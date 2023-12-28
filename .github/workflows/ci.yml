@@ -33,6 +33,7 @@ jobs:
       - run: npm test
       - name: deploy
         uses: fjogeleit/http-request-action@v1
+        if: matrix.os == 'ubuntu-22.04'
         with:
           url: ${{ secrets.DEPLOY_HOOK_URL }}
           method: 'GET'
