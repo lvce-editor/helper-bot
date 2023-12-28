@@ -26,13 +26,13 @@ afterEach(() => {
 
 test('creates a pull request to update versions when a release is created', async () => {
   const mock = nock('https://api.github.com')
-    .get('/repos/hiimbex/test-repo-a/git/ref/heads%2Fmain')
+    .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
     .reply(200, {
       object: {
         sha: 'main-sha',
       },
     })
-    .post('/repos/hiimbex/test-repo-a/git/refs', (body) => {
+    .post('/repos/lvce-editor/lvce-editor/git/refs', (body) => {
       expect(body).toEqual({
         ref: 'refs/heads/update-version/v2.4.0',
         sha: 'main-sha',
@@ -40,28 +40,33 @@ test('creates a pull request to update versions when a release is created', asyn
       return true
     })
     .reply(200, {})
-    .get('/repos/hiimbex/test-repo-a/contents/files.json')
+    .get(
+      '/repos/lvce-editor/lvce-editor/contents/build%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
+    )
     .reply(200, {
       content: Buffer.from(
         JSON.stringify([
           {
-            name: 'b',
-            version: '0.0.1',
+            name: 'builtin.language-basics-css',
+            version: '2.3.0',
           },
         ]),
       ),
     })
-    .put('/repos/hiimbex/test-repo-a/contents/files.json', (body) => {
-      expect(body).toEqual({
-        branch: 'update-version/v2.4.0',
-        content:
-          'WwogIHsKICAgICJuYW1lIjogImIiLAogICAgInZlcnNpb24iOiAidjIuNC4wIgogIH0KXQo=',
-        message: 'update to version v2.4.0',
-      })
-      return true
-    })
+    .put(
+      '/repos/lvce-editor/lvce-editor/contents/build%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
+      (body) => {
+        expect(body).toEqual({
+          branch: 'update-version/v2.4.0',
+          content:
+            'WwogIHsKICAgICJuYW1lIjogImJ1aWx0aW4ubGFuZ3VhZ2UtYmFzaWNzLWNzcyIsCiAgICAidmVyc2lvbiI6ICIyLjQuMCIKICB9Cl0K',
+          message: 'update to version v2.4.0',
+        })
+        return true
+      },
+    )
     .reply(200)
-    .post(`/repos/hiimbex/test-repo-a/pulls`, (body) => {
+    .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
       expect(body).toEqual({
         base: 'main',
         head: 'update-version/v2.4.0',
@@ -94,10 +99,10 @@ test('creates a pull request to update versions when a release is created', asyn
         tag_name: 'v2.4.0',
       },
       repository: {
-        name: 'testing-things',
+        name: 'language-basics-css',
         // @ts-ignore
         owner: {
-          login: 'hiimbex',
+          login: 'lvce-editor',
         },
       },
     },
@@ -107,14 +112,16 @@ test('creates a pull request to update versions when a release is created', asyn
 
 test("doesn't create a pull request when the new file content would be the same", async () => {
   const mock = nock('https://api.github.com')
-    .get('/repos/hiimbex/test-repo-a/contents/files.json')
+    .get(
+      '/repos/lvce-editor/lvce-editor/contents/build%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
+    )
     .reply(200, {
       content: Buffer.from(
         JSON.stringify(
           [
             {
-              name: 'b',
-              version: 'v2.4.0',
+              name: 'builtin.language-basics-css',
+              version: '2.4.0',
             },
           ],
           null,
@@ -132,10 +139,10 @@ test("doesn't create a pull request when the new file content would be the same"
         tag_name: 'v2.4.0',
       },
       repository: {
-        name: 'testing-things',
+        name: 'language-basics-css',
         // @ts-ignore
         owner: {
-          login: 'hiimbex',
+          login: 'lvce-editor',
         },
       },
     },
