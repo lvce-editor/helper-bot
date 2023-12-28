@@ -1,12 +1,13 @@
 /**
  *
  * @param {any[]} value
+ * @param {string} repoName
  * @param {string} version
  * @returns
  */
-const getNewValue = (value, version) => {
+const getNewValue = (value, repoName, version) => {
   return value.map((item) => {
-    if (item.name === 'b') {
+    if (item.name === `builtin.${repoName}`) {
       return {
         ...item,
         version,
@@ -24,9 +25,12 @@ const handleReleaseReleased = async (context) => {
   const tagName = payload.release.tag_name
   const owner = payload.repository.owner.login
   const baseBranch = 'main'
-  const repo = 'test-repo-a'
-  const filesPath = 'files.json'
-  console.log(tagName)
+  const repo = 'lvce-editor'
+  const releasedRepo = payload.repository.name
+  const filesPath =
+    'build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
+  const version = tagName.replace('v', '')
+  console.log(version)
   console.log('release was released' + payload.repository.name)
 
   const newBranch = `update-version/${tagName}`
@@ -43,7 +47,7 @@ const handleReleaseReleased = async (context) => {
   const filesJsonBase64 = filesJson.data.content
   const filesJsonDecoded = Buffer.from(filesJsonBase64, 'base64').toString()
   const filesJsonValue = JSON.parse(filesJsonDecoded)
-  const filesJsonValueNew = getNewValue(filesJsonValue, tagName)
+  const filesJsonValueNew = getNewValue(filesJsonValue, releasedRepo, version)
   const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
   if (filesJsonDecoded === filesJsonStringNew) {
     return
