@@ -30,8 +30,7 @@ const handleReleaseReleased = async (context) => {
   const filesPath =
     'build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
   const version = tagName.replace('v', '')
-  console.log(version)
-  console.log('release was released' + payload.repository.name)
+  console.log(`release was released ${payload.repository.name}@${version}`)
 
   const newBranch = `update-version/${tagName}`
 
