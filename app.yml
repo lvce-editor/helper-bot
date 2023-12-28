@@ -1,0 +1,12 @@
+default_events:
+  - release
+
+default_permissions:
+  contents: write
+  metadata: read
+  pull_requests: write
+
+name: Lvce Editor Helper Bot
+url: https://github.com/lvce-editor/helper-bot
+description: GitHub App to automaticlly update lvce editor extensions to latest versions.
+public: false
