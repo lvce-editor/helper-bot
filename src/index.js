@@ -42,6 +42,7 @@ const handleReleaseReleased = async (context) => {
   })
 
   if (!('content' in filesJson.data)) {
+    console.log('no content in files')
     return
   }
   const filesJsonBase64 = filesJson.data.content
@@ -50,6 +51,7 @@ const handleReleaseReleased = async (context) => {
   const filesJsonValueNew = getNewValue(filesJsonValue, releasedRepo, version)
   const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
   if (filesJsonDecoded === filesJsonStringNew) {
+    console.log('no update necessary')
     return
   }
   const filesJsonBase64New = Buffer.from(filesJsonStringNew).toString('base64')
