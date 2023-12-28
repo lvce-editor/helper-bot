@@ -72,7 +72,7 @@ const handleReleaseReleased = async (context) => {
     owner,
     repo,
     path: filesPath,
-    message: `update to version ${tagName}`,
+    message: `feature: update ${releasedRepo} to version ${tagName}`,
     content: filesJsonBase64New,
     branch: newBranch,
     sha: filesJson.data.sha,
@@ -82,7 +82,7 @@ const handleReleaseReleased = async (context) => {
     repo,
     head: newBranch,
     base: baseBranch,
-    title: `update to version ${tagName}`,
+    title: `feature: update ${releasedRepo} to version ${tagName}`,
   })
   await octokit.graphql(
     `mutation MyMutation {
