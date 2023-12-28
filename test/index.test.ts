@@ -60,7 +60,7 @@ test('creates a pull request to update versions when a release is created', asyn
           branch: 'update-version/v2.4.0',
           content:
             'WwogIHsKICAgICJuYW1lIjogImJ1aWx0aW4ubGFuZ3VhZ2UtYmFzaWNzLWNzcyIsCiAgICAidmVyc2lvbiI6ICIyLjQuMCIKICB9Cl0K',
-          message: 'update to version v2.4.0',
+          message: 'feature: update language-basics-css to version v2.4.0',
         })
         return true
       },
@@ -70,7 +70,7 @@ test('creates a pull request to update versions when a release is created', asyn
       expect(body).toEqual({
         base: 'main',
         head: 'update-version/v2.4.0',
-        title: 'update to version v2.4.0',
+        title: 'feature: update language-basics-css to version v2.4.0',
       })
       return true
     })
