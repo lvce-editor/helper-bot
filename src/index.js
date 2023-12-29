@@ -32,7 +32,7 @@ const handleReleaseReleased = async (context) => {
   const version = tagName.replace('v', '')
   console.log(`release was released ${payload.repository.name}@${version}`)
 
-  const newBranch = `update-version/${tagName}`
+  const newBranch = `update-version/${releasedRepo}-${tagName}`
 
   const filesJson = await context.octokit.rest.repos.getContent({
     owner,

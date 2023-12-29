@@ -34,7 +34,7 @@ test('creates a pull request to update versions when a release is created', asyn
     })
     .post('/repos/lvce-editor/lvce-editor/git/refs', (body) => {
       expect(body).toEqual({
-        ref: 'refs/heads/update-version/v2.4.0',
+        ref: 'refs/heads/update-version/language-basics-css-v2.4.0',
         sha: 'main-sha',
       })
       return true
@@ -57,7 +57,7 @@ test('creates a pull request to update versions when a release is created', asyn
       '/repos/lvce-editor/lvce-editor/contents/build%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
       (body) => {
         expect(body).toEqual({
-          branch: 'update-version/v2.4.0',
+          branch: 'update-version/language-basics-css-v2.4.0',
           content:
             'WwogIHsKICAgICJuYW1lIjogImJ1aWx0aW4ubGFuZ3VhZ2UtYmFzaWNzLWNzcyIsCiAgICAidmVyc2lvbiI6ICIyLjQuMCIKICB9Cl0K',
           message: 'feature: update language-basics-css to version v2.4.0',
@@ -69,7 +69,7 @@ test('creates a pull request to update versions when a release is created', asyn
     .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
       expect(body).toEqual({
         base: 'main',
-        head: 'update-version/v2.4.0',
+        head: 'update-version/language-basics-css-v2.4.0',
         title: 'feature: update language-basics-css to version v2.4.0',
       })
       return true
