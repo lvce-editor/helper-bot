@@ -18,6 +18,22 @@ const getNewValue = (value, repoName, version) => {
 }
 
 /**
+ *
+ * @param {string} releasedRepo
+ * @param {string} tagName
+ * @returns {string}
+ */
+const getCommitMessage = (releasedRepo, tagName) => {
+  if (
+    releasedRepo.startsWith('language-basics') ||
+    releasedRepo.startsWith('language-features')
+  ) {
+    return `feature: update ${releasedRepo} to version ${tagName}`
+  }
+  return `feature: update ${releasedRepo} extension to version ${tagName}`
+}
+
+/**
  * @param {import('probot').Context<"release">} context
  */
 const handleReleaseReleased = async (context) => {
@@ -73,7 +89,7 @@ const handleReleaseReleased = async (context) => {
     owner,
     repo,
     path: filesPath,
-    message: `feature: update ${releasedRepo} to version ${tagName}`,
+    message: getCommitMessage(releasedRepo, tagName),
     content: filesJsonBase64New,
     branch: newBranch,
     sha: filesJson.data.sha,
