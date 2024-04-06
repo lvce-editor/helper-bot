@@ -44,7 +44,7 @@ const handleReleaseReleased = async (context) => {
   const repo = 'lvce-editor'
   const releasedRepo = payload.repository.name
   const filesPath =
-    'build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
+    'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
   const version = tagName.replace('v', '')
   console.log(`release was released ${payload.repository.name}@${version}`)
 
