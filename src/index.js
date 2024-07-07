@@ -209,14 +209,6 @@ const updateRendererProcessVersion = async (context) => {
     path: packageLockJsonPath,
   })
 
-  const mainBranch = await context.octokit.rest.repos.getBranch({
-    branch: baseBranch,
-    owner,
-    repo,
-  })
-
-  const mainBranchSha = mainBranch.data.commit.sha
-
   if (
     !('content' in packageJsonRef.data) ||
     !('content' in packageLockJsonRef.data)
@@ -252,7 +244,7 @@ const updateRendererProcessVersion = async (context) => {
     ref: `heads/${baseBranch}`,
   })
 
-  await octokit.rest.git.createRef({
+  const newBranchRef = await octokit.rest.git.createRef({
     owner,
     repo,
     ref: `refs/heads/${newBranch}`,
@@ -284,11 +276,13 @@ const updateRendererProcessVersion = async (context) => {
     },
   ]
 
+  newBranchRef.data.ref
+
   const newTree = await context.octokit.rest.git.createTree({
     owner,
     repo,
     tree: commitableFiles,
-    base_tree: mainBranchSha,
+    base_tree: newBranchRef.data.object.sha,
   })
 
   await octokit.rest.git.createCommit({
@@ -296,7 +290,7 @@ const updateRendererProcessVersion = async (context) => {
     repo,
     message: getCommitMessage(releasedRepo, tagName),
     tree: newTree.data.sha,
-    parents: [mainBranchSha],
+    parents: [newBranchRef.data.object.sha],
   })
 
   const pullRequestData = await octokit.rest.pulls.create({
