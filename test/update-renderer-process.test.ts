@@ -121,7 +121,8 @@ test('creates a pull request to update versions when a release is created', asyn
       (body) => {
         expect(body).toEqual({
           branch: 'update-version/renderer-process-v2.4.0',
-          content: 'dW5kZWZpbmVkCg==',
+          content:
+            'ewogICJuYW1lIjogInJlbmRlcmVyLXdvcmtlciIsCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJAbHZjZS1lZGl0b3IvcmVuZGVyZXItcHJvY2VzcyI6ICJeMi40LjAiCiAgfQp9Cg==',
           message: 'feature: update renderer-process to version v2.4.0',
         })
         return true
