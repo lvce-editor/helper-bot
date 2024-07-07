@@ -35,6 +35,7 @@ jest.mock('node:fs/promises', () => {
     readFile: jest.fn(),
     writeFile: jest.fn(),
     mkdir: jest.fn(),
+    rm: jest.fn(),
   }
 })
 
@@ -75,6 +76,7 @@ test('creates a pull request to update versions when a release is created', asyn
       updated: true,
     })
   })
+  jest.spyOn(fs, 'rm').mockImplementation(() => {})
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
     .reply(200, {
@@ -184,4 +186,9 @@ test('creates a pull request to update versions when a release is created', asyn
     },
   })
   expect(mock.pendingMocks()).toEqual([])
+  expect(fs.rm).toHaveBeenCalledTimes(1)
+  expect(fs.rm).toHaveBeenCalledWith('/test/renderer-process-release', {
+    force: true,
+    recursive: true,
+  })
 })
