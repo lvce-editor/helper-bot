@@ -1,4 +1,4 @@
-const { mkdir, writeFile, readFile } = require('node:fs/promises')
+const { mkdir, writeFile, readFile, rm } = require('node:fs/promises')
 const { tmpdir } = require('node:os')
 const { join } = require('node:path')
 
@@ -143,6 +143,43 @@ const getNewRendererWorkerPackageJson = (oldPackageJson, newVersion) => {
 }
 
 /**
+ *
+ * @param {any} oldPackageJson
+ * @param {string} newVersion
+ * @returns
+ */
+const getNewRenderWorkerPackageFiles = async (oldPackageJson, newVersion) => {
+  const tmpFolder = join(tmpdir(), 'renderer-process-release')
+  try {
+    oldPackageJson.dependencies['@lvce-editor/renderer-process'] =
+      `^${newVersion}`
+    const oldPackageJsonStringified =
+      JSON.stringify(oldPackageJson, null, 2) + '\n'
+    await mkdir(tmpFolder, { recursive: true })
+    await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
+    const { execa } = await import('execa')
+    await execa(`npm`, ['install'], {
+      cwd: tmpFolder,
+    })
+    const newPackageLockJsonString = await readFile(
+      join(tmpFolder, 'package-lock.json'),
+      'utf8',
+    )
+    return {
+      newPackageJsonString: oldPackageJsonStringified,
+      newPackageLockJsonString,
+    }
+  } catch (error) {
+    throw new Error(`Failed to update renderer-process: ${error}`)
+  } finally {
+    await rm(tmpFolder, {
+      recursive: true,
+      force: true,
+    })
+  }
+}
+
+/**
  * @param {import('probot').Context<"release">} context
  */
 const updateRendererProcessVersion = async (context) => {
@@ -192,30 +229,14 @@ const updateRendererProcessVersion = async (context) => {
     console.info('same version')
     return
   }
-  const filesJsonValueNew = getNewRendererWorkerPackageJson(
-    filesJsonValue,
-    version,
-  )
-  const packageJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
-  const tmpFolder = join(tmpdir(), 'renderer-process-release')
-  console.log({ tmpFolder })
-  await mkdir(tmpFolder, { recursive: true })
-  await writeFile(join(tmpFolder, 'package.json'), packageJsonStringNew)
-  const { execa } = await import('execa')
-  await execa(`npm`, ['install'], {
-    cwd: tmpFolder,
-  })
-  const newPackageLockJson = await readFile(
-    join(tmpFolder, 'package-lock.json'),
-    'utf8',
-  )
-
-  console.log({ packageJsonStringNew, newPackageLockJson })
+  const { newPackageJsonString, newPackageLockJsonString } =
+    await getNewRenderWorkerPackageFiles(filesJsonValue, version)
 
   const packageJsonBase64New =
-    Buffer.from(packageJsonStringNew).toString('base64')
-  const packageLockJsonBase64New =
-    Buffer.from(newPackageLockJson).toString('base64')
+    Buffer.from(newPackageJsonString).toString('base64')
+  const packageLockJsonBase64New = Buffer.from(
+    newPackageLockJsonString,
+  ).toString('base64')
 
   const mainBranchRef = await octokit.rest.git.getRef({
     owner,
