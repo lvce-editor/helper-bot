@@ -10,6 +10,7 @@
     "test:watch": "node ./node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
+    "execa": "^9.3.0",
     "probot": "^12.4.0"
   },
   "devDependencies": {
