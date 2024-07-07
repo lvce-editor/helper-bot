@@ -75,7 +75,7 @@ test('creates a pull request to update versions when a release is created', asyn
     })
     .post('/repos/lvce-editor/lvce-editor/git/refs', (body) => {
       expect(body).toEqual({
-        ref: 'refs/heads/update-version/language-basics-css-v2.4.0',
+        ref: 'refs/heads/update-version/renderer-process-v2.4.0',
         sha: 'main-sha',
       })
       return true
@@ -112,7 +112,7 @@ test('creates a pull request to update versions when a release is created', asyn
       (body) => {
         expect(body).toEqual({
           branch: 'update-version/renderer-process-v2.4.0',
-          content: 'dW5kZWZpbmVkCg==/',
+          content: 'dW5kZWZpbmVkCg==',
           message: 'feature: update renderer-process to version v2.4.0',
         })
         return true
