@@ -276,8 +276,6 @@ const updateRendererProcessVersion = async (context) => {
     },
   ]
 
-  newBranchRef.data.ref
-
   const newTree = await context.octokit.rest.git.createTree({
     owner,
     repo,
