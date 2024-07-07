@@ -1,6 +1,7 @@
 import * as nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import * as myProbotApp from '../src/index.js'
+import { join } from 'path'
 
 let probot: Probot | undefined
 
@@ -187,7 +188,8 @@ test('creates a pull request to update versions when a release is created', asyn
   })
   expect(mock.pendingMocks()).toEqual([])
   expect(fs.rm).toHaveBeenCalledTimes(1)
-  expect(fs.rm).toHaveBeenCalledWith('/test/renderer-process-release', {
+  const testPath = join('/test', 'renderer-process-release')
+  expect(fs.rm).toHaveBeenCalledWith(testPath, {
     force: true,
     recursive: true,
   })
