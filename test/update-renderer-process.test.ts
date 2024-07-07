@@ -46,7 +46,7 @@ jest.mock('node:os', () => {
   }
 })
 
-const { execa } = require('execa')
+const execa = require('execa')
 const fs = require('node:fs/promises')
 
 test('creates a pull request to update versions when a release is created', async () => {
@@ -65,6 +65,15 @@ test('creates a pull request to update versions when a release is created', asyn
     ) {
       packageLockContent = content
     }
+  })
+  jest.spyOn(execa, 'execa').mockImplementation(() => {
+    packageLockContent = JSON.stringify({
+      name: '@lvce-editor/renderer-worker',
+      version: '0.0.0-dev',
+      lockfileVersion: 3,
+      requires: true,
+      updated: true,
+    })
   })
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
@@ -119,11 +128,24 @@ test('creates a pull request to update versions when a release is created', asyn
       },
     )
     .reply(200)
+    .put(
+      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage-lock.json',
+      (body) => {
+        expect(body).toEqual({
+          branch: 'update-version/renderer-process-v2.4.0',
+          content:
+            'eyJuYW1lIjoiQGx2Y2UtZWRpdG9yL3JlbmRlcmVyLXdvcmtlciIsInZlcnNpb24iOiIwLjAuMC1kZXYiLCJsb2NrZmlsZVZlcnNpb24iOjMsInJlcXVpcmVzIjp0cnVlLCJ1cGRhdGVkIjp0cnVlfQ==',
+          message: 'feature: update renderer-process to version v2.4.0',
+        })
+        return true
+      },
+    )
+    .reply(200)
     .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
       expect(body).toEqual({
         base: 'main',
-        head: 'update-version/language-basics-css-v2.4.0',
-        title: 'feature: update language-basics-css to version v2.4.0',
+        head: 'update-version/renderer-process-v2.4.0',
+        title: 'feature: update renderer-process to version v2.4.0',
       })
       return true
     })
