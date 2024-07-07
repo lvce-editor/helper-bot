@@ -155,11 +155,11 @@ test('creates a pull request to update versions when a release is created', asyn
     .post('/graphql', (body) => {
       expect(body).toEqual({
         query: `mutation MyMutation {
-    enablePullRequestAutoMerge(input: { pullRequestId: \"test-node-id\", mergeMethod: SQUASH }) {
-      clientMutationId
-    }
+  enablePullRequestAutoMerge(input: { pullRequestId: \"test-node-id\", mergeMethod: SQUASH }) {
+    clientMutationId
   }
-  `,
+}
+`,
       })
       return true
     })
