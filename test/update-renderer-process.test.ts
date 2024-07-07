@@ -50,6 +50,22 @@ const { execa } = require('execa')
 const fs = require('node:fs/promises')
 
 test('creates a pull request to update versions when a release is created', async () => {
+  let packageLockContent = ''
+  jest.spyOn(fs, 'readFile').mockImplementation((path) => {
+    if (typeof path === 'string' && path.endsWith('package-lock.json')) {
+      return packageLockContent
+    }
+    return ''
+  })
+  jest.spyOn(fs, 'writeFile').mockImplementation((path, content) => {
+    if (
+      typeof path === 'string' &&
+      path.endsWith('package-lock.json') &&
+      typeof content === 'string'
+    ) {
+      packageLockContent = content
+    }
+  })
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
     .reply(200, {

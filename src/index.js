@@ -185,6 +185,8 @@ const updateRendererProcessVersion = async (context) => {
   console.log({ filesJsonValue })
   const oldVersion =
     filesJsonValue.dependencies[`@lvce-editor/${releasedRepo}`].slice(1)
+
+  console.log({ oldVersion })
   if (oldVersion === version) {
     console.info('same version')
     return
@@ -195,6 +197,7 @@ const updateRendererProcessVersion = async (context) => {
   )
   const packageJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
   const tmpFolder = join(tmpdir(), 'renderer-process-release')
+  console.log({ tmpFolder })
   await mkdir(tmpFolder, { recursive: true })
   await writeFile(join(tmpFolder, 'package.json'), packageJsonStringNew)
   const { execa } = await import('execa')
@@ -205,6 +208,8 @@ const updateRendererProcessVersion = async (context) => {
     join(tmpFolder, 'package-lock.json'),
     'utf8',
   )
+
+  console.log({ packageJsonStringNew, newPackageLockJson })
 
   const packageJsonBase64New =
     Buffer.from(packageJsonStringNew).toString('base64')
