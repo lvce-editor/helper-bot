@@ -163,32 +163,6 @@ test('creates a pull request to update versions when a release is created', asyn
         sha: 'new-commit-sha',
       },
     })
-    .put(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json',
-      (body) => {
-        expect(body).toEqual({
-          branch: 'update-version/renderer-process-v2.4.0',
-          content:
-            'ewogICJuYW1lIjogInJlbmRlcmVyLXdvcmtlciIsCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJAbHZjZS1lZGl0b3IvcmVuZGVyZXItcHJvY2VzcyI6ICJeMi40LjAiCiAgfQp9Cg==',
-          message: 'feature: update renderer-process to version v2.4.0',
-        })
-        return true
-      },
-    )
-    .reply(200)
-    .put(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage-lock.json',
-      (body) => {
-        expect(body).toEqual({
-          branch: 'update-version/renderer-process-v2.4.0',
-          content:
-            'eyJuYW1lIjoiQGx2Y2UtZWRpdG9yL3JlbmRlcmVyLXdvcmtlciIsInZlcnNpb24iOiIwLjAuMC1kZXYiLCJsb2NrZmlsZVZlcnNpb24iOjMsInJlcXVpcmVzIjp0cnVlLCJ1cGRhdGVkIjp0cnVlfQ==',
-          message: 'feature: update renderer-process to version v2.4.0',
-        })
-        return true
-      },
-    )
-    .reply(200)
     .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
       expect(body).toEqual({
         base: 'main',
