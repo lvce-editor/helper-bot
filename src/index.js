@@ -66,6 +66,9 @@ const updateBuiltinExtensions = async (context) => {
   const baseBranch = 'main'
   const repo = 'lvce-editor'
   const releasedRepo = payload.repository.name
+  if (releasedRepo === 'renderer-process') {
+    return
+  }
   const filesPath =
     'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
   const version = tagName.replace('v', '')
@@ -179,6 +182,7 @@ const updateRendererProcessVersion = async (context) => {
   const filesJsonBase64 = packageJsonRef.data.content
   const filesJsonDecoded = Buffer.from(filesJsonBase64, 'base64').toString()
   const filesJsonValue = JSON.parse(filesJsonDecoded)
+  console.log({ filesJsonValue })
   const oldVersion =
     filesJsonValue.dependencies[`@lvce-editor/${releasedRepo}`].slice(1)
   if (oldVersion === version) {
