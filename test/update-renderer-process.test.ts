@@ -66,22 +66,34 @@ test('creates a pull request to update versions when a release is created', asyn
     })
     .reply(200, {})
     .get(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
+      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json',
     )
     .reply(200, {
       content: Buffer.from(
-        JSON.stringify([
-          {
-            name: 'builtin.language-basics-css',
-            version: '2.3.0',
+        JSON.stringify({
+          name: 'renderer-worker',
+          dependencies: {
+            '@lvce-editor/renderer-process': '^2.3.0',
           },
-        ]),
+        }),
+      ),
+    })
+    .get(
+      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage-lock.json',
+    )
+    .reply(200, {
+      content: Buffer.from(
+        JSON.stringify({
+          name: '@lvce-editor/renderer-worker',
+          version: '0.0.0-dev',
+          lockfileVersion: 3,
+          requires: true,
+        }),
       ),
     })
     .put(
       '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json',
       (body) => {
-        console.log({ body })
         expect(body).toEqual({
           branch: 'update-version/renderer-process-v2.4.0',
           content: 'dW5kZWZpbmVkCg==/',
