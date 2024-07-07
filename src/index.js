@@ -244,7 +244,7 @@ const updateRendererProcessVersion = async (context) => {
     ref: `heads/${baseBranch}`,
   })
 
-  await octokit.rest.git.createRef({
+  const newBranchRef = await octokit.rest.git.createRef({
     owner,
     repo,
     ref: `refs/heads/${newBranch}`,
@@ -252,24 +252,45 @@ const updateRendererProcessVersion = async (context) => {
   })
   console.log('created branch')
 
-  await context.octokit.repos.createOrUpdateFileContents({
+  /**
+   * @type {'100644'}
+   */
+  const modeFile = '100644'
+  /**
+   * @type {'blob'}
+   */
+  const typeFile = 'blob'
+
+  const commitableFiles = [
+    {
+      path: packageJsonPath,
+      mode: modeFile,
+      type: typeFile,
+      content: packageJsonBase64New,
+    },
+    {
+      path: packageLockJsonPath,
+      mode: modeFile,
+      type: typeFile,
+      content: packageLockJsonBase64New,
+    },
+  ]
+
+  const newTree = await context.octokit.rest.git.createTree({
     owner,
     repo,
-    path: packageJsonPath,
-    message: getCommitMessage(releasedRepo, tagName),
-    content: packageJsonBase64New,
-    branch: newBranch,
-    sha: packageJsonRef.data.sha,
+    tree: commitableFiles,
+    base_tree: newBranchRef.data.object.sha,
   })
-  await context.octokit.repos.createOrUpdateFileContents({
+
+  await octokit.rest.git.createCommit({
     owner,
     repo,
-    path: packageLockJsonPath,
     message: getCommitMessage(releasedRepo, tagName),
-    content: packageLockJsonBase64New,
-    branch: newBranch,
-    sha: packageLockJsonRef.data.sha,
+    tree: newTree.data.sha,
+    parents: [newBranchRef.data.object.sha],
   })
+
   const pullRequestData = await octokit.rest.pulls.create({
     owner,
     repo,
