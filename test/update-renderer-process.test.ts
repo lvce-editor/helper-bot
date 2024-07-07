@@ -79,13 +79,13 @@ test('creates a pull request to update versions when a release is created', asyn
       ),
     })
     .put(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
+      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json',
       (body) => {
+        console.log({ body })
         expect(body).toEqual({
-          branch: 'update-version/language-basics-css-v2.4.0',
-          content:
-            'WwogIHsKICAgICJuYW1lIjogImJ1aWx0aW4ubGFuZ3VhZ2UtYmFzaWNzLWNzcyIsCiAgICAidmVyc2lvbiI6ICIyLjQuMCIKICB9Cl0K',
-          message: 'feature: update language-basics-css to version v2.4.0',
+          branch: 'update-version/renderer-process-v2.4.0',
+          content: 'dW5kZWZpbmVkCg==/',
+          message: 'feature: update renderer-process to version v2.4.0',
         })
         return true
       },
