@@ -287,14 +287,6 @@ const updateRendererProcessVersion = async (context) => {
     parents: [startingCommitSha],
   })
 
-  await octokit.rest.git.updateRef({
-    owner,
-    repo,
-    force: true,
-    sha: commit.data.sha,
-    ref: `refs/heads/${newBranch}`,
-  })
-
   const newBranchRef = await octokit.rest.git.createRef({
     owner,
     repo,
