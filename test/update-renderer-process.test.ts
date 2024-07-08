@@ -136,8 +136,13 @@ test('creates a pull request to update versions when a release is created', asyn
             type: 'blob',
           },
           {
-            content:
-              '{"name":"@lvce-editor/renderer-worker","version":"0.0.0-dev","lockfileVersion":3,"requires":true,"updated":true}',
+            content: JSON.stringify({
+              name: '@lvce-editor/renderer-worker',
+              version: '0.0.0-dev',
+              lockfileVersion: 3,
+              requires: true,
+              updated: true,
+            }),
             mode: '100644',
             path: 'packages/renderer-worker/package-lock.json',
             type: 'blob',
