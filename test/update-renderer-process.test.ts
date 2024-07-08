@@ -85,18 +85,6 @@ test('creates a pull request to update versions when a release is created', asyn
         sha: 'main-sha',
       },
     })
-    .post('/repos/lvce-editor/lvce-editor/git/refs', (body) => {
-      expect(body).toEqual({
-        ref: 'refs/heads/update-version/renderer-process-v2.4.0',
-        sha: 'main-sha',
-      })
-      return true
-    })
-    .reply(201, {
-      object: {
-        sha: 'main-sha',
-      },
-    })
 
     .get(
       '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json',
@@ -161,16 +149,18 @@ test('creates a pull request to update versions when a release is created', asyn
     .reply(201, {
       sha: 'new-commit-sha',
     })
-    .patch(
-      '/repos/lvce-editor/lvce-editor/git/refs/refs%2Fheads%2Fupdate-version%2Frenderer-process-v2.4.0',
-      (body) => {
-        expect(body).toEqual({
-          force: true,
-        })
-        return true
+    .post('/repos/lvce-editor/lvce-editor/git/refs', (body) => {
+      expect(body).toEqual({
+        ref: 'refs/heads/update-version/renderer-process-v2.4.0',
+        sha: 'new-commit-sha',
+      })
+      return true
+    })
+    .reply(201, {
+      object: {
+        sha: 'new-commit-sha',
       },
-    )
-    .reply(200)
+    })
     .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
       expect(body).toEqual({
         base: 'main',
