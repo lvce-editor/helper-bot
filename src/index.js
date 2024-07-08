@@ -180,6 +180,73 @@ const getNewRenderWorkerPackageFiles = async (oldPackageJson, newVersion) => {
 }
 
 /**
+ *
+ * @param {{baseBranch:string, newBranch:string, octokit:import('probot').Context<"release">['octokit'], owner:string, repo:string, commitableFiles:any[], commitMessage:string, pullRequestTitle:string }} param0
+ */
+const createPullRequest = async ({
+  baseBranch,
+  newBranch,
+  octokit,
+  owner,
+  repo,
+  commitableFiles,
+  commitMessage,
+  pullRequestTitle,
+}) => {
+  const mainBranchRef = await octokit.rest.git.getRef({
+    owner,
+    repo,
+    ref: `heads/${baseBranch}`,
+  })
+
+  console.log({ mainBranchRef })
+
+  const latestCommit = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: mainBranchRef.data.object.sha,
+  })
+
+  console.log({ latestCommit })
+
+  const startingCommitSha = latestCommit.data.sha
+
+  console.log('created branch')
+
+  const newTree = await octokit.rest.git.createTree({
+    owner,
+    repo,
+    tree: commitableFiles,
+    base_tree: startingCommitSha,
+  })
+
+  const commit = await octokit.rest.git.createCommit({
+    owner,
+    repo,
+    message: commitMessage,
+    tree: newTree.data.sha,
+    parents: [startingCommitSha],
+  })
+
+  const newBranchRef = await octokit.rest.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${newBranch}`,
+    sha: commit.data.sha,
+  })
+
+  console.log({ newBranchRef })
+  const pullRequestData = await octokit.rest.pulls.create({
+    owner,
+    repo,
+    head: newBranch,
+    base: baseBranch,
+    title: pullRequestTitle,
+  })
+  return pullRequestData
+}
+
+/**
  * @param {import('probot').Context<"release">} context
  */
 const updateRendererProcessVersion = async (context) => {
@@ -232,26 +299,6 @@ const updateRendererProcessVersion = async (context) => {
   const { newPackageJsonString, newPackageLockJsonString } =
     await getNewRenderWorkerPackageFiles(filesJsonValue, version)
 
-  const mainBranchRef = await octokit.rest.git.getRef({
-    owner,
-    repo,
-    ref: `heads/${baseBranch}`,
-  })
-
-  console.log({ mainBranchRef })
-
-  const latestCommit = await octokit.rest.git.getCommit({
-    owner,
-    repo,
-    commit_sha: mainBranchRef.data.object.sha,
-  })
-
-  console.log({ latestCommit })
-
-  const startingCommitSha = latestCommit.data.sha
-
-  console.log('created branch')
-
   /**
    * @type {'100644'}
    */
@@ -276,35 +323,15 @@ const updateRendererProcessVersion = async (context) => {
     },
   ]
 
-  const newTree = await context.octokit.rest.git.createTree({
+  const pullRequestData = await createPullRequest({
+    octokit,
+    baseBranch,
+    newBranch,
+    commitableFiles,
+    commitMessage: getCommitMessage(releasedRepo, tagName),
     owner,
+    pullRequestTitle: `feature: update ${releasedRepo} to version ${tagName}`,
     repo,
-    tree: commitableFiles,
-    base_tree: startingCommitSha,
-  })
-
-  const commit = await octokit.rest.git.createCommit({
-    owner,
-    repo,
-    message: getCommitMessage(releasedRepo, tagName),
-    tree: newTree.data.sha,
-    parents: [startingCommitSha],
-  })
-
-  const newBranchRef = await octokit.rest.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${newBranch}`,
-    sha: commit.data.sha,
-  })
-
-  console.log({ newBranchRef })
-  const pullRequestData = await octokit.rest.pulls.create({
-    owner,
-    repo,
-    head: newBranch,
-    base: baseBranch,
-    title: `feature: update ${releasedRepo} to version ${tagName}`,
   })
   await enableAutoSquash(octokit, pullRequestData)
 }
