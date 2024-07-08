@@ -148,7 +148,7 @@ test('creates a pull request to update versions when a release is created', asyn
     })
     .reply(201, {
       object: {
-        sha: 'new-tree-sha',
+        sha: 'new-commit-sha',
       },
     })
     .post('/repos/lvce-editor/lvce-editor/git/commits', (body) => {
@@ -159,9 +159,7 @@ test('creates a pull request to update versions when a release is created', asyn
       return true
     })
     .reply(201, {
-      object: {
-        sha: 'new-commit-sha',
-      },
+      sha: 'new-commit-sha',
     })
     .patch(
       '/repos/lvce-editor/lvce-editor/git/refs/refs%2Fheads%2Fupdate-version%2Frenderer-process-v2.4.0',
