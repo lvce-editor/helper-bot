@@ -293,6 +293,9 @@ const updateRendererProcessVersion = async (context) => {
     parents: [startingCommitSha],
   })
 
+  // TODO find out if ref can created later, e.g.
+  // not needing to create ref first and then update
+  // but instead create the right ref directly
   await octokit.rest.git.updateRef({
     owner,
     repo,
