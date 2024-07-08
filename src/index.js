@@ -328,9 +328,9 @@ const updateRendererProcessVersion = async (context) => {
     baseBranch,
     newBranch,
     commitableFiles,
-    commitMessage,
+    commitMessage: getCommitMessage(releasedRepo, tagName),
     owner,
-    pullRequestTitle,
+    pullRequestTitle: `feature: update ${releasedRepo} to version ${tagName}`,
     repo,
   })
   await enableAutoSquash(octokit, pullRequestData)
