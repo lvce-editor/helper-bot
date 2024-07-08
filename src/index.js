@@ -244,7 +244,17 @@ const updateRendererProcessVersion = async (context) => {
     ref: `heads/${baseBranch}`,
   })
 
-  const startingCommitSha = mainBranchRef.data.object.sha
+  console.log({ mainBranchRef })
+
+  const latestCommit = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: mainBranchRef.data.object.sha,
+  })
+
+  console.log({ latestCommit })
+
+  const startingCommitSha = latestCommit.data.sha
 
   console.log('created branch')
 
