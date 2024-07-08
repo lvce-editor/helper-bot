@@ -94,7 +94,7 @@ test('creates a pull request to update versions when a release is created', asyn
     })
     .reply(201, {
       object: {
-        sha: 'branch-sha',
+        sha: 'main-sha',
       },
     })
 
@@ -126,7 +126,7 @@ test('creates a pull request to update versions when a release is created', asyn
     })
     .post('/repos/lvce-editor/lvce-editor/git/trees', (body) => {
       expect(body).toEqual({
-        base_tree: 'branch-sha',
+        base_tree: 'main-sha',
         tree: [
           {
             content:
@@ -154,7 +154,7 @@ test('creates a pull request to update versions when a release is created', asyn
     .post('/repos/lvce-editor/lvce-editor/git/commits', (body) => {
       expect(body).toEqual({
         message: 'feature: update renderer-process to version v2.4.0',
-        parents: ['branch-sha'],
+        parents: ['main-sha'],
       })
       return true
     })
@@ -163,6 +163,16 @@ test('creates a pull request to update versions when a release is created', asyn
         sha: 'new-commit-sha',
       },
     })
+    .patch(
+      '/repos/lvce-editor/lvce-editor/git/refs/refs%2Fheads%2Fupdate-version%2Frenderer-process-v2.4.0',
+      (body) => {
+        expect(body).toEqual({
+          force: true,
+        })
+        return true
+      },
+    )
+    .reply(200)
     .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
       expect(body).toEqual({
         base: 'main',
