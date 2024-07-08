@@ -121,14 +121,28 @@ test('creates a pull request to update versions when a release is created', asyn
         tree: [
           {
             content:
-              'ewogICJuYW1lIjogInJlbmRlcmVyLXdvcmtlciIsCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJAbHZjZS1lZGl0b3IvcmVuZGVyZXItcHJvY2VzcyI6ICJeMi40LjAiCiAgfQp9Cg==',
+              JSON.stringify(
+                {
+                  name: 'renderer-worker',
+                  dependencies: {
+                    '@lvce-editor/renderer-process': '^2.4.0',
+                  },
+                },
+                null,
+                2,
+              ) + '\n',
             mode: '100644',
             path: 'packages/renderer-worker/package.json',
             type: 'blob',
           },
           {
-            content:
-              'eyJuYW1lIjoiQGx2Y2UtZWRpdG9yL3JlbmRlcmVyLXdvcmtlciIsInZlcnNpb24iOiIwLjAuMC1kZXYiLCJsb2NrZmlsZVZlcnNpb24iOjMsInJlcXVpcmVzIjp0cnVlLCJ1cGRhdGVkIjp0cnVlfQ==',
+            content: JSON.stringify({
+              name: '@lvce-editor/renderer-worker',
+              version: '0.0.0-dev',
+              lockfileVersion: 3,
+              requires: true,
+              updated: true,
+            }),
             mode: '100644',
             path: 'packages/renderer-worker/package-lock.json',
             type: 'blob',

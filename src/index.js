@@ -232,12 +232,6 @@ const updateRendererProcessVersion = async (context) => {
   const { newPackageJsonString, newPackageLockJsonString } =
     await getNewRenderWorkerPackageFiles(filesJsonValue, version)
 
-  const packageJsonBase64New =
-    Buffer.from(newPackageJsonString).toString('base64')
-  const packageLockJsonBase64New = Buffer.from(
-    newPackageLockJsonString,
-  ).toString('base64')
-
   const mainBranchRef = await octokit.rest.git.getRef({
     owner,
     repo,
@@ -272,13 +266,13 @@ const updateRendererProcessVersion = async (context) => {
       path: packageJsonPath,
       mode: modeFile,
       type: typeFile,
-      content: packageJsonBase64New,
+      content: newPackageJsonString,
     },
     {
       path: packageLockJsonPath,
       mode: modeFile,
       type: typeFile,
-      content: packageLockJsonBase64New,
+      content: newPackageLockJsonString,
     },
   ]
 
