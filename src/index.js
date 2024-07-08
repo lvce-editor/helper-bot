@@ -243,6 +243,7 @@ const createPullRequest = async ({
     base: baseBranch,
     title: pullRequestTitle,
   })
+  return pullRequestData
 }
 
 /**
@@ -322,7 +323,7 @@ const updateRendererProcessVersion = async (context) => {
     },
   ]
 
-  await createPullRequest({
+  const pullRequestData = await createPullRequest({
     octokit,
     baseBranch,
     newBranch,
