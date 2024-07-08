@@ -246,12 +246,6 @@ const updateRendererProcessVersion = async (context) => {
 
   const startingCommitSha = mainBranchRef.data.object.sha
 
-  const newBranchRef = await octokit.rest.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${newBranch}`,
-    sha: startingCommitSha,
-  })
   console.log('created branch')
 
   /**
@@ -293,9 +287,6 @@ const updateRendererProcessVersion = async (context) => {
     parents: [startingCommitSha],
   })
 
-  // TODO find out if ref can created later, e.g.
-  // not needing to create ref first and then update
-  // but instead create the right ref directly
   await octokit.rest.git.updateRef({
     owner,
     repo,
@@ -304,6 +295,14 @@ const updateRendererProcessVersion = async (context) => {
     ref: `refs/heads/${newBranch}`,
   })
 
+  const newBranchRef = await octokit.rest.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${newBranch}`,
+    sha: commit.data.sha,
+  })
+
+  console.log({ newBranchRef })
   const pullRequestData = await octokit.rest.pulls.create({
     owner,
     repo,
