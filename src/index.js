@@ -244,11 +244,13 @@ const updateRendererProcessVersion = async (context) => {
     ref: `heads/${baseBranch}`,
   })
 
+  const startingCommitSha = mainBranchRef.data.object.sha
+
   const newBranchRef = await octokit.rest.git.createRef({
     owner,
     repo,
     ref: `refs/heads/${newBranch}`,
-    sha: mainBranchRef.data.object.sha,
+    sha: startingCommitSha,
   })
   console.log('created branch')
 
@@ -280,15 +282,23 @@ const updateRendererProcessVersion = async (context) => {
     owner,
     repo,
     tree: commitableFiles,
-    base_tree: newBranchRef.data.object.sha,
+    base_tree: startingCommitSha,
   })
 
-  await octokit.rest.git.createCommit({
+  const commit = await octokit.rest.git.createCommit({
     owner,
     repo,
     message: getCommitMessage(releasedRepo, tagName),
     tree: newTree.data.sha,
-    parents: [newBranchRef.data.object.sha],
+    parents: [startingCommitSha],
+  })
+
+  await octokit.rest.git.updateRef({
+    owner,
+    repo,
+    force: true,
+    sha: commit.data.sha,
+    ref: `refs/heads/${newBranch}`,
   })
 
   const pullRequestData = await octokit.rest.pulls.create({
