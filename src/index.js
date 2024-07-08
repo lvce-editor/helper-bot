@@ -181,7 +181,7 @@ const getNewRenderWorkerPackageFiles = async (oldPackageJson, newVersion) => {
 
 /**
  *
- * @param {{baseBranch:string, newBranch:string, octokit:any, owner:string, repo:string, commitableFiles:any[], commitMessage:string, pullRequestTitle:string }} param0
+ * @param {{baseBranch:string, newBranch:string, octokit:import('probot').Context<"release">['octokit'], owner:string, repo:string, commitableFiles:any[], commitMessage:string, pullRequestTitle:string }} param0
  */
 const createPullRequest = async ({
   baseBranch,
