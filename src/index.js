@@ -145,13 +145,18 @@ const getNewRendererWorkerPackageJson = (oldPackageJson, newVersion) => {
 /**
  *
  * @param {any} oldPackageJson
+ * @param {string} dependencyName
  * @param {string} newVersion
  * @returns
  */
-const getNewRenderWorkerPackageFiles = async (oldPackageJson, newVersion) => {
-  const tmpFolder = join(tmpdir(), 'renderer-process-release')
+const getNewPackageFiles = async (
+  oldPackageJson,
+  dependencyName,
+  newVersion,
+) => {
+  const tmpFolder = join(tmpdir(), `update-dependencies-${dependencyName}-tmp`)
   try {
-    oldPackageJson.dependencies['@lvce-editor/renderer-process'] =
+    oldPackageJson.dependencies[`@lvce-editor/${dependencyName}`] =
       `^${newVersion}`
     const oldPackageJsonStringified =
       JSON.stringify(oldPackageJson, null, 2) + '\n'
@@ -170,7 +175,7 @@ const getNewRenderWorkerPackageFiles = async (oldPackageJson, newVersion) => {
       newPackageLockJsonString,
     }
   } catch (error) {
-    throw new Error(`Failed to update renderer-process: ${error}`)
+    throw new Error(`Failed to update dependencies: ${error}`)
   } finally {
     await rm(tmpFolder, {
       recursive: true,
@@ -311,7 +316,7 @@ const updateDependencies = async (context, config) => {
     return
   }
   const { newPackageJsonString, newPackageLockJsonString } =
-    await getNewRenderWorkerPackageFiles(filesJsonValue, version)
+    await getNewPackageFiles(filesJsonValue, config.fromRepo, version)
 
   /**
    * @type {'100644'}
