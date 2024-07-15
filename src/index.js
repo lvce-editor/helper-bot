@@ -364,10 +364,22 @@ const updateRendererProcessVersion = async (context) => {
 /**
  * @param {import('probot').Context<"release">} context
  */
+const updateVirtualDomVersion = async (context) => {
+  await updateDependencies(context, {
+    fromRepo: 'virtual-dom',
+    toRepo: 'renderer-process',
+    toFolder: '',
+  })
+}
+
+/**
+ * @param {import('probot').Context<"release">} context
+ */
 const handleReleaseReleased = async (context) => {
   await Promise.all([
     updateBuiltinExtensions(context),
     updateRendererProcessVersion(context),
+    updateVirtualDomVersion(context),
   ])
 }
 
