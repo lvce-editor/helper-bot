@@ -247,23 +247,37 @@ const createPullRequest = async ({
 }
 
 /**
- * @param {import('probot').Context<"release">} context
+ *
+ * @param {string} parentFolder
+ * @param {string} childPath
+ * @returns
  */
-const updateRendererProcessVersion = async (context) => {
+const quickJoin = (parentFolder, childPath) => {
+  if (!parentFolder) {
+    return childPath
+  }
+  return parentFolder + '/' + childPath
+}
+
+/**
+ * @param {import('probot').Context<"release">} context
+ * @param {any} config
+ */
+const updateDependencies = async (context, config) => {
   const { payload, octokit } = context
   const tagName = payload.release.tag_name
   const owner = payload.repository.owner.login
   const releasedRepo = payload.repository.name
-  if (releasedRepo !== 'renderer-process') {
+  if (releasedRepo !== config.fromRepo) {
     return
   }
-  const packageJsonPath = 'packages/renderer-worker/package.json'
-  const packageLockJsonPath = 'packages/renderer-worker/package-lock.json'
+  const packageJsonPath = quickJoin(config.toFolder, 'package.json')
+  const packageLockJsonPath = quickJoin(config.toFolder, 'package-lock.json')
   const version = tagName.replace('v', '')
 
   const newBranch = `update-version/${releasedRepo}-${tagName}`
   const baseBranch = 'main'
-  const repo = 'lvce-editor'
+  const repo = config.toRepo
 
   const packageJsonRef = await context.octokit.rest.repos.getContent({
     owner,
@@ -334,6 +348,17 @@ const updateRendererProcessVersion = async (context) => {
     repo,
   })
   await enableAutoSquash(octokit, pullRequestData)
+}
+
+/**
+ * @param {import('probot').Context<"release">} context
+ */
+const updateRendererProcessVersion = async (context) => {
+  await updateDependencies(context, {
+    fromRepo: 'renderer-process',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  })
 }
 
 /**
