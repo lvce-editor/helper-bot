@@ -1,4 +1,4 @@
-FROM node:22.3.0
+FROM node:22.5.0
 WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
 RUN npm ci --production
