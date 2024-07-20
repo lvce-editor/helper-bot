@@ -325,8 +325,16 @@ const updateDependencies = async (context, config) => {
   const filesJsonDecoded = Buffer.from(filesJsonBase64, 'base64').toString()
   const filesJsonValue = JSON.parse(filesJsonDecoded)
   console.log({ filesJsonValue })
-  const oldVersion =
-    filesJsonValue.dependencies[`@lvce-editor/${releasedRepo}`].slice(1)
+  const dependencyName = `@lvce-editor/${releasedRepo}`
+  const oldDependency =
+    filesJsonValue.dependencies[dependencyName] ||
+    filesJsonValue.optionalDependencies[dependencyName]
+  if (!oldDependency) {
+    throw new Error(
+      `dependency ${dependencyName} not found in ${packageJsonPath}`,
+    )
+  }
+  const oldVersion = oldDependency.slice(1)
 
   console.log({ oldVersion })
   if (oldVersion === version) {
