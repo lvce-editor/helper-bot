@@ -2,6 +2,24 @@ const { mkdir, writeFile, readFile, rm } = require('node:fs/promises')
 const { tmpdir } = require('node:os')
 const { join } = require('node:path')
 
+const dependencies = [
+  {
+    fromRepo: 'renderer-process',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
+    fromRepo: 'virtual-dom',
+    toRepo: 'renderer-process',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'network-process',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/shared-process',
+  },
+]
+
 /**
  *
  * @param {any[]} value
@@ -358,23 +376,12 @@ const updateDependencies = async (context, config) => {
 /**
  * @param {import('probot').Context<"release">} context
  */
-const updateRendererProcessVersion = async (context) => {
-  await updateDependencies(context, {
-    fromRepo: 'renderer-process',
-    toRepo: 'lvce-editor',
-    toFolder: 'packages/renderer-worker',
-  })
-}
-
-/**
- * @param {import('probot').Context<"release">} context
- */
-const updateVirtualDomVersion = async (context) => {
-  await updateDependencies(context, {
-    fromRepo: 'virtual-dom',
-    toRepo: 'renderer-process',
-    toFolder: '',
-  })
+const updateRepositoryDependencies = async (context) => {
+  await Promise.all(
+    dependencies.map((dependency) => {
+      return updateDependencies(context, dependency)
+    }),
+  )
 }
 
 /**
@@ -383,8 +390,7 @@ const updateVirtualDomVersion = async (context) => {
 const handleReleaseReleased = async (context) => {
   await Promise.all([
     updateBuiltinExtensions(context),
-    updateRendererProcessVersion(context),
-    updateVirtualDomVersion(context),
+    updateRepositoryDependencies(context),
   ])
 }
 
