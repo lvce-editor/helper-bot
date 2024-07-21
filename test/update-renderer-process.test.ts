@@ -45,6 +45,9 @@ jest.mock('node:os', () => {
     tmpdir() {
       return '/test'
     },
+    hostname() {
+      return 'localhost'
+    },
   }
 })
 
