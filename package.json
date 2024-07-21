@@ -24,6 +24,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "injectGlobals": false,
     "transform": {
       "^.+\\.(t|j)sx?$": [
         "@swc-node/jest"

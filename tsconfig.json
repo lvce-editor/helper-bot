@@ -4,7 +4,7 @@
     "checkJs": true,
     "module": "CommonJS",
     "target": "ESNext",
-    "types": ["node", "jest"],
+    "types": ["node"],
     "moduleResolution": "node",
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
