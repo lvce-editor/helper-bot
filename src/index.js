@@ -151,18 +151,6 @@ const updateBuiltinExtensions = async (context) => {
 /**
  *
  * @param {any} oldPackageJson
- * @param {string} newVersion
- * @returns
- */
-const getNewRendererWorkerPackageJson = (oldPackageJson, newVersion) => {
-  oldPackageJson.dependencies['@lvce-editor/renderer-process'] =
-    `^${newVersion}`
-  return oldPackageJson
-}
-
-/**
- *
- * @param {any} oldPackageJson
  * @param {string} dependencyKey
  * @param {string} dependencyName
  * @param {string} newVersion
