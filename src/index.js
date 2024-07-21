@@ -163,6 +163,7 @@ const getNewRendererWorkerPackageJson = (oldPackageJson, newVersion) => {
 /**
  *
  * @param {any} oldPackageJson
+ * @param {string} dependencyKey
  * @param {string} dependencyName
  * @param {string} newVersion
  * @returns
@@ -170,11 +171,12 @@ const getNewRendererWorkerPackageJson = (oldPackageJson, newVersion) => {
 const getNewPackageFiles = async (
   oldPackageJson,
   dependencyName,
+  dependencyKey,
   newVersion,
 ) => {
   const tmpFolder = join(tmpdir(), `update-dependencies-${dependencyName}-tmp`)
   try {
-    oldPackageJson.dependencies[`@lvce-editor/${dependencyName}`] =
+    oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
       `^${newVersion}`
     const oldPackageJsonStringified =
       JSON.stringify(oldPackageJson, null, 2) + '\n'
@@ -326,10 +328,15 @@ const updateDependencies = async (context, config) => {
   const filesJsonValue = JSON.parse(filesJsonDecoded)
   console.log({ filesJsonValue })
   const dependencyName = `@lvce-editor/${releasedRepo}`
-  const oldDependency =
-    filesJsonValue.dependencies[dependencyName] ||
-    filesJsonValue.optionalDependencies[dependencyName]
-  if (!oldDependency) {
+  let dependencyKey = ''
+  let oldDependency = ''
+  if (filesJsonValue.dependencies[dependencyName]) {
+    dependencyKey = 'dependencies'
+    oldDependency = filesJsonValue.dependencies[dependencyName]
+  } else if (filesJsonValue.optionalDependencies[dependencyName]) {
+    dependencyKey = 'optionalDependencies'
+    oldDependency = filesJsonValue.optionalDependencies[dependencyName]
+  } else {
     throw new Error(
       `dependency ${dependencyName} not found in ${packageJsonPath}`,
     )
@@ -342,7 +349,12 @@ const updateDependencies = async (context, config) => {
     return
   }
   const { newPackageJsonString, newPackageLockJsonString } =
-    await getNewPackageFiles(filesJsonValue, config.fromRepo, version)
+    await getNewPackageFiles(
+      filesJsonValue,
+      config.fromRepo,
+      dependencyKey,
+      version,
+    )
 
   /**
    * @type {'100644'}
