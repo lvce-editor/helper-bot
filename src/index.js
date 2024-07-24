@@ -9,6 +9,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'test-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'virtual-dom',
     toRepo: 'renderer-process',
     toFolder: '',
