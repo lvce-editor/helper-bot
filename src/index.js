@@ -24,6 +24,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'json-rpc',
+    toRepo: 'editor-worker',
+    toFolder: '',
+  },
+  {
     fromRepo: 'network-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/shared-process',
@@ -341,6 +346,9 @@ const updateDependencies = async (context, config) => {
   if (filesJsonValue.dependencies[dependencyName]) {
     dependencyKey = 'dependencies'
     oldDependency = filesJsonValue.dependencies[dependencyName]
+  } else if (filesJsonValue.devDependencies[dependencyName]) {
+    dependencyKey = 'devDependencies'
+    oldDependency = filesJsonValue.devDependencies[dependencyName]
   } else if (filesJsonValue.optionalDependencies[dependencyName]) {
     dependencyKey = 'optionalDependencies'
     oldDependency = filesJsonValue.optionalDependencies[dependencyName]
