@@ -44,6 +44,11 @@ const dependencies = [
     toFolder: 'packages/shared-process',
   },
   {
+    fromRepo: 'pty-host',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/shared-process',
+  },
+  {
     fromRepo: 'preload',
     toRepo: 'lvce-editor',
     toFolder: 'packages/shared-process',
