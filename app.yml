@@ -8,5 +8,5 @@ default_permissions:
 
 name: Lvce Editor Helper Bot
 url: https://github.com/lvce-editor/helper-bot
-description: GitHub App to automaticlly update lvce editor extensions to latest versions.
+description: GitHub App to automatically update lvce editor extensions to latest versions.
 public: false
