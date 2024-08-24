@@ -29,6 +29,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'ipc',
+    toRepo: 'renderer-process',
+    toFolder: '',
+  },
+  {
     fromRepo: 'json-rpc',
     toRepo: 'editor-worker',
     toFolder: '',
