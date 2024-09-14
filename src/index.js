@@ -34,6 +34,21 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'ipc',
+    toRepo: 'editor-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'ipc',
+    toRepo: 'syntax-highlighting-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'ipc',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/main-process',
+  },
+  {
     fromRepo: 'json-rpc',
     toRepo: 'editor-worker',
     toFolder: '',
