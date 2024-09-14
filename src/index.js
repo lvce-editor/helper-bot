@@ -19,6 +19,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'diff-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'syntax-highlighting-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
