@@ -59,6 +59,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'json-rpc',
+    toRepo: 'renderer-process',
+    toFolder: '',
+  },
+  {
     fromRepo: 'network-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/shared-process',
