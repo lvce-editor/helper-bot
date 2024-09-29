@@ -1,6 +1,6 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+const { mkdir, readFile, rm, writeFile } = require('fs/promises')
+const { tmpdir } = require('node:os')
+const { join } = require('node:path')
 
 const dependencies = [
   {
