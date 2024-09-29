@@ -3,6 +3,7 @@
   "version": "0.0.0-dev",
   "description": "GitHub App to automaticlly update lvce editor extensions to latest versions.",
   "author": "Lvce Editor",
+  "type": "commonjs",
   "license": "MIT",
   "scripts": {
     "start": "probot run ./src/index.js",

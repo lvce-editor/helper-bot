@@ -16,7 +16,8 @@ beforeEach(() => {
       throttle: { enabled: false },
     }),
   })
-  probot.load(myProbotApp.default)
+  // @ts-ignore
+  probot.load(myProbotApp.default || myProbotApp)
 })
 
 afterEach(() => {

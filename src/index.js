@@ -484,6 +484,6 @@ const handleReleaseReleased = async (context) => {
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-export default (app) => {
+module.exports = (app) => {
   app.on('release.released', handleReleaseReleased)
 }
