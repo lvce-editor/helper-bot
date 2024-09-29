@@ -4,6 +4,7 @@
   "description": "GitHub App to automaticlly update lvce editor extensions to latest versions.",
   "author": "Lvce Editor",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "start": "probot run ./src/index.js",
     "test": "jest",
@@ -11,7 +12,7 @@
   },
   "dependencies": {
     "execa": "^9.4.0",
-    "probot": "^12.4.0"
+    "probot": "^13.3.8"
   },
   "devDependencies": {
     "@swc-node/jest": "^1.8.12",
