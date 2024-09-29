@@ -16,7 +16,7 @@ beforeEach(() => {
       throttle: { enabled: false },
     }),
   })
-  probot.load(myProbotApp)
+  probot.load(myProbotApp.default)
 })
 
 afterEach(() => {

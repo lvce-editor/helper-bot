@@ -1,6 +1,6 @@
-const { mkdir, writeFile, readFile, rm } = require('node:fs/promises')
-const { tmpdir } = require('node:os')
-const { join } = require('node:path')
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 const dependencies = [
   {
@@ -479,6 +479,6 @@ const handleReleaseReleased = async (context) => {
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-module.exports = (app) => {
+export default (app) => {
   app.on('release.released', handleReleaseReleased)
 }
