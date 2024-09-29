@@ -1,4 +1,4 @@
-const { mkdir, readFile, rm, writeFile } = require('fs/promises')
+const { mkdir, readFile, rm, writeFile } = require('node:fs/promises')
 const { tmpdir } = require('node:os')
 const { join } = require('node:path')
 
