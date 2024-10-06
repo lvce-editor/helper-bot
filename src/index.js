@@ -59,6 +59,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'ripgrep',
+    toRepo: 'search-process',
+    toFolder: '',
+  },
+  {
     fromRepo: 'ipc',
     toRepo: 'lvce-editor',
     toFolder: 'packages/main-process',
