@@ -39,6 +39,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'file-search-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'virtual-dom',
     toRepo: 'renderer-process',
     toFolder: '',
@@ -71,6 +76,11 @@ const dependencies = [
   {
     fromRepo: 'json-rpc',
     toRepo: 'editor-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'command',
+    toRepo: 'file-search-worker',
     toFolder: '',
   },
   {
