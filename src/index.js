@@ -266,7 +266,7 @@ const getNewPackageFiles = async (
     await mkdir(tmpFolder, { recursive: true })
     await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
     const { execa } = await import('execa')
-    await execa(`npm`, ['install'], {
+    await execa(`npm`, ['install', '--prefer-online'], {
       cwd: tmpFolder,
     })
     const newPackageLockJsonString = await readFile(
