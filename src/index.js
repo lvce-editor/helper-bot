@@ -89,6 +89,26 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'json-rpc',
+    toRepo: 'preview-process',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'json-rpc',
+    toRepo: 'test-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'json-rpc',
+    toRepo: 'syntax-highlighting-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'json-rpc',
+    toRepo: 'iframe-worker',
+    toFolder: '',
+  },
+  {
     fromRepo: 'network-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/shared-process',
