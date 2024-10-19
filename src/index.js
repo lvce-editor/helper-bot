@@ -49,6 +49,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'text-search-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'virtual-dom',
     toRepo: 'renderer-process',
     toFolder: '',
