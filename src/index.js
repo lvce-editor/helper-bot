@@ -24,6 +24,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'keybindings-view',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'iframe-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
