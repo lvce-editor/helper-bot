@@ -44,6 +44,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'about-view-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'file-search-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
