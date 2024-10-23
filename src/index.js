@@ -540,7 +540,7 @@ const handleReleaseReleased = async (context) => {
  * @returns
  */
 const enableCustomRoutes = (getRouter) => {
-  if (!getRouter) {
+  if (!getRouter || typeof getRouter !== 'function') {
     return
   }
   const router = getRouter('/my-app')
