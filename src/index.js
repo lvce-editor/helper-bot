@@ -538,7 +538,18 @@ const handleReleaseReleased = async (context) => {
 /**
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
+ * @param {*} getRouter
  */
-module.exports = (app) => {
+module.exports = (app, getRouter) => {
+  const router = getRouter('/my-app')
+  /**
+   *
+   * @param {*} req
+   * @param {*} res
+   */
+  const handleHelloWorld = (req, res) => {
+    res.send('Hello World')
+  }
+  router.get('/hello-world', handleHelloWorld)
   app.on('release.released', handleReleaseReleased)
 }
