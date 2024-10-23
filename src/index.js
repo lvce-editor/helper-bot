@@ -536,9 +536,31 @@ const handleReleaseReleased = async (context) => {
 }
 
 /**
+ * @param {*} getRouter
+ * @returns
+ */
+const enableCustomRoutes = (getRouter) => {
+  if (!getRouter || typeof getRouter !== 'function') {
+    return
+  }
+  const router = getRouter('/my-app')
+  /**
+   *
+   * @param {*} req
+   * @param {*} res
+   */
+  const handleHelloWorld = (req, res) => {
+    res.send('Hello World')
+  }
+  router.get('/hello-world', handleHelloWorld)
+}
+
+/**
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
+ * @param {*} getRouter
  */
-module.exports = (app) => {
+module.exports = (app, getRouter) => {
+  enableCustomRoutes(getRouter)
   app.on('release.released', handleReleaseReleased)
 }
