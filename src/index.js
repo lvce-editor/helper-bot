@@ -298,6 +298,10 @@ const getNewPackageFiles = async (
   newVersion,
 ) => {
   const tmpFolder = join(tmpdir(), `update-dependencies-${dependencyName}-tmp`)
+  const tmpCacheFolder = join(
+    tmpdir(),
+    `update-dependencies-${dependencyName}-tmp-cache`,
+  )
   try {
     oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
       `^${newVersion}`
@@ -306,9 +310,13 @@ const getNewPackageFiles = async (
     await mkdir(tmpFolder, { recursive: true })
     await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
     const { execa } = await import('execa')
-    await execa(`npm`, ['install', '--prefer-online'], {
-      cwd: tmpFolder,
-    })
+    await execa(
+      `npm`,
+      ['install', '--prefer-online', '--cache', tmpCacheFolder],
+      {
+        cwd: tmpFolder,
+      },
+    )
     const newPackageLockJsonString = await readFile(
       join(tmpFolder, 'package-lock.json'),
       'utf8',
