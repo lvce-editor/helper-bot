@@ -302,10 +302,10 @@ const getNewPackageFiles = async (
   dependencyKey,
   newVersion,
 ) => {
-  const tmpFolder = join(tmpdir(), `update-dependencies-${dependencyName}-tmp`)
+  const tmpFolder = join(tmpdir(), `update-dependencies-${dependencyName}-${newVersion}-tmp`)
   const tmpCacheFolder = join(
     tmpdir(),
-    `update-dependencies-${dependencyName}-tmp-cache`,
+    `update-dependencies-${dependencyName}-${newVersion}-tmp-cache`,
   )
   try {
     oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
