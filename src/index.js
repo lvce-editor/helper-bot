@@ -90,6 +90,11 @@ const dependencies = [
   },
   {
     fromRepo: 'rpc',
+    toRepo: 'iframe-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
     toRepo: 'about-view',
     toFolder: '',
   },
