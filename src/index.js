@@ -80,6 +80,11 @@ const dependencies = [
   },
   {
     fromRepo: 'ipc',
+    toRepo: 'rpc',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'ipc',
     toRepo: 'editor-worker',
     toFolder: '',
   },
