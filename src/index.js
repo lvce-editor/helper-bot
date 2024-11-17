@@ -101,7 +101,7 @@ const dependencies = [
   {
     fromRepo: 'rpc',
     toRepo: 'text-search-worker',
-    toFolder: '',
+    toFolder: 'packages/text-search-worker',
   },
   {
     fromRepo: 'ipc',
