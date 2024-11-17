@@ -84,6 +84,26 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'rpc',
+    toRepo: 'test-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'about-view',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'file-search-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'text-search-worker',
+    toFolder: '',
+  },
+  {
     fromRepo: 'ipc',
     toRepo: 'editor-worker',
     toFolder: '',
