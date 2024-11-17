@@ -427,6 +427,38 @@ const quickJoin = (parentFolder, childPath) => {
 
 /**
  * @param {import('probot').Context<"release">} context
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} packageJsonPath
+ * @param {string} packageLockJsonPath
+ */
+const getPackageRefs = async (
+  context,
+  owner,
+  repo,
+  packageJsonPath,
+  packageLockJsonPath,
+) => {
+  const [packageJsonRef, packageLockJsonRef] = await Promise.all([
+    context.octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: packageJsonPath,
+    }),
+    context.octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: packageLockJsonPath,
+    }),
+  ])
+  return {
+    packageJsonRef,
+    packageLockJsonRef,
+  }
+}
+
+/**
+ * @param {import('probot').Context<"release">} context
  * @param {any} config
  */
 const updateDependencies = async (context, config) => {
@@ -445,16 +477,13 @@ const updateDependencies = async (context, config) => {
   const baseBranch = 'main'
   const repo = config.toRepo
 
-  const packageJsonRef = await context.octokit.rest.repos.getContent({
+  const { packageJsonRef, packageLockJsonRef } = await getPackageRefs(
+    context,
     owner,
     repo,
-    path: packageJsonPath,
-  })
-  const packageLockJsonRef = await context.octokit.rest.repos.getContent({
-    owner,
-    repo,
-    path: packageLockJsonPath,
-  })
+    packageJsonPath,
+    packageLockJsonPath,
+  )
 
   if (
     !('content' in packageJsonRef.data) ||
