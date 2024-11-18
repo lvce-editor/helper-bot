@@ -209,6 +209,22 @@ const getNewValue = (value, repoName, version) => {
   })
 }
 
+const shortCommitMessageRepos = [
+  'renderer-process',
+  'editor-worker',
+  'text-search-worker',
+  'file-search-worker',
+]
+
+/**
+ *
+ * @param {string} releasedRepo
+ * @returns {boolean}
+ */
+const shouldUseShortCommitMessage = (releasedRepo) => {
+  return shortCommitMessageRepos.includes(releasedRepo)
+}
+
 /**
  *
  * @param {string} releasedRepo
@@ -216,7 +232,7 @@ const getNewValue = (value, repoName, version) => {
  * @returns {string}
  */
 const getCommitMessage = (releasedRepo, tagName) => {
-  if (releasedRepo === 'renderer-process') {
+  if (shouldUseShortCommitMessage(releasedRepo)) {
     return `feature: update ${releasedRepo} to version ${tagName}`
   }
   if (
