@@ -215,6 +215,7 @@ const shortCommitMessageRepos = [
   'text-search-worker',
   'file-search-worker',
   'virtual-dom',
+  'iframe-worker',
 ]
 
 /**
