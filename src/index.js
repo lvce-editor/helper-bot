@@ -80,6 +80,36 @@ const dependencies = [
   },
   {
     fromRepo: 'ipc',
+    toRepo: 'rpc',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'test-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'iframe-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'about-view',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'file-search-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'text-search-worker',
+    toFolder: 'packages/text-search-worker',
+  },
+  {
+    fromRepo: 'ipc',
     toRepo: 'editor-worker',
     toFolder: '',
   },
@@ -179,6 +209,24 @@ const getNewValue = (value, repoName, version) => {
   })
 }
 
+const shortCommitMessageRepos = [
+  'renderer-process',
+  'editor-worker',
+  'text-search-worker',
+  'file-search-worker',
+  'virtual-dom',
+  'iframe-worker',
+]
+
+/**
+ *
+ * @param {string} releasedRepo
+ * @returns {boolean}
+ */
+const shouldUseShortCommitMessage = (releasedRepo) => {
+  return shortCommitMessageRepos.includes(releasedRepo)
+}
+
 /**
  *
  * @param {string} releasedRepo
@@ -186,7 +234,7 @@ const getNewValue = (value, repoName, version) => {
  * @returns {string}
  */
 const getCommitMessage = (releasedRepo, tagName) => {
-  if (releasedRepo === 'renderer-process') {
+  if (shouldUseShortCommitMessage(releasedRepo)) {
     return `feature: update ${releasedRepo} to version ${tagName}`
   }
   if (
@@ -422,6 +470,38 @@ const quickJoin = (parentFolder, childPath) => {
 
 /**
  * @param {import('probot').Context<"release">} context
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} packageJsonPath
+ * @param {string} packageLockJsonPath
+ */
+const getPackageRefs = async (
+  context,
+  owner,
+  repo,
+  packageJsonPath,
+  packageLockJsonPath,
+) => {
+  const [packageJsonRef, packageLockJsonRef] = await Promise.all([
+    context.octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: packageJsonPath,
+    }),
+    context.octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: packageLockJsonPath,
+    }),
+  ])
+  return {
+    packageJsonRef,
+    packageLockJsonRef,
+  }
+}
+
+/**
+ * @param {import('probot').Context<"release">} context
  * @param {any} config
  */
 const updateDependencies = async (context, config) => {
@@ -440,16 +520,13 @@ const updateDependencies = async (context, config) => {
   const baseBranch = 'main'
   const repo = config.toRepo
 
-  const packageJsonRef = await context.octokit.rest.repos.getContent({
+  const { packageJsonRef, packageLockJsonRef } = await getPackageRefs(
+    context,
     owner,
     repo,
-    path: packageJsonPath,
-  })
-  const packageLockJsonRef = await context.octokit.rest.repos.getContent({
-    owner,
-    repo,
-    path: packageLockJsonPath,
-  })
+    packageJsonPath,
+    packageLockJsonPath,
+  )
 
   if (
     !('content' in packageJsonRef.data) ||
