@@ -225,10 +225,13 @@ test('creates a pull request to update versions when a release is created', asyn
   })
   expect(mock.pendingMocks()).toEqual([])
   expect(fs.rm).toHaveBeenCalledTimes(2)
-  const testPath = join('/test', 'update-dependencies-renderer-process-tmp')
+  const testPath = join(
+    '/test',
+    'update-dependencies-renderer-process-2.4.0-tmp',
+  )
   const testCachePath = join(
     '/test',
-    'update-dependencies-renderer-process-tmp-cache',
+    'update-dependencies-renderer-process-2.4.0-tmp-cache',
   )
   expect(fs.rm).toHaveBeenNthCalledWith(1, testPath, {
     force: true,
