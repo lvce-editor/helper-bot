@@ -355,6 +355,7 @@ const getNewPackageFiles = async (
     tmpdir(),
     `update-dependencies-${dependencyName}-${newVersion}-tmp-cache`,
   )
+  const toRemove = [tmpFolder, tmpCacheFolder]
   try {
     oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
       `^${newVersion}`
@@ -381,10 +382,12 @@ const getNewPackageFiles = async (
   } catch (error) {
     throw new Error(`Failed to update dependencies: ${error}`)
   } finally {
-    await rm(tmpFolder, {
-      recursive: true,
-      force: true,
-    })
+    for (const folder of toRemove) {
+      await rm(folder, {
+        recursive: true,
+        force: true,
+      })
+    }
   }
 }
 

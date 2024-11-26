@@ -224,9 +224,17 @@ test('creates a pull request to update versions when a release is created', asyn
     },
   })
   expect(mock.pendingMocks()).toEqual([])
-  expect(fs.rm).toHaveBeenCalledTimes(1)
+  expect(fs.rm).toHaveBeenCalledTimes(2)
   const testPath = join('/test', 'update-dependencies-renderer-process-tmp')
-  expect(fs.rm).toHaveBeenCalledWith(testPath, {
+  const testCachePath = join(
+    '/test',
+    'update-dependencies-renderer-process-tmp-cache',
+  )
+  expect(fs.rm).toHaveBeenNthCalledWith(1, testPath, {
+    force: true,
+    recursive: true,
+  })
+  expect(fs.rm).toHaveBeenNthCalledWith(2, testCachePath, {
     force: true,
     recursive: true,
   })
