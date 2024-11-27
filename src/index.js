@@ -14,6 +14,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'explorer-view',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'editor-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
@@ -350,7 +355,10 @@ const getNewPackageFiles = async (
   dependencyKey,
   newVersion,
 ) => {
-  const tmpFolder = join(tmpdir(), `update-dependencies-${dependencyName}-${newVersion}-tmp`)
+  const tmpFolder = join(
+    tmpdir(),
+    `update-dependencies-${dependencyName}-${newVersion}-tmp`,
+  )
   const tmpCacheFolder = join(
     tmpdir(),
     `update-dependencies-${dependencyName}-${newVersion}-tmp-cache`,
