@@ -564,9 +564,10 @@ const updateDependencies = async (context, config) => {
     dependencyKey = 'optionalDependencies'
     oldDependency = filesJsonValue.optionalDependencies[dependencyName]
   } else {
-    throw new Error(
-      `dependency ${dependencyName} not found in ${packageJsonPath}`,
+    console.warn(
+      `dependency ${dependencyName} not found in ${packageJsonPath} of ${repo}`,
     )
+    return
   }
   const oldVersion = oldDependency.slice(1)
 
