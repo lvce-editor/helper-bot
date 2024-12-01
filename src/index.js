@@ -554,13 +554,22 @@ const updateDependencies = async (context, config) => {
   const dependencyName = `@lvce-editor/${releasedRepo}`
   let dependencyKey = ''
   let oldDependency = ''
-  if (filesJsonValue.dependencies[dependencyName]) {
+  if (
+    filesJsonValue.dependencies &&
+    filesJsonValue.dependencies[dependencyName]
+  ) {
     dependencyKey = 'dependencies'
     oldDependency = filesJsonValue.dependencies[dependencyName]
-  } else if (filesJsonValue.devDependencies[dependencyName]) {
+  } else if (
+    filesJsonValue.devDependencies &&
+    filesJsonValue.devDependencies[dependencyName]
+  ) {
     dependencyKey = 'devDependencies'
     oldDependency = filesJsonValue.devDependencies[dependencyName]
-  } else if (filesJsonValue.optionalDependencies[dependencyName]) {
+  } else if (
+    filesJsonValue.optionalDependencies &&
+    filesJsonValue.optionalDependencies[dependencyName]
+  ) {
     dependencyKey = 'optionalDependencies'
     oldDependency = filesJsonValue.optionalDependencies[dependencyName]
   } else {
