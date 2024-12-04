@@ -355,13 +355,14 @@ const getNewPackageFiles = async (
   dependencyKey,
   newVersion,
 ) => {
+  const name = oldPackageJson.name
   const tmpFolder = join(
     tmpdir(),
-    `update-dependencies-${dependencyName}-${newVersion}-tmp`,
+    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
   )
   const tmpCacheFolder = join(
     tmpdir(),
-    `update-dependencies-${dependencyName}-${newVersion}-tmp-cache`,
+    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`,
   )
   const toRemove = [tmpFolder, tmpCacheFolder]
   try {
