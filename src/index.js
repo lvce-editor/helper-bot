@@ -94,6 +94,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'json-rpc',
+    toRepo: 'rpc',
+    toFolder: '',
+  },
+  {
     fromRepo: 'rpc',
     toRepo: 'test-worker',
     toFolder: '',
