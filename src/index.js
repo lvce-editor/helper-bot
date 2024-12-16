@@ -124,6 +124,11 @@ const dependencies = [
     toFolder: 'packages/text-search-worker',
   },
   {
+    fromRepo: 'rpc',
+    toRepo: 'explorer-view',
+    toFolder: 'packages/explorer-view',
+  },
+  {
     fromRepo: 'ipc',
     toRepo: 'editor-worker',
     toFolder: '',
