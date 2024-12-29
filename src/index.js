@@ -105,8 +105,13 @@ const dependencies = [
   },
   {
     fromRepo: 'rpc',
-    toRepo: 'iframe-worker',
+    toRepo: 'typescript-compile-process',
     toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'iframe-worker',
+    toFolder: 'packages/iframe-worker',
   },
   {
     fromRepo: 'rpc',
