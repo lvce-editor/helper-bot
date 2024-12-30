@@ -110,6 +110,16 @@ const dependencies = [
   },
   {
     fromRepo: 'rpc',
+    toRepo: 'extension-host-worker',
+    toFolder: 'packages/extension-host-worker',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'iframe-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc',
     toRepo: 'iframe-worker',
     toFolder: 'packages/iframe-worker',
   },
