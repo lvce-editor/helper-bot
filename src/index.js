@@ -14,6 +14,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'extension-host-sub-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'title-bar-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
