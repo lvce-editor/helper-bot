@@ -62,7 +62,6 @@ const dependencies = [
     fromRepo: 'extension-host-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
-    additionalPackagesToUpdate: ['extension-host-sub-worker'],
   },
   {
     fromRepo: 'syntax-highlighting-worker',
@@ -240,6 +239,7 @@ const dependencies = [
     toFolder: 'packages/shared-process',
   },
 ]
+
 /**
  *
  * @param {any[]} value
@@ -389,28 +389,30 @@ const updateBuiltinExtensions = async (context) => {
 /**
  *
  * @param {any} oldPackageJson
- * @param {any[]} updates
+ * @param {string} dependencyKey
+ * @param {string} dependencyName
  * @param {string} newVersion
  * @returns
  */
-const getNewPackageFiles = async (oldPackageJson, updates, newVersion) => {
+const getNewPackageFiles = async (
+  oldPackageJson,
+  dependencyName,
+  dependencyKey,
+  newVersion,
+) => {
   const name = oldPackageJson.name
-  const first = updates[0]
-  const cacheKey = first.dependencyName.replaceAll('/', '-')
   const tmpFolder = join(
     tmpdir(),
-    `update-dependencies-${name}-${cacheKey}-${newVersion}-tmp`,
+    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
   )
   const tmpCacheFolder = join(
     tmpdir(),
-    `update-dependencies-${name}-${cacheKey}-${newVersion}-tmp-cache`,
+    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`,
   )
   const toRemove = [tmpFolder, tmpCacheFolder]
   try {
-    for (const update of updates) {
-      oldPackageJson[update.dependencyKey][update.dependencyName] =
-        `^${newVersion}`
-    }
+    oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
+      `^${newVersion}`
     const oldPackageJsonStringified =
       JSON.stringify(oldPackageJson, null, 2) + '\n'
     await mkdir(tmpFolder, { recursive: true })
@@ -556,62 +558,6 @@ const getPackageRefs = async (
 }
 
 /**
- *
- * @param {*} filesJsonValue
- * @param {string} dependencyName
- * @param {string} packageJsonPath
- * @param {string} repo
- * @param {string} version
- * @returns
- */
-const getPackageUpdateInfos = (
-  filesJsonValue,
-  dependencyName,
-  packageJsonPath,
-  repo,
-  version,
-) => {
-  let dependencyKey = ''
-  let oldDependency = ''
-  if (
-    filesJsonValue.dependencies &&
-    filesJsonValue.dependencies[dependencyName]
-  ) {
-    dependencyKey = 'dependencies'
-    oldDependency = filesJsonValue.dependencies[dependencyName]
-  } else if (
-    filesJsonValue.devDependencies &&
-    filesJsonValue.devDependencies[dependencyName]
-  ) {
-    dependencyKey = 'devDependencies'
-    oldDependency = filesJsonValue.devDependencies[dependencyName]
-  } else if (
-    filesJsonValue.optionalDependencies &&
-    filesJsonValue.optionalDependencies[dependencyName]
-  ) {
-    dependencyKey = 'optionalDependencies'
-    oldDependency = filesJsonValue.optionalDependencies[dependencyName]
-  } else {
-    console.warn(
-      `dependency ${dependencyName} not found in ${packageJsonPath} of ${repo}`,
-    )
-    return undefined
-  }
-  const oldVersion = oldDependency.slice(1)
-  console.log({ oldVersion })
-  if (oldVersion === version) {
-    console.info('same version')
-    return undefined
-  }
-  return {
-    dependencyName,
-    dependencyKey,
-    oldDependency,
-    oldVersion,
-  }
-}
-
-/**
  * @param {import('probot').Context<"release">} context
  * @param {any} config
  */
@@ -652,35 +598,46 @@ const updateDependencies = async (context, config) => {
   const filesJsonValue = JSON.parse(filesJsonDecoded)
   console.log({ filesJsonValue })
   const dependencyName = `@lvce-editor/${releasedRepo}`
-
-  const additionalPackagesToUpdate = config.additionalPackagesToUpdate || []
-  const updates = [
-    getPackageUpdateInfos(
-      filesJsonValue,
-      dependencyName,
-      packageJsonPath,
-      repo,
-      version,
-    ),
-    // @ts-ignore
-    ...additionalPackagesToUpdate.map((item) =>
-      getPackageUpdateInfos(
-        filesJsonValue,
-        `@lvce-editor/${item}`,
-        packageJsonPath,
-        repo,
-        version,
-      ),
-    ),
-  ].filter(Boolean)
-
-  console.log({ updates })
-  if (updates.length === 0) {
+  let dependencyKey = ''
+  let oldDependency = ''
+  if (
+    filesJsonValue.dependencies &&
+    filesJsonValue.dependencies[dependencyName]
+  ) {
+    dependencyKey = 'dependencies'
+    oldDependency = filesJsonValue.dependencies[dependencyName]
+  } else if (
+    filesJsonValue.devDependencies &&
+    filesJsonValue.devDependencies[dependencyName]
+  ) {
+    dependencyKey = 'devDependencies'
+    oldDependency = filesJsonValue.devDependencies[dependencyName]
+  } else if (
+    filesJsonValue.optionalDependencies &&
+    filesJsonValue.optionalDependencies[dependencyName]
+  ) {
+    dependencyKey = 'optionalDependencies'
+    oldDependency = filesJsonValue.optionalDependencies[dependencyName]
+  } else {
+    console.warn(
+      `dependency ${dependencyName} not found in ${packageJsonPath} of ${repo}`,
+    )
     return
   }
+  const oldVersion = oldDependency.slice(1)
 
+  console.log({ oldVersion })
+  if (oldVersion === version) {
+    console.info('same version')
+    return
+  }
   const { newPackageJsonString, newPackageLockJsonString } =
-    await getNewPackageFiles(filesJsonValue, updates, version)
+    await getNewPackageFiles(
+      filesJsonValue,
+      config.fromRepo,
+      dependencyKey,
+      version,
+    )
 
   /**
    * @type {'100644'}
