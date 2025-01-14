@@ -10,6 +10,11 @@ const dependencies = [
   },
   {
     fromRepo: 'eslint-config',
+    toRepo: 'iframe-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'eslint-config',
     toRepo: 'test-worker',
     toFolder: '',
   },
