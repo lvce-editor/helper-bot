@@ -695,11 +695,13 @@ const updateDependencies = async (context, config) => {
  * @param {import('probot').Context<"release">} context
  */
 const updateRepositoryDependencies = async (context) => {
-  await Promise.all(
-    dependencies.map((dependency) => {
-      return updateDependencies(context, dependency)
-    }),
-  )
+  for (const dependency of dependencies) {
+    try {
+      await updateDependencies(context, dependency)
+    } catch (error) {
+      console.error(error)
+    }
+  }
 }
 
 /**
