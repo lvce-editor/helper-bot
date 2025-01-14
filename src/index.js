@@ -9,6 +9,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'eslint-config',
+    toRepo: 'test-worker',
+    toFolder: '',
+  },
+  {
     fromRepo: 'renderer-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
