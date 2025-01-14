@@ -4,6 +4,11 @@ const { join } = require('node:path')
 
 const dependencies = [
   {
+    fromRepo: 'eslint-config',
+    toRepo: 'text-search-worker',
+    toFolder: '',
+  },
+  {
     fromRepo: 'renderer-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
