@@ -435,7 +435,13 @@ const getNewPackageFiles = async (
     const { execa } = await import('execa')
     await execa(
       `npm`,
-      ['install', '--prefer-online', '--cache', tmpCacheFolder],
+      [
+        'install',
+        '--ignore-scripts',
+        '--prefer-online',
+        '--cache',
+        tmpCacheFolder,
+      ],
       {
         cwd: tmpFolder,
       },
