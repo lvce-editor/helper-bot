@@ -9,6 +9,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'test-worker',
+    toRepo: 'test-with-playwright',
+    toFolder: 'packages/build',
+  },
+  {
     fromRepo: 'eslint-config',
     toRepo: 'iframe-worker',
     toFolder: '',
