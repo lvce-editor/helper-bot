@@ -20,6 +20,11 @@ const dependencies = [
   },
   {
     fromRepo: 'eslint-config',
+    toRepo: 'file-watcher-process',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'eslint-config',
     toRepo: 'test-worker',
     toFolder: '',
   },
