@@ -34,6 +34,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'markdown-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'test-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
