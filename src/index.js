@@ -129,6 +129,11 @@ const dependencies = [
     toFolder: '',
   },
   {
+    fromRepo: 'preview-injected-code',
+    toRepo: 'preview-process',
+    toFolder: 'packages/preview-process',
+  },
+  {
     fromRepo: 'ipc',
     toRepo: 'rpc',
     toFolder: '',
