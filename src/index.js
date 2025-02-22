@@ -236,7 +236,12 @@ const dependencies = [
   {
     fromRepo: 'json-rpc',
     toRepo: 'preview-process',
-    toFolder: '',
+    toFolder: 'packages/preview-process',
+  },
+  {
+    fromRepo: 'preview-injected-code',
+    toRepo: 'preview-process',
+    toFolder: '/packages/preview-process',
   },
   {
     fromRepo: 'json-rpc',
