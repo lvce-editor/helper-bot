@@ -115,6 +115,11 @@ export const handleDependencies =
     try {
       const [owner, repo] = repositoryName.split('/')
 
+      if (owner !== 'lvce-editor') {
+        res.status(400).send('Repository owner must be lvce-editor')
+        return
+      }
+
       // Check if repository exists
       try {
         await octokit.rest.repos.get({
