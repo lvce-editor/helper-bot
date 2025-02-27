@@ -73,8 +73,14 @@ test('creates pull request successfully', async () => {
     graphql: jest.fn().mockResolvedValue({}),
   }
 
+  const app = {
+    auth() {
+      return mockOctokit
+    },
+  }
+
   const handler = handleDependencies({
-    app: mockOctokit as any,
+    app: app as any,
     installationId: 1,
     secret: 'test-secret',
   })
@@ -115,9 +121,14 @@ test('handles repository not found', async () => {
       },
     },
   }
+  const app = {
+    auth() {
+      return mockOctokit
+    },
+  }
 
   const handler = handleDependencies({
-    app: mockOctokit as any,
+    app: app as any,
     installationId: 1,
 
     secret: 'test-secret',
