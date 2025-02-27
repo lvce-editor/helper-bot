@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { handleDependencies } from './dependencies.js'
 
 const dependencies = [
   {
@@ -765,16 +766,24 @@ const handleHelloWorld = (req, res) => {
 }
 
 /**
+ * @param {*} app
  * @param {*} getRouter
  * @returns
  */
-const enableCustomRoutes = (getRouter) => {
+const enableCustomRoutes = (app, getRouter) => {
   if (!getRouter || typeof getRouter !== 'function') {
     return
   }
   const router = getRouter('/my-app')
 
   router.get('/hello-world', handleHelloWorld)
+  router.post(
+    '/update-dependencies',
+    handleDependencies({
+      octokit: app.octokit,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
 }
 
 /**
@@ -783,6 +792,6 @@ const enableCustomRoutes = (getRouter) => {
  * @param {*} getRouter
  */
 export default (app, { getRouter }) => {
-  enableCustomRoutes(getRouter)
+  enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
 }
