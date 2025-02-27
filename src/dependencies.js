@@ -212,7 +212,17 @@ export const handleDependencies =
       try {
         await cloneRepo(owner, repo, tmpFolder)
         await updateDependencies(tmpFolder)
-        await commitAndPush(tmpFolder, branchName, octokit, owner, repo)
+        const hasChanges = await commitAndPush(
+          tmpFolder,
+          branchName,
+          octokit,
+          owner,
+          repo,
+        )
+        if (!hasChanges) {
+          res.status(200).send('No changes to commit')
+          return
+        }
         await createPullRequest(octokit, owner, repo, branchName)
         res.status(200).send('Dependencies update PR created successfully')
       } finally {

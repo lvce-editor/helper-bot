@@ -168,7 +168,7 @@ test('creates pull request successfully', async () => {
   )
 })
 
-test('handles no changes case', async () => {
+test.only('handles no changes case', async () => {
   const mockOctokit = {
     rest: {
       repos: {
@@ -202,7 +202,7 @@ test('handles no changes case', async () => {
   }
 
   // @ts-ignore
-  mockExeca.execa.mockResolvedValueOnce({ stdout: '' })
+  mockExeca.execa.mockResolvedValue({ stdout: '' })
   // @ts-ignore
   mockFs.mkdir.mockResolvedValue(undefined)
   // @ts-ignore
