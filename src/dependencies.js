@@ -38,7 +38,7 @@ const cloneRepo = async (owner, repo, tmpFolder) => {
 
 /**
  * Create a pull request
- * @param {import('@octokit/rest').Octokit} octokit
+ * @param {import('probot').Context<"release">['octokit']} octokit
  * @param {string} owner
  * @param {string} repo
  * @param {string} branchName
@@ -88,62 +88,62 @@ const commitAndPush = async (tmpFolder, branchName) => {
 
 /**
  * Handle the dependencies update
- * @param {import('express').Request} req
- * @param {import('express').Response} res
  * @param {{ octokit: import('probot').Context<"release">['octokit'], secret: string }} params
  */
-const handleDependencies = async (req, res, { octokit, secret }) => {
-  if (!verifySecret(req, res, secret)) {
-    return
-  }
+export const handleDependencies =
+  ({ octokit, secret }) =>
+  /**
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  async (req, res) => {
+    if (!verifySecret(req, res, secret)) {
+      return
+    }
 
-  const repositoryName = req.query.repositoryName
-  if (!repositoryName) {
-    res.status(400).send('Missing repositoryName parameter')
-    return
-  }
+    const repositoryName = req.query.repositoryName
+    if (!repositoryName) {
+      res.status(400).send('Missing repositoryName parameter')
+      return
+    }
 
-  if (typeof repositoryName !== 'string') {
-    res.status(400).send('Invalid repositoryName parameter')
-    return
-  }
+    if (typeof repositoryName !== 'string') {
+      res.status(400).send('Invalid repositoryName parameter')
+      return
+    }
 
-  try {
-    const [owner, repo] = repositoryName.split('/')
-
-    // Check if repository exists
     try {
-      await octokit.rest.repos.get({
-        owner,
-        repo,
-      })
-    } catch (error) {
-      // @ts-ignore
-      if (error.status === 404) {
-        res.status(404).send('Repository not found')
-        return
+      const [owner, repo] = repositoryName.split('/')
+
+      // Check if repository exists
+      try {
+        await octokit.rest.repos.get({
+          owner,
+          repo,
+        })
+      } catch (error) {
+        // @ts-ignore
+        if (error.status === 404) {
+          res.status(404).send('Repository not found')
+          return
+        }
+        throw error
       }
-      throw error
-    }
 
-    const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}`)
-    const branchName = `update-dependencies-${Date.now()}`
+      const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}`)
+      const branchName = `update-dependencies-${Date.now()}`
 
-    try {
-      await cloneRepo(owner, repo, tmpFolder)
-      await updateDependencies(tmpFolder)
-      await commitAndPush(tmpFolder, branchName)
-      await createPullRequest(octokit, owner, repo, branchName)
-      res.status(200).send('Dependencies update PR created successfully')
-    } finally {
-      await rm(tmpFolder, { recursive: true, force: true })
+      try {
+        await cloneRepo(owner, repo, tmpFolder)
+        await updateDependencies(tmpFolder)
+        await commitAndPush(tmpFolder, branchName)
+        await createPullRequest(octokit, owner, repo, branchName)
+        res.status(200).send('Dependencies update PR created successfully')
+      } finally {
+        await rm(tmpFolder, { recursive: true, force: true })
+      }
+    } catch (error) {
+      console.error('Error updating dependencies:', error)
+      res.status(500).send('Internal server error')
     }
-  } catch (error) {
-    console.error('Error updating dependencies:', error)
-    res.status(500).send('Internal server error')
   }
-}
-
-export default {
-  handleDependencies,
-}
