@@ -21,6 +21,7 @@ test('verifies secret correctly', async () => {
   const handler = handleDependencies({
     app: {} as any,
     secret: 'test-secret',
+    installationId: 1,
   })
   const mockReq = {
     query: {
@@ -38,7 +39,8 @@ test('verifies secret correctly', async () => {
 
 test('handles missing repository name', async () => {
   const handler = handleDependencies({
-    octokit: {} as any,
+    app: {} as any,
+    installationId: 1,
     secret: 'test-secret',
   })
   const mockReq = {
@@ -72,7 +74,8 @@ test('creates pull request successfully', async () => {
   }
 
   const handler = handleDependencies({
-    octokit: mockOctokit as any,
+    app: mockOctokit as any,
+    installationId: 1,
     secret: 'test-secret',
   })
 
@@ -114,7 +117,9 @@ test('handles repository not found', async () => {
   }
 
   const handler = handleDependencies({
-    octokit: mockOctokit as any,
+    app: mockOctokit as any,
+    installationId: 1,
+
     secret: 'test-secret',
   })
 
@@ -137,7 +142,8 @@ test('handles repository not found', async () => {
 
 test('handles invalid repository owner', async () => {
   const handler = handleDependencies({
-    octokit: {} as any,
+    app: {} as any,
+    installationId: 1,
     secret: 'test-secret',
   })
   const mockReq = {
