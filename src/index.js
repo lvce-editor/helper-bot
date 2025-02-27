@@ -1,6 +1,6 @@
-const { mkdir, readFile, rm, writeFile } = require('node:fs/promises')
-const { tmpdir } = require('node:os')
-const { join } = require('node:path')
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 const dependencies = [
   {
@@ -782,7 +782,7 @@ const enableCustomRoutes = (getRouter) => {
  * @param {import('probot').Probot} app
  * @param {*} getRouter
  */
-module.exports = (app, { getRouter }) => {
+export default (app, { getRouter }) => {
   enableCustomRoutes(getRouter)
   app.on('release.released', handleReleaseReleased)
 }
