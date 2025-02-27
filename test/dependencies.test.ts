@@ -168,7 +168,7 @@ test('creates pull request successfully', async () => {
   )
 })
 
-test.only('handles no changes case', async () => {
+test('handles no changes case', async () => {
   const mockOctokit = {
     rest: {
       repos: {
