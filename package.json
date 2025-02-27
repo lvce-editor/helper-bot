@@ -7,8 +7,8 @@
   "license": "MIT",
   "scripts": {
     "start": "probot run ./src/index.js",
-    "test": "jest",
-    "test:watch": "node ./node_modules/jest/bin/jest.js --watch"
+    "test": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
+    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
     "execa": "^9.5.2",
@@ -26,12 +26,24 @@
     "typescript": "^5.7.3"
   },
   "jest": {
-    "testEnvironment": "node",
+    "injectGlobals": false,
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
     "transform": {
-      "^.+\\.(t|j)sx?$": [
-        "@swc-node/jest"
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "useESM": true
+        }
       ]
-    }
+    },
+    "testMatch": [
+      "**/test/**"
+    ]
   },
   "prettier": {
     "semi": false,

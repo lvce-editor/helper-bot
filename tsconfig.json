@@ -2,9 +2,9 @@
   "compilerOptions": {
     "lib": ["esnext"],
     "checkJs": true,
-    "module": "CommonJS",
+    "module": "ESNext",
     "target": "ESNext",
-    "types": ["node", "jest"],
+    "types": ["node"],
     "moduleResolution": "node",
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
