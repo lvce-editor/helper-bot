@@ -1,9 +1,39 @@
-import * as nock from 'nock'
+import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
-import * as myProbotApp from '../src/index.js'
 import { join } from 'path'
+import { jest, beforeEach, test, expect, afterEach } from '@jest/globals'
 
 let probot: Probot | undefined
+
+jest.unstable_mockModule('execa', () => {
+  return {
+    execa: jest.fn(),
+  }
+})
+
+jest.unstable_mockModule('node:fs/promises', () => {
+  return {
+    readFile: jest.fn(),
+    writeFile: jest.fn(),
+    mkdir: jest.fn(),
+    rm: jest.fn(),
+  }
+})
+
+jest.unstable_mockModule('node:os', () => {
+  return {
+    tmpdir() {
+      return '/test'
+    },
+    hostname() {
+      return 'localhost'
+    },
+  }
+})
+
+const myProbotApp = await import('../src/index.js')
+const execa = await import('execa')
+const fs = await import('node:fs/promises')
 
 beforeEach(() => {
   nock.disableNetConnect()
@@ -26,43 +56,16 @@ afterEach(() => {
   probot = undefined
 })
 
-jest.mock('execa', () => {
-  return {
-    execa: jest.fn(),
-  }
-})
-
-jest.mock('node:fs/promises', () => {
-  return {
-    readFile: jest.fn(),
-    writeFile: jest.fn(),
-    mkdir: jest.fn(),
-    rm: jest.fn(),
-  }
-})
-
-jest.mock('node:os', () => {
-  return {
-    tmpdir() {
-      return '/test'
-    },
-    hostname() {
-      return 'localhost'
-    },
-  }
-})
-
-const execa = require('execa')
-const fs = require('node:fs/promises')
-
 test('creates a pull request to update versions when a release is created', async () => {
   let packageLockContent = ''
+  // @ts-ignore
   jest.spyOn(fs, 'readFile').mockImplementation((path) => {
     if (typeof path === 'string' && path.endsWith('package-lock.json')) {
       return packageLockContent
     }
     return ''
   })
+  // @ts-ignore
   jest.spyOn(fs, 'writeFile').mockImplementation((path, content) => {
     if (
       typeof path === 'string' &&
@@ -72,6 +75,7 @@ test('creates a pull request to update versions when a release is created', asyn
       packageLockContent = content
     }
   })
+  // @ts-ignore
   jest.spyOn(execa, 'execa').mockImplementation(() => {
     packageLockContent = JSON.stringify({
       name: '@lvce-editor/renderer-worker',
@@ -81,6 +85,7 @@ test('creates a pull request to update versions when a release is created', asyn
       updated: true,
     })
   })
+  // @ts-ignore
   jest.spyOn(fs, 'rm').mockImplementation(() => {})
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
