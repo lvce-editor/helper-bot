@@ -19,7 +19,7 @@ const { handleDependencies } = await import('../src/dependencies.js')
 
 test('verifies secret correctly', async () => {
   const handler = handleDependencies({
-    octokit: {} as any,
+    app: {} as any,
     secret: 'test-secret',
   })
   const mockReq = {

@@ -88,10 +88,10 @@ const commitAndPush = async (tmpFolder, branchName) => {
 
 /**
  * Handle the dependencies update
- * @param {{ octokit: import('probot').Context<"release">['octokit'], secret: string }} params
+ * @param {{ app: import('probot').Probot, secret: string, installationId:number }} params
  */
 export const handleDependencies =
-  ({ octokit, secret }) =>
+  ({ app, secret, installationId }) =>
   /**
    * @param {import('express').Request} req
    * @param {import('express').Response} res
@@ -100,6 +100,8 @@ export const handleDependencies =
     if (!verifySecret(req, res, secret)) {
       return
     }
+
+    const octokit = await app.auth(installationId)
 
     const repositoryName = req.query.repositoryName
     if (!repositoryName) {

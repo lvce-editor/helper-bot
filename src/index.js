@@ -777,12 +777,18 @@ const enableCustomRoutes = async (app, getRouter) => {
   const router = getRouter('/my-app')
 
   router.get('/hello-world', handleHelloWorld)
-  const octokit = await app.auth()
+
+  const installationIdString = process.env.INSTALLATION_ID
+  if (!installationIdString) {
+    throw new Error('installation id not found')
+  }
+  const installationId = parseInt(installationIdString)
 
   router.post(
     '/update-dependencies',
     handleDependencies({
-      octokit,
+      app,
+      installationId,
       secret: process.env.DEPENDENCIES_SECRET,
     }),
   )
