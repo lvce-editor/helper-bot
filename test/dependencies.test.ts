@@ -124,7 +124,13 @@ test('creates pull request successfully', async () => {
   }
 
   // @ts-ignore
-  mockExeca.execa.mockResolvedValueOnce({ stdout: 'M  package.json' })
+  mockExeca.execa.mockImplementation(async (cmd, args) => {
+    // @ts-ignore
+    if (cmd === 'git' && args[0] === 'status') {
+      return { stdout: 'M  package.json' }
+    }
+    return { stdout: '' }
+  })
   // @ts-ignore
   mockFs.readFile.mockResolvedValue('test content')
   // @ts-ignore
