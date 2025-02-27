@@ -766,21 +766,23 @@ const handleHelloWorld = (req, res) => {
 }
 
 /**
- * @param {*} app
+ * @param {import('probot').Probot} app
  * @param {*} getRouter
  * @returns
  */
-const enableCustomRoutes = (app, getRouter) => {
+const enableCustomRoutes = async (app, getRouter) => {
   if (!getRouter || typeof getRouter !== 'function') {
     return
   }
   const router = getRouter('/my-app')
 
   router.get('/hello-world', handleHelloWorld)
+  const octokit = await app.auth()
+
   router.post(
     '/update-dependencies',
     handleDependencies({
-      octokit: app.octokit,
+      octokit,
       secret: process.env.DEPENDENCIES_SECRET,
     }),
   )
