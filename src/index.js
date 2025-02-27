@@ -756,6 +756,15 @@ const handleReleaseReleased = async (context) => {
 }
 
 /**
+ *
+ * @param {*} req
+ * @param {*} res
+ */
+const handleHelloWorld = (req, res) => {
+  res.send('Hello World')
+}
+
+/**
  * @param {*} getRouter
  * @returns
  */
@@ -764,14 +773,7 @@ const enableCustomRoutes = (getRouter) => {
     return
   }
   const router = getRouter('/my-app')
-  /**
-   *
-   * @param {*} req
-   * @param {*} res
-   */
-  const handleHelloWorld = (req, res) => {
-    res.send('Hello World')
-  }
+
   router.get('/hello-world', handleHelloWorld)
 }
 
