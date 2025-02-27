@@ -79,7 +79,7 @@ test('creates pull request successfully', async () => {
   const mockReq = {
     query: {
       secret: 'test-secret',
-      repositoryName: 'owner/repo',
+      repositoryName: 'lvce-editor/repo',
     },
   }
   const mockRes = {
@@ -121,7 +121,7 @@ test('handles repository not found', async () => {
   const mockReq = {
     query: {
       secret: 'test-secret',
-      repositoryName: 'owner/repo',
+      repositoryName: 'lvce-editor/repo',
     },
   }
   const mockRes = {
@@ -133,4 +133,26 @@ test('handles repository not found', async () => {
 
   expect(mockRes.status).toHaveBeenCalledWith(404)
   expect(mockRes.send).toHaveBeenCalledWith('Repository not found')
+})
+
+test('handles invalid repository owner', async () => {
+  const handler = handleDependencies({
+    octokit: {} as any,
+    secret: 'test-secret',
+  })
+  const mockReq = {
+    query: {
+      secret: 'test-secret',
+      repositoryName: 'wrong-owner/repo',
+    },
+  }
+  const mockRes = {
+    status: jest.fn().mockReturnThis(),
+    send: jest.fn(),
+  }
+  await handler(mockReq as any, mockRes as any)
+  expect(mockRes.status).toHaveBeenCalledWith(400)
+  expect(mockRes.send).toHaveBeenCalledWith(
+    'Repository owner must be lvce-editor',
+  )
 })
