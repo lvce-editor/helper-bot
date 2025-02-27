@@ -158,8 +158,14 @@ test('handles repository not found', async () => {
 })
 
 test('handles invalid repository owner', async () => {
+  const mockOctoKit = {}
+  const app = {
+    auth() {
+      return mockOctoKit
+    },
+  }
   const handler = handleDependencies({
-    app: {} as any,
+    app: app as any,
     installationId: 1,
     secret: 'test-secret',
   })
