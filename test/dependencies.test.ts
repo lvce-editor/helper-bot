@@ -19,8 +19,9 @@ const { handleDependencies } = await import('../src/dependencies.js')
 
 test('verifies secret correctly', async () => {
   const handler = handleDependencies({
-    octokit: {} as any,
+    app: {} as any,
     secret: 'test-secret',
+    installationId: 1,
   })
   const mockReq = {
     query: {
@@ -37,8 +38,15 @@ test('verifies secret correctly', async () => {
 })
 
 test('handles missing repository name', async () => {
+  const mockOctoKit = {}
+  const app = {
+    auth() {
+      return mockOctoKit
+    },
+  }
   const handler = handleDependencies({
-    octokit: {} as any,
+    app: app as any,
+    installationId: 1,
     secret: 'test-secret',
   })
   const mockReq = {
@@ -71,8 +79,15 @@ test('creates pull request successfully', async () => {
     graphql: jest.fn().mockResolvedValue({}),
   }
 
+  const app = {
+    auth() {
+      return mockOctokit
+    },
+  }
+
   const handler = handleDependencies({
-    octokit: mockOctokit as any,
+    app: app as any,
+    installationId: 1,
     secret: 'test-secret',
   })
 
@@ -112,9 +127,16 @@ test('handles repository not found', async () => {
       },
     },
   }
+  const app = {
+    auth() {
+      return mockOctokit
+    },
+  }
 
   const handler = handleDependencies({
-    octokit: mockOctokit as any,
+    app: app as any,
+    installationId: 1,
+
     secret: 'test-secret',
   })
 
@@ -136,8 +158,15 @@ test('handles repository not found', async () => {
 })
 
 test('handles invalid repository owner', async () => {
+  const mockOctoKit = {}
+  const app = {
+    auth() {
+      return mockOctoKit
+    },
+  }
   const handler = handleDependencies({
-    octokit: {} as any,
+    app: app as any,
+    installationId: 1,
     secret: 'test-secret',
   })
   const mockReq = {
