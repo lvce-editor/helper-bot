@@ -38,8 +38,14 @@ test('verifies secret correctly', async () => {
 })
 
 test('handles missing repository name', async () => {
+  const mockOctoKit = {}
+  const app = {
+    auth() {
+      return mockOctoKit
+    },
+  }
   const handler = handleDependencies({
-    app: {} as any,
+    app: app as any,
     installationId: 1,
     secret: 'test-secret',
   })
