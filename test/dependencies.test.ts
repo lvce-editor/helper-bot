@@ -121,7 +121,7 @@ test('handles repository not found', async () => {
   const mockReq = {
     query: {
       secret: 'test-secret',
-      repositoryName: 'owner/repo',
+      repositoryName: 'lvce-editor/repo',
     },
   }
   const mockRes = {
