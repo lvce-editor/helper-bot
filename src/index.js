@@ -780,7 +780,7 @@ const enableCustomRoutes = (getRouter) => {
  * @param {import('probot').Probot} app
  * @param {*} getRouter
  */
-module.exports = (app, getRouter) => {
+module.exports = (app, { getRouter }) => {
   enableCustomRoutes(getRouter)
   app.on('release.released', handleReleaseReleased)
 }
