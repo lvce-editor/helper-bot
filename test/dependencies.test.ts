@@ -98,6 +98,8 @@ test('creates pull request successfully', async () => {
       // @ts-ignore
       graphql: jest.fn().mockResolvedValue({}),
     },
+    // @ts-ignore
+    graphql: jest.fn().mockResolvedValue({}),
   }
 
   const app = {
