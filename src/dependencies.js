@@ -1,7 +1,7 @@
 import { mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { execa } from 'execa'
+import { readFile } from 'node:fs/promises'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -29,6 +29,7 @@ const verifySecret = (req, res, secret) => {
  */
 const cloneRepo = async (owner, repo, tmpFolder) => {
   await mkdir(tmpFolder, { recursive: true })
+  const { execa } = await import('execa')
   await execa('git', [
     'clone',
     `https://github.com/${owner}/${repo}.git`,
@@ -67,23 +68,91 @@ const createPullRequest = async (octokit, owner, repo, branchName) => {
  */
 const updateDependencies = async (tmpFolder) => {
   const scriptPath = join(tmpFolder, 'scripts', 'update-dependencies.sh')
+  const { execa } = await import('execa')
   await execa('bash', [scriptPath], {
     cwd: tmpFolder,
   })
 }
 
 /**
+ * @type {'100644'}
+ */
+const modeFile = '100644'
+/**
+ * @type {'blob'}
+ */
+const typeFile = 'blob'
+
+/**
  * Commit and push the changes
  * @param {string} tmpFolder
  * @param {string} branchName
+ * @param {import('probot').Context<"release">['octokit']} octokit
+ * @param {string} owner
+ * @param {string} repo
  */
-const commitAndPush = async (tmpFolder, branchName) => {
-  await execa('git', ['checkout', '-b', branchName], { cwd: tmpFolder })
-  await execa('git', ['add', '.'], { cwd: tmpFolder })
-  await execa('git', ['commit', '-m', 'update dependencies'], {
+const commitAndPush = async (tmpFolder, branchName, octokit, owner, repo) => {
+  const { execa } = await import('execa')
+  const { stdout } = await execa('git', ['status', '--porcelain'], {
     cwd: tmpFolder,
   })
-  await execa('git', ['push', 'origin', branchName], { cwd: tmpFolder })
+
+  if (!stdout) {
+    return false
+  }
+
+  const mainBranchRef = await octokit.rest.git.getRef({
+    owner,
+    repo,
+    ref: 'heads/main',
+  })
+
+  const latestCommit = await octokit.rest.git.getCommit({
+    owner,
+    repo,
+    commit_sha: mainBranchRef.data.object.sha,
+  })
+
+  const changedFiles = stdout
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => line.slice(3))
+
+  const tree = await Promise.all(
+    changedFiles.map(async (file) => {
+      const content = await readFile(join(tmpFolder, file), 'utf8')
+      return {
+        path: file,
+        mode: modeFile,
+        type: typeFile,
+        content,
+      }
+    }),
+  )
+
+  const newTree = await octokit.rest.git.createTree({
+    owner,
+    repo,
+    tree,
+    base_tree: latestCommit.data.sha,
+  })
+
+  const commit = await octokit.rest.git.createCommit({
+    owner,
+    repo,
+    message: 'update dependencies',
+    tree: newTree.data.sha,
+    parents: [latestCommit.data.sha],
+  })
+
+  await octokit.rest.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${branchName}`,
+    sha: commit.data.sha,
+  })
+
+  return true
 }
 
 /**
@@ -143,7 +212,17 @@ export const handleDependencies =
       try {
         await cloneRepo(owner, repo, tmpFolder)
         await updateDependencies(tmpFolder)
-        await commitAndPush(tmpFolder, branchName)
+        const hasChanges = await commitAndPush(
+          tmpFolder,
+          branchName,
+          octokit,
+          owner,
+          repo,
+        )
+        if (!hasChanges) {
+          res.status(200).send('No changes to commit')
+          return
+        }
         await createPullRequest(octokit, owner, repo, branchName)
         res.status(200).send('Dependencies update PR created successfully')
       } finally {

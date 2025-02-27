@@ -7,6 +7,7 @@ const mockExeca = {
 const mockFs = {
   mkdir: jest.fn(),
   rm: jest.fn(),
+  readFile: jest.fn(),
 }
 
 jest.unstable_mockModule('execa', () => mockExeca)
@@ -70,10 +71,32 @@ test('creates pull request successfully', async () => {
         // @ts-ignore
         get: jest.fn().mockResolvedValue({}),
       },
+      git: {
+        // @ts-ignore
+        getRef: jest.fn().mockResolvedValue({
+          data: { object: { sha: 'main-sha' } },
+        }),
+        // @ts-ignore
+        getCommit: jest.fn().mockResolvedValue({
+          data: { sha: 'commit-sha' },
+        }),
+        // @ts-ignore
+        createTree: jest.fn().mockResolvedValue({
+          data: { sha: 'tree-sha' },
+        }),
+        // @ts-ignore
+        createCommit: jest.fn().mockResolvedValue({
+          data: { sha: 'new-commit-sha' },
+        }),
+        // @ts-ignore
+        createRef: jest.fn().mockResolvedValue({}),
+      },
       pulls: {
         // @ts-ignore
         create: jest.fn().mockResolvedValue({ data: { node_id: 'test-id' } }),
       },
+      // @ts-ignore
+      graphql: jest.fn().mockResolvedValue({}),
     },
     // @ts-ignore
     graphql: jest.fn().mockResolvedValue({}),
@@ -101,21 +124,96 @@ test('creates pull request successfully', async () => {
     status: jest.fn().mockReturnThis(),
     send: jest.fn(),
   }
+
   // @ts-ignore
-  mockExeca.execa.mockResolvedValue({} as any)
+  mockExeca.execa.mockImplementation(async (cmd, args) => {
+    // @ts-ignore
+    if (cmd === 'git' && args[0] === 'status') {
+      return { stdout: 'M  package.json' }
+    }
+    return { stdout: '' }
+  })
   // @ts-ignore
-  mockFs.mkdir.mockResolvedValue({} as any)
+  mockFs.readFile.mockResolvedValue('test content')
   // @ts-ignore
-  mockFs.rm.mockResolvedValue({} as any)
+  mockFs.mkdir.mockResolvedValue(undefined)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
 
   await handler(mockReq as any, mockRes as any)
+
+  expect(mockOctokit.rest.git.createTree).toHaveBeenCalledWith({
+    owner: 'lvce-editor',
+    repo: 'repo',
+    tree: [
+      {
+        path: 'package.json',
+        mode: '100644',
+        type: 'blob',
+        content: 'test content',
+      },
+    ],
+    base_tree: 'commit-sha',
+  })
+
+  expect(mockOctokit.rest.git.createCommit).toHaveBeenCalledWith({
+    owner: 'lvce-editor',
+    repo: 'repo',
+    message: 'update dependencies',
+    tree: 'tree-sha',
+    parents: ['commit-sha'],
+  })
 
   expect(mockRes.status).toHaveBeenCalledWith(200)
   expect(mockRes.send).toHaveBeenCalledWith(
     'Dependencies update PR created successfully',
   )
-  expect(mockOctokit.rest.pulls.create).toHaveBeenCalled()
-  expect(mockOctokit.graphql).toHaveBeenCalled()
+})
+
+test('handles no changes case', async () => {
+  const mockOctokit = {
+    rest: {
+      repos: {
+        // @ts-ignore
+        get: jest.fn().mockResolvedValue({}),
+      },
+    },
+  }
+
+  const app = {
+    auth() {
+      return mockOctokit
+    },
+  }
+
+  const handler = handleDependencies({
+    app: app as any,
+    installationId: 1,
+    secret: 'test-secret',
+  })
+
+  const mockReq = {
+    query: {
+      secret: 'test-secret',
+      repositoryName: 'lvce-editor/repo',
+    },
+  }
+  const mockRes = {
+    status: jest.fn().mockReturnThis(),
+    send: jest.fn(),
+  }
+
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({ stdout: '' })
+  // @ts-ignore
+  mockFs.mkdir.mockResolvedValue(undefined)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
+  await handler(mockReq as any, mockRes as any)
+
+  expect(mockRes.status).toHaveBeenCalledWith(200)
+  expect(mockRes.send).toHaveBeenCalledWith('No changes to commit')
 })
 
 test('handles repository not found', async () => {

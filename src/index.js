@@ -503,6 +503,15 @@ const getNewPackageFiles = async (
 }
 
 /**
+ * @type {'100644'}
+ */
+const modeFile = '100644'
+/**
+ * @type {'blob'}
+ */
+const typeFile = 'blob'
+
+/**
  *
  * @param {{baseBranch:string, newBranch:string, octokit:import('probot').Context<"release">['octokit'], owner:string, repo:string, commitableFiles:any[], commitMessage:string, pullRequestTitle:string }} param0
  */
@@ -695,15 +704,6 @@ const updateDependencies = async (context, config) => {
       dependencyKey,
       version,
     )
-
-  /**
-   * @type {'100644'}
-   */
-  const modeFile = '100644'
-  /**
-   * @type {'blob'}
-   */
-  const typeFile = 'blob'
 
   const commitableFiles = [
     {
