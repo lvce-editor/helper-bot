@@ -48,13 +48,8 @@ test('updates node version in files', async () => {
     root: '/test',
   })
 
-  expect(mockFs.writeFile).toHaveBeenNthCalledWith(
-    1,
-    '/test/.nvmrc',
-    'v20.0.0\n',
-  )
-  expect(mockFs.writeFile).toHaveBeenNthCalledWith(
-    2,
+  expect(mockFs.writeFile).toHaveBeenCalledWith('/test/.nvmrc', 'v20.0.0\n')
+  expect(mockFs.writeFile).toHaveBeenCalledWith(
     '/test/Dockerfile',
     'FROM node:20.0.0\nWORKDIR /app',
   )
