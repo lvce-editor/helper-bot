@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { readFile } from 'node:fs/promises'
 import type { Request, Response } from 'express'
 import { Context, Probot } from 'probot'
+import { updateNodeVersion } from './updateNodeVersion.js'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -191,6 +192,7 @@ export const handleDependencies =
 
       try {
         await cloneRepo(owner, repo, tmpFolder)
+        await updateNodeVersion({ root: tmpFolder })
         await updateDependencies(tmpFolder)
         const hasChanges = await commitAndPush(
           tmpFolder,
