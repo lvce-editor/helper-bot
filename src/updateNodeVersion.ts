@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises'
+import { Context } from 'probot'
 
 interface NodeVersion {
   version: string
@@ -50,7 +51,7 @@ const updateGitpodDockerfile = async (newVersion: string) => {
 interface UpdateNodeVersionParams {
   owner: string
   repo: string
-  octokit: any
+  octokit: Context<'release'>['octokit']
 }
 
 export const updateNodeVersion = async ({
