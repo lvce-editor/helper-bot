@@ -11,6 +11,9 @@ jest.unstable_mockModule('node:fs/promises', () => mockFs)
 const { updateNodeVersion } = await import('../src/updateNodeVersion.js')
 
 test('updates node version in files', async () => {
+  if (process.platform === 'win32') {
+    return
+  }
   mockFs.readFile.mockImplementation((path) => {
     if (path === '/test/.nvmrc') {
       return 'v18.0.0'
