@@ -57,18 +57,10 @@ const updateGitpodDockerfile = async (newVersion: string, root: string) => {
 }
 
 interface UpdateNodeVersionParams {
-  owner: string
-  repo: string
-  octokit: Context<'release'>['octokit']
-  root?: string
+  root: string
 }
 
-export const updateNodeVersion = async ({
-  owner,
-  repo,
-  octokit,
-  root = '.',
-}: UpdateNodeVersionParams) => {
+export const updateNodeVersion = async ({ root }: UpdateNodeVersionParams) => {
   const newVersion = await getLatestNodeVersion()
   await Promise.all([
     updateNvmrc(newVersion, root),

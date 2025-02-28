@@ -42,9 +42,6 @@ test('updates node version in files', async () => {
     ])
 
   await updateNodeVersion({
-    owner: 'lvce-editor',
-    repo: 'test-repo',
-    octokit: {} as any,
     root: '/test',
   })
 
