@@ -2,17 +2,12 @@ import { mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { readFile } from 'node:fs/promises'
+import type { Request, Response } from 'express'
+import { Context, Probot } from 'probot'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
-/**
- * Verify the secret key
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- * @param {string} secret
- * @returns {boolean}
- */
-const verifySecret = (req, res, secret) => {
+const verifySecret = (req: Request, res: Response, secret: string) => {
   const providedSecret = req.query.secret
   if (providedSecret !== secret) {
     res.status(401).send('Unauthorized')
@@ -21,13 +16,7 @@ const verifySecret = (req, res, secret) => {
   return true
 }
 
-/**
- * Clone the repository
- * @param {string} owner
- * @param {string} repo
- * @param {string} tmpFolder
- */
-const cloneRepo = async (owner, repo, tmpFolder) => {
+const cloneRepo = async (owner: string, repo: string, tmpFolder: string) => {
   await mkdir(tmpFolder, { recursive: true })
   const { execa } = await import('execa')
   await execa('git', [
@@ -37,14 +26,12 @@ const cloneRepo = async (owner, repo, tmpFolder) => {
   ])
 }
 
-/**
- * Create a pull request
- * @param {import('probot').Context<"release">['octokit']} octokit
- * @param {string} owner
- * @param {string} repo
- * @param {string} branchName
- */
-const createPullRequest = async (octokit, owner, repo, branchName) => {
+const createPullRequest = async (
+  octokit: Context<'release'>['octokit'],
+  owner: string,
+  repo: string,
+  branchName: string,
+) => {
   const pullRequestData = await octokit.rest.pulls.create({
     owner,
     repo,
@@ -62,11 +49,7 @@ const createPullRequest = async (octokit, owner, repo, branchName) => {
   )
 }
 
-/**
- * Update the dependencies
- * @param {string} tmpFolder
- */
-const updateDependencies = async (tmpFolder) => {
+const updateDependencies = async (tmpFolder: string) => {
   const scriptPath = join(tmpFolder, 'scripts', 'update-dependencies.sh')
   const { execa } = await import('execa')
   await execa('bash', [scriptPath], {
@@ -74,24 +57,17 @@ const updateDependencies = async (tmpFolder) => {
   })
 }
 
-/**
- * @type {'100644'}
- */
-const modeFile = '100644'
-/**
- * @type {'blob'}
- */
-const typeFile = 'blob'
+const modeFile: '100644' = '100644'
 
-/**
- * Commit and push the changes
- * @param {string} tmpFolder
- * @param {string} branchName
- * @param {import('probot').Context<"release">['octokit']} octokit
- * @param {string} owner
- * @param {string} repo
- */
-const commitAndPush = async (tmpFolder, branchName, octokit, owner, repo) => {
+const typeFile: 'blob' = 'blob'
+
+const commitAndPush = async (
+  tmpFolder: string,
+  branchName: string,
+  octokit: Context<'release'>['octokit'],
+  owner: string,
+  repo: string,
+) => {
   const { execa } = await import('execa')
   const { stdout } = await execa('git', ['status', '--porcelain'], {
     cwd: tmpFolder,
@@ -160,12 +136,16 @@ const commitAndPush = async (tmpFolder, branchName, octokit, owner, repo) => {
  * @param {{ app: import('probot').Probot, secret: string, installationId:number }} params
  */
 export const handleDependencies =
-  ({ app, secret, installationId }) =>
-  /**
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   */
-  async (req, res) => {
+  ({
+    app,
+    secret,
+    installationId,
+  }: {
+    app: Probot
+    secret: string
+    installationId: number
+  }) =>
+  async (req: Request, res: Response) => {
     if (!verifySecret(req, res, secret)) {
       return
     }
