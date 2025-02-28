@@ -38,6 +38,10 @@ test('updates node version in files', async () => {
         version: 'v20.0.0',
         lts: 'Iron',
       },
+      {
+        version: 'v18.0.0',
+        lts: 'Hydrogen',
+      },
     ])
 
   await updateNodeVersion({
@@ -46,11 +50,11 @@ test('updates node version in files', async () => {
     octokit: {} as any,
   })
 
-  expect(mockFs.writeFile).toHaveBeenNthCalledWith(1, '.nvmrc', 'v22.0.0\n')
+  expect(mockFs.writeFile).toHaveBeenNthCalledWith(1, '.nvmrc', 'v20.0.0\n')
   expect(mockFs.writeFile).toHaveBeenNthCalledWith(
     2,
     'Dockerfile',
-    'FROM node:22.0.0\nWORKDIR /app',
+    'FROM node:20.0.0\nWORKDIR /app',
   )
   // expect(mockFs.writeFile).toHaveBeenNthCalledWith(
   //   3,
