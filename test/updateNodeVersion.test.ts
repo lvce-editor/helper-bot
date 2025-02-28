@@ -12,16 +12,13 @@ const { updateNodeVersion } = await import('../src/updateNodeVersion.js')
 
 test('updates node version in files', async () => {
   mockFs.readFile.mockImplementation((path) => {
-    // @ts-ignore
-    if (path.endsWith('.nvmrc')) {
+    if (path === '/test/.nvmrc') {
       return 'v18.0.0'
     }
-    // @ts-ignore
-    if (path.endsWith('Dockerfile')) {
+    if (path === '/test/Dockerfile') {
       return 'FROM node:18.0.0\nWORKDIR /app'
     }
-    // @ts-ignore
-    if (path.endsWith('gitpod.Dockerfile')) {
+    if (path === '/test/gitpod.Dockerfile') {
       return 'FROM gitpod/workspace-full\nRUN nvm install 18.0.0'
     }
     throw new Error('File not found')
@@ -48,12 +45,17 @@ test('updates node version in files', async () => {
     owner: 'lvce-editor',
     repo: 'test-repo',
     octokit: {} as any,
+    root: '/test',
   })
 
-  expect(mockFs.writeFile).toHaveBeenNthCalledWith(1, '.nvmrc', 'v20.0.0\n')
+  expect(mockFs.writeFile).toHaveBeenNthCalledWith(
+    1,
+    '/test/.nvmrc',
+    'v20.0.0\n',
+  )
   expect(mockFs.writeFile).toHaveBeenNthCalledWith(
     2,
-    'Dockerfile',
+    '/test/Dockerfile',
     'FROM node:20.0.0\nWORKDIR /app',
   )
   // expect(mockFs.writeFile).toHaveBeenNthCalledWith(

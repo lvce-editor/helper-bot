@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { Context } from 'probot'
+import { join } from 'node:path'
 
 interface NodeVersion {
   version: string
@@ -17,36 +18,39 @@ const getLatestNodeVersion = async (): Promise<string> => {
   return latestLts.version
 }
 
-const updateNvmrc = async (newVersion: string) => {
+const updateNvmrc = async (newVersion: string, root: string) => {
   try {
-    await readFile('.nvmrc', 'utf-8')
-    await writeFile('.nvmrc', `${newVersion}\n`)
+    const nvmrcPath = join(root, '.nvmrc')
+    await readFile(nvmrcPath, 'utf-8')
+    await writeFile(nvmrcPath, `${newVersion}\n`)
   } catch (error) {
     // File doesn't exist, skip
   }
 }
 
-const updateDockerfile = async (newVersion: string) => {
+const updateDockerfile = async (newVersion: string, root: string) => {
   try {
-    const content = await readFile('Dockerfile', 'utf-8')
+    const dockerfilePath = join(root, 'Dockerfile')
+    const content = await readFile(dockerfilePath, 'utf-8')
     const updated = content.replace(
       /node:\d+\.\d+\.\d+/,
       `node:${newVersion.slice(1)}`,
     )
-    await writeFile('Dockerfile', updated)
+    await writeFile(dockerfilePath, updated)
   } catch (error) {
     // File doesn't exist, skip
   }
 }
 
-const updateGitpodDockerfile = async (newVersion: string) => {
+const updateGitpodDockerfile = async (newVersion: string, root: string) => {
   try {
-    const content = await readFile('gitpod.Dockerfile', 'utf-8')
+    const gitpodPath = join(root, 'gitpod.Dockerfile')
+    const content = await readFile(gitpodPath, 'utf-8')
     const updated = content.replace(
       /nvm install \d+\.\d+\.\d+/,
       `nvm install ${newVersion.slice(1)}`,
     )
-    await writeFile('gitpod.Dockerfile', updated)
+    await writeFile(gitpodPath, updated)
   } catch (error) {
     // File doesn't exist, skip
   }
@@ -56,18 +60,20 @@ interface UpdateNodeVersionParams {
   owner: string
   repo: string
   octokit: Context<'release'>['octokit']
+  root?: string
 }
 
 export const updateNodeVersion = async ({
   owner,
   repo,
   octokit,
+  root = '.',
 }: UpdateNodeVersionParams) => {
   const newVersion = await getLatestNodeVersion()
   await Promise.all([
-    updateNvmrc(newVersion),
-    updateDockerfile(newVersion),
-    updateGitpodDockerfile(newVersion),
+    updateNvmrc(newVersion, root),
+    updateDockerfile(newVersion, root),
+    updateGitpodDockerfile(newVersion, root),
   ])
   return newVersion
 }
