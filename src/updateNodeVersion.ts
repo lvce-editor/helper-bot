@@ -1,5 +1,4 @@
 import { readFile, writeFile } from 'node:fs/promises'
-import { Context } from 'probot'
 import { join } from 'node:path'
 
 interface NodeVersion {
