@@ -2,6 +2,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { handleDependencies } from './dependencies.js'
+import { Context, Probot } from 'probot'
 
 const dependencies = [
   {
@@ -291,14 +292,11 @@ const dependencies = [
   },
 ]
 
-/**
- *
- * @param {any[]} value
- * @param {string} repoName
- * @param {string} version
- * @returns
- */
-const getNewValue = (value, repoName, version) => {
+const getNewValue = (
+  value: readonly any[],
+  repoName: string,
+  version: string,
+) => {
   return value.map((item) => {
     if (item.name === `builtin.${repoName}`) {
       return {
@@ -319,22 +317,11 @@ const shortCommitMessageRepos = [
   'iframe-worker',
 ]
 
-/**
- *
- * @param {string} releasedRepo
- * @returns {boolean}
- */
-const shouldUseShortCommitMessage = (releasedRepo) => {
+const shouldUseShortCommitMessage = (releasedRepo: string): boolean => {
   return shortCommitMessageRepos.includes(releasedRepo)
 }
 
-/**
- *
- * @param {string} releasedRepo
- * @param {string} tagName
- * @returns {string}
- */
-const getCommitMessage = (releasedRepo, tagName) => {
+const getCommitMessage = (releasedRepo: string, tagName: string): string => {
   if (shouldUseShortCommitMessage(releasedRepo)) {
     return `feature: update ${releasedRepo} to version ${tagName}`
   }
@@ -347,11 +334,10 @@ const getCommitMessage = (releasedRepo, tagName) => {
   return `feature: update ${releasedRepo} extension to version ${tagName}`
 }
 
-/**
- * @param {import('probot').Context<"release">['octokit']} octokit
- * @param {any} pullRequestData
- */
-const enableAutoSquash = async (octokit, pullRequestData) => {
+const enableAutoSquash = async (
+  octokit: Context<'release'>['octokit'],
+  pullRequestData: any,
+) => {
   await octokit.graphql(
     `mutation MyMutation {
   enablePullRequestAutoMerge(input: { pullRequestId: "${pullRequestData.data.node_id}", mergeMethod: SQUASH }) {
@@ -363,10 +349,7 @@ const enableAutoSquash = async (octokit, pullRequestData) => {
   )
 }
 
-/**
- * @param {import('probot').Context<"release">} context
- */
-const updateBuiltinExtensions = async (context) => {
+const updateBuiltinExtensions = async (context: Context<'release'>) => {
   const { payload, octokit } = context
   const tagName = payload.release.tag_name
   const owner = payload.repository.owner.login
@@ -437,19 +420,11 @@ const updateBuiltinExtensions = async (context) => {
   await enableAutoSquash(octokit, pullRequestData)
 }
 
-/**
- *
- * @param {any} oldPackageJson
- * @param {string} dependencyKey
- * @param {string} dependencyName
- * @param {string} newVersion
- * @returns
- */
 const getNewPackageFiles = async (
-  oldPackageJson,
-  dependencyName,
-  dependencyKey,
-  newVersion,
+  oldPackageJson: any,
+  dependencyName: string,
+  dependencyKey: string,
+  newVersion: string,
 ) => {
   const name = oldPackageJson.name
   const tmpFolder = join(
@@ -502,19 +477,10 @@ const getNewPackageFiles = async (
   }
 }
 
-/**
- * @type {'100644'}
- */
-const modeFile = '100644'
-/**
- * @type {'blob'}
- */
-const typeFile = 'blob'
+const modeFile: '100644' = '100644'
 
-/**
- *
- * @param {{baseBranch:string, newBranch:string, octokit:import('probot').Context<"release">['octokit'], owner:string, repo:string, commitableFiles:any[], commitMessage:string, pullRequestTitle:string }} param0
- */
+const typeFile: 'blob' = 'blob'
+
 const createPullRequest = async ({
   baseBranch,
   newBranch,
@@ -524,6 +490,15 @@ const createPullRequest = async ({
   commitableFiles,
   commitMessage,
   pullRequestTitle,
+}: {
+  baseBranch: string
+  newBranch: string
+  octokit: Context<'release'>['octokit']
+  owner: string
+  repo: string
+  commitableFiles: readonly any[]
+  commitMessage: string
+  pullRequestTitle: string
 }) => {
   const mainBranchRef = await octokit.rest.git.getRef({
     owner,
@@ -548,6 +523,7 @@ const createPullRequest = async ({
   const newTree = await octokit.rest.git.createTree({
     owner,
     repo,
+    // @ts-ignore
     tree: commitableFiles,
     base_tree: startingCommitSha,
   })
@@ -578,32 +554,19 @@ const createPullRequest = async ({
   return pullRequestData
 }
 
-/**
- *
- * @param {string} parentFolder
- * @param {string} childPath
- * @returns
- */
-const quickJoin = (parentFolder, childPath) => {
+const quickJoin = (parentFolder: string, childPath: string) => {
   if (!parentFolder) {
     return childPath
   }
   return parentFolder + '/' + childPath
 }
 
-/**
- * @param {import('probot').Context<"release">} context
- * @param {string} owner
- * @param {string} repo
- * @param {string} packageJsonPath
- * @param {string} packageLockJsonPath
- */
 const getPackageRefs = async (
-  context,
-  owner,
-  repo,
-  packageJsonPath,
-  packageLockJsonPath,
+  context: Context<'release'>,
+  owner: string,
+  repo: string,
+  packageJsonPath: string,
+  packageLockJsonPath: string,
 ) => {
   const [packageJsonRef, packageLockJsonRef] = await Promise.all([
     context.octokit.rest.repos.getContent({
@@ -623,11 +586,7 @@ const getPackageRefs = async (
   }
 }
 
-/**
- * @param {import('probot').Context<"release">} context
- * @param {any} config
- */
-const updateDependencies = async (context, config) => {
+const updateDependencies = async (context: Context<'release'>, config: any) => {
   const { payload, octokit } = context
   const tagName = payload.release.tag_name
   const owner = payload.repository.owner.login
@@ -733,10 +692,7 @@ const updateDependencies = async (context, config) => {
   await enableAutoSquash(octokit, pullRequestData)
 }
 
-/**
- * @param {import('probot').Context<"release">} context
- */
-const updateRepositoryDependencies = async (context) => {
+const updateRepositoryDependencies = async (context: Context<'release'>) => {
   for (const dependency of dependencies) {
     try {
       await updateDependencies(context, dependency)
@@ -746,31 +702,18 @@ const updateRepositoryDependencies = async (context) => {
   }
 }
 
-/**
- * @param {import('probot').Context<"release">} context
- */
-const handleReleaseReleased = async (context) => {
+const handleReleaseReleased = async (context: Context<'release'>) => {
   await Promise.all([
     updateBuiltinExtensions(context),
     updateRepositoryDependencies(context),
   ])
 }
 
-/**
- *
- * @param {*} req
- * @param {*} res
- */
-const handleHelloWorld = (req, res) => {
+const handleHelloWorld = (req: any, res: any) => {
   res.send('Hello World')
 }
 
-/**
- * @param {import('probot').Probot} app
- * @param {*} getRouter
- * @returns
- */
-const enableCustomRoutes = async (app, getRouter) => {
+const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   if (!getRouter || typeof getRouter !== 'function') {
     return
   }
@@ -794,12 +737,7 @@ const enableCustomRoutes = async (app, getRouter) => {
   )
 }
 
-/**
- * This is the main entrypoint to your Probot app
- * @param {import('probot').Probot} app
- * @param {*} getRouter
- */
-export default (app, { getRouter }) => {
+export default (app: Probot, { getRouter }: any) => {
   enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
 }
