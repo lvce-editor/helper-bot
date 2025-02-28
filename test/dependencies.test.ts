@@ -8,6 +8,7 @@ const mockFs = {
   mkdir: jest.fn(),
   rm: jest.fn(),
   readFile: jest.fn(),
+  writeFile: jest.fn(),
 }
 
 jest.unstable_mockModule('execa', () => mockExeca)
