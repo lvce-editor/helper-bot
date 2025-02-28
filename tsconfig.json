@@ -8,14 +8,15 @@
     "moduleResolution": "node",
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
     "assumeChangesOnlyAffectDirectDependencies": true,
     "strict": true,
     "strictNullChecks": false,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "outDir": "dist",
+    "rootDir": "src"
   },
-  "include": ["src", "test"]
+  "include": ["src"]
 }
