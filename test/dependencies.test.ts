@@ -320,11 +320,8 @@ test('handles dependency update failure', async () => {
 
   // Mock a failure during dependency update
   jest.spyOn(console, 'error').mockImplementation(() => {})
-  const mockError = new Error('Failed to update package.json')
-  jest.mock('../src/updateDependencies.js', () => ({
-    // @ts-ignore
-    updateDependencies: jest.fn().mockRejectedValue(mockError),
-  }))
+  // @ts-ignore
+  mockExeca.execa.mockRejectedValue(new Error('Failed to update package.json'))
 
   await handler(mockReq as any, mockRes as any)
 
