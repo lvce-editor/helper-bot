@@ -212,6 +212,11 @@ export const handleDependencies =
       }
     } catch (error) {
       console.error('Error updating dependencies:', error)
-      res.status(500).send('Internal server error')
+      res.status(424).json({
+        error: 'Failed to update dependencies',
+        // @ts-ignore
+        details: error.message,
+        code: 'DEPENDENCY_UPDATE_FAILED',
+      })
     }
   }

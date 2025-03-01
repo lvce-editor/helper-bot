@@ -284,3 +284,54 @@ test('handles invalid repository owner', async () => {
     'Repository owner must be lvce-editor',
   )
 })
+
+test('handles dependency update failure', async () => {
+  const mockOctokit = {
+    rest: {
+      repos: {
+        // @ts-ignore
+        get: jest.fn().mockResolvedValue({}),
+      },
+    },
+  }
+  const app = {
+    auth() {
+      return mockOctokit
+    },
+  }
+
+  const handler = handleDependencies({
+    app: app as any,
+    installationId: 1,
+    secret: 'test-secret',
+  })
+
+  const mockReq = {
+    query: {
+      secret: 'test-secret',
+      repositoryName: 'lvce-editor/repo',
+    },
+  }
+  const mockRes = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+    send: jest.fn(),
+  }
+
+  // Mock a failure during dependency update
+  jest.spyOn(console, 'error').mockImplementation(() => {})
+  const mockError = new Error('Failed to update package.json')
+  jest.mock('../src/updateDependencies.js', () => ({
+    // @ts-ignore
+    updateDependencies: jest.fn().mockRejectedValue(mockError),
+  }))
+
+  await handler(mockReq as any, mockRes as any)
+
+  expect(mockRes.status).toHaveBeenCalledWith(424)
+  expect(mockRes.json).toHaveBeenCalledWith({
+    error: 'Failed to update dependencies',
+    details: 'Failed to update package.json',
+    code: 'DEPENDENCY_UPDATE_FAILED',
+  })
+})
