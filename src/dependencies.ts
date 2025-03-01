@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises'
 import type { Request, Response } from 'express'
 import { Context, Probot } from 'probot'
 import { updateNodeVersion } from './updateNodeVersion.js'
+import { randomUUID } from 'node:crypto'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -187,7 +188,8 @@ export const handleDependencies =
         throw error
       }
 
-      const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}`)
+      const uuid = randomUUID()
+      const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}-${uuid}`)
       const branchName = `update-dependencies-${Date.now()}`
 
       try {
