@@ -6,6 +6,7 @@ import type { Request, Response } from 'express'
 import { Context, Probot } from 'probot'
 import { updateNodeVersion } from './updateNodeVersion.js'
 import { randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -96,11 +97,18 @@ const commitAndPush = async (
     .filter(Boolean)
     .map((line) => line.slice(3))
 
+  const paths = changedFiles.map((file) => join(tmpFolder, file))
+  for (const path of paths) {
+    if (!existsSync(path)) {
+      throw new Error(`path ${path} does not exist`)
+    }
+  }
+
   const tree = await Promise.all(
-    changedFiles.map(async (file) => {
-      const content = await readFile(join(tmpFolder, file), 'utf8')
+    paths.map(async (path) => {
+      const content = await readFile(path, 'utf8')
       return {
-        path: file,
+        path,
         mode: modeFile,
         type: typeFile,
         content,
