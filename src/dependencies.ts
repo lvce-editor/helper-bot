@@ -7,6 +7,7 @@ import { Context, Probot } from 'probot'
 import { updateNodeVersion } from './updateNodeVersion.js'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
+import { execa } from 'execa'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -21,7 +22,6 @@ const verifySecret = (req: Request, res: Response, secret: string) => {
 
 const cloneRepo = async (owner: string, repo: string, tmpFolder: string) => {
   await mkdir(tmpFolder, { recursive: true })
-  const { execa } = await import('execa')
   await execa('git', [
     'clone',
     `https://github.com/${owner}/${repo}.git`,
@@ -54,7 +54,6 @@ const createPullRequest = async (
 
 const updateDependencies = async (tmpFolder: string) => {
   const scriptPath = join(tmpFolder, 'scripts', 'update-dependencies.sh')
-  const { execa } = await import('execa')
   await execa('bash', [scriptPath], {
     cwd: tmpFolder,
   })
@@ -71,7 +70,6 @@ const commitAndPush = async (
   owner: string,
   repo: string,
 ) => {
-  const { execa } = await import('execa')
   const { stdout } = await execa('git', ['status', '--porcelain'], {
     cwd: tmpFolder,
   })
