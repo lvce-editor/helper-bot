@@ -1,12 +1,12 @@
-import { mkdir, rm } from 'node:fs/promises'
+import { execa } from 'execa'
+import type { Request, Response } from 'express'
+import { randomUUID } from 'node:crypto'
+import { existsSync } from 'node:fs'
+import { mkdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { readFile } from 'node:fs/promises'
-import type { Request, Response } from 'express'
 import { Context, Probot } from 'probot'
 import { updateNodeVersion } from './updateNodeVersion.js'
-import { randomUUID } from 'node:crypto'
-import { execa } from 'execa'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -94,11 +94,19 @@ const commitAndPush = async (
     .filter(Boolean)
     .map((line) => line.slice(3))
 
+  const absolutePaths = changedFiles.map((file) => join(tmpFolder, file))
+  for (const path of absolutePaths) {
+    if (!existsSync(path)) {
+      throw new Error(`path ${path} does not exist`)
+    }
+  }
+
   const tree = await Promise.all(
-    changedFiles.map(async (file) => {
-      const content = await readFile(join(tmpFolder, file), 'utf8')
+    changedFiles.map(async (path) => {
+      const absolutePath = join(tmpFolder, path)
+      const content = await readFile(absolutePath, 'utf8')
       return {
-        path: file,
+        path,
         mode: modeFile,
         type: typeFile,
         content,
