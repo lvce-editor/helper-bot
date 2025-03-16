@@ -36,6 +36,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'main-process',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/main-process',
+  },
+  {
     fromRepo: 'iframe-inspector',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
