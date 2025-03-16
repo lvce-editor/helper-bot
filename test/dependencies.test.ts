@@ -9,10 +9,12 @@ const mockFs = {
   rm: jest.fn(),
   readFile: jest.fn(),
   writeFile: jest.fn(),
+  existsSync: jest.fn(),
 }
 
 jest.unstable_mockModule('execa', () => mockExeca)
 jest.unstable_mockModule('node:fs/promises', () => mockFs)
+jest.unstable_mockModule('node:fs', () => mockFs)
 jest.unstable_mockModule('node:os', () => ({
   tmpdir: () => '/test',
 }))
@@ -141,6 +143,8 @@ test('creates pull request successfully', async () => {
   mockFs.mkdir.mockResolvedValue(undefined)
   // @ts-ignore
   mockFs.rm.mockResolvedValue(undefined)
+
+  mockFs.existsSync.mockReturnValue(true)
 
   await handler(mockReq as any, mockRes as any)
 
