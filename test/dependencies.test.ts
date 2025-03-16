@@ -124,6 +124,7 @@ test('creates pull request successfully', async () => {
   const mockRes = {
     status: jest.fn().mockReturnThis(),
     send: jest.fn(),
+    json: jest.fn(),
   }
 
   // @ts-ignore
