@@ -133,12 +133,12 @@ const dependencies = [
   {
     fromRepo: 'virtual-dom',
     toRepo: 'renderer-process',
-    toFolder: '',
+    toFolder: 'packages/renderer-process',
   },
   {
     fromRepo: 'ipc',
     toRepo: 'renderer-process',
-    toFolder: '',
+    toFolder: 'packages/renderer-process',
   },
   {
     fromRepo: 'preview-injected-code',
@@ -243,7 +243,7 @@ const dependencies = [
   {
     fromRepo: 'json-rpc',
     toRepo: 'renderer-process',
-    toFolder: '',
+    toFolder: 'packages/renderer-process',
   },
   {
     fromRepo: 'json-rpc',
