@@ -286,6 +286,11 @@ const dependencies = [
     toFolder: 'packages/shared-process',
   },
   {
+    fromRepo: 'file-system-process',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/shared-process',
+  },
+  {
     fromRepo: 'file-watcher-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/shared-process',
