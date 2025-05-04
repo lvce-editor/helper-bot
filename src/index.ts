@@ -212,6 +212,11 @@ const dependencies = [
     toFolder: 'packages/about-view',
   },
   {
+    fromRepo: 'rpc-registry',
+    toRepo: 'explorer-view',
+    toFolder: 'packages/explorer-view',
+  },
+  {
     fromRepo: 'rpc',
     toRepo: 'file-search-worker',
     toFolder: '',
