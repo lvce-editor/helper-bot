@@ -134,6 +134,7 @@ const dependencies = [
     fromRepo: 'source-control-view',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
+    asName: 'source-control-worker',
   },
   {
     fromRepo: 'file-search-worker',
@@ -652,7 +653,8 @@ const updateDependencies = async (context: Context<'release'>, config: any) => {
   const filesJsonDecoded = Buffer.from(filesJsonBase64, 'base64').toString()
   const filesJsonValue = JSON.parse(filesJsonDecoded)
   console.log({ filesJsonValue })
-  const dependencyName = `@lvce-editor/${releasedRepo}`
+  const dependencyNameShort = config.asName || releasedRepo
+  const dependencyName = `@lvce-editor/${dependencyNameShort}`
   let dependencyKey = ''
   let oldDependency = ''
   if (
