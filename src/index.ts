@@ -203,7 +203,12 @@ const dependencies = [
   {
     fromRepo: 'rpc',
     toRepo: 'about-view',
-    toFolder: '',
+    toFolder: 'packages/about-view',
+  },
+  {
+    fromRepo: 'rpc-registry',
+    toRepo: 'about-view',
+    toFolder: 'packages/about-view',
   },
   {
     fromRepo: 'rpc',
