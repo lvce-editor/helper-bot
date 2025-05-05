@@ -148,51 +148,61 @@ const commitAndPush = async (
 }
 
 const handleQueueItem = async (item: QueueItem) => {
-  const [owner, repo] = item.repositoryName.split('/')
-
-  if (owner !== 'lvce-editor') {
-    item.res.status(400).send('Repository owner must be lvce-editor')
-    return
-  }
-
-  // Check if repository exists
   try {
-    await item.octokit.rest.repos.get({
-      owner,
-      repo,
-    })
+    const [owner, repo] = item.repositoryName.split('/')
+
+    if (owner !== 'lvce-editor') {
+      item.res.status(400).send('Repository owner must be lvce-editor')
+      return
+    }
+
+    // Check if repository exists
+    try {
+      await item.octokit.rest.repos.get({
+        owner,
+        repo,
+      })
+    } catch (error) {
+      // @ts-ignore
+      if (error.status === 404) {
+        item.res.status(404).send('Repository not found')
+        return
+      }
+      throw error
+    }
+
+    const uuid = randomUUID()
+    const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}-${uuid}`)
+    const branchName = `update-dependencies-${Date.now()}`
+
+    try {
+      await cloneRepo(owner, repo, tmpFolder)
+      await updateNodeVersion({ root: tmpFolder })
+      await updateDependencies(tmpFolder)
+      const hasChanges = await commitAndPush(
+        tmpFolder,
+        branchName,
+        item.octokit,
+        owner,
+        repo,
+      )
+      if (!hasChanges) {
+        item.res.status(200).send('No changes to commit')
+        return
+      }
+      await createPullRequest(item.octokit, owner, repo, branchName)
+      item.res.status(200).send('Dependencies update PR created successfully')
+    } finally {
+      await rm(tmpFolder, { recursive: true, force: true })
+    }
   } catch (error) {
-    // @ts-ignore
-    if (error.status === 404) {
-      item.res.status(404).send('Repository not found')
-      return
-    }
-    throw error
-  }
-
-  const uuid = randomUUID()
-  const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}-${uuid}`)
-  const branchName = `update-dependencies-${Date.now()}`
-
-  try {
-    await cloneRepo(owner, repo, tmpFolder)
-    await updateNodeVersion({ root: tmpFolder })
-    await updateDependencies(tmpFolder)
-    const hasChanges = await commitAndPush(
-      tmpFolder,
-      branchName,
-      item.octokit,
-      owner,
-      repo,
-    )
-    if (!hasChanges) {
-      item.res.status(200).send('No changes to commit')
-      return
-    }
-    await createPullRequest(item.octokit, owner, repo, branchName)
-    item.res.status(200).send('Dependencies update PR created successfully')
-  } finally {
-    await rm(tmpFolder, { recursive: true, force: true })
+    console.error('Error updating dependencies:', error)
+    item.res.status(424).json({
+      error: 'Failed to update dependencies',
+      // @ts-ignore
+      details: error.message,
+      code: 'DEPENDENCY_UPDATE_FAILED',
+    })
   }
 }
 
