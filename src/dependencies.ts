@@ -7,8 +7,16 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context, Probot } from 'probot'
 import { updateNodeVersion } from './updateNodeVersion.js'
+import { createQueue } from './createQueue.js'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
+
+type QueueItem = {
+  repositoryName: string
+  req: Request
+  res: Response
+  octokit: Context<'release'>['octokit']
+}
 
 const verifySecret = (req: Request, res: Response, secret: string) => {
   const providedSecret = req.query.secret
@@ -139,6 +147,67 @@ const commitAndPush = async (
   return true
 }
 
+const handleQueueItem = async (item: QueueItem) => {
+  try {
+    const [owner, repo] = item.repositoryName.split('/')
+
+    if (owner !== 'lvce-editor') {
+      item.res.status(400).send('Repository owner must be lvce-editor')
+      return
+    }
+
+    // Check if repository exists
+    try {
+      await item.octokit.rest.repos.get({
+        owner,
+        repo,
+      })
+    } catch (error) {
+      // @ts-ignore
+      if (error.status === 404) {
+        item.res.status(404).send('Repository not found')
+        return
+      }
+      throw error
+    }
+
+    const uuid = randomUUID()
+    const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}-${uuid}`)
+    const branchName = `update-dependencies-${Date.now()}`
+
+    try {
+      await cloneRepo(owner, repo, tmpFolder)
+      await updateNodeVersion({ root: tmpFolder })
+      await updateDependencies(tmpFolder)
+      const hasChanges = await commitAndPush(
+        tmpFolder,
+        branchName,
+        item.octokit,
+        owner,
+        repo,
+      )
+      if (!hasChanges) {
+        item.res.status(200).send('No changes to commit')
+        return
+      }
+      await createPullRequest(item.octokit, owner, repo, branchName)
+      item.res.status(200).send('Dependencies update PR created successfully')
+    } finally {
+      await rm(tmpFolder, { recursive: true, force: true })
+    }
+  } catch (error) {
+    console.error('Error updating dependencies:', error)
+    item.res.status(424).json({
+      error: 'Failed to update dependencies',
+      // @ts-ignore
+      details: error.message,
+      code: 'DEPENDENCY_UPDATE_FAILED',
+    })
+  }
+}
+
+const { addToQueue } = createQueue<QueueItem>(handleQueueItem)
+
 /**
  * Handle the dependencies update
  * @param {{ app: import('probot').Probot, secret: string, installationId:number }} params
@@ -171,60 +240,10 @@ export const handleDependencies =
       return
     }
 
-    try {
-      const [owner, repo] = repositoryName.split('/')
-
-      if (owner !== 'lvce-editor') {
-        res.status(400).send('Repository owner must be lvce-editor')
-        return
-      }
-
-      // Check if repository exists
-      try {
-        await octokit.rest.repos.get({
-          owner,
-          repo,
-        })
-      } catch (error) {
-        // @ts-ignore
-        if (error.status === 404) {
-          res.status(404).send('Repository not found')
-          return
-        }
-        throw error
-      }
-
-      const uuid = randomUUID()
-      const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}-${uuid}`)
-      const branchName = `update-dependencies-${Date.now()}`
-
-      try {
-        await cloneRepo(owner, repo, tmpFolder)
-        await updateNodeVersion({ root: tmpFolder })
-        await updateDependencies(tmpFolder)
-        const hasChanges = await commitAndPush(
-          tmpFolder,
-          branchName,
-          octokit,
-          owner,
-          repo,
-        )
-        if (!hasChanges) {
-          res.status(200).send('No changes to commit')
-          return
-        }
-        await createPullRequest(octokit, owner, repo, branchName)
-        res.status(200).send('Dependencies update PR created successfully')
-      } finally {
-        await rm(tmpFolder, { recursive: true, force: true })
-      }
-    } catch (error) {
-      console.error('Error updating dependencies:', error)
-      res.status(424).json({
-        error: 'Failed to update dependencies',
-        // @ts-ignore
-        details: error.message,
-        code: 'DEPENDENCY_UPDATE_FAILED',
-      })
-    }
+    await addToQueue({
+      repositoryName,
+      req,
+      res,
+      octokit,
+    })
   }
