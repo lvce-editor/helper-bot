@@ -216,6 +216,11 @@ const dependencies = [
     toFolder: 'packages/keybindings-view',
   },
   {
+    fromRepo: 'rpc-registry',
+    toRepo: 'explorer-view',
+    toFolder: 'packages/explorer-view',
+  },
+  {
     fromRepo: 'rpc',
     toRepo: 'file-search-worker',
     toFolder: '',
