@@ -1,9 +1,9 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { handleDependencies } from './dependencies.js'
 import { Context, Probot } from 'probot'
-import { createPullRequest } from './createPullRequest.js'
+import { handleDependencies } from './dependencies.js'
+import { updateDependencies } from './updateDependencies.js'
 
 const dependencies = [
   {
@@ -553,113 +553,6 @@ const getPackageRefs = async (
     packageJsonRef,
     packageLockJsonRef,
   }
-}
-
-const updateDependencies = async (context: Context<'release'>, config: any) => {
-  const { payload, octokit } = context
-  const tagName = payload.release.tag_name
-  const owner = payload.repository.owner.login
-  const releasedRepo = payload.repository.name
-  if (releasedRepo !== config.fromRepo) {
-    return
-  }
-  const packageJsonPath = quickJoin(config.toFolder, 'package.json')
-  const packageLockJsonPath = quickJoin(config.toFolder, 'package-lock.json')
-  const version = tagName.replace('v', '')
-
-  const newBranch = `update-version/${releasedRepo}-${tagName}`
-  const baseBranch = 'main'
-  const repo = config.toRepo
-
-  const { packageJsonRef, packageLockJsonRef } = await getPackageRefs(
-    context,
-    owner,
-    repo,
-    packageJsonPath,
-    packageLockJsonPath,
-  )
-
-  if (
-    !('content' in packageJsonRef.data) ||
-    !('content' in packageLockJsonRef.data)
-  ) {
-    console.log('no content in files')
-    return
-  }
-
-  const filesJsonBase64 = packageJsonRef.data.content
-  const filesJsonDecoded = Buffer.from(filesJsonBase64, 'base64').toString()
-  const filesJsonValue = JSON.parse(filesJsonDecoded)
-  console.log({ filesJsonValue })
-  const dependencyNameShort = config.asName || releasedRepo
-  const dependencyName = `@lvce-editor/${dependencyNameShort}`
-  let dependencyKey = ''
-  let oldDependency = ''
-  if (
-    filesJsonValue.dependencies &&
-    filesJsonValue.dependencies[dependencyName]
-  ) {
-    dependencyKey = 'dependencies'
-    oldDependency = filesJsonValue.dependencies[dependencyName]
-  } else if (
-    filesJsonValue.devDependencies &&
-    filesJsonValue.devDependencies[dependencyName]
-  ) {
-    dependencyKey = 'devDependencies'
-    oldDependency = filesJsonValue.devDependencies[dependencyName]
-  } else if (
-    filesJsonValue.optionalDependencies &&
-    filesJsonValue.optionalDependencies[dependencyName]
-  ) {
-    dependencyKey = 'optionalDependencies'
-    oldDependency = filesJsonValue.optionalDependencies[dependencyName]
-  } else {
-    console.warn(
-      `dependency ${dependencyName} not found in ${packageJsonPath} of ${repo}`,
-    )
-    return
-  }
-  const oldVersion = oldDependency.slice(1)
-
-  console.log({ oldVersion })
-  if (oldVersion === version) {
-    console.info('same version')
-    return
-  }
-  const { newPackageJsonString, newPackageLockJsonString } =
-    await getNewPackageFiles(
-      filesJsonValue,
-      config.fromRepo,
-      dependencyKey,
-      version,
-    )
-
-  const commitableFiles = [
-    {
-      path: packageJsonPath,
-      mode: modeFile,
-      type: typeFile,
-      content: newPackageJsonString,
-    },
-    {
-      path: packageLockJsonPath,
-      mode: modeFile,
-      type: typeFile,
-      content: newPackageLockJsonString,
-    },
-  ]
-
-  const pullRequestData = await createPullRequest({
-    octokit,
-    baseBranch,
-    newBranch,
-    commitableFiles,
-    commitMessage: getCommitMessage(releasedRepo, tagName),
-    owner,
-    pullRequestTitle: `feature: update ${releasedRepo} to version ${tagName}`,
-    repo,
-  })
-  await enableAutoSquash(octokit, pullRequestData)
 }
 
 const updateRepositoryDependencies = async (context: Context<'release'>) => {
