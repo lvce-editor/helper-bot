@@ -187,6 +187,11 @@ const dependencies = [
   },
   {
     fromRepo: 'rpc',
+    toRepo: 'pty-host',
+    toFolder: 'packages/pty-host',
+  },
+  {
+    fromRepo: 'rpc',
     toRepo: 'extension-host-worker',
     toFolder: 'packages/extension-host-sub-worker',
   },
