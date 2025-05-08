@@ -40,6 +40,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'embeds-process',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/shared-process',
+  },
+  {
     fromRepo: 'main-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/main-process',
