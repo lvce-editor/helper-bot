@@ -40,6 +40,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'color-picker-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'main-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/main-process',
