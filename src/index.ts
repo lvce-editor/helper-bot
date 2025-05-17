@@ -65,6 +65,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'rename-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'terminal-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
