@@ -45,6 +45,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'embeds-process',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/shared-process',
+  },
+  {
     fromRepo: 'main-process',
     toRepo: 'lvce-editor',
     toFolder: 'packages/main-process',
@@ -189,6 +194,11 @@ const dependencies = [
     fromRepo: 'rpc',
     toRepo: 'extension-host-worker',
     toFolder: 'packages/extension-host-worker',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'pty-host',
+    toFolder: 'packages/pty-host',
   },
   {
     fromRepo: 'rpc',
