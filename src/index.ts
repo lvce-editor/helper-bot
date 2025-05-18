@@ -222,6 +222,11 @@ const dependencies = [
   },
   {
     fromRepo: 'rpc-registry',
+    toRepo: 'embeds-worker',
+    toFolder: '',
+  },
+  {
+    fromRepo: 'rpc-registry',
     toRepo: 'keybindings-view',
     toFolder: 'packages/keybindings-view',
   },
