@@ -232,8 +232,23 @@ const dependencies = [
   },
   {
     fromRepo: 'rpc-registry',
+    toRepo: 'file-system-worker',
+    toFolder: 'packages/file-system-worker',
+  },
+  {
+    fromRepo: 'eslint-config',
+    toRepo: 'file-system-worker',
+    toFolder: 'packages/file-system-worker',
+  },
+  {
+    fromRepo: 'rpc',
+    toRepo: 'file-system-worker',
+    toFolder: 'packages/file-system-worker',
+  },
+  {
+    fromRepo: 'rpc-registry',
     toRepo: 'embeds-worker',
-    toFolder: '',
+    toFolder: 'packages/embeds-worker',
   },
   {
     fromRepo: 'rpc-registry',
