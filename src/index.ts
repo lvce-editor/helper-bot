@@ -236,6 +236,11 @@ const dependencies = [
     toFolder: 'packages/file-system-worker',
   },
   {
+    fromRepo: 'rpc-registry',
+    toRepo: 'completion-worker',
+    toFolder: 'packages/completion-worker',
+  },
+  {
     fromRepo: 'eslint-config',
     toRepo: 'file-system-worker',
     toFolder: 'packages/file-system-worker',
