@@ -361,6 +361,11 @@ const dependencies = [
     toFolder: 'packages/renderer-worker',
   },
   {
+    fromRepo: 'find-widget-worker',
+    toRepo: 'lvce-editor',
+    toFolder: 'packages/renderer-worker',
+  },
+  {
     fromRepo: 'completion-worker',
     toRepo: 'lvce-editor',
     toFolder: 'packages/renderer-worker',
