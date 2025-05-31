@@ -17,14 +17,26 @@ const getLatestNodeVersion = async (): Promise<string> => {
   return latestLts.version
 }
 
+const parseVersion = (content: string) => {
+  if (content.startsWith('v')) {
+    return parseInt(content.slice(1))
+  }
+  return parseInt(content)
+}
+
 const updateNvmrc = async (newVersion: string, root: string) => {
   try {
     const nvmrcPath = join(root, '.nvmrc')
-    await readFile(nvmrcPath, 'utf-8')
+    const content = await readFile(nvmrcPath, 'utf-8')
+    const existingVersion = parseVersion(content)
+    if (parseInt(newVersion) < existingVersion) {
+      return false
+    }
     await writeFile(nvmrcPath, `${newVersion}\n`)
   } catch (error) {
     // File doesn't exist, skip
   }
+  return true
 }
 
 const updateDockerfile = async (newVersion: string, root: string) => {
@@ -61,8 +73,11 @@ interface UpdateNodeVersionParams {
 
 export const updateNodeVersion = async ({ root }: UpdateNodeVersionParams) => {
   const newVersion = await getLatestNodeVersion()
+  const shouldContinueUpdating = await updateNvmrc(newVersion, root)
+  if (!shouldContinueUpdating) {
+    return
+  }
   await Promise.all([
-    updateNvmrc(newVersion, root),
     updateDockerfile(newVersion, root),
     updateGitpodDockerfile(newVersion, root),
   ])
