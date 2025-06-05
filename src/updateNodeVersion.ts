@@ -28,8 +28,9 @@ const updateNvmrc = async (newVersion: string, root: string) => {
   try {
     const nvmrcPath = join(root, '.nvmrc')
     const content = await readFile(nvmrcPath, 'utf-8')
-    const existingVersion = parseVersion(content)
-    if (parseInt(newVersion) < existingVersion) {
+    const existingVersionNumber = parseVersion(content)
+    const newVersionNumber = parseVersion(newVersion)
+    if (existingVersionNumber > newVersionNumber) {
       return false
     }
     await writeFile(nvmrcPath, `${newVersion}\n`)
