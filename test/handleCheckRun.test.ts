@@ -1,9 +1,9 @@
 import { test, expect, jest } from '@jest/globals'
 import { Context } from 'probot'
 
-const mockExeca = jest.fn()
-const mockCloneRepo = jest.fn()
-const mockCommitAndPush = jest.fn()
+const mockExeca = jest.fn<any>()
+const mockCloneRepo = jest.fn<any>()
+const mockCommitAndPush = jest.fn<any>()
 
 jest.unstable_mockModule('execa', () => ({
   execa: mockExeca,
@@ -17,9 +17,8 @@ jest.unstable_mockModule('../src/commitAndPush', () => ({
   commitAndPush: mockCommitAndPush,
 }))
 
-const { handleCheckRun } = await import('../src/handleCheckRun')
-
 test('handleCheckRun should not run if check run is not failed', async () => {
+  const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
       check_run: {
@@ -36,20 +35,21 @@ test('handleCheckRun should not run if check run is not failed', async () => {
     octokit: {
       rest: {
         checks: {
-          listForRef: jest.fn(),
+          listForRef: jest.fn<any>(),
         },
         repos: {
-          getCommit: jest.fn(),
+          getCommit: jest.fn<any>(),
         },
       },
     },
-  } as unknown as Context<'check_run'>
+  } as any
 
   await handleCheckRun(context)
   expect(context.octokit.rest.checks.listForRef).not.toHaveBeenCalled()
 })
 
 test('handleCheckRun should not run if no PR found', async () => {
+  const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
       check_run: {
@@ -66,7 +66,7 @@ test('handleCheckRun should not run if no PR found', async () => {
     octokit: {
       rest: {
         checks: {
-          listForRef: jest.fn().mockResolvedValue({
+          listForRef: jest.fn<any>().mockResolvedValue({
             data: {
               check_runs: [
                 {
@@ -74,20 +74,21 @@ test('handleCheckRun should not run if no PR found', async () => {
                 },
               ],
             },
-          }) as any,
+          }),
         },
         repos: {
-          getCommit: jest.fn(),
+          getCommit: jest.fn<any>(),
         },
       },
     },
-  } as unknown as Context<'check_run'>
+  } as any
 
   await handleCheckRun(context)
   expect(context.octokit.rest.repos.getCommit).not.toHaveBeenCalled()
 })
 
 test('handleCheckRun should not run if no committer found', async () => {
+  const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
       check_run: {
@@ -104,7 +105,7 @@ test('handleCheckRun should not run if no committer found', async () => {
     octokit: {
       rest: {
         checks: {
-          listForRef: jest.fn().mockResolvedValue({
+          listForRef: jest.fn<any>().mockResolvedValue({
             data: {
               check_runs: [
                 {
@@ -116,27 +117,27 @@ test('handleCheckRun should not run if no committer found', async () => {
                 },
               ],
             },
-          }) as any,
+          }),
         },
         repos: {
-          getCommit: jest.fn().mockResolvedValue({
+          getCommit: jest.fn<any>().mockResolvedValue({
             data: {
               commit: {
                 author: null,
               },
             },
-          }) as any,
+          }),
         },
       },
     },
-  } as unknown as Context<'check_run'>
+  } as any
 
   await handleCheckRun(context)
 })
 
 test('handleCheckRun should not run if committer is not authorized', async () => {
   process.env.AUTHORIZED_COMMITTER = 'authorized@example.com'
-
+  const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
       check_run: {
@@ -153,7 +154,7 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
     octokit: {
       rest: {
         checks: {
-          listForRef: jest.fn().mockResolvedValue({
+          listForRef: jest.fn<any>().mockResolvedValue({
             data: {
               check_runs: [
                 {
@@ -165,10 +166,10 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
                 },
               ],
             },
-          }) as any,
+          }),
         },
         repos: {
-          getCommit: jest.fn().mockResolvedValue({
+          getCommit: jest.fn<any>().mockResolvedValue({
             data: {
               commit: {
                 author: {
@@ -176,24 +177,21 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
                 },
               },
             },
-          }) as any,
+          }),
         },
       },
     },
-  } as unknown as Context<'check_run'>
+  } as any
 
   await handleCheckRun(context)
 })
 
 test('handleCheckRun should run if all conditions are met', async () => {
   process.env.AUTHORIZED_COMMITTER = 'authorized@example.com'
-
-  mockExeca.mockImplementation(async () => {
-    return { stdout: '', stderr: '' } as any
-  })
+  mockExeca.mockImplementation(async () => ({ stdout: '', stderr: '' }))
   mockCloneRepo.mockResolvedValue()
   mockCommitAndPush.mockResolvedValue()
-
+  const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
       check_run: {
@@ -210,7 +208,7 @@ test('handleCheckRun should run if all conditions are met', async () => {
     octokit: {
       rest: {
         checks: {
-          listForRef: jest.fn().mockResolvedValue({
+          listForRef: jest.fn<any>().mockResolvedValue({
             data: {
               check_runs: [
                 {
@@ -222,10 +220,10 @@ test('handleCheckRun should run if all conditions are met', async () => {
                 },
               ],
             },
-          }) as any,
+          }),
         },
         repos: {
-          getCommit: jest.fn().mockResolvedValue({
+          getCommit: jest.fn<any>().mockResolvedValue({
             data: {
               commit: {
                 author: {
@@ -233,10 +231,10 @@ test('handleCheckRun should run if all conditions are met', async () => {
                 },
               },
             },
-          }) as any,
+          }),
         },
         pulls: {
-          get: jest.fn().mockResolvedValue({
+          get: jest.fn<any>().mockResolvedValue({
             data: {
               head: {
                 ref: 'feature-branch',
@@ -245,11 +243,11 @@ test('handleCheckRun should run if all conditions are met', async () => {
                 },
               },
             },
-          }) as any,
+          }),
         },
       },
     },
-  } as unknown as Context<'check_run'>
+  } as any
 
   await handleCheckRun(context)
   expect(context.octokit.rest.pulls.get).toHaveBeenCalledWith({
@@ -260,4 +258,4 @@ test('handleCheckRun should run if all conditions are met', async () => {
   expect(mockCloneRepo).toHaveBeenCalled()
   expect(mockExeca).toHaveBeenCalledTimes(3)
   expect(mockCommitAndPush).toHaveBeenCalled()
-}, 30000)
+}, 10000)
