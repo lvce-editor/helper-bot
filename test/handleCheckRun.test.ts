@@ -1,5 +1,4 @@
-import { test, expect, jest } from '@jest/globals'
-import { Context } from 'probot'
+import { expect, jest, test } from '@jest/globals'
 
 const mockExeca = jest.fn<any>()
 const mockCloneRepo = jest.fn<any>()
