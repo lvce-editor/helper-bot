@@ -189,8 +189,18 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
 test('handleCheckRun should run if all conditions are met', async () => {
   process.env.AUTHORIZED_COMMITTER = 'authorized@example.com'
   mockExeca.mockImplementation(async () => ({ stdout: '', stderr: '' }))
-  mockCloneRepo.mockResolvedValue()
-  mockCommitAndPush.mockResolvedValue()
+  mockCloneRepo.mockImplementation(
+    async (owner: string, repo: string, tmpFolder: string) => {},
+  )
+  mockCommitAndPush.mockImplementation(
+    async (
+      tmpFolder: string,
+      branchName: string,
+      octokit: any,
+      owner: string,
+      repo: string,
+    ) => {},
+  )
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
@@ -255,7 +265,17 @@ test('handleCheckRun should run if all conditions are met', async () => {
     repo: 'repo',
     pull_number: 1,
   })
-  expect(mockCloneRepo).toHaveBeenCalled()
+  expect(mockCloneRepo).toHaveBeenCalledWith(
+    'owner',
+    'repo',
+    expect.any(String),
+  )
   expect(mockExeca).toHaveBeenCalledTimes(3)
-  expect(mockCommitAndPush).toHaveBeenCalled()
+  expect(mockCommitAndPush).toHaveBeenCalledWith(
+    expect.any(String),
+    'feature-branch',
+    context.octokit,
+    'owner',
+    'repo',
+  )
 }, 10000)
