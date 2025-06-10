@@ -12,17 +12,18 @@ export const handleCheckRun = async (
 
   // Only handle failed check suites
   if (check_suite.conclusion !== 'failure') {
+    console.log('no failure')
     return
   }
 
   const pr = check_suite.pull_requests?.[0]
   if (!pr) {
+    console.log('no pr')
     return
   }
 
-  console.log(`Commit author email: ${sender.login}`)
-
   if (!sender.login || sender.login !== authorizedCommitter) {
+    console.log('not authorized')
     return
   }
 
