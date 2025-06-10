@@ -2,8 +2,8 @@ import { execa } from 'execa'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { ProbotOctokit } from 'probot'
-import { cloneRepo } from './cloneRepo'
-import { commitAndPush } from './commitAndPush'
+import { cloneRepo } from './cloneRepo.js'
+import { commitAndPush } from './commitAndPush.js'
 
 export const autoFixCi = async (
   octokit: ProbotOctokit,
