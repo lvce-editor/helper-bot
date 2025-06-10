@@ -1,12 +1,12 @@
 import { execa } from 'execa'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { Context } from 'probot'
+import { ProbotOctokit } from 'probot'
 import { cloneRepo } from './cloneRepo'
 import { commitAndPush } from './commitAndPush'
 
 export const autoFixCi = async (
-  context: Context,
+  octokit: ProbotOctokit,
   owner: string,
   repo: string,
   prNumber: number,
@@ -16,7 +16,6 @@ export const autoFixCi = async (
   if (committer !== authorizedCommitter) {
     return
   }
-  const octokit = context.octokit
 
   const { data: pr } = await octokit.rest.pulls.get({
     owner,
