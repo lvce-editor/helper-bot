@@ -1,5 +1,5 @@
 import { Context } from 'probot'
-import { autoFixCi } from './autoFixCi'
+import { autoFixCi } from './autoFixCi.js'
 
 export const handleCheckRun = async (
   context: Context<'check_run'>,
