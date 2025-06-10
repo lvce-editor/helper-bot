@@ -21,7 +21,7 @@ test('updates node version in files', async () => {
     if (path === '/test/Dockerfile') {
       return 'FROM node:18.0.0\nWORKDIR /app'
     }
-    if (path === '/test/gitpod.Dockerfile') {
+    if (path === '/test/.gitpod.Dockerfile') {
       return 'FROM gitpod/workspace-full\nRUN nvm install 18.0.0'
     }
     throw new Error('File not found')
@@ -55,7 +55,7 @@ test('updates node version in files', async () => {
   )
   expect(mockFs.writeFile).toHaveBeenNthCalledWith(
     3,
-    '/test/gitpod.Dockerfile',
+    '/test/.gitpod.Dockerfile',
     'FROM gitpod/workspace-full\nRUN nvm install 20.0.0',
   )
   expect(mock.isDone()).toBe(true)
