@@ -1,3 +1,5 @@
+import { captureException } from './errorHandling.js'
+
 type QueueContext<T> = {
   queue: T[]
   isProcessing: boolean
@@ -21,7 +23,7 @@ export const createQueue = <T>(handleItem: (item: T) => Promise<void>) => {
     try {
       await handleItem(item)
     } catch (error) {
-      console.error('Error processing queue item:', error)
+      captureException(error as Error)
     }
 
     context.queue.shift()

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from 'probot'
 import { createPullRequest } from './createPullRequest.js'
+import { captureException } from './errorHandling.js'
 
 const shortCommitMessageRepos = [
   'renderer-process',
@@ -91,6 +92,7 @@ const getNewPackageFiles = async (
       newPackageLockJsonString,
     }
   } catch (error) {
+    captureException(error as Error)
     throw new Error(`Failed to update dependencies: ${error}`)
   } finally {
     for (const folder of toRemove) {
