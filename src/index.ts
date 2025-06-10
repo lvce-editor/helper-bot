@@ -1,3 +1,4 @@
+import './errorHandling.js'
 import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
