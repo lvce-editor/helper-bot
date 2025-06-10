@@ -10,14 +10,7 @@ export const handleCheckRun = async (context: Context<'check_run'>) => {
     return
   }
 
-  // Get the PR number from the check run
-  const { data: prs } = await context.octokit.rest.checks.listForRef({
-    owner: owner.login,
-    repo: name,
-    ref: check_run.head_sha,
-  })
-
-  const pr = prs.check_runs[0]?.pull_requests?.[0]
+  const pr = check_run.pull_requests?.[0]
   if (!pr) {
     return
   }
