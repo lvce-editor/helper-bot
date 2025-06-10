@@ -2,6 +2,7 @@ import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
 import { updateDependencies } from './updateDependencies.js'
+import { handleCheckRun } from './handleCheckRun.js'
 
 const dependencies = [
   {
@@ -445,4 +446,11 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
 export default (app: Probot, { getRouter }: any) => {
   enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
+  app.on('check_run.completed', (context) => {
+    const authorizedCommitter = process.env.AUTHORIZED_COMMITTER
+    if (!authorizedCommitter) {
+      return
+    }
+    return handleCheckRun(context, authorizedCommitter)
+  })
 }
