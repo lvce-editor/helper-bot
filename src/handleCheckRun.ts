@@ -8,6 +8,8 @@ export const handleCheckRun = async (
   const { check_run, repository } = context.payload
   const { owner, name } = repository
 
+  console.log(`Received check run from repository: ${owner.login}/${name}`)
+
   // Only handle failed check runs
   if (check_run.conclusion !== 'failure') {
     return
@@ -26,6 +28,8 @@ export const handleCheckRun = async (
   })
 
   const committer = commit.commit.author?.email
+  console.log(`Commit author email: ${committer}`)
+
   if (!committer || committer !== authorizedCommitter) {
     return
   }
