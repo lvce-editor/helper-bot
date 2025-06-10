@@ -58,7 +58,7 @@ export default (app: Probot, { getRouter }: any) => {
   console.log('Application starting up...')
   enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
-  app.on('check_run.completed', (context) => {
+  app.on('check_suite.completed', (context) => {
     console.log('Check run completed event received')
     console.log('Event payload:', JSON.stringify(context.payload, null, 2))
 

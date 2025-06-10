@@ -2,20 +2,20 @@ import { Context } from 'probot'
 import { autoFixCi } from './autoFixCi.js'
 
 export const handleCheckRun = async (
-  context: Context<'check_run'>,
+  context: Context<'check_suite'>,
   authorizedCommitter: string,
 ) => {
-  const { check_run, repository } = context.payload
+  const { check_suite, repository } = context.payload
   const { owner, name } = repository
 
   console.log(`Received check run from repository: ${owner.login}/${name}`)
 
   // Only handle failed check runs
-  if (check_run.conclusion !== 'failure') {
+  if (check_suite.conclusion !== 'failure') {
     return
   }
 
-  const pr = check_run.pull_requests?.[0]
+  const pr = check_suite.pull_requests?.[0]
   if (!pr) {
     return
   }
@@ -24,7 +24,7 @@ export const handleCheckRun = async (
   const { data: commit } = await context.octokit.rest.repos.getCommit({
     owner: owner.login,
     repo: name,
-    ref: check_run.head_sha,
+    ref: check_suite.head_sha,
   })
 
   const committer = commit.commit.author?.email
