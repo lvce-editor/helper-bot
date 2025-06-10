@@ -5,7 +5,7 @@ export const handleCheckRun = async (
   context: Context<'check_suite'>,
   authorizedCommitter: string,
 ) => {
-  const { check_suite, repository } = context.payload
+  const { check_suite, repository, sender } = context.payload
   const { owner, name } = repository
 
   console.log(`Received check suite from repository: ${owner.login}/${name}`)
@@ -20,17 +20,9 @@ export const handleCheckRun = async (
     return
   }
 
-  // Get the committer from the check suite
-  const { data: commit } = await context.octokit.rest.repos.getCommit({
-    owner: owner.login,
-    repo: name,
-    ref: check_suite.head_sha,
-  })
+  console.log(`Commit author email: ${sender.login}`)
 
-  const committer = commit.commit.author?.email
-  console.log(`Commit author email: ${committer}`)
-
-  if (!committer || committer !== authorizedCommitter) {
+  if (!sender.login || sender.login !== authorizedCommitter) {
     return
   }
 
@@ -46,12 +38,5 @@ export const handleCheckRun = async (
     return
   }
 
-  await autoFixCi(
-    context.octokit,
-    owner.login,
-    name,
-    pr.number,
-    committer,
-    authorizedCommitter,
-  )
+  await autoFixCi(context.octokit, owner.login, name, pr.number)
 }

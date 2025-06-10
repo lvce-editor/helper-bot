@@ -78,6 +78,9 @@ test('handleCheckRun should not run if no committer found', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
+      sender: {
+        login: '',
+      },
       check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
@@ -116,6 +119,9 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
+      sender: {
+        login: 'not-authorized@example.com',
+      },
       check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
@@ -156,6 +162,9 @@ test('handleCheckRun should not run if PR is from a fork', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
+      sender: {
+        login: 'authorized@example.com',
+      },
       check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
@@ -226,6 +235,9 @@ test('handleCheckRun should run if all conditions are met', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
+      sender: {
+        login: 'authorized@example.com',
+      },
       check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
