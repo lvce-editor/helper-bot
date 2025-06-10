@@ -58,11 +58,10 @@ export default (app: Probot, { getRouter }: any) => {
   console.log('Application starting up...')
   enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
-  app.on('check_run.completed', (context) => {
-    console.log('Check run completed event received')
+  app.on('check_suite.completed', (context) => {
+    console.log('Check suite completed event received')
     console.log('Event payload:', JSON.stringify(context.payload, null, 2))
-
-    console.log(`Received check run: ${context.payload.repository.full_name}`)
+    console.log(`Received check suite: ${context.payload.repository.full_name}`)
     const authorizedCommitter = process.env.AUTHORIZED_COMMITTER
     console.log('Authorized committer:', authorizedCommitter)
     if (!authorizedCommitter) {

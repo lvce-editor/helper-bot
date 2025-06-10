@@ -16,11 +16,11 @@ jest.unstable_mockModule('../src/commitAndPush', () => ({
   commitAndPush: mockCommitAndPush,
 }))
 
-test('handleCheckRun should not run if check run is not failed', async () => {
+test('handleCheckRun should not run if check suite is not failed', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
-      check_run: {
+      check_suite: {
         conclusion: 'success',
         head_sha: 'test-sha',
         pull_requests: [],
@@ -49,7 +49,7 @@ test('handleCheckRun should not run if no PR found', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
-      check_run: {
+      check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
         pull_requests: [],
@@ -78,7 +78,7 @@ test('handleCheckRun should not run if no committer found', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
-      check_run: {
+      check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
         pull_requests: [
@@ -116,7 +116,7 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
-      check_run: {
+      check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
         pull_requests: [
@@ -156,7 +156,7 @@ test('handleCheckRun should not run if PR is from a fork', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
-      check_run: {
+      check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
         pull_requests: [
@@ -226,7 +226,7 @@ test('handleCheckRun should run if all conditions are met', async () => {
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
-      check_run: {
+      check_suite: {
         conclusion: 'failure',
         head_sha: 'test-sha',
         pull_requests: [
