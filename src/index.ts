@@ -5,6 +5,7 @@ import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
 import { updateDependencies } from './updateDependencies.js'
 import { handleCheckRun } from './handleCheckRun.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
+import { captureException } from './errorHandling.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -13,7 +14,7 @@ const updateRepositoryDependencies = async (context: Context<'release'>) => {
     try {
       await updateDependencies(context, dependency)
     } catch (error) {
-      console.error(error)
+      captureException(error as Error)
     }
   }
 }

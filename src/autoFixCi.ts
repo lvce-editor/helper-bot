@@ -5,6 +5,7 @@ import { ProbotOctokit } from 'probot'
 import { cloneRepo } from './cloneRepo.js'
 import { commitAndPush } from './commitAndPush.js'
 import { rm } from 'node:fs/promises'
+import { captureException } from './errorHandling.js'
 
 export const autoFixCi = async (
   octokit: ProbotOctokit,
@@ -40,6 +41,7 @@ export const autoFixCi = async (
     await execa('npx', ['eslint', '.', '--fix'], { cwd: tempDir })
     await commitAndPush(tempDir, branchName, octokit, owner, repo)
   } catch (error) {
+    captureException(error as Error)
     // If eslint fails or can't fix, do nothing
     return
   } finally {

@@ -10,3 +10,10 @@ if (process.env.SENTRY_DSN) {
     sendDefaultPii: true,
   })
 }
+
+export const captureException = (error: Error): void => {
+  console.error(error)
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(error)
+  }
+}

@@ -8,6 +8,7 @@ import { Context, Probot } from 'probot'
 import { commitAndPush } from './commitAndPush.js'
 import { createQueue } from './createQueue.js'
 import { updateNodeVersion } from './updateNodeVersion.js'
+import { captureException } from './errorHandling.js'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -115,7 +116,7 @@ const handleQueueItem = async (item: QueueItem) => {
       await rm(tmpFolder, { recursive: true, force: true })
     }
   } catch (error) {
-    console.error('Error updating dependencies:', error)
+    captureException(error as Error)
     item.res.status(424).json({
       error: 'Failed to update dependencies',
       // @ts-ignore

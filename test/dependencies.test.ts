@@ -8,11 +8,16 @@ const mockFs = {
   mkdir: jest.fn(),
   rm: jest.fn(),
   readFile: jest.fn(),
+  readdir: jest.fn(),
   writeFile: jest.fn(),
   existsSync: jest.fn(),
+  createReadStream: jest.fn(),
 }
 
+const mockSentry = {}
+
 jest.unstable_mockModule('execa', () => mockExeca)
+jest.unstable_mockModule('@sentry/node', () => mockSentry)
 jest.unstable_mockModule('node:fs/promises', () => mockFs)
 jest.unstable_mockModule('node:fs', () => mockFs)
 jest.unstable_mockModule('node:os', () => ({
