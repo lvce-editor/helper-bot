@@ -1,0 +1,195 @@
+{
+  "dependencies": [
+    {
+      "fromRepo": "eslint-config",
+      "toRepo": "text-search-worker",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "test-worker",
+      "toRepo": "test-with-playwright",
+      "toFolder": "packages/build"
+    },
+    {
+      "fromRepo": "eslint-config",
+      "toRepo": "iframe-worker",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "eslint-config",
+      "toRepo": "file-watcher-process",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "eslint-config",
+      "toRepo": "test-worker",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "renderer-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "embeds-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "color-picker-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "embeds-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/shared-process"
+    },
+    {
+      "fromRepo": "main-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/main-process"
+    },
+    {
+      "fromRepo": "iframe-inspector",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "markdown-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "rename-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "terminal-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "test-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-host-sub-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "title-bar-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "explorer-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "editor-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "error-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "diff-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "keybindings-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-search-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-detail-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "iframe-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-host-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "syntax-highlighting-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "about-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "source-control-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker",
+      "asName": "source-control-worker"
+    },
+    {
+      "fromRepo": "file-search-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "text-search-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "virtual-dom",
+      "toRepo": "renderer-process",
+      "toFolder": "packages/renderer-process"
+    },
+    {
+      "fromRepo": "ipc",
+      "toRepo": "renderer-process",
+      "toFolder": "packages/renderer-process"
+    },
+    {
+      "fromRepo": "preview-injected-code",
+      "toRepo": "preview-process",
+      "toFolder": "packages/preview-process"
+    },
+    {
+      "fromRepo": "ipc",
+      "toRepo": "rpc",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "json-rpc",
+      "toRepo": "rpc",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "rpc",
+      "toRepo": "test-worker",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "rpc",
+      "toRepo": "typescript-compile-process",
+      "toFolder": ""
+    }
+  ]
+}
