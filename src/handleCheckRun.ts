@@ -30,6 +30,18 @@ export const handleCheckRun = async (
     return
   }
 
+  // Get PR details to check if it's from a fork
+  const { data: prData } = await context.octokit.rest.pulls.get({
+    owner: owner.login,
+    repo: name,
+    pull_number: pr.number,
+  })
+
+  // Check if the PR is from a fork
+  if (prData.head.repo.full_name !== `${owner.login}/${name}`) {
+    return
+  }
+
   await autoFixCi(
     context.octokit,
     owner.login,

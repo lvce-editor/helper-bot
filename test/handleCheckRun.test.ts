@@ -152,6 +152,63 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
   await handleCheckRun(context, 'authorized@example.com')
 })
 
+test('handleCheckRun should not run if PR is from a fork', async () => {
+  const { handleCheckRun } = await import('../src/handleCheckRun')
+  const context = {
+    payload: {
+      check_run: {
+        conclusion: 'failure',
+        head_sha: 'test-sha',
+        pull_requests: [
+          {
+            number: 1,
+          },
+        ],
+      },
+      repository: {
+        owner: {
+          login: 'owner',
+        },
+        name: 'repo',
+      },
+    },
+    octokit: {
+      rest: {
+        repos: {
+          getCommit: jest.fn<any>().mockResolvedValue({
+            data: {
+              commit: {
+                author: {
+                  email: 'authorized@example.com',
+                },
+              },
+            },
+          }),
+        },
+        pulls: {
+          get: jest.fn<any>().mockResolvedValue({
+            data: {
+              head: {
+                repo: {
+                  full_name: 'fork-owner/repo',
+                },
+              },
+            },
+          }),
+        },
+      },
+    },
+  } as any
+
+  await handleCheckRun(context, 'authorized@example.com')
+  expect(context.octokit.rest.pulls.get).toHaveBeenCalledWith({
+    owner: 'owner',
+    repo: 'repo',
+    pull_number: 1,
+  })
+  expect(mockCloneRepo).not.toHaveBeenCalled()
+})
+
 test('handleCheckRun should run if all conditions are met', async () => {
   mockExeca.mockImplementation(async () => ({ stdout: '', stderr: '' }))
   mockCloneRepo.mockImplementation(
@@ -204,6 +261,7 @@ test('handleCheckRun should run if all conditions are met', async () => {
               head: {
                 ref: 'feature-branch',
                 repo: {
+                  full_name: 'owner/repo',
                   clone_url: 'https://github.com/owner/repo.git',
                 },
               },
