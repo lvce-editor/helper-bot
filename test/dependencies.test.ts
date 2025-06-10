@@ -8,6 +8,7 @@ const mockFs = {
   mkdir: jest.fn(),
   rm: jest.fn(),
   readFile: jest.fn(),
+  readDir: jest.fn(),
   writeFile: jest.fn(),
   existsSync: jest.fn(),
 }
