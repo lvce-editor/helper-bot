@@ -56,7 +56,7 @@ const updateDockerfile = async (newVersion: string, root: string) => {
 
 const updateGitpodDockerfile = async (newVersion: string, root: string) => {
   try {
-    const gitpodPath = join(root, 'gitpod.Dockerfile')
+    const gitpodPath = join(root, '.gitpod.Dockerfile')
     const content = await readFile(gitpodPath, 'utf-8')
     const updated = content.replace(
       /nvm install \d+\.\d+\.\d+/,
