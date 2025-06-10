@@ -8,9 +8,9 @@ export const handleCheckRun = async (
   const { check_suite, repository } = context.payload
   const { owner, name } = repository
 
-  console.log(`Received check run from repository: ${owner.login}/${name}`)
+  console.log(`Received check suite from repository: ${owner.login}/${name}`)
 
-  // Only handle failed check runs
+  // Only handle failed check suites
   if (check_suite.conclusion !== 'failure') {
     return
   }
@@ -20,7 +20,7 @@ export const handleCheckRun = async (
     return
   }
 
-  // Get the committer from the check run
+  // Get the committer from the check suite
   const { data: commit } = await context.octokit.rest.repos.getCommit({
     owner: owner.login,
     repo: name,
