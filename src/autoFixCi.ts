@@ -12,13 +12,7 @@ export const autoFixCi = async (
   owner: string,
   repo: string,
   prNumber: number,
-  committer: string,
-  authorizedCommitter: string,
 ): Promise<void> => {
-  if (committer !== authorizedCommitter) {
-    return
-  }
-
   const { data: pr } = await octokit.rest.pulls.get({
     owner,
     repo,
