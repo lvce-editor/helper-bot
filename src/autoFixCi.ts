@@ -31,8 +31,20 @@ export const autoFixCi = async (
 
   try {
     await execa('git', ['checkout', branchName], { cwd: tempDir })
-    await execa('npm', ['ci'], { cwd: tempDir })
-    await execa('npx', ['eslint', '.', '--fix'], { cwd: tempDir })
+    await execa('npm', ['ci'], {
+      cwd: tempDir,
+      env: {
+        ...process.env,
+        NODE_ENV: 'development',
+      },
+    })
+    await execa('npx', ['eslint', '.', '--fix'], {
+      cwd: tempDir,
+      env: {
+        ...process.env,
+        NODE_ENV: 'development',
+      },
+    })
     await commitAndPush(tempDir, branchName, octokit, owner, repo)
   } catch (error) {
     captureException(error as Error)
