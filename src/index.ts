@@ -55,14 +55,21 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
 }
 
 export default (app: Probot, { getRouter }: any) => {
+  console.log('Application starting up...')
   enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
   app.on('check_run.completed', (context) => {
+    console.log('Check run completed event received')
+    console.log('Event payload:', JSON.stringify(context.payload, null, 2))
+
     console.log(`Received check run: ${context.payload.repository.full_name}`)
     const authorizedCommitter = process.env.AUTHORIZED_COMMITTER
+    console.log('Authorized committer:', authorizedCommitter)
     if (!authorizedCommitter) {
+      console.log('No authorized committer set')
       return
     }
     return handleCheckRun(context, authorizedCommitter)
   })
+  console.log('Event handlers registered')
 }
