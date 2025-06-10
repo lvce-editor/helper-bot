@@ -1,7 +1,10 @@
 import { Context } from 'probot'
 import { autoFixCi } from './autoFixCi'
 
-export const handleCheckRun = async (context: Context<'check_run'>) => {
+export const handleCheckRun = async (
+  context: Context<'check_run'>,
+  authorizedCommitter: string,
+) => {
   const { check_run, repository } = context.payload
   const { owner, name } = repository
 
@@ -23,12 +26,7 @@ export const handleCheckRun = async (context: Context<'check_run'>) => {
   })
 
   const committer = commit.commit.author?.email
-  if (!committer) {
-    return
-  }
-
-  const authorizedCommitter = process.env.AUTHORIZED_COMMITTER
-  if (!authorizedCommitter) {
+  if (!committer || committer !== authorizedCommitter) {
     return
   }
 
