@@ -1,10 +1,12 @@
 default_events:
   - release
+  - check_run
 
 default_permissions:
   contents: write
   metadata: read
   pull_requests: write
+  checks: write
 
 name: Lvce Editor Helper Bot
 url: https://github.com/lvce-editor/helper-bot
