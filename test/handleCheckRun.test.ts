@@ -41,7 +41,7 @@ test('handleCheckRun should not run if check run is not failed', async () => {
     },
   } as any
 
-  await handleCheckRun(context)
+  await handleCheckRun(context, 'authorized@example.com')
   expect(context.octokit.rest.repos.getCommit).not.toHaveBeenCalled()
 })
 
@@ -70,7 +70,7 @@ test('handleCheckRun should not run if no PR found', async () => {
     },
   } as any
 
-  await handleCheckRun(context)
+  await handleCheckRun(context, 'authorized@example.com')
   expect(context.octokit.rest.repos.getCommit).not.toHaveBeenCalled()
 })
 
@@ -109,11 +109,10 @@ test('handleCheckRun should not run if no committer found', async () => {
     },
   } as any
 
-  await handleCheckRun(context)
+  await handleCheckRun(context, 'authorized@example.com')
 })
 
 test('handleCheckRun should not run if committer is not authorized', async () => {
-  process.env.AUTHORIZED_COMMITTER = 'authorized@example.com'
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
@@ -150,11 +149,10 @@ test('handleCheckRun should not run if committer is not authorized', async () =>
     },
   } as any
 
-  await handleCheckRun(context)
+  await handleCheckRun(context, 'authorized@example.com')
 })
 
 test('handleCheckRun should run if all conditions are met', async () => {
-  process.env.AUTHORIZED_COMMITTER = 'authorized@example.com'
   mockExeca.mockImplementation(async () => ({ stdout: '', stderr: '' }))
   mockCloneRepo.mockImplementation(
     async (owner: string, repo: string, tmpFolder: string) => {},
@@ -216,7 +214,7 @@ test('handleCheckRun should run if all conditions are met', async () => {
     },
   } as any
 
-  await handleCheckRun(context)
+  await handleCheckRun(context, 'authorized@example.com')
   expect(context.octokit.rest.pulls.get).toHaveBeenCalledWith({
     owner: 'owner',
     repo: 'repo',
