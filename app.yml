@@ -6,6 +6,7 @@ default_permissions:
   contents: write
   metadata: read
   pull_requests: write
+  checks: read
 
 name: Lvce Editor Helper Bot
 url: https://github.com/lvce-editor/helper-bot
