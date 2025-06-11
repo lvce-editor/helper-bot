@@ -7,12 +7,46 @@ import { commitAndPush } from './commitAndPush.js'
 import { rm } from 'node:fs/promises'
 import { captureException } from './errorHandling.js'
 import { createQueue } from './createQueue.js'
+import { existsSync } from 'node:fs'
+import { readdir } from 'node:fs/promises'
 
 type QueueItem = {
   octokit: ProbotOctokit
   owner: string
   repo: string
   prNumber: number
+}
+
+const installDependencies = async (cwd: string): Promise<void> => {
+  // Run npm ci with postinstall scripts disabled
+  await execa('npm', ['ci', '--ignore-scripts'], {
+    cwd,
+    env: {
+      ...process.env,
+      NODE_ENV: 'development',
+    },
+  })
+
+  // Check if packages directory exists and install dependencies for each package
+  const packagesDir = join(cwd, 'packages')
+  if (existsSync(packagesDir)) {
+    const packages = await readdir(packagesDir, { withFileTypes: true })
+    for (const pkg of packages) {
+      if (pkg.isDirectory()) {
+        const pkgPath = join(packagesDir, pkg.name)
+        const pkgJsonPath = join(pkgPath, 'package.json')
+        if (existsSync(pkgJsonPath)) {
+          await execa('npm', ['ci'], {
+            cwd: pkgPath,
+            env: {
+              ...process.env,
+              NODE_ENV: 'development',
+            },
+          })
+        }
+      }
+    }
+  }
 }
 
 const handleQueueItem = async (item: QueueItem): Promise<void> => {
@@ -36,13 +70,7 @@ const handleQueueItem = async (item: QueueItem): Promise<void> => {
 
   try {
     await execa('git', ['checkout', branchName], { cwd: tempDir })
-    await execa('nice', ['npm', 'ci'], {
-      cwd: tempDir,
-      env: {
-        ...process.env,
-        NODE_ENV: 'development',
-      },
-    })
+    await installDependencies(tempDir)
     await execa('npx', ['eslint', '.', '--fix'], {
       cwd: tempDir,
       env: {
