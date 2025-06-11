@@ -78,7 +78,11 @@ const handleQueueItem = async (item: QueueItem): Promise<void> => {
         NODE_ENV: 'development',
       },
     })
-    await commitAndPush(tempDir, branchName, octokit, owner, repo)
+    await commitAndPush(tempDir, branchName, octokit, owner, repo, {
+      commitMessage: 'style: fix eslint errors',
+      createNewBranch: false,
+      baseBranch: branchName,
+    })
   } catch (error) {
     captureException(error as Error)
     // If eslint fails or can't fix, do nothing
