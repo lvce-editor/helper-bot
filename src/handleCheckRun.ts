@@ -35,7 +35,7 @@ export const handleCheckRun = async (
   })
 
   // Check if the PR is from a fork
-  if (prData.head.repo.full_name !== `${owner.login}/${name}`) {
+  if (prData.head.repo.owner.login !== owner.login) {
     return
   }
 
