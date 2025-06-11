@@ -6,6 +6,7 @@ import { updateDependencies } from './updateDependencies.js'
 import { handleCheckRun } from './handleCheckRun.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { captureException } from './errorHandling.js'
+import { availableParallelism } from 'node:os'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -56,6 +57,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
 
 export default (app: Probot, { getRouter }: any) => {
   console.log('Application starting up...')
+  console.log(`cpus: ${availableParallelism()}`)
   enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
   app.on('check_suite.completed', (context) => {

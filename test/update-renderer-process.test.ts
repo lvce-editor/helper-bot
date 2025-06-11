@@ -28,6 +28,9 @@ jest.unstable_mockModule('node:os', () => {
     hostname() {
       return 'localhost'
     },
+    availableParallelism() {
+      return 1
+    },
   }
 })
 
