@@ -199,6 +199,9 @@ test('handleCheckRun should not run if PR is from a fork', async () => {
             data: {
               head: {
                 repo: {
+                  owner: {
+                    login: 'fork-owner',
+                  },
                   full_name: 'fork-owner/repo',
                 },
               },
@@ -272,7 +275,11 @@ test('handleCheckRun should run if all conditions are met', async () => {
             data: {
               head: {
                 ref: 'feature-branch',
+
                 repo: {
+                  owner: {
+                    login: 'owner',
+                  },
                   full_name: 'owner/repo',
                   clone_url: 'https://github.com/owner/repo.git',
                 },
