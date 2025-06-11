@@ -41,5 +41,6 @@ export const handleCheckRun = async (
     return
   }
 
+  console.log('begin autofix ci')
   await autoFixCi(context.octokit, owner.login, name, pr.number)
 }
