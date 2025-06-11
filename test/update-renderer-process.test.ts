@@ -2,7 +2,6 @@ import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import { join } from 'path'
 import { jest, beforeEach, test, expect, afterEach } from '@jest/globals'
-import { availableParallelism } from 'node:os'
 
 let probot: Probot | undefined
 
