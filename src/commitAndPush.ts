@@ -3,6 +3,7 @@ import { execa } from 'execa'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { VError } from '@lvce-editor/verror'
 
 const modeFile: '100644' = '100644'
 const typeFile: 'blob' = 'blob'
@@ -36,7 +37,7 @@ export const commitAndPush = async (
   const branchRef = await octokit.rest.git.getRef({
     owner,
     repo,
-    ref: `heads/${baseBranch}`,
+    ref: `heads/${createNewBranch ? baseBranch : branchName}`,
   })
 
   const latestCommit = await octokit.rest.git.getCommit({
@@ -86,20 +87,28 @@ export const commitAndPush = async (
   })
 
   if (createNewBranch) {
-    await octokit.rest.git.createRef({
-      owner,
-      repo,
-      ref: `refs/heads/${branchName}`,
-      sha: commit.data.sha,
-    })
+    try {
+      await octokit.rest.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branchName}`,
+        sha: commit.data.sha,
+      })
+    } catch (error) {
+      throw new VError(error, `Failed to create new branch`)
+    }
   } else {
-    await octokit.rest.git.updateRef({
-      owner,
-      repo,
-      ref: `heads/${branchName}`,
-      sha: commit.data.sha,
-      force: true,
-    })
+    try {
+      await octokit.rest.git.updateRef({
+        owner,
+        repo,
+        ref: `heads/${branchName}`,
+        sha: commit.data.sha,
+        force: true,
+      })
+    } catch (error) {
+      throw new VError(error, `Failed to update branch`)
+    }
   }
 
   return true
