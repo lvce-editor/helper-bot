@@ -6,13 +6,18 @@ import { cloneRepo } from './cloneRepo.js'
 import { commitAndPush } from './commitAndPush.js'
 import { rm } from 'node:fs/promises'
 import { captureException } from './errorHandling.js'
+import { createQueue } from './createQueue.js'
 
-export const autoFixCi = async (
-  octokit: ProbotOctokit,
-  owner: string,
-  repo: string,
-  prNumber: number,
-): Promise<void> => {
+type QueueItem = {
+  octokit: ProbotOctokit
+  owner: string
+  repo: string
+  prNumber: number
+}
+
+const handleQueueItem = async (item: QueueItem): Promise<void> => {
+  const { octokit, owner, repo, prNumber } = item
+
   const { data: pr } = await octokit.rest.pulls.get({
     owner,
     repo,
@@ -53,4 +58,20 @@ export const autoFixCi = async (
   } finally {
     await rm(tempDir, { recursive: true, force: true })
   }
+}
+
+const { addToQueue } = createQueue<QueueItem>(handleQueueItem)
+
+export const autoFixCi = async (
+  octokit: ProbotOctokit,
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<void> => {
+  await addToQueue({
+    octokit,
+    owner,
+    repo,
+    prNumber,
+  })
 }
