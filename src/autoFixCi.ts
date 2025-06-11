@@ -36,7 +36,7 @@ const handleQueueItem = async (item: QueueItem): Promise<void> => {
 
   try {
     await execa('git', ['checkout', branchName], { cwd: tempDir })
-    await execa('npm', ['ci'], {
+    await execa('nice', ['npm', 'ci'], {
       cwd: tempDir,
       env: {
         ...process.env,
