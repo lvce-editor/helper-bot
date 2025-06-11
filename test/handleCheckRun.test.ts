@@ -309,5 +309,10 @@ test('handleCheckRun should run if all conditions are met', async () => {
     context.octokit,
     'owner',
     'repo',
+    {
+      baseBranch: 'feature-branch',
+      commitMessage: 'style: fix eslint errors',
+      createNewBranch: false,
+    },
   )
 }, 10000)
