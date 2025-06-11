@@ -1,4 +1,4 @@
-import { test, expect } from '@jest/globals'
+import { test, expect, jest } from '@jest/globals'
 import { autoFixCi } from '../src/autoFixCi.js'
 import { execa } from 'execa'
 import { cloneRepo } from '../src/cloneRepo.js'
