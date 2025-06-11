@@ -31,7 +31,7 @@ export const autoFixCi = async (
 
   try {
     await execa('git', ['checkout', branchName], { cwd: tempDir })
-    await execa('npm', ['ci'], {
+    await execa('nice', ['npm', 'ci'], {
       cwd: tempDir,
       env: {
         ...process.env,
