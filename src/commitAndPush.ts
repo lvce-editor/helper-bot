@@ -13,7 +13,12 @@ export const commitAndPush = async (
   octokit: Context<'release'>['octokit'],
   owner: string,
   repo: string,
-) => {
+  options: {
+    commitMessage?: string
+    createNewBranch?: boolean
+    baseBranch?: string
+  } = {},
+): Promise<boolean> => {
   const { stdout } = await execa('git', ['status', '--porcelain'], {
     cwd: tmpFolder,
   })
@@ -22,16 +27,22 @@ export const commitAndPush = async (
     return false
   }
 
-  const mainBranchRef = await octokit.rest.git.getRef({
+  const {
+    commitMessage = 'update dependencies',
+    createNewBranch = true,
+    baseBranch = 'main',
+  } = options
+
+  const branchRef = await octokit.rest.git.getRef({
     owner,
     repo,
-    ref: 'heads/main',
+    ref: `heads/${baseBranch}`,
   })
 
   const latestCommit = await octokit.rest.git.getCommit({
     owner,
     repo,
-    commit_sha: mainBranchRef.data.object.sha,
+    commit_sha: branchRef.data.object.sha,
   })
 
   const changedFiles = stdout
@@ -69,17 +80,27 @@ export const commitAndPush = async (
   const commit = await octokit.rest.git.createCommit({
     owner,
     repo,
-    message: 'update dependencies',
+    message: commitMessage,
     tree: newTree.data.sha,
     parents: [latestCommit.data.sha],
   })
 
-  await octokit.rest.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${branchName}`,
-    sha: commit.data.sha,
-  })
+  if (createNewBranch) {
+    await octokit.rest.git.createRef({
+      owner,
+      repo,
+      ref: `refs/heads/${branchName}`,
+      sha: commit.data.sha,
+    })
+  } else {
+    await octokit.rest.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${branchName}`,
+      sha: commit.data.sha,
+      force: true,
+    })
+  }
 
   return true
 }
