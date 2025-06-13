@@ -19,7 +19,7 @@ type QueueItem = {
 
 const installDependencies = async (cwd: string): Promise<void> => {
   // Run npm ci with postinstall scripts disabled
-  await execa('nice', ['npm', 'ci', '--ignore-scripts'], {
+  await execa('nice', ['-n', '19', 'npm', 'ci', '--ignore-scripts'], {
     cwd,
     env: {
       ...process.env,
