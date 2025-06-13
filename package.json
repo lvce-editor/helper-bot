@@ -16,7 +16,7 @@
     "@lvce-editor/verror": "^1.7.0",
     "@sentry/node": "^9.29.0",
     "execa": "^9.6.0",
-    "probot": "^13.4.3"
+    "probot": "^13.4.5"
   },
   "devDependencies": {
     "@jest/globals": "^30.0.0",
