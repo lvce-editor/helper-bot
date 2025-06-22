@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { setTimeout } from 'node:timers/promises'
 import { Context, Probot } from 'probot'
 import { commitAndPush } from './commitAndPush.js'
 import { createQueue } from './createQueue.js'
@@ -60,11 +61,52 @@ const createPullRequest = async (
   )
 }
 
-const updateDependencies = async (tmpFolder: string) => {
+const updateDependencies = async (
+  tmpFolder: string,
+  maxAttempts: number = 3,
+  retryDelay: number = 60000,
+) => {
   const scriptPath = join(tmpFolder, 'scripts', 'update-dependencies.sh')
-  await execa('bash', [scriptPath], {
-    cwd: tmpFolder,
-  })
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await execa('bash', [scriptPath], {
+        cwd: tmpFolder,
+      })
+      return // Success, exit the retry loop
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      // Always reset the folder to a clean state before retrying
+      try {
+        await execa('git', ['reset', '--hard'], { cwd: tmpFolder })
+      } catch (resetError) {
+        console.warn(
+          'Failed to reset folder with git reset --hard:',
+          resetError,
+        )
+      }
+      // Check if this is an ETARGET error
+      if (
+        errorMessage.includes('ETARGET') ||
+        errorMessage.includes('No matching version found')
+      ) {
+        if (attempt < maxAttempts) {
+          console.log(
+            `Attempt ${attempt} failed with ETARGET error, retrying in ${retryDelay / 1000} seconds...`,
+          )
+          await setTimeout(retryDelay) // Wait retryDelay ms
+          continue
+        } else {
+          console.log(`All ${maxAttempts} attempts failed with ETARGET error`)
+          throw error
+        }
+      } else {
+        // Not an ETARGET error, don't retry
+        throw error
+      }
+    }
+  }
 }
 
 const handleQueueItem = async (item: QueueItem) => {
@@ -167,3 +209,5 @@ export const handleDependencies =
       octokit,
     })
   }
+
+export { updateDependencies }
