@@ -342,3 +342,42 @@ test('handles dependency update failure', async () => {
     code: 'DEPENDENCY_UPDATE_FAILED',
   })
 })
+
+test('retries updateDependencies and resets folder on ETARGET error', async () => {
+  const { updateDependencies } = await import('../src/dependencies.js')
+  const tmpFolder = '/tmp/test-retry-etarget'
+  let callCount = 0
+  mockExeca.execa.mockImplementation(async (cmd, args) => {
+    const a = args as any
+    if (cmd === 'bash') {
+      callCount++
+      if (callCount === 1) {
+        const err = new Error(
+          'npm ERR! code ETARGET\nnpm ERR! notarget No matching version found for',
+        )
+        // Simulate ETARGET error on first call
+        throw err
+      }
+      // Succeed on second call
+      return { stdout: '' }
+    }
+    if (cmd === 'git' && a[0] === 'reset' && a[1] === '--hard') {
+      return { stdout: '' }
+    }
+    return { stdout: '' }
+  })
+
+  // Use a very short retryDelay for fast test
+  await updateDependencies(tmpFolder, 2, 1)
+
+  // Should have called bash script twice (first fails, second succeeds)
+  expect(mockExeca.execa).toHaveBeenCalledWith('bash', [expect.any(String)], {
+    cwd: tmpFolder,
+  })
+  // Should have called git reset --hard after the first failure
+  expect(mockExeca.execa).toHaveBeenCalledWith('git', ['reset', '--hard'], {
+    cwd: tmpFolder,
+  })
+  // Should have called the script at least twice
+  expect(callCount).toBe(2)
+})
