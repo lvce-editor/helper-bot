@@ -16,7 +16,7 @@ fi
 
 function updateDependencies {
   echo "updating dependencies..."
-  OUTPUT=`ncu -u -x probot jest @jest/globals`
+  OUTPUT=`ncu -u -x probot -x jest -x @jest/globals`
   SUB='All dependencies match the latest package versions'
   if [[ "$OUTPUT" == *"$SUB"* ]]; then
     echo "$OUTPUT"
