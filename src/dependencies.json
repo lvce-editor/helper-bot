@@ -56,6 +56,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "clipboard-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "markdown-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
