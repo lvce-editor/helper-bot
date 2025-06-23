@@ -19,11 +19,11 @@
     "probot": "^13.4.5"
   },
   "devDependencies": {
-    "@jest/globals": "^29.7.0",
+    "@jest/globals": "^30.0.2",
     "@swc-node/jest": "^1.8.13",
     "@types/jest": "^29.5.14",
     "@types/node": "^24.0.1",
-    "jest": "^29.7.0",
+    "jest": "^30.0.2",
     "nock": "^14.0.5",
     "prettier": "^3.5.3",
     "ts-jest": "^29.4.0",
