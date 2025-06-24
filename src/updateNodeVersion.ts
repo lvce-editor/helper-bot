@@ -44,7 +44,7 @@ const updateDockerfile = async (newVersion: string, root: string) => {
   try {
     const dockerfilePath = join(root, 'Dockerfile')
     const content = await readFile(dockerfilePath, 'utf-8')
-    const updated = content.replace(
+    const updated = content.replaceAll(
       /node:\d+\.\d+\.\d+/,
       `node:${newVersion.slice(1)}`,
     )
