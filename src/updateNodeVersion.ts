@@ -45,7 +45,7 @@ const updateDockerfile = async (newVersion: string, root: string) => {
     const dockerfilePath = join(root, 'Dockerfile')
     const content = await readFile(dockerfilePath, 'utf-8')
     const updated = content.replaceAll(
-      /node:\d+\.\d+\.\d+/,
+      /node:\d+\.\d+\.\d+/g,
       `node:${newVersion.slice(1)}`,
     )
     await writeFile(dockerfilePath, updated)
@@ -59,7 +59,7 @@ const updateGitpodDockerfile = async (newVersion: string, root: string) => {
     const gitpodPath = join(root, '.gitpod.Dockerfile')
     const content = await readFile(gitpodPath, 'utf-8')
     const updated = content.replaceAll(
-      /nvm install \d+\.\d+\.\d+/,
+      /nvm install \d+\.\d+\.\d+/g,
       `nvm install ${newVersion.slice(1)}`,
     )
     await writeFile(gitpodPath, updated)
