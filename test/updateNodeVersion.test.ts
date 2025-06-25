@@ -50,6 +50,11 @@ test('updates node version in files', async () => {
 
   expect(mockFs.writeFile).toHaveBeenCalledWith('/test/.nvmrc', 'v20.0.0\n')
   expect(mockFs.writeFile).toHaveBeenCalledWith(
+    '/test/Dockerfile',
+    'FROM node:20.0.0\nWORKDIR /app',
+  )
+  expect(mockFs.writeFile).toHaveBeenNthCalledWith(
+    3,
     '/test/.gitpod.Dockerfile',
     'FROM gitpod/workspace-full\nRUN nvm install 20.0.0',
   )
