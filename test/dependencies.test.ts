@@ -295,6 +295,135 @@ test('handles invalid repository owner', async () => {
   )
 })
 
+test('updates existing pull request when one exists', async () => {
+  // Set the environment variable for the test
+  const originalBotUserId = process.env.BOT_USER_ID
+  process.env.BOT_USER_ID = '23086823'
+
+  // Mock console.warn to avoid noise in test output
+  const originalWarn = console.warn
+  console.warn = jest.fn()
+
+  const mockOctokit = {
+    rest: {
+      repos: {
+        // @ts-ignore
+        get: jest.fn().mockResolvedValue({}),
+      },
+      git: {
+        // @ts-ignore
+        getRef: jest.fn().mockResolvedValue({
+          data: { object: { sha: 'main-sha' } },
+        }),
+        // @ts-ignore
+        getCommit: jest.fn().mockResolvedValue({
+          data: { sha: 'commit-sha' },
+        }),
+        // @ts-ignore
+        createTree: jest.fn().mockResolvedValue({
+          data: { sha: 'tree-sha' },
+        }),
+        // @ts-ignore
+        createCommit: jest.fn().mockResolvedValue({
+          data: { sha: 'new-commit-sha' },
+        }),
+        // @ts-ignore
+        updateRef: jest.fn().mockResolvedValue({}),
+      },
+      pulls: {
+        // @ts-ignore
+        list: jest.fn().mockResolvedValue({
+          data: [
+            {
+              title: 'update dependencies',
+              user: { login: 'helper-bot[bot]', id: 23086823, type: 'Bot' },
+              head: { ref: 'update-dependencies-1234567890' },
+            },
+          ],
+        }),
+      },
+      // @ts-ignore
+      graphql: jest.fn().mockResolvedValue({}),
+    },
+    // @ts-ignore
+    graphql: jest.fn().mockResolvedValue({}),
+  }
+
+  const app = {
+    auth() {
+      return mockOctokit
+    },
+  }
+
+  const handler = handleDependencies({
+    app: app as any,
+    installationId: 1,
+    secret: 'test-secret',
+  })
+
+  const mockReq = {
+    query: {
+      secret: 'test-secret',
+      repositoryName: 'lvce-editor/repo',
+    },
+  }
+  const mockRes = {
+    status: jest.fn().mockReturnThis(),
+    send: jest.fn(),
+    json: jest.fn(),
+  }
+
+  // @ts-ignore
+  mockExeca.execa.mockImplementation(async (cmd, args) => {
+    // @ts-ignore
+    if (cmd === 'git' && args[0] === 'status') {
+      return { stdout: 'M  package.json' }
+    }
+    return { stdout: '' }
+  })
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue('test content')
+  // @ts-ignore
+  mockFs.mkdir.mockResolvedValue(undefined)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
+  mockFs.existsSync.mockReturnValue(true)
+
+  await handler(mockReq as any, mockRes as any)
+
+  expect(mockOctokit.rest.pulls.list).toHaveBeenCalledWith({
+    owner: 'lvce-editor',
+    repo: 'repo',
+    state: 'open',
+    head: 'lvce-editor:update-dependencies-',
+  })
+
+  // When an existing PR is found, it should update the branch, not create a new one
+  expect(mockOctokit.rest.git.updateRef).toHaveBeenCalledWith({
+    owner: 'lvce-editor',
+    repo: 'repo',
+    ref: 'heads/update-dependencies-1234567890',
+    sha: 'new-commit-sha',
+    force: true,
+  })
+
+  expect(mockRes.status).toHaveBeenCalledWith(200)
+  expect(mockRes.send).toHaveBeenCalledWith(
+    'Dependencies update PR updated successfully',
+  )
+
+  // Clean up environment variable
+  if (originalBotUserId) {
+    process.env.BOT_USER_ID = originalBotUserId
+  } else {
+    delete process.env.BOT_USER_ID
+  }
+
+  // Restore console.warn
+  console.warn = originalWarn
+})
+
 test('handles dependency update failure', async () => {
   const mockOctokit = {
     rest: {
