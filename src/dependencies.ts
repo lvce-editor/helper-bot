@@ -109,6 +109,45 @@ const updateDependencies = async (
   }
 }
 
+const findExistingUpdateDependenciesPR = async (
+  octokit: Context<'release'>['octokit'],
+  owner: string,
+  repo: string,
+): Promise<{ pr: any; branchName: string } | null> => {
+  const BOT_ID = process.env.BOT_USER_ID ? Number(process.env.BOT_USER_ID) : undefined
+  if (!BOT_ID) {
+    console.warn('BOT_USER_ID environment variable is not set. PR author check will be less secure.')
+  }
+  try {
+    const { data: pullRequests } = await octokit.rest.pulls.list({
+      owner,
+      repo,
+      state: 'open',
+      head: `${owner}:update-dependencies-`,
+    })
+
+    // Find PRs with "update dependencies" title from the bot user
+    const updateDepsPR = pullRequests.find(
+      (pr) =>
+        pr.title === 'update dependencies' &&
+        (BOT_ID ? pr.user?.id === BOT_ID : true) &&
+        pr.user?.type === 'Bot'
+    )
+
+    if (updateDepsPR) {
+      return {
+        pr: updateDepsPR,
+        branchName: updateDepsPR.head.ref,
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.warn('Failed to find existing PR:', error)
+    return null
+  }
+}
+
 const handleQueueItem = async (item: QueueItem) => {
   try {
     const [owner, repo] = item.repositoryName.split('/')
@@ -133,9 +172,18 @@ const handleQueueItem = async (item: QueueItem) => {
       throw error
     }
 
+    // Check for existing update-dependencies PR
+    const existingPR = await findExistingUpdateDependenciesPR(
+      item.octokit,
+      owner,
+      repo,
+    )
+
     const uuid = randomUUID()
     const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}-${uuid}`)
-    const branchName = `update-dependencies-${Date.now()}`
+    const branchName = existingPR
+      ? existingPR.branchName
+      : `update-dependencies-${Date.now()}`
 
     try {
       await cloneRepo(owner, repo, tmpFolder)
@@ -147,13 +195,22 @@ const handleQueueItem = async (item: QueueItem) => {
         item.octokit,
         owner,
         repo,
+        {
+          createNewBranch: !existingPR,
+          baseBranch: existingPR ? branchName : 'main',
+        },
       )
       if (!hasChanges) {
         item.res.status(200).send('No changes to commit')
         return
       }
-      await createPullRequest(item.octokit, owner, repo, branchName)
-      item.res.status(200).send('Dependencies update PR created successfully')
+
+      if (existingPR) {
+        item.res.status(200).send('Dependencies update PR updated successfully')
+      } else {
+        await createPullRequest(item.octokit, owner, repo, branchName)
+        item.res.status(200).send('Dependencies update PR created successfully')
+      }
     } finally {
       await rm(tmpFolder, { recursive: true, force: true })
     }
