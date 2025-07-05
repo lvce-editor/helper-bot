@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@lvce-editor/verror": "^1.7.0",
-    "@sentry/node": "^9.33.0",
+    "@sentry/node": "^9.35.0",
     "execa": "^9.6.0",
     "probot": "^13.4.5"
   },
@@ -22,7 +22,7 @@
     "@jest/globals": "^29.7.0",
     "@swc-node/jest": "^1.8.13",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.0.8",
+    "@types/node": "^24.0.10",
     "jest": "^29.7.0",
     "nock": "^14.0.5",
     "prettier": "^3.6.2",
