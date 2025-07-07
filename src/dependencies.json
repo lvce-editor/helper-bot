@@ -46,6 +46,11 @@
       "toFolder": "packages/shared-process"
     },
     {
+      "fromRepo": "file-system-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/shared-process"
+    },
+    {
       "fromRepo": "main-process",
       "toRepo": "lvce-editor",
       "toFolder": "packages/main-process"
