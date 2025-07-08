@@ -187,6 +187,11 @@
       "toFolder": "packages/renderer-process"
     },
     {
+      "fromRepo": "rpc",
+      "toRepo": "renderer-process",
+      "toFolder": "packages/renderer-process"
+    },
+    {
       "fromRepo": "preview-injected-code",
       "toRepo": "preview-process",
       "toFolder": "packages/preview-process"
