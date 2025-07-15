@@ -138,7 +138,7 @@
     {
       "fromRepo": "list",
       "toRepo": "extension-search-view",
-      "toFolder": "packages/extension-search-view"
+      "toFolder": "packages/extension-search-view-worker"
     },
     {
       "fromRepo": "extension-detail-view",
