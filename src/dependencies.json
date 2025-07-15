@@ -136,6 +136,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "list",
+      "toRepo": "extension-search-view",
+      "toFolder": "packages/extension-search-view-worker"
+    },
+    {
       "fromRepo": "extension-detail-view",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
