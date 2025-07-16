@@ -81,6 +81,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "problems-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "rename-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
