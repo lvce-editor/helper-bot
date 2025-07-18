@@ -41,6 +41,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "file-sysem-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "embeds-process",
       "toRepo": "lvce-editor",
       "toFolder": "packages/shared-process"
