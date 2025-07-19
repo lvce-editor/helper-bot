@@ -207,6 +207,11 @@
       "toFolder": "packages/renderer-process"
     },
     {
+      "fromRepo": "rpc-registry",
+      "toRepo": "extension-detail-view",
+      "toFolder": "packages/extension-detail-view"
+    },
+    {
       "fromRepo": "preview-injected-code",
       "toRepo": "preview-process",
       "toFolder": "packages/preview-process"
