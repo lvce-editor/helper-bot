@@ -209,7 +209,7 @@
     {
       "fromRepo": "rpc-registry",
       "toRepo": "extension-detail-view",
-      "toFolder": "packages/extension-detail-view"
+      "toFolder": "packages/extension-detail-view-worker"
     },
     {
       "fromRepo": "preview-injected-code",
