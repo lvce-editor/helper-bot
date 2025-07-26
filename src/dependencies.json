@@ -121,6 +121,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "settings-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "editor-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
