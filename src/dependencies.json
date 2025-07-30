@@ -229,12 +229,17 @@
     {
       "fromRepo": "ipc",
       "toRepo": "rpc",
-      "toFolder": ""
+      "toFolder": "packages/rpc"
+    },
+    {
+      "fromRepo": "command",
+      "toRepo": "rpc",
+      "toFolder": "packages/rpc"
     },
     {
       "fromRepo": "json-rpc",
       "toRepo": "rpc",
-      "toFolder": ""
+      "toFolder": "packages/rpc"
     },
     {
       "fromRepo": "rpc",
