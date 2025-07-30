@@ -222,6 +222,11 @@
       "toFolder": "packages/extension-detail-view-worker"
     },
     {
+      "fromRepo": "rpc-registry",
+      "toRepo": "completion-worker",
+      "toFolder": "packages/completion-worker"
+    },
+    {
       "fromRepo": "preview-injected-code",
       "toRepo": "preview-process",
       "toFolder": "packages/preview-process"
