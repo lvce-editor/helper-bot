@@ -181,6 +181,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "source-action-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "output-view",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
