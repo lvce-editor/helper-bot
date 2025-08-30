@@ -186,6 +186,21 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "constants",
+      "toRepo": "rpc-registry",
+      "toFolder": "packages/rpc-registry"
+    },
+    {
+      "fromRepo": "constants",
+      "toRepo": "virtual-dom",
+      "toFolder": "packages/virtual-dom"
+    },
+    {
+      "fromRepo": "constants",
+      "toRepo": "virtual-dom",
+      "toFolder": "packages/virtual-dom-worker"
+    },
+    {
       "fromRepo": "output-view",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
