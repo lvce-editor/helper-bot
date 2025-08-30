@@ -228,6 +228,11 @@
     },
     {
       "fromRepo": "virtual-dom",
+      "toRepo": "about-view",
+      "toFolder": "packages/about-view"
+    },
+    {
+      "fromRepo": "virtual-dom",
       "toRepo": "color-picker-worker",
       "toFolder": "packages/color-picker-worker"
     },
