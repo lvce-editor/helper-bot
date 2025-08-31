@@ -7,6 +7,7 @@ import { handleCheckRun } from './handleCheckRun.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { captureException } from './errorHandling.js'
 import { availableParallelism } from 'node:os'
+import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -48,6 +49,15 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   router.post(
     '/update-dependencies',
     handleDependencies({
+      app,
+      installationId,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
+
+  router.post(
+    '/update-github-actions',
+    handleUpdateGithubActions({
       app,
       installationId,
       secret: process.env.DEPENDENCIES_SECRET,
