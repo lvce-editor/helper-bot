@@ -1,4 +1,5 @@
 import type { Context } from 'probot'
+import { VError } from '@lvce-editor/verror'
 
 export interface UpdateGithubActionsParams {
   octokit: Context<'release'>['octokit']
@@ -73,7 +74,10 @@ export const updateGithubActions = async (
       // No workflows directory, nothing to do
       return undefined
     }
-    throw error
+    throw new VError(
+      error as Error,
+      `failed to list workflows at ${WORKFLOWS_DIR} for ${owner}/${repo} on ${baseBranch}`,
+    )
   }
 
   const changed: Array<{
@@ -85,22 +89,29 @@ export const updateGithubActions = async (
   // Fetch and update each workflow file
   for (const file of workflows) {
     const filePath = file.path as string
-    const fileRef = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: filePath,
-      ref: baseBranch,
-    })
-    if (!('content' in fileRef.data)) {
-      continue
-    }
-    const originalSha = fileRef.data.sha as string
-    const decoded = decodeBase64(fileRef.data.content as string)
-    const updated = updateOsVersionsInYaml(decoded, osVersions)
-    if (updated !== decoded) {
-      // Ensure trailing newline like repo style
-      const finalContent = updated.endsWith('\n') ? updated : updated + '\n'
-      changed.push({ path: filePath, originalSha, newContent: finalContent })
+    try {
+      const fileRef = await octokit.rest.repos.getContent({
+        owner,
+        repo,
+        path: filePath,
+        ref: baseBranch,
+      })
+      if (!('content' in fileRef.data)) {
+        continue
+      }
+      const originalSha = fileRef.data.sha as string
+      const decoded = decodeBase64(fileRef.data.content as string)
+      const updated = updateOsVersionsInYaml(decoded, osVersions)
+      if (updated !== decoded) {
+        // Ensure trailing newline like repo style
+        const finalContent = updated.endsWith('\n') ? updated : updated + '\n'
+        changed.push({ path: filePath, originalSha, newContent: finalContent })
+      }
+    } catch (error) {
+      throw new VError(
+        error as Error,
+        `failed to read workflow file ${filePath} for ${owner}/${repo} on ${baseBranch}`,
+      )
     }
   }
 
@@ -110,39 +121,68 @@ export const updateGithubActions = async (
 
   // Create a new branch from baseBranch
   const newBranch = `update-gh-actions-${Date.now()}`
-  const baseRef = await octokit.rest.git.getRef({
-    owner,
-    repo,
-    ref: `heads/${baseBranch}`,
-  })
+  let baseRef
+  try {
+    baseRef = await octokit.rest.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${baseBranch}`,
+    })
+  } catch (error) {
+    throw new VError(
+      error as Error,
+      `failed to get base ref heads/${baseBranch} for ${owner}/${repo}`,
+    )
+  }
 
-  await octokit.rest.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${newBranch}`,
-    sha: baseRef.data.object.sha,
-  })
+  try {
+    await octokit.rest.git.createRef({
+      owner,
+      repo,
+      ref: `refs/heads/${newBranch}`,
+      sha: baseRef.data.object.sha,
+    })
+  } catch (error) {
+    throw new VError(
+      error as Error,
+      `failed to create branch ${newBranch} for ${owner}/${repo}`,
+    )
+  }
 
   // Commit updates file-by-file on the new branch
   for (const change of changed) {
-    await octokit.repos.createOrUpdateFileContents({
-      owner,
-      repo,
-      path: change.path,
-      message: 'ci: update GitHub Actions OS versions',
-      content: encodeBase64(change.newContent),
-      branch: newBranch,
-      sha: change.originalSha,
-    })
+    try {
+      await octokit.repos.createOrUpdateFileContents({
+        owner,
+        repo,
+        path: change.path,
+        message: 'ci: update GitHub Actions OS versions',
+        content: encodeBase64(change.newContent),
+        branch: newBranch,
+        sha: change.originalSha,
+      })
+    } catch (error) {
+      throw new VError(
+        error as Error,
+        `failed to commit workflow update to ${change.path} on branch ${newBranch} in ${owner}/${repo}`,
+      )
+    }
   }
 
-  await octokit.rest.pulls.create({
-    owner,
-    repo,
-    head: newBranch,
-    base: baseBranch,
-    title: 'ci: update CI OS versions',
-  })
+  try {
+    await octokit.rest.pulls.create({
+      owner,
+      repo,
+      head: newBranch,
+      base: baseBranch,
+      title: 'ci: update CI OS versions',
+    })
+  } catch (error) {
+    throw new VError(
+      error as Error,
+      `failed to open pull request from ${newBranch} to ${baseBranch} in ${owner}/${repo}`,
+    )
+  }
 
   return { changedFiles: changed.length, newBranch }
 }
