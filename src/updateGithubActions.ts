@@ -43,6 +43,145 @@ const updateOsVersionsInYaml = (
   return updated
 }
 
+const updateContextOsVersions = (
+  context: string,
+  osVersions: UpdateGithubActionsParams['osVersions'],
+): string => {
+  let updated = context
+  if (osVersions.ubuntu) {
+    updated = updated.replace(
+      /ubuntu-\d{2}\.\d{2}/g,
+      `ubuntu-${osVersions.ubuntu}`,
+    )
+  }
+  if (osVersions.windows) {
+    updated = updated.replace(/windows-\d{4}/g, `windows-${osVersions.windows}`)
+  }
+  if (osVersions.macos) {
+    updated = updated.replace(/macos-\d+/g, `macos-${osVersions.macos}`)
+  }
+  return updated
+}
+
+const updateBranchRulesetsRequiredChecks = async (
+  params: UpdateGithubActionsParams,
+): Promise<number> => {
+  const { octokit, owner, repo, osVersions } = params
+  // Fetch repository rulesets (branch rules)
+  let rulesetsResponse: any
+  try {
+    rulesetsResponse = await octokit.request(
+      'GET /repos/{owner}/{repo}/rulesets',
+      { owner, repo },
+    )
+  } catch (error: any) {
+    // If rulesets are not enabled or API not available, skip silently on 404
+    // @ts-ignore
+    if (error && error.status === 404) {
+      return 0
+    }
+    throw new VError(
+      error as Error,
+      `failed to list rulesets for ${owner}/${repo}`,
+    )
+  }
+
+  const rulesets: any[] = Array.isArray(rulesetsResponse.data)
+    ? rulesetsResponse.data
+    : []
+  let updatedRulesets = 0
+
+  for (const ruleset of rulesets) {
+    const originalRules = Array.isArray(ruleset.rules) ? ruleset.rules : []
+    let rulesChanged = false
+
+    const newRules = originalRules.map((rule: any) => {
+      // Heuristics for required status checks rule. Different orgs might have slightly
+      // different shapes; we try to update any "checks" arrays with "context" strings.
+      const parameters = rule && rule.parameters ? rule.parameters : undefined
+      if (!parameters) {
+        return rule
+      }
+
+      // candidate property names that may contain status check entries
+      const candidatePropNames = [
+        'checks',
+        'required_checks',
+        'required_status_checks',
+      ]
+
+      let updatedRule = rule
+      for (const propName of candidatePropNames) {
+        const checks = parameters[propName]
+        if (!checks || !Array.isArray(checks)) {
+          continue
+        }
+
+        const newChecks = checks.map((check: any) => {
+          if (typeof check === 'string') {
+            const newContext = updateContextOsVersions(check, osVersions)
+            if (newContext !== check) {
+              rulesChanged = true
+            }
+            return newContext
+          }
+          if (check && typeof check === 'object' && 'context' in check) {
+            const oldContext = String(check.context)
+            const newContext = updateContextOsVersions(oldContext, osVersions)
+            if (newContext !== oldContext) {
+              rulesChanged = true
+            }
+            return { ...check, context: newContext }
+          }
+          return check
+        })
+
+        if (newChecks !== checks) {
+          updatedRule = {
+            ...updatedRule,
+            parameters: {
+              ...updatedRule.parameters,
+              [propName]: newChecks,
+            },
+          }
+        }
+      }
+
+      return updatedRule
+    })
+
+    if (!rulesChanged) {
+      continue
+    }
+
+    // PATCH the ruleset with updated rules, keeping other fields the same
+    try {
+      await octokit.request(
+        'PATCH /repos/{owner}/{repo}/rulesets/{ruleset_id}',
+        {
+          owner,
+          repo,
+          ruleset_id: ruleset.id,
+          name: ruleset.name,
+          target: ruleset.target,
+          enforcement: ruleset.enforcement,
+          conditions: ruleset.conditions,
+          bypass_actors: ruleset.bypass_actors,
+          rules: newRules,
+        },
+      )
+      updatedRulesets++
+    } catch (error) {
+      throw new VError(
+        error as Error,
+        `failed to update ruleset ${String(ruleset && ruleset.id)} for ${owner}/${repo}`,
+      )
+    }
+  }
+
+  return updatedRulesets
+}
+
 export const updateGithubActions = async (
   params: UpdateGithubActionsParams,
 ): Promise<{ changedFiles: number; newBranch?: string } | undefined> => {
@@ -116,6 +255,15 @@ export const updateGithubActions = async (
   }
 
   if (changed.length === 0) {
+    // Even if no workflow files need changes, try to update branch rulesets
+    try {
+      await updateBranchRulesetsRequiredChecks(params)
+    } catch (error) {
+      throw new VError(
+        error as Error,
+        `failed to update branch rulesets for ${owner}/${repo}`,
+      )
+    }
     return { changedFiles: 0 }
   }
 
@@ -181,6 +329,16 @@ export const updateGithubActions = async (
     throw new VError(
       error as Error,
       `failed to open pull request from ${newBranch} to ${baseBranch} in ${owner}/${repo}`,
+    )
+  }
+
+  // After opening the PR, also try to update branch rulesets
+  try {
+    await updateBranchRulesetsRequiredChecks(params)
+  } catch (error) {
+    throw new VError(
+      error as Error,
+      `failed to update branch rulesets for ${owner}/${repo}`,
     )
   }
 

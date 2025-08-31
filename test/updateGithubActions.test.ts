@@ -24,7 +24,7 @@ test('returns undefined when workflows directory is missing', async () => {
   expect(result).toBeUndefined()
 })
 
-test('returns 0 changes when no files require update', async () => {
+test('returns 0 changes when no files require update (and rulesets untouched)', async () => {
   const workflowsListing = {
     data: [
       {
@@ -53,6 +53,8 @@ test('returns 0 changes when no files require update', async () => {
           .mockResolvedValueOnce(fileContent),
       },
     },
+    // @ts-ignore
+    request: jest.fn().mockResolvedValueOnce({ data: [] }),
   }
 
   const { updateGithubActions } = await import('../src/updateGithubActions.js')
@@ -65,6 +67,10 @@ test('returns 0 changes when no files require update', async () => {
   })
 
   expect(result).toEqual({ changedFiles: 0 })
+  expect(octokit.request).toHaveBeenCalledWith(
+    'GET /repos/{owner}/{repo}/rulesets',
+    { owner: 'org', repo: 'repo' },
+  )
 })
 
 test('updates workflow files and opens PR', async () => {
@@ -123,6 +129,9 @@ test('updates workflow files and opens PR', async () => {
       // @ts-ignore
       createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
+    // No ruleset updates in this scenario
+    // @ts-ignore
+    request: jest.fn().mockResolvedValueOnce({ data: [] }),
   }
 
   const { updateGithubActions } = await import('../src/updateGithubActions.js')
@@ -154,4 +163,97 @@ test('updates workflow files and opens PR', async () => {
     base: 'main',
     title: 'ci: update CI OS versions',
   })
+  expect(octokit.request).toHaveBeenCalledWith(
+    'GET /repos/{owner}/{repo}/rulesets',
+    { owner: 'org', repo: 'repo' },
+  )
+})
+
+test('updates branch rulesets required checks contexts', async () => {
+  const workflowsListing = {
+    data: [
+      {
+        type: 'file',
+        name: 'ci.yml',
+        path: '.github/workflows/ci.yml',
+      },
+    ],
+  }
+
+  const fileContent = {
+    data: {
+      content: encode('runs-on: ubuntu-24.04\n'),
+      sha: 'sha-ci',
+    },
+  }
+
+  const getRulesetsResp = {
+    data: [
+      {
+        id: 1,
+        name: 'Default',
+        target: 'branch',
+        enforcement: 'active',
+        conditions: {},
+        bypass_actors: [],
+        rules: [
+          {
+            type: 'required_status_checks',
+            parameters: {
+              checks: [
+                { context: 'pr(macos-14)' },
+                'pr(ubuntu-22.04)',
+                { context: 'lint' },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  }
+
+  const octokit = {
+    rest: {
+      repos: {
+        // @ts-ignore
+        getContent: jest
+          .fn()
+          .mockResolvedValueOnce(workflowsListing)
+          .mockResolvedValueOnce(fileContent),
+      },
+    },
+    // @ts-ignore
+    request: jest
+      .fn()
+      // GET rulesets
+      .mockResolvedValueOnce(getRulesetsResp)
+      // PATCH ruleset
+      .mockResolvedValueOnce({}),
+  }
+
+  const { updateGithubActions } = await import('../src/updateGithubActions.js')
+  const result = await updateGithubActions({
+    // @ts-ignore
+    octokit,
+    owner: 'org',
+    repo: 'repo',
+    osVersions: { ubuntu: '24.04', macos: '15' },
+  })
+
+  expect(result).toEqual({ changedFiles: 0 })
+  expect(octokit.request).toHaveBeenNthCalledWith(
+    1,
+    'GET /repos/{owner}/{repo}/rulesets',
+    { owner: 'org', repo: 'repo' },
+  )
+  // Verify PATCH payload contains updated contexts
+  const patchCall = (octokit.request as any).mock.calls.find(
+    (args: any[]) => String(args[0]).startsWith('PATCH /repos/'),
+  )
+  expect(patchCall).toBeTruthy()
+  const patchParams = patchCall[1]
+  const patchedRules = patchParams.rules
+  const checks = patchedRules[0].parameters.checks
+  expect(checks).toContainEqual({ context: 'pr(macos-15)' })
+  expect(checks).toContain('pr(ubuntu-24.04)')
 })
