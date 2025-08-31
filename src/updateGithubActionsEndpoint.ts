@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
+import { VError } from '@lvce-editor/verror'
 import { updateGithubActions } from './updateGithubActions.js'
 
 const verifySecret = (
@@ -35,39 +36,68 @@ export const handleUpdateGithubActions =
     const [owner, repo] = repository.split('/')
     try {
       // Authenticate as app to discover the installation for the repository
-      const appOctokit = await app.auth()
-      const { data: installation } =
-        await appOctokit.rest.apps.getRepoInstallation({
+      let appOctokit
+      try {
+        appOctokit = await app.auth()
+      } catch (error) {
+        throw new VError(error as Error, 'failed to authenticate app')
+      }
+      let installation
+      try {
+        const response = await appOctokit.rest.apps.getRepoInstallation({
           owner,
           repo,
         })
-      // Authenticate as the installation
-      const octokit = await app.auth(installation.id)
-      const result = await updateGithubActions({
-        octokit,
-        owner,
-        repo,
-        osVersions: {
-          ubuntu: '24.04',
-          windows: '2025',
-          macos: '15',
-        },
-      })
+        installation = response.data
+      } catch (error) {
+        // @ts-ignore
+        if (error && error.status === 404) {
+          throw new VError(
+            error as Error,
+            `app not installed on ${owner}/${repo} (missing installation)`,
+          )
+        }
+        throw new VError(
+          error as Error,
+          `failed to get installation for ${owner}/${repo}`,
+        )
+      }
+      let octokit
+      try {
+        octokit = await app.auth(installation.id)
+      } catch (error) {
+        throw new VError(
+          error as Error,
+          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}`,
+        )
+      }
+      let result
+      try {
+        result = await updateGithubActions({
+          octokit,
+          owner,
+          repo,
+          osVersions: {
+            ubuntu: '24.04',
+            windows: '2025',
+            macos: '15',
+          },
+        })
+      } catch (error) {
+        throw new VError(
+          error as Error,
+          `failed to update workflows in ${owner}/${repo}`,
+        )
+      }
       if (!result || result.changedFiles === 0) {
         res.status(200).send('No workflow updates needed')
         return
       }
       res.status(200).send('GitHub Actions update PR created successfully')
     } catch (error) {
-      // @ts-ignore
-      if (error && error.status === 404) {
-        res.status(404).send('App is not installed on repository')
-        return
-      }
       res.status(424).json({
         error: 'Failed to update GitHub Actions',
-        // @ts-ignore
-        details: error.message,
+        details: error instanceof Error ? error.message : String(error),
         code: 'GITHUB_ACTIONS_UPDATE_FAILED',
       })
     }
