@@ -67,9 +67,15 @@ test('returns 0 changes when no files require update (and rulesets untouched)', 
   })
 
   expect(result).toEqual({ changedFiles: 0 })
-  expect(octokit.request).toHaveBeenCalledWith(
+  expect(octokit.request).toHaveBeenNthCalledWith(
+    1,
     'GET /repos/{owner}/{repo}/rulesets',
-    { owner: 'org', repo: 'repo' },
+    { owner: 'org', repo: 'repo', includes_parents: true },
+  )
+  expect(octokit.request).toHaveBeenNthCalledWith(
+    2,
+    'GET /repos/{owner}/{repo}/branches/{branch}/protection',
+    { owner: 'org', repo: 'repo', branch: 'main' },
   )
 })
 
@@ -163,9 +169,15 @@ test('updates workflow files and opens PR', async () => {
     base: 'main',
     title: 'ci: update CI OS versions',
   })
-  expect(octokit.request).toHaveBeenCalledWith(
+  expect(octokit.request).toHaveBeenNthCalledWith(
+    1,
     'GET /repos/{owner}/{repo}/rulesets',
-    { owner: 'org', repo: 'repo' },
+    { owner: 'org', repo: 'repo', includes_parents: true },
+  )
+  expect(octokit.request).toHaveBeenNthCalledWith(
+    2,
+    'GET /repos/{owner}/{repo}/branches/{branch}/protection',
+    { owner: 'org', repo: 'repo', branch: 'main' },
   )
 })
 
@@ -244,11 +256,11 @@ test('updates branch rulesets required checks contexts', async () => {
   expect(octokit.request).toHaveBeenNthCalledWith(
     1,
     'GET /repos/{owner}/{repo}/rulesets',
-    { owner: 'org', repo: 'repo' },
+    { owner: 'org', repo: 'repo', includes_parents: true },
   )
   // Verify PATCH payload contains updated contexts
-  const patchCall = (octokit.request as any).mock.calls.find(
-    (args: any[]) => String(args[0]).startsWith('PATCH /repos/'),
+  const patchCall = (octokit.request as any).mock.calls.find((args: any[]) =>
+    String(args[0]).startsWith('PATCH /repos/'),
   )
   expect(patchCall).toBeTruthy()
   const patchParams = patchCall[1]
@@ -256,4 +268,73 @@ test('updates branch rulesets required checks contexts', async () => {
   const checks = patchedRules[0].parameters.checks
   expect(checks).toContainEqual({ context: 'pr(macos-15)' })
   expect(checks).toContain('pr(ubuntu-24.04)')
+})
+
+test('falls back to classic branch protection and updates contexts', async () => {
+  const workflowsListing = {
+    data: [
+      {
+        type: 'file',
+        name: 'ci.yml',
+        path: '.github/workflows/ci.yml',
+      },
+    ],
+  }
+
+  const fileContent = {
+    data: {
+      content: encode('runs-on: ubuntu-24.04\n'),
+      sha: 'sha-ci',
+    },
+  }
+
+  const getProtection = {
+    data: {
+      required_status_checks: {
+        strict: true,
+        contexts: ['pr(macos-14)', 'lint'],
+      },
+    },
+  }
+
+  const octokit = {
+    rest: {
+      repos: {
+        // @ts-ignore
+        getContent: jest
+          .fn()
+          .mockResolvedValueOnce(workflowsListing)
+          .mockResolvedValueOnce(fileContent),
+      },
+    },
+    // @ts-ignore
+    request: jest
+      .fn()
+      // GET rulesets (none)
+      .mockResolvedValueOnce({ data: [] })
+      // GET branch protection
+      .mockResolvedValueOnce(getProtection)
+      // PATCH required status checks
+      .mockResolvedValueOnce({}),
+  }
+
+  const { updateGithubActions } = await import('../src/updateGithubActions.js')
+  const result = await updateGithubActions({
+    // @ts-ignore
+    octokit,
+    owner: 'org',
+    repo: 'repo',
+    osVersions: { macos: '15' },
+  })
+
+  expect(result).toEqual({ changedFiles: 0 })
+  const patchCall = (octokit.request as any).mock.calls.find(
+    (c: any[]) =>
+      String(c[0]).includes('/branches/') &&
+      String(c[0]).includes('/protection/required_status_checks'),
+  )
+  expect(patchCall).toBeTruthy()
+  const patchParams = patchCall[1]
+  expect(patchParams.contexts).toContain('pr(macos-15)')
+  expect(patchParams.strict).toBe(true)
 })
