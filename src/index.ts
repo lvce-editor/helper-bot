@@ -59,7 +59,6 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     '/update-github-actions',
     handleUpdateGithubActions({
       app,
-      installationId,
       secret: process.env.DEPENDENCIES_SECRET,
     }),
   )
