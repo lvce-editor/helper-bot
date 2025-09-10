@@ -191,6 +191,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "icon-theme-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "constants",
       "toRepo": "rpc-registry",
       "toFolder": "packages/rpc-registry"
