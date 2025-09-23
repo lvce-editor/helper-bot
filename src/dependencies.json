@@ -26,6 +26,11 @@
       "toFolder": ""
     },
     {
+      "fromRepo": "test-with-playwright",
+      "toRepo": "test-worker",
+      "toFolder": "packages/e2e"
+    },
+    {
       "fromRepo": "renderer-process",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
