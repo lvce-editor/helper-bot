@@ -6,35 +6,52 @@ export const ensureLernaExcluded = async (
   try {
     const scriptContent = await readFile(scriptPath, 'utf8')
 
-    // Check if the script contains an ncu command and if lerna is already excluded
-    const ncuRegex = /OUTPUT=`ncu -u(.*?)`/
-    const match = scriptContent.match(ncuRegex)
+    // Check if the script contains any ncu commands
+    const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g
+    const matches = [...scriptContent.matchAll(ncuRegex)]
 
-    if (match) {
+    if (matches.length === 0) {
+      console.log('No ncu command found in update-dependencies.sh script')
+      return
+    }
+
+    let updatedContent = scriptContent
+    let hasChanges = false
+
+    // Process each ncu command
+    for (const match of matches) {
       const ncuCommand = match[1]
 
       // Check if lerna is already excluded
       if (!ncuCommand.includes('-x lerna')) {
         // Add lerna to the exclusion list
-        const updatedCommand = ncuCommand.replace(
-          /(-x [^-]+)+$/,
-          (match) => `${match} -x lerna`,
-        )
+        let updatedCommand: string
+        if (ncuCommand.trim() === '') {
+          // No existing exclusions
+          updatedCommand = ' -x lerna'
+        } else {
+          // Has existing exclusions, add lerna to the end
+          updatedCommand = ncuCommand.replace(
+            /(-x [^-]+)+$/,
+            (match) => `${match} -x lerna`,
+          )
+        }
 
-        const updatedContent = scriptContent.replace(
-          ncuRegex,
+        updatedContent = updatedContent.replace(
+          match[0],
           `OUTPUT=\`ncu -u${updatedCommand}\``,
         )
-
-        await writeFile(scriptPath, updatedContent, 'utf8')
-        console.log('Added lerna exclusion to update-dependencies.sh script')
-      } else {
-        console.log(
-          'Lerna is already excluded in update-dependencies.sh script',
-        )
+        hasChanges = true
       }
+    }
+
+    if (hasChanges) {
+      await writeFile(scriptPath, updatedContent, 'utf8')
+      console.log('Added lerna exclusion to update-dependencies.sh script')
     } else {
-      console.log('No ncu command found in update-dependencies.sh script')
+      console.log(
+        'Lerna is already excluded in update-dependencies.sh script',
+      )
     }
   } catch (error) {
     console.warn('Failed to check/modify update-dependencies.sh script:', error)
