@@ -67,7 +67,9 @@ sleep 2`
 })
 
 test('should not modify script if lerna is already excluded', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-already-excluded-'))
+  const tempDir = await mkdtemp(
+    join(tmpdir(), 'test-ensure-lerna-already-excluded-'),
+  )
 
   try {
     // Create a test update-dependencies.sh script with lerna already excluded
@@ -152,7 +154,9 @@ echo "It just does some other stuff"`
 })
 
 test('should handle script with ncu command but no exclusions', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-no-exclusions-'))
+  const tempDir = await mkdtemp(
+    join(tmpdir(), 'test-ensure-lerna-no-exclusions-'),
+  )
 
   try {
     // Create a test script with ncu command but no exclusions
@@ -187,7 +191,9 @@ updateDependencies`
 })
 
 test('should handle script with multiple ncu commands', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-multiple-ncu-'))
+  const tempDir = await mkdtemp(
+    join(tmpdir(), 'test-ensure-lerna-multiple-ncu-'),
+  )
 
   try {
     // Create a test script with multiple ncu commands
@@ -243,7 +249,9 @@ test('should handle file read error gracefully', async () => {
 })
 
 test('should handle file write error gracefully', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-write-error-'))
+  const tempDir = await mkdtemp(
+    join(tmpdir(), 'test-ensure-lerna-write-error-'),
+  )
 
   try {
     // Create a test script

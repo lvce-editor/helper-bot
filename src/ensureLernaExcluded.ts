@@ -49,9 +49,7 @@ export const ensureLernaExcluded = async (
       await writeFile(scriptPath, updatedContent, 'utf8')
       console.log('Added lerna exclusion to update-dependencies.sh script')
     } else {
-      console.log(
-        'Lerna is already excluded in update-dependencies.sh script',
-      )
+      console.log('Lerna is already excluded in update-dependencies.sh script')
     }
   } catch (error) {
     console.warn('Failed to check/modify update-dependencies.sh script:', error)
