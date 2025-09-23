@@ -2,6 +2,7 @@ import { execa } from 'execa'
 import type { Request, Response } from 'express'
 import { randomUUID } from 'node:crypto'
 import { mkdir, rm } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout } from 'node:timers/promises'
@@ -10,6 +11,7 @@ import { commitAndPush } from './commitAndPush.js'
 import { createQueue } from './createQueue.js'
 import { updateNodeVersion } from './updateNodeVersion.js'
 import { captureException } from './errorHandling.js'
+import { ensureLernaExcluded } from './ensureLernaExcluded.js'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'
 
@@ -68,6 +70,11 @@ const updateDependencies = async (
 ) => {
   const scriptPath = join(tmpFolder, 'scripts', 'update-dependencies.sh')
 
+  // Check if the script exists and ensure lerna is excluded
+  if (existsSync(scriptPath)) {
+    await ensureLernaExcluded(scriptPath)
+  }
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       await execa('bash', [scriptPath], {
@@ -114,9 +121,13 @@ const findExistingUpdateDependenciesPR = async (
   owner: string,
   repo: string,
 ): Promise<{ pr: any; branchName: string } | null> => {
-  const BOT_ID = process.env.BOT_USER_ID ? Number(process.env.BOT_USER_ID) : undefined
+  const BOT_ID = process.env.BOT_USER_ID
+    ? Number(process.env.BOT_USER_ID)
+    : undefined
   if (!BOT_ID) {
-    console.warn('BOT_USER_ID environment variable is not set. PR author check will be less secure.')
+    console.warn(
+      'BOT_USER_ID environment variable is not set. PR author check will be less secure.',
+    )
   }
   try {
     const { data: pullRequests } = await octokit.rest.pulls.list({
@@ -131,7 +142,7 @@ const findExistingUpdateDependenciesPR = async (
       (pr) =>
         pr.title === 'update dependencies' &&
         (BOT_ID ? pr.user?.id === BOT_ID : true) &&
-        pr.user?.type === 'Bot'
+        pr.user?.type === 'Bot',
     )
 
     if (updateDepsPR) {
