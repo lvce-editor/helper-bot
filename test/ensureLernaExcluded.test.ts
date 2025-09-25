@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { mkdtemp, writeFile, readFile, rm, stat } from 'node:fs/promises'
+import { mkdtemp, writeFile, readFile, rm, stat, chmod } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ensureLernaExcluded } from '../src/ensureLernaExcluded.js'
@@ -272,9 +272,7 @@ OUTPUT=\`ncu -u -x probot\``
 })
 
 test('should preserve executable permissions when updating script', async () => {
-  const tempDir = await mkdtemp(
-    join(tmpdir(), 'test-ensure-lerna-executable-'),
-  )
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-executable-'))
 
   try {
     // Create a test update-dependencies.sh script without lerna exclusion
@@ -299,9 +297,9 @@ updateDependencies`
 
     const scriptPath = join(tempDir, 'update-dependencies.sh')
     await writeFile(scriptPath, scriptContent, 'utf8')
-    
+
     // Set executable permissions
-    await writeFile(scriptPath, scriptContent, { mode: 0o755 })
+    await chmod(scriptPath, 0o755)
 
     // Verify the script has executable permissions before modification
     const statsBefore = await stat(scriptPath)
@@ -323,4 +321,3 @@ updateDependencies`
     await rm(tempDir, { recursive: true, force: true })
   }
 })
-
