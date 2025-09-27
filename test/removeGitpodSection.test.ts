@@ -160,6 +160,7 @@ test('removeGitpodSectionMigration should handle multiple README files', async (
   mockFs.rm.mockResolvedValue(undefined)
 
   mockFs.readFile.mockImplementation((path) => {
+    console.log('readFile called with:', path)
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -185,13 +186,28 @@ Here's how to use it.`
     throw new Error('File not found')
   })
 
-  mockExeca
-    .mockResolvedValueOnce({ stdout: '' }) // git clone
-    .mockResolvedValueOnce({ stdout: ' M README.md\n M readme.md' }) // git status
-    .mockResolvedValueOnce({ stdout: '' }) // git checkout
-    .mockResolvedValueOnce({ stdout: '' }) // git add
-    .mockResolvedValueOnce({ stdout: '' }) // git commit
-    .mockResolvedValueOnce({ stdout: '' }) // git push
+  mockExeca.mockImplementation((command, args) => {
+    console.log('execa called with:', command, args)
+    if (command === 'git' && args[0] === 'clone') {
+      return Promise.resolve({ stdout: '' })
+    }
+    if (command === 'git' && args[0] === 'status') {
+      return Promise.resolve({ stdout: ' M README.md\n M readme.md' })
+    }
+    if (command === 'git' && args[0] === 'checkout') {
+      return Promise.resolve({ stdout: '' })
+    }
+    if (command === 'git' && args[0] === 'add') {
+      return Promise.resolve({ stdout: '' })
+    }
+    if (command === 'git' && args[0] === 'commit') {
+      return Promise.resolve({ stdout: '' })
+    }
+    if (command === 'git' && args[0] === 'push') {
+      return Promise.resolve({ stdout: '' })
+    }
+    return Promise.resolve({ stdout: '' })
+  })
 
   const mockOctokit = {
     rest: {
