@@ -6,20 +6,34 @@ const removeGitpodSection = async (readmePath: string): Promise<boolean> => {
   try {
     const { readFile, writeFile } = await import('node:fs/promises')
     const content = await readFile(readmePath, 'utf-8')
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/main
     // Pattern to match Gitpod sections in README
     // This matches sections that start with ## Gitpod or similar headers
     // and includes content until the next header or end of file
     const gitpodPattern = /^#{1,6}\s*[Gg]itpod.*?(?=^#{1,6}\s|\Z)/gms
+<<<<<<< HEAD
 
     const updatedContent = content.replace(gitpodPattern, '')
 
+=======
+    
+    const updatedContent = content.replace(gitpodPattern, '')
+    
+>>>>>>> origin/main
     // Only write if content actually changed
     if (content !== updatedContent) {
       await writeFile(readmePath, updatedContent)
       return true
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/main
     return false
   } catch (error) {
     // File doesn't exist or can't be read, skip
@@ -35,9 +49,15 @@ const updateReadmeFiles = async (root: string): Promise<boolean> => {
     'README.MD',
     'readme.MD',
   ]
+<<<<<<< HEAD
 
   let hasChanges = false
 
+=======
+  
+  let hasChanges = false
+  
+>>>>>>> origin/main
   for (const readmePath of readmePaths) {
     const fullPath = join(root, readmePath)
     const changed = await removeGitpodSection(fullPath)
@@ -45,14 +65,22 @@ const updateReadmeFiles = async (root: string): Promise<boolean> => {
       hasChanges = true
     }
   }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> origin/main
   return hasChanges
 }
 
 export const removeGitpodSectionMigration: Migration = {
   name: 'removeGitpodSection',
+<<<<<<< HEAD
   description:
     'Remove Gitpod sections from README files since Gitpod has shut down',
+=======
+  description: 'Remove Gitpod sections from README files since Gitpod has shut down',
+>>>>>>> origin/main
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params
@@ -66,11 +94,15 @@ export const removeGitpodSectionMigration: Migration = {
 
       try {
         // Clone the repository
+<<<<<<< HEAD
         await execa('git', [
           'clone',
           `https://github.com/${owner}/${repo}.git`,
           tempDir,
         ])
+=======
+        await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
+>>>>>>> origin/main
 
         // Update README files
         const hasChanges = await updateReadmeFiles(tempDir)
@@ -98,11 +130,15 @@ export const removeGitpodSectionMigration: Migration = {
         const newBranch = `remove-gitpod-section-${Date.now()}`
         await execa('git', ['checkout', '-b', newBranch], { cwd: tempDir })
         await execa('git', ['add', '.'], { cwd: tempDir })
+<<<<<<< HEAD
         await execa(
           'git',
           ['commit', '-m', 'ci: remove Gitpod section from README'],
           { cwd: tempDir },
         )
+=======
+        await execa('git', ['commit', '-m', 'ci: remove Gitpod section from README'], { cwd: tempDir })
+>>>>>>> origin/main
         await execa('git', ['push', 'origin', newBranch], { cwd: tempDir })
 
         // Create pull request

@@ -32,7 +32,7 @@ jest.unstable_mockModule('execa', () => ({
 }))
 
 // Mock fs operations
-const mockFs = {
+const mockFs: any = {
   mkdtemp: jest.fn().mockResolvedValue('/tmp/test-dir'),
   rm: jest.fn().mockResolvedValue(undefined),
   readFile: jest.fn().mockResolvedValue('v18.0.0'),
@@ -52,7 +52,7 @@ jest.unstable_mockModule('node:path', () => ({
 }))
 
 test('updateNodeVersionMigration should return success when no changes needed', async () => {
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       repos: {
         getContent: jest.fn().mockResolvedValue({
@@ -73,7 +73,7 @@ test('updateNodeVersionMigration should return success when no changes needed', 
 })
 
 test('updateDependenciesMigration should return success when no dependencies found', async () => {
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       repos: {
         listReleases: jest.fn().mockResolvedValue({
@@ -94,7 +94,7 @@ test('updateDependenciesMigration should return success when no dependencies fou
 })
 
 test('ensureLernaExcludedMigration should return success when no script found', async () => {
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       repos: {
         getContent: jest.fn().mockRejectedValue(new Error('Not found')),
@@ -113,7 +113,7 @@ test('ensureLernaExcludedMigration should return success when no script found', 
 })
 
 test('updateGithubActionsMigration should return success when no workflows found', async () => {
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       repos: {
         getContent: jest.fn().mockRejectedValue(new Error('Not found')),
