@@ -65,7 +65,7 @@ Here's how to use the project.`
     .mockResolvedValueOnce({ stdout: '' }) // git commit
     .mockResolvedValueOnce({ stdout: '' }) // git push
 
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       git: {
         getRef: jest.fn().mockResolvedValue({
@@ -211,7 +211,7 @@ Here's how to use it.`
     return Promise.resolve({ stdout: '' })
   })
 
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       git: {
         getRef: jest.fn().mockResolvedValue({

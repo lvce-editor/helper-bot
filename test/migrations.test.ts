@@ -8,7 +8,7 @@ import {
 
 // Mock execa to prevent actual git operations
 jest.unstable_mockModule('execa', () => ({
-  execa: jest.fn().mockImplementation((command, args) => {
+  execa: jest.fn().mockImplementation((command: any, args: any) => {
     if (command === 'git' && args[0] === 'clone') {
       return Promise.resolve({ stdout: '', stderr: '' })
     }
