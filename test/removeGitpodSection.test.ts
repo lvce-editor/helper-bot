@@ -17,7 +17,9 @@ jest.unstable_mockModule('node:fs/promises', () => mockFs)
 jest.unstable_mockModule('execa', () => ({ execa: mockExeca }))
 jest.unstable_mockModule('node:os', () => mockOs)
 
-const { removeGitpodSectionMigration } = await import('../src/migrations/removeGitpodSection.js')
+const { removeGitpodSectionMigration } = await import(
+  '../src/migrations/removeGitpodSection.js'
+)
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -86,7 +88,10 @@ Here's how to use the project.`
       },
       pulls: {
         create: jest.fn().mockResolvedValue({
-          data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
+          data: {
+            number: 123,
+            html_url: 'https://github.com/owner/repo/pull/123',
+          },
         }),
       },
     },
@@ -160,7 +165,6 @@ test('removeGitpodSectionMigration should handle multiple README files', async (
   mockFs.rm.mockResolvedValue(undefined)
 
   mockFs.readFile.mockImplementation((path) => {
-    console.log('readFile called with:', path)
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -187,7 +191,6 @@ Here's how to use it.`
   })
 
   mockExeca.mockImplementation((command, args) => {
-    console.log('execa called with:', command, args)
     if (command === 'git' && args[0] === 'clone') {
       return Promise.resolve({ stdout: '' })
     }
@@ -231,7 +234,10 @@ Here's how to use it.`
       },
       pulls: {
         create: jest.fn().mockResolvedValue({
-          data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
+          data: {
+            number: 123,
+            html_url: 'https://github.com/owner/repo/pull/123',
+          },
         }),
       },
     },
