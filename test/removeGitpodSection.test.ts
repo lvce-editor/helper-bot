@@ -1,5 +1,4 @@
 import { jest, test, expect, beforeEach } from '@jest/globals'
-import nock from 'nock'
 
 const mockFs = {
   readFile: jest.fn(),
