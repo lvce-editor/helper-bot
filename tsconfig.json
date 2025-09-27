@@ -17,5 +17,6 @@
     "noUnusedLocals": true,
     "outDir": "dist"
   },
-  "include": ["src", "test"]
+  "include": ["src"],
+  "exclude": ["test", "node_modules", "dist"]
 }

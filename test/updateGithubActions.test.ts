@@ -207,7 +207,7 @@ test('updates branch rulesets required checks contexts', async () => {
         target: 'branch',
         enforcement: 'active',
         conditions: {},
-        bypass_actors: [],
+        bypass_actors: [] as any[],
         rules: [
           {
             type: 'required_status_checks',

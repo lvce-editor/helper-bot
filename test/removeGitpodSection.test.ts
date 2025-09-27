@@ -1,15 +1,14 @@
 import { jest, test, expect, beforeEach } from '@jest/globals'
-import nock from 'nock'
 
-const mockFs = {
+const mockFs: any = {
   readFile: jest.fn(),
   writeFile: jest.fn(),
   mkdtemp: jest.fn(),
   rm: jest.fn(),
 }
 
-const mockExeca = jest.fn()
-const mockOs = {
+const mockExeca: any = jest.fn()
+const mockOs: any = {
   tmpdir: jest.fn(),
 }
 
@@ -33,7 +32,7 @@ test('removeGitpodSectionMigration should remove Gitpod sections from README', a
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-  mockFs.readFile.mockImplementation((path) => {
+  mockFs.readFile.mockImplementation((path: any) => {
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -64,7 +63,7 @@ Here's how to use the project.`
     .mockResolvedValueOnce({ stdout: '' }) // git commit
     .mockResolvedValueOnce({ stdout: '' }) // git push
 
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       git: {
         getRef: jest.fn().mockResolvedValue({
@@ -118,7 +117,7 @@ test('removeGitpodSectionMigration should handle README without Gitpod section',
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-  mockFs.readFile.mockImplementation((path) => {
+  mockFs.readFile.mockImplementation((path: any) => {
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -159,7 +158,7 @@ test('removeGitpodSectionMigration should handle multiple README files', async (
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-  mockFs.readFile.mockImplementation((path) => {
+  mockFs.readFile.mockImplementation((path: any) => {
     console.log('readFile called with:', path)
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
@@ -186,7 +185,7 @@ Here's how to use it.`
     throw new Error('File not found')
   })
 
-  mockExeca.mockImplementation((command, args) => {
+  mockExeca.mockImplementation((command: any, args: any) => {
     console.log('execa called with:', command, args)
     if (command === 'git' && args[0] === 'clone') {
       return Promise.resolve({ stdout: '' })
@@ -209,7 +208,7 @@ Here's how to use it.`
     return Promise.resolve({ stdout: '' })
   })
 
-  const mockOctokit = {
+  const mockOctokit: any = {
     rest: {
       git: {
         getRef: jest.fn().mockResolvedValue({
