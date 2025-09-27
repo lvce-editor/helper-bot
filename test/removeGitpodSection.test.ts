@@ -1,8 +1,5 @@
 import { jest, test, expect, beforeEach } from '@jest/globals'
-<<<<<<< HEAD
-=======
 import nock from 'nock'
->>>>>>> origin/main
 
 const mockFs = {
   readFile: jest.fn(),
@@ -20,13 +17,7 @@ jest.unstable_mockModule('node:fs/promises', () => mockFs)
 jest.unstable_mockModule('execa', () => ({ execa: mockExeca }))
 jest.unstable_mockModule('node:os', () => mockOs)
 
-<<<<<<< HEAD
-const { removeGitpodSectionMigration } = await import(
-  '../src/migrations/removeGitpodSection.js'
-)
-=======
 const { removeGitpodSectionMigration } = await import('../src/migrations/removeGitpodSection.js')
->>>>>>> origin/main
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -42,11 +33,7 @@ test('removeGitpodSectionMigration should remove Gitpod sections from README', a
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-<<<<<<< HEAD
-  mockFs.readFile.mockImplementation((path: any) => {
-=======
   mockFs.readFile.mockImplementation((path) => {
->>>>>>> origin/main
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -77,11 +64,7 @@ Here's how to use the project.`
     .mockResolvedValueOnce({ stdout: '' }) // git commit
     .mockResolvedValueOnce({ stdout: '' }) // git push
 
-<<<<<<< HEAD
-  const mockOctokit: any = {
-=======
   const mockOctokit = {
->>>>>>> origin/main
     rest: {
       git: {
         getRef: jest.fn().mockResolvedValue({
@@ -103,14 +86,7 @@ Here's how to use the project.`
       },
       pulls: {
         create: jest.fn().mockResolvedValue({
-<<<<<<< HEAD
-          data: {
-            number: 123,
-            html_url: 'https://github.com/owner/repo/pull/123',
-          },
-=======
           data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
->>>>>>> origin/main
         }),
       },
     },
@@ -142,11 +118,7 @@ test('removeGitpodSectionMigration should handle README without Gitpod section',
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-<<<<<<< HEAD
-  mockFs.readFile.mockImplementation((path: any) => {
-=======
   mockFs.readFile.mockImplementation((path) => {
->>>>>>> origin/main
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -187,12 +159,8 @@ test('removeGitpodSectionMigration should handle multiple README files', async (
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-<<<<<<< HEAD
-  mockFs.readFile.mockImplementation((path: any) => {
-=======
   mockFs.readFile.mockImplementation((path) => {
     console.log('readFile called with:', path)
->>>>>>> origin/main
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -218,12 +186,8 @@ Here's how to use it.`
     throw new Error('File not found')
   })
 
-<<<<<<< HEAD
-  mockExeca.mockImplementation((command: any, args: any) => {
-=======
   mockExeca.mockImplementation((command, args) => {
     console.log('execa called with:', command, args)
->>>>>>> origin/main
     if (command === 'git' && args[0] === 'clone') {
       return Promise.resolve({ stdout: '' })
     }
@@ -245,11 +209,7 @@ Here's how to use it.`
     return Promise.resolve({ stdout: '' })
   })
 
-<<<<<<< HEAD
-  const mockOctokit: any = {
-=======
   const mockOctokit = {
->>>>>>> origin/main
     rest: {
       git: {
         getRef: jest.fn().mockResolvedValue({
@@ -271,14 +231,7 @@ Here's how to use it.`
       },
       pulls: {
         create: jest.fn().mockResolvedValue({
-<<<<<<< HEAD
-          data: {
-            number: 123,
-            html_url: 'https://github.com/owner/repo/pull/123',
-          },
-=======
           data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
->>>>>>> origin/main
         }),
       },
     },
