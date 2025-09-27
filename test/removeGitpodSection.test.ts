@@ -1,15 +1,15 @@
 import { jest, test, expect, beforeEach } from '@jest/globals'
 
 const mockFs = {
-  readFile: jest.fn(),
-  writeFile: jest.fn(),
-  mkdtemp: jest.fn(),
-  rm: jest.fn(),
+  readFile: jest.fn() as jest.MockedFunction<typeof import('node:fs/promises').readFile>,
+  writeFile: jest.fn() as jest.MockedFunction<typeof import('node:fs/promises').writeFile>,
+  mkdtemp: jest.fn() as jest.MockedFunction<typeof import('node:fs/promises').mkdtemp>,
+  rm: jest.fn() as jest.MockedFunction<typeof import('node:fs/promises').rm>,
 }
 
-const mockExeca = jest.fn()
+const mockExeca = jest.fn() as jest.MockedFunction<typeof import('execa').execa>
 const mockOs = {
-  tmpdir: jest.fn(),
+  tmpdir: jest.fn() as jest.MockedFunction<typeof import('node:os').tmpdir>,
 }
 
 jest.unstable_mockModule('node:fs/promises', () => mockFs)
@@ -34,7 +34,7 @@ test('removeGitpodSectionMigration should remove Gitpod sections from README', a
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-  mockFs.readFile.mockImplementation((path) => {
+  mockFs.readFile.mockImplementation((path: string) => {
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -122,7 +122,7 @@ test('removeGitpodSectionMigration should handle README without Gitpod section',
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-  mockFs.readFile.mockImplementation((path) => {
+  mockFs.readFile.mockImplementation((path: string) => {
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -163,7 +163,7 @@ test('removeGitpodSectionMigration should handle multiple README files', async (
   mockFs.mkdtemp.mockResolvedValue('/tmp/remove-gitpod-section-123')
   mockFs.rm.mockResolvedValue(undefined)
 
-  mockFs.readFile.mockImplementation((path) => {
+  mockFs.readFile.mockImplementation((path: string) => {
     if (path.includes('/tmp/remove-gitpod-section-123/README.md')) {
       return `# My Project
 
@@ -189,7 +189,7 @@ Here's how to use it.`
     throw new Error('File not found')
   })
 
-  mockExeca.mockImplementation((command, args) => {
+  mockExeca.mockImplementation((command: string, args: string[]) => {
     if (command === 'git' && args[0] === 'clone') {
       return Promise.resolve({ stdout: '' })
     }
