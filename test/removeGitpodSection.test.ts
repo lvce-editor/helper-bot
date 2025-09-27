@@ -1,14 +1,17 @@
 import { jest, test, expect, beforeEach } from '@jest/globals'
 
-const mockFs: any = {
+// @ts-ignore
+const mockFs = {
   readFile: jest.fn(),
   writeFile: jest.fn(),
   mkdtemp: jest.fn(),
   rm: jest.fn(),
 }
 
-const mockExeca: any = jest.fn()
-const mockOs: any = {
+// @ts-ignore
+const mockExeca = jest.fn()
+// @ts-ignore
+const mockOs = {
   tmpdir: jest.fn(),
 }
 
@@ -63,27 +66,35 @@ Here's how to use the project.`
     .mockResolvedValueOnce({ stdout: '' }) // git commit
     .mockResolvedValueOnce({ stdout: '' }) // git push
 
-  const mockOctokit: any = {
+  // @ts-ignore
+  const mockOctokit = {
     rest: {
       git: {
+        // @ts-ignore
         getRef: jest.fn().mockResolvedValue({
           data: { object: { sha: 'base-sha' } },
         }),
+        // @ts-ignore
         getCommit: jest.fn().mockResolvedValue({
           data: { tree: { sha: 'tree-sha' }, sha: 'commit-sha' },
         }),
+        // @ts-ignore
         createTree: jest.fn().mockResolvedValue({
           data: { sha: 'new-tree-sha' },
         }),
+        // @ts-ignore
         createCommit: jest.fn().mockResolvedValue({
           data: { sha: 'new-commit-sha' },
         }),
+        // @ts-ignore
         createRef: jest.fn().mockResolvedValue({
           data: { ref: 'refs/heads/new-branch' },
         }),
+        // @ts-ignore
         updateRef: jest.fn().mockResolvedValue({}),
       },
       pulls: {
+        // @ts-ignore
         create: jest.fn().mockResolvedValue({
           data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
         }),
@@ -208,27 +219,35 @@ Here's how to use it.`
     return Promise.resolve({ stdout: '' })
   })
 
-  const mockOctokit: any = {
+  // @ts-ignore
+  const mockOctokit = {
     rest: {
       git: {
+        // @ts-ignore
         getRef: jest.fn().mockResolvedValue({
           data: { object: { sha: 'base-sha' } },
         }),
+        // @ts-ignore
         getCommit: jest.fn().mockResolvedValue({
           data: { tree: { sha: 'tree-sha' }, sha: 'commit-sha' },
         }),
+        // @ts-ignore
         createTree: jest.fn().mockResolvedValue({
           data: { sha: 'new-tree-sha' },
         }),
+        // @ts-ignore
         createCommit: jest.fn().mockResolvedValue({
           data: { sha: 'new-commit-sha' },
         }),
+        // @ts-ignore
         createRef: jest.fn().mockResolvedValue({
           data: { ref: 'refs/heads/new-branch' },
         }),
+        // @ts-ignore
         updateRef: jest.fn().mockResolvedValue({}),
       },
       pulls: {
+        // @ts-ignore
         create: jest.fn().mockResolvedValue({
           data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
         }),

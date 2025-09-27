@@ -3,7 +3,7 @@ import { expect, test, jest } from '@jest/globals'
 const encode = (s: string): string => Buffer.from(s).toString('base64')
 
 test('returns undefined when workflows directory is missing', async () => {
-  const octokit: any = {
+  const octokit = {
     rest: {
       repos: {
         // @ts-ignore
@@ -42,10 +42,11 @@ test('returns 0 changes when no files require update (and rulesets untouched)', 
     },
   }
 
-  const octokit: any = {
+  const octokit = {
     rest: {
       repos: {
         // First call: list workflows; Second: get file
+        // @ts-ignore
         // @ts-ignore
         getContent: jest
           .fn()
@@ -110,7 +111,7 @@ test('updates workflow files and opens PR', async () => {
 
   const getRefResp = { data: { object: { sha: 'base-sha' } } }
 
-  const octokit: any = {
+  const octokit = {
     rest: {
       repos: {
         // @ts-ignore
@@ -224,9 +225,10 @@ test('updates branch rulesets required checks contexts', async () => {
     ],
   }
 
-  const octokit: any = {
+  const octokit = {
     rest: {
       repos: {
+        // @ts-ignore
         // @ts-ignore
         getContent: jest
           .fn()
@@ -297,9 +299,10 @@ test('falls back to classic branch protection and updates contexts', async () =>
     },
   }
 
-  const octokit: any = {
+  const octokit = {
     rest: {
       repos: {
+        // @ts-ignore
         // @ts-ignore
         getContent: jest
           .fn()
