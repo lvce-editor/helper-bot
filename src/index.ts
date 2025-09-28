@@ -8,6 +8,12 @@ import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { captureException } from './errorHandling.js'
 import { availableParallelism } from 'node:os'
 import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.js'
+import {
+  handleUpdateNodeVersion,
+  handleUpdateDependencies,
+  handleEnsureLernaExcluded,
+  handleUpdateGithubActions as handleUpdateGithubActionsMigration,
+} from './migrations/endpoints.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -58,6 +64,39 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   router.post(
     '/update-github-actions',
     handleUpdateGithubActions({
+      app,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
+
+  // Migration endpoints
+  router.post(
+    '/migrations/update-node-version',
+    handleUpdateNodeVersion({
+      app,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
+
+  router.post(
+    '/migrations/update-dependencies',
+    handleUpdateDependencies({
+      app,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
+
+  router.post(
+    '/migrations/ensure-lerna-excluded',
+    handleEnsureLernaExcluded({
+      app,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
+
+  router.post(
+    '/migrations/update-github-actions',
+    handleUpdateGithubActionsMigration({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
     }),
