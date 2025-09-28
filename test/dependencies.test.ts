@@ -12,6 +12,7 @@ const mockFs = {
   writeFile: jest.fn(),
   existsSync: jest.fn(),
   createReadStream: jest.fn(),
+  chmod: jest.fn(),
 }
 
 const mockSentry = {}
