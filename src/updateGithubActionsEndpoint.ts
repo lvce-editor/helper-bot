@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
+import { VError } from '@lvce-editor/verror'
 import { updateGithubActions } from './updateGithubActions.js'
 
 const verifySecret = (
@@ -39,7 +40,7 @@ export const handleUpdateGithubActions =
       try {
         appOctokit = await app.auth()
       } catch (error) {
-        throw new Error(`failed to authenticate app: ${error}`)
+        throw new VError(error as Error, 'failed to authenticate app')
       }
       let installation
       try {
@@ -51,20 +52,23 @@ export const handleUpdateGithubActions =
       } catch (error) {
         // @ts-ignore
         if (error && error.status === 404) {
-          throw new Error(
+          throw new VError(
+            error as Error,
             `app not installed on ${owner}/${repo} (missing installation)`,
           )
         }
-        throw new Error(
-          `failed to get installation for ${owner}/${repo}: ${error}`,
+        throw new VError(
+          error as Error,
+          `failed to get installation for ${owner}/${repo}`,
         )
       }
       let octokit
       try {
         octokit = await app.auth(installation.id)
       } catch (error) {
-        throw new Error(
-          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`,
+        throw new VError(
+          error as Error,
+          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}`,
         )
       }
       let result
@@ -80,7 +84,10 @@ export const handleUpdateGithubActions =
           },
         })
       } catch (error) {
-        throw new Error(`failed to update workflows in ${owner}/${repo}: ${error}`)
+        throw new VError(
+          error as Error,
+          `failed to update workflows in ${owner}/${repo}`,
+        )
       }
       if (!result || result.changedFiles === 0) {
         res.status(200).send('No workflow updates needed')
