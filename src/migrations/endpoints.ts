@@ -46,7 +46,7 @@ const createMigrationHandler = (
       try {
         appOctokit = await app.auth()
       } catch (error) {
-        throw new VError(error as Error, 'failed to authenticate app')
+        throw new Error(`failed to authenticate app: ${error}`)
       }
       let installation
       try {
@@ -59,12 +59,12 @@ const createMigrationHandler = (
         // @ts-ignore
         if (error && error.status === 404) {
           throw new VError(
-            error as Error,
+            error instanceof Error ? error : new Error(String(error)),
             `app not installed on ${owner}/${repo} (missing installation)`,
           )
         }
         throw new VError(
-          error as Error,
+          error instanceof Error ? error : new Error(String(error)),
           `failed to get installation for ${owner}/${repo}`,
         )
       }
@@ -73,7 +73,7 @@ const createMigrationHandler = (
         octokit = await app.auth(installation.id)
       } catch (error) {
         throw new VError(
-          error as Error,
+          error instanceof Error ? error : new Error(String(error)),
           `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}`,
         )
       }
