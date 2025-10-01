@@ -13,6 +13,7 @@ import {
   handleUpdateDependencies,
   handleEnsureLernaExcluded,
   handleUpdateGithubActions as handleUpdateGithubActionsMigration,
+  handleAddGitattributes,
 } from './migrations/endpoints.js'
 
 const dependencies = dependenciesConfig.dependencies

@@ -4,6 +4,7 @@ import { updateNodeVersionMigration } from './updateNodeVersion.js'
 import { updateDependenciesMigration } from './updateDependencies.js'
 import { ensureLernaExcludedMigration } from './ensureLernaExcluded.js'
 import { updateGithubActionsMigration } from './updateGithubActions.js'
+import { addGitattributesMigration } from './addGitattributes.js'
 import type { MigrationEndpointParams } from './types.js'
 
 const verifySecret = (
@@ -119,3 +120,6 @@ export const handleEnsureLernaExcluded = (params: MigrationEndpointParams) =>
 
 export const handleUpdateGithubActions = (params: MigrationEndpointParams) =>
   createMigrationHandler(updateGithubActionsMigration, params)
+
+export const handleAddGitattributes = (params: MigrationEndpointParams) =>
+  createMigrationHandler(addGitattributesMigration, params)
