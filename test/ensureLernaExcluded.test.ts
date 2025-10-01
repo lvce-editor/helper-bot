@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, writeFile, readFile, rm, stat, chmod } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { ensureLernaExcluded } from '../src/ensureLernaExcluded.js'
@@ -266,6 +266,60 @@ OUTPUT=\`ncu -u -x probot\``
 
     // Should not throw an error
     await expect(ensureLernaExcluded(scriptPath)).resolves.toBeUndefined()
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
+test('should preserve executable permissions when updating script', async () => {
+  if (process.platform === 'win32') {
+    return
+  }
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-executable-'))
+
+  try {
+    // Create a test update-dependencies.sh script without lerna exclusion
+    const scriptContent = `#!/bin/bash
+
+cd $(dirname "$0")
+cd ..
+
+function updateDependencies {
+  echo "updating dependencies..."
+  OUTPUT=\`ncu -u -x probot -x jest\`
+  SUB='All dependencies match the latest package versions'
+  if [[ "$OUTPUT" == *"$SUB"* ]]; then
+    echo "$OUTPUT"
+  else
+    rm -rf node_modules package-lock.json dist
+    npm install
+  fi
+}
+
+updateDependencies`
+
+    const scriptPath = join(tempDir, 'update-dependencies.sh')
+    await writeFile(scriptPath, scriptContent, 'utf8')
+
+    // Set executable permissions
+    await chmod(scriptPath, 0o755)
+
+    // Verify the script has executable permissions before modification
+    const statsBefore = await stat(scriptPath)
+    const isExecutableBefore = (statsBefore.mode & 0o111) !== 0
+    expect(isExecutableBefore).toBe(true)
+
+    // Call the function
+    await ensureLernaExcluded(scriptPath)
+
+    // Verify the script still has executable permissions after modification
+    const statsAfter = await stat(scriptPath)
+    const isExecutableAfter = (statsAfter.mode & 0o111) !== 0
+    expect(isExecutableAfter).toBe(true)
+
+    // Also verify the content was updated
+    const finalContent = await readFile(scriptPath, 'utf8')
+    expect(finalContent).toContain('OUTPUT=`ncu -u -x probot -x jest -x lerna`')
   } finally {
     await rm(tempDir, { recursive: true, force: true })
   }

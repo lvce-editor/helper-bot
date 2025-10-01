@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile, chmod } from 'node:fs/promises'
 
 export const ensureLernaExcluded = async (
   scriptPath: string,
@@ -47,6 +47,8 @@ export const ensureLernaExcluded = async (
 
     if (hasChanges) {
       await writeFile(scriptPath, updatedContent, 'utf8')
+      // Ensure the script remains executable after modification
+      await chmod(scriptPath, 0o755)
       console.log('Added lerna exclusion to update-dependencies.sh script')
     } else {
       console.log('Lerna is already excluded in update-dependencies.sh script')

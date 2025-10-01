@@ -18,6 +18,7 @@ jest.unstable_mockModule('node:fs/promises', () => {
     mkdir: jest.fn(),
     rm: jest.fn(),
     readdir: jest.fn(),
+    chmod: jest.fn(),
   }
 })
 
