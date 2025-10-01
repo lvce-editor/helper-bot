@@ -80,10 +80,7 @@ const updateBranchRulesetsRequiredChecks = async (
     if (error && error.status === 404) {
       return 0
     }
-    throw new VError(
-      error as Error,
-      `failed to list rulesets for ${owner}/${repo}`,
-    )
+    throw new Error(`failed to list rulesets for ${owner}/${repo}: ${error}`)
   }
 
   const rulesets: any[] = Array.isArray(rulesetsResponse.data)
@@ -220,10 +217,7 @@ const updateBranchRulesetsRequiredChecks = async (
       }
       updatedRulesets++
     } catch (error) {
-      throw new VError(
-        error as Error,
-        `failed to update ruleset ${String(ruleset && ruleset.id)} for ${owner}/${repo}`,
-      )
+      throw new Error(`failed to update ruleset ${String(ruleset && ruleset.id)} for ${owner}/${repo}: ${error}`)
     }
   }
 
@@ -247,10 +241,7 @@ const updateClassicBranchProtectionRequiredChecks = async (
     if (error && error.status === 404) {
       return false
     }
-    throw new VError(
-      error as Error,
-      `failed to get branch protection for ${owner}/${repo}@${branch}`,
-    )
+    throw new Error(`failed to get branch protection for ${owner}/${repo}@${branch}: ${error}`)
   }
 
   const statusChecks =
@@ -285,10 +276,7 @@ const updateClassicBranchProtectionRequiredChecks = async (
     )
     return true
   } catch (error) {
-    throw new VError(
-      error as Error,
-      `failed to update required status checks for ${owner}/${repo}@${branch}`,
-    )
+    throw new Error(`failed to update required status checks for ${owner}/${repo}@${branch}: ${error}`)
   }
 }
 
@@ -323,10 +311,7 @@ export const updateGithubActions = async (
       // No workflows directory, nothing to do
       return undefined
     }
-    throw new VError(
-      error as Error,
-      `failed to list workflows at ${WORKFLOWS_DIR} for ${owner}/${repo} on ${baseBranch}`,
-    )
+    throw new Error(`failed to list workflows at ${WORKFLOWS_DIR} for ${owner}/${repo} on ${baseBranch}: ${error}`)
   }
 
   const changed: Array<{
@@ -357,10 +342,7 @@ export const updateGithubActions = async (
         changed.push({ path: filePath, originalSha, newContent: finalContent })
       }
     } catch (error) {
-      throw new VError(
-        error as Error,
-        `failed to read workflow file ${filePath} for ${owner}/${repo} on ${baseBranch}`,
-      )
+      throw new Error(`failed to read workflow file ${filePath} for ${owner}/${repo} on ${baseBranch}: ${error}`)
     }
   }
 
@@ -373,10 +355,7 @@ export const updateGithubActions = async (
         await updateClassicBranchProtectionRequiredChecks(params, baseBranch)
       }
     } catch (error) {
-      throw new VError(
-        error as Error,
-        `failed to update branch rulesets for ${owner}/${repo}`,
-      )
+      throw new Error(`failed to update branch rulesets for ${owner}/${repo}: ${error}`)
     }
     return { changedFiles: 0 }
   }

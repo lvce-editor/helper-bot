@@ -80,10 +80,7 @@ export const handleUpdateGithubActions =
           },
         })
       } catch (error) {
-        throw new VError(
-          error as Error,
-          `failed to update workflows in ${owner}/${repo}`,
-        )
+        throw new Error(`failed to update workflows in ${owner}/${repo}: ${error}`)
       }
       if (!result || result.changedFiles === 0) {
         res.status(200).send('No workflow updates needed')
