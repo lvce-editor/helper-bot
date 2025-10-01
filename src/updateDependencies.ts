@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from 'probot'
@@ -222,6 +222,28 @@ export const updateDependencies = async (
       version,
     )
 
+  // Check if .gitattributes file needs to be added
+  let gitattributesContent: string | null = null
+  try {
+    // Check if .gitattributes exists using GitHub API
+    await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: '.gitattributes',
+    })
+    // If we get here, the file exists, so we don't need to add it
+    console.log('.gitattributes file already exists')
+  } catch (error: any) {
+    // If the file doesn't exist (404), we need to add it
+    if (error.status === 404) {
+      console.log('.gitattributes file not found, will add it')
+      gitattributesContent = '* text=auto eol=lf\n'
+    } else {
+      // Some other error occurred
+      console.warn('Failed to check for .gitattributes file:', error)
+    }
+  }
+
   const commitableFiles = [
     {
       path: packageJsonPath,
@@ -236,6 +258,16 @@ export const updateDependencies = async (
       content: newPackageLockJsonString,
     },
   ]
+
+  // Add .gitattributes file if it needs to be created
+  if (gitattributesContent) {
+    commitableFiles.push({
+      path: '.gitattributes',
+      mode: modeFile,
+      type: typeFile,
+      content: gitattributesContent,
+    })
+  }
 
   const pullRequestData = await createPullRequest({
     octokit,

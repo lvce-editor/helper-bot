@@ -102,6 +102,14 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
       secret: process.env.DEPENDENCIES_SECRET,
     }),
   )
+
+  router.post(
+    '/migrations/add-gitattributes',
+    handleAddGitattributes({
+      app,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
 }
 
 export default (app: Probot, { getRouter }: any) => {

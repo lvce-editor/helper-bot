@@ -82,7 +82,7 @@ const createMigrationHandler = (
         octokit,
         owner,
         repo,
-        baseBranch: req.query.baseBranch as string || 'main',
+        baseBranch: (req.query.baseBranch as string) || 'main',
       })
 
       if (!result.success) {
@@ -95,7 +95,9 @@ const createMigrationHandler = (
       }
 
       res.status(200).json({
-        message: result.message || `${migration.name} migration completed successfully`,
+        message:
+          result.message ||
+          `${migration.name} migration completed successfully`,
         changedFiles: result.changedFiles,
         newBranch: result.newBranch,
       })
