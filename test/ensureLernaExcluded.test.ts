@@ -272,6 +272,9 @@ OUTPUT=\`ncu -u -x probot\``
 })
 
 test('should preserve executable permissions when updating script', async () => {
+  if (process.platform === 'win32') {
+    return
+  }
   const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-executable-'))
 
   try {
