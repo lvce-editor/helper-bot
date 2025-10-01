@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express'
-import { VError } from '@lvce-editor/verror'
 import { updateNodeVersionMigration } from './updateNodeVersion.js'
 import { updateDependenciesMigration } from './updateDependencies.js'
 import { ensureLernaExcludedMigration } from './ensureLernaExcluded.js'
@@ -58,15 +57,21 @@ const createMigrationHandler = (
       } catch (error) {
         // @ts-ignore
         if (error && error.status === 404) {
-          throw new Error(`app not installed on ${owner}/${repo} (missing installation)`)
+          throw new Error(
+            `app not installed on ${owner}/${repo} (missing installation)`,
+          )
         }
-        throw new Error(`failed to get installation for ${owner}/${repo}: ${error}`)
+        throw new Error(
+          `failed to get installation for ${owner}/${repo}: ${error}`,
+        )
       }
       let octokit
       try {
         octokit = await app.auth(installation.id)
       } catch (error) {
-        throw new Error(`failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`)
+        throw new Error(
+          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`,
+        )
       }
 
       const result = await migration.run({

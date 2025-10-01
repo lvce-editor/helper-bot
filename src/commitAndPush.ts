@@ -3,7 +3,6 @@ import { execa } from 'execa'
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { VError } from '@lvce-editor/verror'
 
 const modeFile: '100644' = '100644'
 const typeFile: 'blob' = 'blob'
@@ -95,7 +94,7 @@ export const commitAndPush = async (
         sha: commit.data.sha,
       })
     } catch (error) {
-      throw new VError(error, `Failed to create new branch`)
+      throw new Error(`Failed to create new branch: ${error}`)
     }
   } else {
     try {
@@ -107,7 +106,7 @@ export const commitAndPush = async (
         force: true,
       })
     } catch (error) {
-      throw new VError(error, `Failed to update branch`)
+      throw new Error(`Failed to update branch: ${error}`)
     }
   }
 

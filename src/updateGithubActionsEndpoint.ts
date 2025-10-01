@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
-import { VError } from '@lvce-editor/verror'
 import { updateGithubActions } from './updateGithubActions.js'
 
 const verifySecret = (
@@ -40,7 +39,7 @@ export const handleUpdateGithubActions =
       try {
         appOctokit = await app.auth()
       } catch (error) {
-        throw new VError(error as Error, 'failed to authenticate app')
+        throw new Error(`failed to authenticate app: ${error}`)
       }
       let installation
       try {
@@ -52,23 +51,20 @@ export const handleUpdateGithubActions =
       } catch (error) {
         // @ts-ignore
         if (error && error.status === 404) {
-          throw new VError(
-            error as Error,
+          throw new Error(
             `app not installed on ${owner}/${repo} (missing installation)`,
           )
         }
-        throw new VError(
-          error as Error,
-          `failed to get installation for ${owner}/${repo}`,
+        throw new Error(
+          `failed to get installation for ${owner}/${repo}: ${error}`,
         )
       }
       let octokit
       try {
         octokit = await app.auth(installation.id)
       } catch (error) {
-        throw new VError(
-          error as Error,
-          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}`,
+        throw new Error(
+          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`,
         )
       }
       let result
