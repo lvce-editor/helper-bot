@@ -13,6 +13,7 @@ import {
   handleUpdateDependencies,
   handleEnsureLernaExcluded,
   handleUpdateGithubActions as handleUpdateGithubActionsMigration,
+  handleAddGitattributes,
 } from './migrations/endpoints.js'
 
 const dependencies = dependenciesConfig.dependencies
@@ -97,6 +98,14 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   router.post(
     '/migrations/update-github-actions',
     handleUpdateGithubActionsMigration({
+      app,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
+
+  router.post(
+    '/migrations/add-gitattributes',
+    handleAddGitattributes({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
     }),

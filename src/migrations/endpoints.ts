@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express'
-import { VError } from '@lvce-editor/verror'
 import { updateNodeVersionMigration } from './updateNodeVersion.js'
 import { updateDependenciesMigration } from './updateDependencies.js'
 import { ensureLernaExcludedMigration } from './ensureLernaExcluded.js'
 import { updateGithubActionsMigration } from './updateGithubActions.js'
+import { addGitattributesMigration } from './addGitattributes.js'
 import type { MigrationEndpointParams } from './types.js'
 
 const verifySecret = (
@@ -45,7 +45,7 @@ const createMigrationHandler = (
       try {
         appOctokit = await app.auth()
       } catch (error) {
-        throw new VError(error as Error, 'failed to authenticate app')
+        throw new Error(`failed to authenticate app: ${error}`)
       }
       let installation
       try {
@@ -57,23 +57,20 @@ const createMigrationHandler = (
       } catch (error) {
         // @ts-ignore
         if (error && error.status === 404) {
-          throw new VError(
-            error as Error,
+          throw new Error(
             `app not installed on ${owner}/${repo} (missing installation)`,
           )
         }
-        throw new VError(
-          error as Error,
-          `failed to get installation for ${owner}/${repo}`,
+        throw new Error(
+          `failed to get installation for ${owner}/${repo}: ${error}`,
         )
       }
       let octokit
       try {
         octokit = await app.auth(installation.id)
       } catch (error) {
-        throw new VError(
-          error as Error,
-          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}`,
+        throw new Error(
+          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`,
         )
       }
 
@@ -81,7 +78,7 @@ const createMigrationHandler = (
         octokit,
         owner,
         repo,
-        baseBranch: req.query.baseBranch as string || 'main',
+        baseBranch: (req.query.baseBranch as string) || 'main',
       })
 
       if (!result.success) {
@@ -94,7 +91,9 @@ const createMigrationHandler = (
       }
 
       res.status(200).json({
-        message: result.message || `${migration.name} migration completed successfully`,
+        message:
+          result.message ||
+          `${migration.name} migration completed successfully`,
         changedFiles: result.changedFiles,
         newBranch: result.newBranch,
       })
@@ -119,3 +118,6 @@ export const handleEnsureLernaExcluded = (params: MigrationEndpointParams) =>
 
 export const handleUpdateGithubActions = (params: MigrationEndpointParams) =>
   createMigrationHandler(updateGithubActionsMigration, params)
+
+export const handleAddGitattributes = (params: MigrationEndpointParams) =>
+  createMigrationHandler(addGitattributesMigration, params)
