@@ -10,8 +10,8 @@ const addOidcPermissionsToWorkflow = (content: string): string => {
 
   // Find the jobs section and add permissions before it
   const lines = content.split('\n')
-  const jobsIndex = lines.findIndex(line => line.trim().startsWith('jobs:'))
-  
+  const jobsIndex = lines.findIndex((line) => line.trim().startsWith('jobs:'))
+
   if (jobsIndex === -1) {
     // If no jobs section found, add permissions at the end of the file
     lines.push('')
@@ -29,7 +29,7 @@ const addOidcPermissionsToWorkflow = (content: string): string => {
     '  id-token: write # Required for OIDC',
     '  contents: write',
     '',
-    ...lines.slice(jobsIndex)
+    ...lines.slice(jobsIndex),
   ]
 
   return newLines.join('\n')
@@ -37,7 +37,8 @@ const addOidcPermissionsToWorkflow = (content: string): string => {
 
 export const addOidcPermissionsMigration: Migration = {
   name: 'addOidcPermissions',
-  description: 'Add OpenID Connect permissions to release.yml workflow files for secure npm publishing',
+  description:
+    'Add OpenID Connect permissions to release.yml workflow files for secure npm publishing',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params
@@ -51,14 +52,14 @@ export const addOidcPermissionsMigration: Migration = {
           path: `${WORKFLOWS_DIR}/release.yml`,
           ref: baseBranch,
         })
-        
+
         if (!('content' in result.data)) {
           return {
             success: true,
             message: 'release.yml is not a file',
           }
         }
-        
+
         releaseWorkflow = result.data
       } catch (error: any) {
         if (error && error.status === 404) {
@@ -71,11 +72,14 @@ export const addOidcPermissionsMigration: Migration = {
       }
 
       // Decode the content
-      const originalContent = Buffer.from(releaseWorkflow.content, 'base64').toString()
-      
+      const originalContent = Buffer.from(
+        releaseWorkflow.content,
+        'base64',
+      ).toString()
+
       // Add OIDC permissions
       const updatedContent = addOidcPermissionsToWorkflow(originalContent)
-      
+
       // Check if content actually changed
       if (originalContent === updatedContent) {
         return {
@@ -86,7 +90,7 @@ export const addOidcPermissionsMigration: Migration = {
 
       // Create a new branch
       const newBranch = `add-oidc-permissions-${Date.now()}`
-      
+
       // Get the main branch reference
       const mainBranchRef = await octokit.rest.git.getRef({
         owner,
@@ -103,8 +107,9 @@ export const addOidcPermissionsMigration: Migration = {
       })
 
       // Update the file
-      const updatedContentBase64 = Buffer.from(updatedContent).toString('base64')
-      
+      const updatedContentBase64 =
+        Buffer.from(updatedContent).toString('base64')
+
       await octokit.repos.createOrUpdateFileContents({
         owner,
         repo,
@@ -122,13 +127,6 @@ export const addOidcPermissionsMigration: Migration = {
         title: 'Add OIDC permissions for secure npm publishing',
         head: newBranch,
         base: baseBranch,
-        body: `This PR adds the required OpenID Connect permissions to the release.yml workflow file for more secure npm publishing.
-
-The added permissions are:
-- \`id-token: write\` - Required for OIDC token generation
-- \`contents: write\` - Required for publishing to npm
-
-This follows GitHub's recommended security practices for npm publishing workflows.`,
       })
 
       return {
