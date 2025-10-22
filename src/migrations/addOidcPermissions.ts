@@ -125,7 +125,7 @@ export const addOidcPermissionsMigration: Migration = {
         owner,
         repo,
         path: `${WORKFLOWS_DIR}/release.yml`,
-        message: 'Add OIDC permissions for secure npm publishing',
+        message: 'feature: update permissions for open id connect publishing',
         content: updatedContentBase64,
         branch: newBranch,
         sha: releaseWorkflow.sha,
