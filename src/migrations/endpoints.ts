@@ -4,6 +4,7 @@ import { updateDependenciesMigration } from './updateDependencies.js'
 import { ensureLernaExcludedMigration } from './ensureLernaExcluded.js'
 import { updateGithubActionsMigration } from './updateGithubActions.js'
 import { addGitattributesMigration } from './addGitattributes.js'
+import { addOidcPermissionsMigration } from './addOidcPermissions.js'
 import type { MigrationEndpointParams } from './types.js'
 
 const verifySecret = (
@@ -121,3 +122,6 @@ export const handleUpdateGithubActions = (params: MigrationEndpointParams) =>
 
 export const handleAddGitattributes = (params: MigrationEndpointParams) =>
   createMigrationHandler(addGitattributesMigration, params)
+
+export const handleAddOidcPermissions = (params: MigrationEndpointParams) =>
+  createMigrationHandler(addOidcPermissionsMigration, params)
