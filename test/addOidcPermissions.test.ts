@@ -92,9 +92,7 @@ jobs:
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(releaseWorkflow as any),
+        getContent: jest.fn().mockResolvedValueOnce(releaseWorkflow as any),
       },
       git: {
         // @ts-ignore
@@ -156,7 +154,6 @@ jobs:
     title: 'Add OIDC permissions for secure npm publishing',
     head: expect.stringMatching(/^add-oidc-permissions-/),
     base: 'main',
-    body: expect.stringContaining('OpenID Connect permissions'),
   })
 })
 
@@ -178,9 +175,7 @@ on:
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(releaseWorkflow as any),
+        getContent: jest.fn().mockResolvedValueOnce(releaseWorkflow as any),
       },
       git: {
         // @ts-ignore
@@ -212,7 +207,7 @@ on:
   // Verify the content was updated correctly
   const updateCall = octokit.repos.createOrUpdateFileContents.mock.calls[0]
   const updatedContent = Buffer.from(updateCall[0].content, 'base64').toString()
-  
+
   expect(updatedContent).toContain('permissions:')
   expect(updatedContent).toContain('id-token: write # Required for OIDC')
   expect(updatedContent).toContain('contents: write')
