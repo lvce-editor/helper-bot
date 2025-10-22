@@ -124,7 +124,7 @@ export const addOidcPermissionsMigration: Migration = {
       await octokit.rest.pulls.create({
         owner,
         repo,
-        title: 'Add OIDC permissions for secure npm publishing',
+        title: 'feature: update permissions for open id connect publishing',
         head: newBranch,
         base: baseBranch,
       })

@@ -151,7 +151,7 @@ jobs:
   expect(octokit.rest.pulls.create).toHaveBeenCalledWith({
     owner: 'org',
     repo: 'repo',
-    title: 'Add OIDC permissions for secure npm publishing',
+    title: 'feature: update permissions for open id connect publishing',
     head: expect.stringMatching(/^add-oidc-permissions-/),
     base: 'main',
   })
