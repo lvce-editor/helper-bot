@@ -30,3 +30,4 @@ jobs:
         run: npm ci
         if: steps.npm-cache.outputs.cache-hit != 'true'
       - run: npm test
+      - run: npm run build
