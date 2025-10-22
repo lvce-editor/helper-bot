@@ -160,6 +160,10 @@ jobs:
     base: 'main',
     body: expect.stringContaining('OpenID Connect permissions'),
   })
+
+  expect(octokit.graphql).toHaveBeenCalledWith(
+    expect.stringContaining('enablePullRequestAutoMerge')
+  )
 })
 
 test('adds permissions at the end when no jobs section exists', async () => {
