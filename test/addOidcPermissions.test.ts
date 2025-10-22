@@ -94,7 +94,7 @@ jobs:
         // @ts-ignore
         getContent: jest
           .fn()
-          .mockResolvedValueOnce(releaseWorkflow),
+          .mockResolvedValueOnce(releaseWorkflow as any),
       },
       git: {
         // @ts-ignore
@@ -107,11 +107,9 @@ jobs:
         create: jest.fn().mockResolvedValue({ data: { number: 1 } }),
       },
     },
-    rest: {
-      repos: {
-        // @ts-ignore
-        createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
-      },
+    repos: {
+      // @ts-ignore
+      createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
   }
 
@@ -142,7 +140,7 @@ jobs:
     sha: 'base-sha',
   })
 
-  expect(octokit.rest.repos.createOrUpdateFileContents).toHaveBeenCalledWith({
+  expect(octokit.repos.createOrUpdateFileContents).toHaveBeenCalledWith({
     owner: 'org',
     repo: 'repo',
     path: '.github/workflows/release.yml',
@@ -182,7 +180,7 @@ on:
         // @ts-ignore
         getContent: jest
           .fn()
-          .mockResolvedValueOnce(releaseWorkflow),
+          .mockResolvedValueOnce(releaseWorkflow as any),
       },
       git: {
         // @ts-ignore
@@ -195,11 +193,9 @@ on:
         create: jest.fn().mockResolvedValue({}),
       },
     },
-    rest: {
-      repos: {
-        // @ts-ignore
-        createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
-      },
+    repos: {
+      // @ts-ignore
+      createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
   }
 
@@ -214,7 +210,7 @@ on:
   expect(result.changedFiles).toBe(1)
 
   // Verify the content was updated correctly
-  const updateCall = octokit.rest.repos.createOrUpdateFileContents.mock.calls[0]
+  const updateCall = octokit.repos.createOrUpdateFileContents.mock.calls[0]
   const updatedContent = Buffer.from(updateCall[0].content, 'base64').toString()
   
   expect(updatedContent).toContain('permissions:')
