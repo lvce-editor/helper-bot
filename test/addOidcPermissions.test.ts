@@ -92,9 +92,7 @@ jobs:
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(releaseWorkflow as any),
+        getContent: jest.fn().mockResolvedValueOnce(releaseWorkflow as any),
       },
       git: {
         // @ts-ignore
@@ -104,7 +102,9 @@ jobs:
       },
       pulls: {
         // @ts-ignore
-        create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
+        create: jest
+          .fn()
+          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
@@ -162,7 +162,7 @@ jobs:
   })
 
   expect(octokit.graphql).toHaveBeenCalledWith(
-    expect.stringContaining('enablePullRequestAutoMerge')
+    expect.stringContaining('enablePullRequestAutoMerge'),
   )
 })
 
@@ -184,9 +184,7 @@ on:
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(releaseWorkflow as any),
+        getContent: jest.fn().mockResolvedValueOnce(releaseWorkflow as any),
       },
       git: {
         // @ts-ignore
@@ -196,7 +194,9 @@ on:
       },
       pulls: {
         // @ts-ignore
-        create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
+        create: jest
+          .fn()
+          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
@@ -220,7 +220,7 @@ on:
   // Verify the content was updated correctly
   const updateCall = octokit.repos.createOrUpdateFileContents.mock.calls[0]
   const updatedContent = Buffer.from(updateCall[0].content, 'base64').toString()
-  
+
   expect(updatedContent).toContain('permissions:')
   expect(updatedContent).toContain('id-token: write # Required for OIDC')
   expect(updatedContent).toContain('contents: write')
