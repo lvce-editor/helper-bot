@@ -15,7 +15,8 @@
     "strict": true,
     "strictNullChecks": false,
     "noUnusedLocals": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src"
   },
-  "include": ["src", "test"]
+  "include": ["src"]
 }
