@@ -102,13 +102,17 @@ jobs:
       },
       pulls: {
         // @ts-ignore
-        create: jest.fn().mockResolvedValue({ data: { number: 1 } }),
+        create: jest
+          .fn()
+          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
       // @ts-ignore
       createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
+    // @ts-ignore
+    graphql: jest.fn().mockResolvedValue({}),
   }
 
   const result = await addOidcPermissionsMigration.run({
@@ -155,6 +159,10 @@ jobs:
     head: expect.stringMatching(/^add-oidc-permissions-/),
     base: 'main',
   })
+
+  expect(octokit.graphql).toHaveBeenCalledWith(
+    expect.stringContaining('enablePullRequestAutoMerge'),
+  )
 })
 
 test('adds permissions at the end when no jobs section exists', async () => {
@@ -185,13 +193,17 @@ on:
       },
       pulls: {
         // @ts-ignore
-        create: jest.fn().mockResolvedValue({}),
+        create: jest
+          .fn()
+          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
       // @ts-ignore
       createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
+    // @ts-ignore
+    graphql: jest.fn().mockResolvedValue({}),
   }
 
   const result = await addOidcPermissionsMigration.run({

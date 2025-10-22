@@ -2,6 +2,17 @@ import type { Migration, MigrationParams, MigrationResult } from './types.js'
 
 const WORKFLOWS_DIR = '.github/workflows'
 
+const enableAutoSquash = async (octokit: any, pullRequestData: any) => {
+  await octokit.graphql(
+    `mutation MyMutation {
+  enablePullRequestAutoMerge(input: { pullRequestId: "${pullRequestData.data.node_id}", mergeMethod: SQUASH }) {
+    clientMutationId
+  }
+}
+`,
+  )
+}
+
 const addOidcPermissionsToWorkflow = (content: string): string => {
   // Check if permissions section already exists
   if (content.includes('permissions:')) {
@@ -121,13 +132,16 @@ export const addOidcPermissionsMigration: Migration = {
       })
 
       // Create a pull request
-      await octokit.rest.pulls.create({
+      const pullRequestData = await octokit.rest.pulls.create({
         owner,
         repo,
         title: 'feature: update permissions for open id connect publishing',
         head: newBranch,
         base: baseBranch,
       })
+
+      // Enable auto squash merge
+      await enableAutoSquash(octokit, pullRequestData)
 
       return {
         success: true,
