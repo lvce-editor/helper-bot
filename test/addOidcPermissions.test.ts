@@ -146,7 +146,7 @@ jobs:
     owner: 'org',
     repo: 'repo',
     path: '.github/workflows/release.yml',
-    message: 'Add OIDC permissions for secure npm publishing',
+    message: 'feature: update permissions for open id connect publishing',
     content: expect.any(String),
     branch: expect.stringMatching(/^add-oidc-permissions-/),
     sha: 'sha-release',
