@@ -196,13 +196,15 @@ on:
       },
       pulls: {
         // @ts-ignore
-        create: jest.fn().mockResolvedValue({}),
+        create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
       // @ts-ignore
       createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
+    // @ts-ignore
+    graphql: jest.fn().mockResolvedValue({}),
   }
 
   const result = await addOidcPermissionsMigration.run({
