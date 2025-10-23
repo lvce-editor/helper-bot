@@ -5,6 +5,7 @@ import { ensureLernaExcludedMigration } from './ensureLernaExcluded.js'
 import { updateGithubActionsMigration } from './updateGithubActions.js'
 import { addGitattributesMigration } from './addGitattributes.js'
 import { addOidcPermissionsMigration } from './addOidcPermissions.js'
+import { removeNpmTokenMigration } from './removeNpmToken.js'
 import type { MigrationEndpointParams } from './types.js'
 
 const verifySecret = (
@@ -125,3 +126,6 @@ export const handleAddGitattributes = (params: MigrationEndpointParams) =>
 
 export const handleAddOidcPermissions = (params: MigrationEndpointParams) =>
   createMigrationHandler(addOidcPermissionsMigration, params)
+
+export const handleRemoveNpmToken = (params: MigrationEndpointParams) =>
+  createMigrationHandler(removeNpmTokenMigration, params)

@@ -15,6 +15,7 @@ import {
   handleUpdateGithubActions as handleUpdateGithubActionsMigration,
   handleAddGitattributes,
   handleAddOidcPermissions,
+  handleRemoveNpmToken,
 } from './migrations/endpoints.js'
 
 const dependencies = dependenciesConfig.dependencies
@@ -115,6 +116,14 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   router.post(
     '/migrations/add-oidc-permissions',
     handleAddOidcPermissions({
+      app,
+      secret: process.env.DEPENDENCIES_SECRET,
+    }),
+  )
+
+  router.post(
+    '/migrations/remove-npm-token',
+    handleRemoveNpmToken({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
     }),
