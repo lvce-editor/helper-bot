@@ -126,6 +126,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "activity-bar-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "explorer-view",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
