@@ -1,29 +1,9 @@
 {
   "dependencies": [
     {
-      "fromRepo": "eslint-config",
-      "toRepo": "text-search-worker",
-      "toFolder": ""
-    },
-    {
       "fromRepo": "test-worker",
       "toRepo": "test-with-playwright",
       "toFolder": "packages/build"
-    },
-    {
-      "fromRepo": "eslint-config",
-      "toRepo": "iframe-worker",
-      "toFolder": ""
-    },
-    {
-      "fromRepo": "eslint-config",
-      "toRepo": "file-watcher-process",
-      "toFolder": ""
-    },
-    {
-      "fromRepo": "eslint-config",
-      "toRepo": "test-worker",
-      "toFolder": ""
     },
     {
       "fromRepo": "test-with-playwright",
