@@ -66,6 +66,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "text-measurement-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "menu-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
