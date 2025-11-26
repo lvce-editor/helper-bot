@@ -25,8 +25,7 @@ export const updateNodeVersion = async (
         changedFiles: [],
         pullRequestTitle: 'ci: update Node.js version',
         errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
-        errorMessage:
-          nvmrcResult.errorMessage || 'Failed to compute .nvmrc content',
+        errorMessage: nvmrcResult.errorMessage || 'Failed to compute .nvmrc content',
       }
     }
     if (dockerfileResult.status === 'error') {
@@ -36,8 +35,7 @@ export const updateNodeVersion = async (
         pullRequestTitle: 'ci: update Node.js version',
         errorCode: ERROR_CODES.COMPUTE_DOCKERFILE_CONTENT_FAILED,
         errorMessage:
-          dockerfileResult.errorMessage ||
-          'Failed to compute Dockerfile content',
+          dockerfileResult.errorMessage || 'Failed to compute Dockerfile content',
       }
     }
     if (gitpodResult.status === 'error') {

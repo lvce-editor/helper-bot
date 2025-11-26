@@ -7,8 +7,6 @@ import { handleCheckRun } from './handleCheckRun.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { captureException } from './errorHandling.js'
 import { availableParallelism } from 'node:os'
-import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.js'
-import { handleUpdateGithubActions as handleUpdateGithubActionsMigration } from './migrations/endpoints.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
 import {
   getAvailableMigrations,
@@ -65,14 +63,6 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     }),
   )
 
-  router.post(
-    '/update-github-actions',
-    handleUpdateGithubActions({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-    }),
-  )
-
   // Get available migrations and register them dynamically
   const availableMigrations = await getAvailableMigrations(migrationsRpc)
   console.log(
@@ -99,16 +89,6 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
       )
     }
   }
-
-  // Register special migrations (not yet moved to RPC)
-  router.post(
-    '/migrations/update-github-actions',
-    handleUpdateGithubActionsMigration({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-      migrationsRpc,
-    }),
-  )
 }
 
 export default (app: Probot, { getRouter }: any) => {

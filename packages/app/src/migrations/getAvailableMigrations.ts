@@ -7,10 +7,11 @@ export const MIGRATION_MAP: Record<string, string> = {
   'update-node-version': 'updateNodeVersion',
   'update-dependencies': 'updateDependencies',
   'add-gitattributes': 'addGitattributes',
+  'update-github-actions': 'updateGithubActions',
 }
 
 // Migrations that need special handling (not yet moved to RPC)
-export const SPECIAL_MIGRATIONS = ['update-github-actions']
+export const SPECIAL_MIGRATIONS: string[] = []
 
 export const getAvailableMigrations = async (migrationsRpc: {
   invoke: (method: string, ...args: any[]) => Promise<any>

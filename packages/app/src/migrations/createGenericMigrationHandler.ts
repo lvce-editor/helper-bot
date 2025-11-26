@@ -128,6 +128,15 @@ export const createGenericMigrationHandler = (
       ) {
         rpcOptions.packageLockJsonPath = req.query.packageLockJsonPath
       }
+      if (req.query.ubuntu && typeof req.query.ubuntu === 'string') {
+        rpcOptions.ubuntu = req.query.ubuntu
+      }
+      if (req.query.windows && typeof req.query.windows === 'string') {
+        rpcOptions.windows = req.query.windows
+      }
+      if (req.query.macos && typeof req.query.macos === 'string') {
+        rpcOptions.macos = req.query.macos
+      }
 
       // Call the RPC function
       const rpcResult = (await migrationsRpc.invoke(

@@ -11,6 +11,7 @@ export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   packageLockJsonPath: string
 }
 
+
 export const updateDependencies = async (
   options: Readonly<UpdateDependenciesOptions>,
 ): Promise<MigrationResult> => {
