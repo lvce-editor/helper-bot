@@ -37,7 +37,7 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
     try {
       // Call handleReleaseReleased migration with all necessary options
       const migrationResult = await migrationsRpc.invoke(
-        'handleReleaseReleased',
+        'migrations/handle-release-released',
         {
           repositoryOwner: owner,
           repositoryName,
@@ -157,21 +157,19 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
 
   // Register all migrations dynamically (1:1 mapping to RPC functions)
   for (const endpointName of availableMigrations.migrations) {
-    const rpcMethodName = MIGRATION_MAP[endpointName]
-    if (rpcMethodName) {
-      router.post(
-        `/migrations/${endpointName}`,
-        createGenericMigrationHandler(
-          rpcMethodName,
-          app,
-          process.env.DEPENDENCIES_SECRET,
-          migrationsRpc,
-        ),
-      )
-      console.log(
-        `Registered migration endpoint: /migrations/${endpointName} -> ${rpcMethodName}`,
-      )
-    }
+    const rpcMethodName = `migrations/${endpointName}`
+    router.post(
+      `/migrations/${endpointName}`,
+      createGenericMigrationHandler(
+        rpcMethodName,
+        app,
+        process.env.DEPENDENCIES_SECRET,
+        migrationsRpc,
+      ),
+    )
+    console.log(
+      `Registered migration endpoint: /migrations/${endpointName} -> ${rpcMethodName}`,
+    )
   }
 }
 
