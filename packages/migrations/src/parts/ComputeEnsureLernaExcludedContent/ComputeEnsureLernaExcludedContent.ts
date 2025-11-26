@@ -1,17 +1,11 @@
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-
-export interface ComputeEnsureLernaExcludedContentParams {
-  currentContent: string
-}
-
-export interface ComputeEnsureLernaExcludedContentResult {
-  newContent: string
-  hasChanges: boolean
-}
 
 const computeEnsureLernaExcludedContentCore = (
   currentContent: string,
-): ComputeEnsureLernaExcludedContentResult => {
+): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
   const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g
   const matches = [...currentContent.matchAll(ncuRegex)]
@@ -60,17 +54,36 @@ const computeEnsureLernaExcludedContentCore = (
 }
 
 export interface ComputeEnsureLernaExcludedContentOptions
-  extends BaseMigrationOptions {
-  currentContent: string
-}
+  extends BaseMigrationOptions {}
 
 export const computeEnsureLernaExcludedContent = async (
   options: ComputeEnsureLernaExcludedContentOptions,
 ): Promise<MigrationResult> => {
+  const clonedRepo = await cloneRepositoryTmp(
+    options.repositoryOwner,
+    options.repositoryName,
+  )
   try {
-    const { currentContent } = options
-    const result = computeEnsureLernaExcludedContentCore(currentContent)
+    const scriptPath = join(
+      clonedRepo.path,
+      'scripts/update-dependencies.sh',
+    )
 
+    let currentContent: string
+    try {
+      currentContent = await readFile(scriptPath, 'utf8')
+    } catch (error: any) {
+      if (error && error.code === 'ENOENT') {
+        return {
+          status: 'success',
+          changedFiles: [],
+          pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+        }
+      }
+      throw error
+    }
+
+    const result = computeEnsureLernaExcludedContentCore(currentContent)
     const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
 
     if (!result.hasChanges) {
@@ -99,5 +112,7 @@ export const computeEnsureLernaExcludedContent = async (
       errorCode: 'COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
+  } finally {
+    await clonedRepo[Symbol.asyncDispose]()
   }
 }

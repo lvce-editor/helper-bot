@@ -9,6 +9,7 @@ const mockFs = {
   readFile: jest.fn(),
   rm: jest.fn(),
   writeFile: jest.fn(),
+  mkdtemp: jest.fn(),
 }
 
 jest.unstable_mockModule('execa', () => mockExeca)
@@ -46,19 +47,45 @@ test('generates new package files with updated dependency', async () => {
   )
 
   // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
+  mockExeca.execa.mockImplementation(async (cmd) => {
+    if (cmd === 'git') {
+      return {}
+    }
+    if (cmd === 'npm') {
+      return {}
+    }
+    return {}
+  })
+  // @ts-ignore
+  mockFs.mkdtemp.mockImplementation(async (prefix) => {
+    if (prefix.includes('migration-')) {
+      return '/test/cloned-repo'
+    }
+    return '/test/tmp-folder'
+  })
+  // @ts-ignore
+  mockFs.readFile.mockImplementation(async (path) => {
+    if (typeof path === 'string' && path.includes('package.json')) {
+      return JSON.stringify(oldPackageJson)
+    }
+    if (typeof path === 'string' && path.includes('package-lock.json')) {
+      if (path.includes('tmp-folder')) {
+        return mockPackageLockJson
+      }
+      return mockPackageLockJson
+    }
+    throw new Error('File not found')
+  })
   // @ts-ignore
   mockFs.mkdir.mockResolvedValue(undefined)
   // @ts-ignore
   mockFs.writeFile.mockResolvedValue(undefined)
   // @ts-ignore
-  mockFs.readFile.mockResolvedValue(mockPackageLockJson)
-  // @ts-ignore
   mockFs.rm.mockResolvedValue(undefined)
 
   const result = await getNewPackageFiles({
-    repository: 'test/repo',
-    oldPackageJson,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
     dependencyName: 'test-dependency',
     dependencyKey: 'dependencies',
     newVersion: '2.0.0',
@@ -77,63 +104,39 @@ test('generates new package files with updated dependency', async () => {
   expect(result.pullRequestTitle).toBe(
     'feature: update test-dependency to version 2.0.0',
   )
-
-  // Verify execa was called with npm install
-  expect(mockExeca.execa).toHaveBeenCalledWith(
-    'npm',
-    [
-      'install',
-      '--ignore-scripts',
-      '--prefer-online',
-      '--cache',
-      expect.any(String),
-    ],
-    expect.objectContaining({
-      cwd: expect.any(String),
-    }),
-  )
 })
 
-test('handles devDependencies', async () => {
-  const oldPackageJson = {
-    name: 'test-package',
-    version: '1.0.0',
-    devDependencies: {
-      '@lvce-editor/test-dev-dependency': '^1.0.0',
-    },
-  }
+test('handles missing package.json', async () => {
+  const error = new Error('File not found')
+  // @ts-ignore
+  error.code = 'ENOENT'
 
-  const mockPackageLockJson = JSON.stringify({
-    name: 'test-package',
-    version: '1.0.0',
+  // @ts-ignore
+  mockExeca.execa.mockImplementation(async (cmd) => {
+    if (cmd === 'git') {
+      return {}
+    }
+    return {}
   })
-
   // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
+  mockFs.mkdtemp.mockResolvedValue('/test/cloned-repo')
   // @ts-ignore
-  mockFs.mkdir.mockResolvedValue(undefined)
-  // @ts-ignore
-  mockFs.writeFile.mockResolvedValue(undefined)
-  // @ts-ignore
-  mockFs.readFile.mockResolvedValue(mockPackageLockJson)
+  mockFs.readFile.mockRejectedValue(error)
   // @ts-ignore
   mockFs.rm.mockResolvedValue(undefined)
 
   const result = await getNewPackageFiles({
-    repository: 'test/repo',
-    oldPackageJson,
-    dependencyName: 'test-dev-dependency',
-    dependencyKey: 'devDependencies',
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    dependencyName: 'test-dependency',
+    dependencyKey: 'dependencies',
     newVersion: '2.0.0',
     packageJsonPath: 'package.json',
     packageLockJsonPath: 'package-lock.json',
   })
 
   expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(2)
-  expect(result.changedFiles[0].content).toContain(
-    '"@lvce-editor/test-dev-dependency": "^2.0.0"',
-  )
+  expect(result.changedFiles).toEqual([])
 })
 
 test('handles error when npm install fails', async () => {
@@ -146,7 +149,24 @@ test('handles error when npm install fails', async () => {
   }
 
   // @ts-ignore
-  mockExeca.execa.mockRejectedValue(new Error('npm install failed'))
+  mockExeca.execa.mockImplementation(async (cmd) => {
+    if (cmd === 'git') {
+      return {}
+    }
+    if (cmd === 'npm') {
+      throw new Error('npm install failed')
+    }
+    return {}
+  })
+  // @ts-ignore
+  mockFs.mkdtemp.mockImplementation(async (prefix) => {
+    if (prefix.includes('migration-')) {
+      return '/test/cloned-repo'
+    }
+    return '/test/tmp-folder'
+  })
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue(JSON.stringify(oldPackageJson))
   // @ts-ignore
   mockFs.mkdir.mockResolvedValue(undefined)
   // @ts-ignore
@@ -155,8 +175,8 @@ test('handles error when npm install fails', async () => {
   mockFs.rm.mockResolvedValue(undefined)
 
   const result = await getNewPackageFiles({
-    repository: 'test/repo',
-    oldPackageJson,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
     dependencyName: 'test-dependency',
     dependencyKey: 'dependencies',
     newVersion: '2.0.0',

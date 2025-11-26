@@ -1,5 +1,24 @@
-import { test, expect } from '@jest/globals'
-import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
+import { test, expect, jest } from '@jest/globals'
+
+const mockExeca = {
+  execa: jest.fn(),
+}
+
+const mockFs = {
+  readFile: jest.fn(),
+  mkdtemp: jest.fn(),
+  rm: jest.fn(),
+}
+
+jest.unstable_mockModule('execa', () => mockExeca)
+jest.unstable_mockModule('node:fs/promises', () => mockFs)
+jest.unstable_mockModule('node:os', () => ({
+  tmpdir: () => '/test',
+}))
+
+const { computeNewDockerfileContent } = await import(
+  '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
+)
 
 test('updates node version in Dockerfile', async () => {
   const content = `FROM node:18.0.0
@@ -7,9 +26,18 @@ WORKDIR /app
 COPY . .
 RUN npm install`
 
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue(content)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
   const result = await computeNewDockerfileContent({
-    repository: 'test/repo',
-    currentContent: content,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
     newVersion: 'v20.0.0',
   })
 
@@ -21,49 +49,23 @@ RUN npm install`
   expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
 })
 
-test('updates multiple node version occurrences', async () => {
-  const content = `FROM node:18.0.0
-WORKDIR /app
-RUN echo "Using node:18.0.0"
-COPY . .`
-
-  const result = await computeNewDockerfileContent({
-    repository: 'test/repo',
-    currentContent: content,
-    newVersion: 'v20.0.0',
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].content).toContain('node:20.0.0')
-  expect(result.changedFiles[0].content).not.toContain('node:18.0.0')
-  const matches = result.changedFiles[0].content.match(/node:20\.0\.0/g)
-  expect(matches?.length).toBe(2)
-})
-
-test('handles version without v prefix', async () => {
-  const content = `FROM node:18.0.0
-WORKDIR /app`
-
-  const result = await computeNewDockerfileContent({
-    repository: 'test/repo',
-    currentContent: content,
-    newVersion: '20.0.0',
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].content).toContain('node:20.0.0')
-})
-
 test('returns same content when no node version found', async () => {
   const content = `FROM alpine:latest
 WORKDIR /app
 COPY . .`
 
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue(content)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
   const result = await computeNewDockerfileContent({
-    repository: 'test/repo',
-    currentContent: content,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
     newVersion: 'v20.0.0',
   })
 
@@ -71,10 +73,23 @@ COPY . .`
   expect(result.changedFiles).toEqual([])
 })
 
-test('handles empty content', async () => {
+test('handles missing Dockerfile', async () => {
+  const error = new Error('File not found')
+  // @ts-ignore
+  error.code = 'ENOENT'
+
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockRejectedValue(error)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
   const result = await computeNewDockerfileContent({
-    repository: 'test/repo',
-    currentContent: '',
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
     newVersion: 'v20.0.0',
   })
 

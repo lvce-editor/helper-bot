@@ -1,49 +1,57 @@
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-
-export interface ComputeNewGitpodDockerfileContentParams {
-  currentContent: string
-  newVersion: string
-}
-
-export interface ComputeNewGitpodDockerfileContentResult {
-  newContent: string
-}
 
 const computeNewGitpodDockerfileContentCore = (
   currentContent: string,
   newVersion: string,
-): ComputeNewGitpodDockerfileContentResult => {
+): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v')
     ? newVersion.slice(1)
     : newVersion
-  const updated = currentContent.replaceAll(
+  return currentContent.replaceAll(
     /(nvm [\w\s]+) \d+\.\d+\.\d+/g,
     `$1 ${versionWithoutPrefix}`,
   )
-  return {
-    newContent: updated,
-  }
 }
 
 export interface ComputeNewGitpodDockerfileContentOptions
   extends BaseMigrationOptions {
-  currentContent: string
   newVersion: string
 }
 
 export const computeNewGitpodDockerfileContent = async (
   options: ComputeNewGitpodDockerfileContentOptions,
 ): Promise<MigrationResult> => {
+  const clonedRepo = await cloneRepositoryTmp(
+    options.repositoryOwner,
+    options.repositoryName,
+  )
   try {
-    const { currentContent, newVersion } = options
-    const result = computeNewGitpodDockerfileContentCore(
-      currentContent,
-      newVersion,
-    )
+    const gitpodDockerfilePath = join(clonedRepo.path, '.gitpod.Dockerfile')
 
-    const hasChanges = currentContent !== result.newContent
-    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
+    let currentContent: string
+    try {
+      currentContent = await readFile(gitpodDockerfilePath, 'utf8')
+    } catch (error: any) {
+      if (error && error.code === 'ENOENT') {
+        return {
+          status: 'success',
+          changedFiles: [],
+          pullRequestTitle: `ci: update Node.js to version ${options.newVersion}`,
+        }
+      }
+      throw error
+    }
+
+    const newContent = computeNewGitpodDockerfileContentCore(
+      currentContent,
+      options.newVersion,
+    )
+    const hasChanges = currentContent !== newContent
+    const pullRequestTitle = `ci: update Node.js to version ${options.newVersion}`
 
     return {
       status: 'success',
@@ -51,7 +59,7 @@ export const computeNewGitpodDockerfileContent = async (
         ? [
             {
               path: '.gitpod.Dockerfile',
-              content: result.newContent,
+              content: newContent,
             },
           ]
         : [],
@@ -65,5 +73,7 @@ export const computeNewGitpodDockerfileContent = async (
       errorCode: 'COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
+  } finally {
+    await clonedRepo[Symbol.asyncDispose]()
   }
 }

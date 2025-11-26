@@ -1,5 +1,6 @@
 export interface BaseMigrationOptions {
-  repository: string
+  repositoryOwner: string
+  repositoryName: string
   [key: string]: any
 }
 

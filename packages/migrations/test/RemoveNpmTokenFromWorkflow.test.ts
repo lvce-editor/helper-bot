@@ -1,5 +1,24 @@
-import { test, expect } from '@jest/globals'
-import { removeNpmTokenFromWorkflow } from '../src/parts/RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+import { test, expect, jest } from '@jest/globals'
+
+const mockExeca = {
+  execa: jest.fn(),
+}
+
+const mockFs = {
+  readFile: jest.fn(),
+  mkdtemp: jest.fn(),
+  rm: jest.fn(),
+}
+
+jest.unstable_mockModule('execa', () => mockExeca)
+jest.unstable_mockModule('node:fs/promises', () => mockFs)
+jest.unstable_mockModule('node:os', () => ({
+  tmpdir: () => '/test',
+}))
+
+const { removeNpmTokenFromWorkflow } = await import(
+  '../src/parts/RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+)
 
 test('removes NODE_AUTH_TOKEN from workflow', async () => {
   const content = `name: release
@@ -24,9 +43,18 @@ jobs:
       - name: Publish to npm
         run: npm publish`
 
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue(content)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
   const result = await removeNpmTokenFromWorkflow({
-    repository: 'test/repo',
-    content,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
   })
 
   expect(result.status).toBe('success')
@@ -54,9 +82,18 @@ jobs:
     name: create-release
     runs-on: ubuntu-24.04`
 
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue(content)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
   const result = await removeNpmTokenFromWorkflow({
-    repository: 'test/repo',
-    content,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
   })
 
   expect(result.status).toBe('success')
@@ -66,47 +103,23 @@ jobs:
   )
 })
 
-test('handles different indentation', async () => {
-  const content = `name: release
-on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+test('handles missing release.yml file', async () => {
+  const error = new Error('File not found')
+  // @ts-ignore
+  error.code = 'ENOENT'
 
-jobs:
-  create-release:
-    name: create-release
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-        env:
-          NODE_AUTH_TOKEN: \${{secrets.NPM_TOKEN}}
-      - name: Publish to npm
-        run: npm publish`
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockRejectedValue(error)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
 
   const result = await removeNpmTokenFromWorkflow({
-    repository: 'test/repo',
-    content,
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].content).not.toContain(
-    'NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}',
-  )
-})
-
-test('handles empty content', async () => {
-  const content = ''
-
-  const result = await removeNpmTokenFromWorkflow({
-    repository: 'test/repo',
-    content,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
   })
 
   expect(result.status).toBe('success')

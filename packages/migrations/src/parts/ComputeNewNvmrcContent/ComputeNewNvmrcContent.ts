@@ -1,14 +1,7 @@
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-
-export interface ComputeNewNvmrcContentParams {
-  currentContent: string
-  newVersion: string
-}
-
-export interface ComputeNewNvmrcContentResult {
-  newContent: string
-  shouldUpdate: boolean
-}
 
 const parseVersion = (content: string): number => {
   const trimmed = content.trim()
@@ -21,7 +14,7 @@ const parseVersion = (content: string): number => {
 const computeNewNvmrcContentCore = (
   currentContent: string,
   newVersion: string,
-): ComputeNewNvmrcContentResult => {
+): { newContent: string; shouldUpdate: boolean } => {
   try {
     const existingVersionNumber = parseVersion(currentContent)
     const newVersionNumber = parseVersion(newVersion)
@@ -45,18 +38,35 @@ const computeNewNvmrcContentCore = (
 }
 
 export interface ComputeNewNvmrcContentOptions extends BaseMigrationOptions {
-  currentContent: string
   newVersion: string
 }
 
 export const computeNewNvmrcContent = async (
   options: ComputeNewNvmrcContentOptions,
 ): Promise<MigrationResult> => {
+  const clonedRepo = await cloneRepositoryTmp(
+    options.repositoryOwner,
+    options.repositoryName,
+  )
   try {
-    const { currentContent, newVersion } = options
-    const result = computeNewNvmrcContentCore(currentContent, newVersion)
+    const nvmrcPath = join(clonedRepo.path, '.nvmrc')
 
-    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
+    let currentContent: string
+    try {
+      currentContent = await readFile(nvmrcPath, 'utf8')
+    } catch (error: any) {
+      if (error && error.code === 'ENOENT') {
+        return {
+          status: 'success',
+          changedFiles: [],
+          pullRequestTitle: `ci: update Node.js to version ${options.newVersion}`,
+        }
+      }
+      throw error
+    }
+
+    const result = computeNewNvmrcContentCore(currentContent, options.newVersion)
+    const pullRequestTitle = `ci: update Node.js to version ${options.newVersion}`
 
     if (!result.shouldUpdate) {
       return {
@@ -88,5 +98,7 @@ export const computeNewNvmrcContent = async (
       errorCode: 'COMPUTE_NVMRC_CONTENT_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
+  } finally {
+    await clonedRepo[Symbol.asyncDispose]()
   }
 }

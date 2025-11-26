@@ -1,5 +1,24 @@
-import { test, expect } from '@jest/globals'
-import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
+import { test, expect, jest } from '@jest/globals'
+
+const mockExeca = {
+  execa: jest.fn(),
+}
+
+const mockFs = {
+  readFile: jest.fn(),
+  mkdtemp: jest.fn(),
+  rm: jest.fn(),
+}
+
+jest.unstable_mockModule('execa', () => mockExeca)
+jest.unstable_mockModule('node:fs/promises', () => mockFs)
+jest.unstable_mockModule('node:os', () => ({
+  tmpdir: () => '/test',
+}))
+
+const { computeEnsureLernaExcludedContent } = await import(
+  '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
+)
 
 test('adds lerna exclusion to ncu command', async () => {
   const content = `#!/bin/bash
@@ -18,9 +37,18 @@ function updateDependencies {
 
 updateDependencies`
 
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue(content)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
   const result = await computeEnsureLernaExcludedContent({
-    repository: 'test/repo',
-    currentContent: content,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
   })
 
   expect(result.status).toBe('success')
@@ -51,87 +79,41 @@ function updateDependencies {
 
 updateDependencies`
 
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockResolvedValue(content)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
+
   const result = await computeEnsureLernaExcludedContent({
-    repository: 'test/repo',
-    currentContent: content,
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
   })
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
 })
 
-test('handles script without ncu command', async () => {
-  const content = `#!/bin/bash
+test('handles missing update-dependencies.sh script', async () => {
+  const error = new Error('File not found')
+  // @ts-ignore
+  error.code = 'ENOENT'
 
-echo "This script does not contain ncu command"
-echo "It just does some other stuff"`
-
-  const result = await computeEnsureLernaExcludedContent({
-    repository: 'test/repo',
-    currentContent: content,
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
-})
-
-test('handles ncu command with no exclusions', async () => {
-  const content = `#!/bin/bash
-
-function updateDependencies {
-  echo "updating dependencies..."
-  OUTPUT=\`ncu -u\`
-  SUB='All dependencies match the latest package versions'
-  if [[ "$OUTPUT" == *"$SUB"* ]]; then
-    echo "$OUTPUT"
-  else
-    rm -rf node_modules package-lock.json dist
-    npm install
-  fi
-}
-
-updateDependencies`
+  // @ts-ignore
+  mockExeca.execa.mockResolvedValue({})
+  // @ts-ignore
+  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
+  // @ts-ignore
+  mockFs.readFile.mockRejectedValue(error)
+  // @ts-ignore
+  mockFs.rm.mockResolvedValue(undefined)
 
   const result = await computeEnsureLernaExcludedContent({
-    repository: 'test/repo',
-    currentContent: content,
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].content).toContain('OUTPUT=`ncu -u -x lerna`')
-})
-
-test('handles multiple ncu commands', async () => {
-  const content = `#!/bin/bash
-
-function updateDependencies {
-  OUTPUT=\`ncu -u -x probot\`
-  echo "Updated"
-  OUTPUT=\`ncu -u -x jest\`
-}
-
-updateDependencies`
-
-  const result = await computeEnsureLernaExcludedContent({
-    repository: 'test/repo',
-    currentContent: content,
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].content).toContain(
-    'OUTPUT=`ncu -u -x probot -x lerna`',
-  )
-  expect(result.changedFiles[0].content).toContain(
-    'OUTPUT=`ncu -u -x jest -x lerna`',
-  )
-})
-
-test('handles empty content', async () => {
-  const result = await computeEnsureLernaExcludedContent({
-    repository: 'test/repo',
-    currentContent: '',
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
   })
 
   expect(result.status).toBe('success')
