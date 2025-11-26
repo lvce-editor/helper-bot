@@ -10,17 +10,27 @@ const mockFs = {
   rm: jest.fn(),
 }
 
+const mockGetLatestNodeVersion = jest.fn()
+
 jest.unstable_mockModule('execa', () => mockExeca)
 jest.unstable_mockModule('node:fs/promises', () => mockFs)
 jest.unstable_mockModule('node:os', () => ({
   tmpdir: () => '/test',
 }))
+jest.unstable_mockModule(
+  '../src/parts/GetLatestNodeVersion/GetLatestNodeVersion.ts',
+  () => ({
+    getLatestNodeVersion: mockGetLatestNodeVersion,
+  }),
+)
 
 const { computeNewNvmrcContent } = await import(
   '../src/parts/ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 )
 
 test('computes new nvmrc content when version should be updated', async () => {
+  // @ts-ignore
+  mockGetLatestNodeVersion.mockResolvedValue('v20.0.0')
   // @ts-ignore
   mockExeca.execa.mockResolvedValue({})
   // @ts-ignore
@@ -33,7 +43,6 @@ test('computes new nvmrc content when version should be updated', async () => {
   const result = await computeNewNvmrcContent({
     repositoryOwner: 'test',
     repositoryName: 'repo',
-    newVersion: 'v20.0.0',
   })
 
   expect(result.status).toBe('success')

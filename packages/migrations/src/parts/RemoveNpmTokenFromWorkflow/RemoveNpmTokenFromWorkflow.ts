@@ -23,10 +23,7 @@ export const removeNpmTokenFromWorkflow = async (
     options.repositoryName,
   )
   try {
-    const workflowPath = join(
-      clonedRepo.path,
-      '.github/workflows/release.yml',
-    )
+    const workflowPath = join(clonedRepo.path, '.github/workflows/release.yml')
 
     let originalContent: string
     try {

@@ -64,10 +64,7 @@ export const computeEnsureLernaExcludedContent = async (
     options.repositoryName,
   )
   try {
-    const scriptPath = join(
-      clonedRepo.path,
-      'scripts/update-dependencies.sh',
-    )
+    const scriptPath = join(clonedRepo.path, 'scripts/update-dependencies.sh')
 
     let currentContent: string
     try {

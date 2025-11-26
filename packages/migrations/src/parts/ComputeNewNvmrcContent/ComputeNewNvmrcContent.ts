@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
+import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const parseVersion = (content: string): number => {
@@ -37,9 +38,7 @@ const computeNewNvmrcContentCore = (
   }
 }
 
-export interface ComputeNewNvmrcContentOptions extends BaseMigrationOptions {
-  newVersion: string
-}
+export interface ComputeNewNvmrcContentOptions extends BaseMigrationOptions {}
 
 export const computeNewNvmrcContent = async (
   options: ComputeNewNvmrcContentOptions,
@@ -49,6 +48,7 @@ export const computeNewNvmrcContent = async (
     options.repositoryName,
   )
   try {
+    const newVersion = await getLatestNodeVersion()
     const nvmrcPath = join(clonedRepo.path, '.nvmrc')
 
     let currentContent: string
@@ -59,14 +59,14 @@ export const computeNewNvmrcContent = async (
         return {
           status: 'success',
           changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${options.newVersion}`,
+          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
         }
       }
       throw error
     }
 
-    const result = computeNewNvmrcContentCore(currentContent, options.newVersion)
-    const pullRequestTitle = `ci: update Node.js to version ${options.newVersion}`
+    const result = computeNewNvmrcContentCore(currentContent, newVersion)
+    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     if (!result.shouldUpdate) {
       return {

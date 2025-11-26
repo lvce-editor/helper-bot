@@ -10,7 +10,10 @@ const getNewPackageFilesCore = async (
   dependencyName: string,
   dependencyKey: string,
   newVersion: string,
-): Promise<{ newPackageJsonString: string; newPackageLockJsonString: string }> => {
+): Promise<{
+  newPackageJsonString: string
+  newPackageLockJsonString: string
+}> => {
   const name = oldPackageJson.name
   const tmpFolder = join(
     tmpdir(),

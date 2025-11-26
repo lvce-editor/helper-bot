@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
+import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const computeNewDockerfileContentCore = (
@@ -11,13 +12,14 @@ const computeNewDockerfileContentCore = (
   const versionWithoutPrefix = newVersion.startsWith('v')
     ? newVersion.slice(1)
     : newVersion
-  return currentContent.replaceAll(/node:\d+\.\d+\.\d+/g, `node:${versionWithoutPrefix}`)
+  return currentContent.replaceAll(
+    /node:\d+\.\d+\.\d+/g,
+    `node:${versionWithoutPrefix}`,
+  )
 }
 
 export interface ComputeNewDockerfileContentOptions
-  extends BaseMigrationOptions {
-  newVersion: string
-}
+  extends BaseMigrationOptions {}
 
 export const computeNewDockerfileContent = async (
   options: ComputeNewDockerfileContentOptions,
@@ -27,6 +29,7 @@ export const computeNewDockerfileContent = async (
     options.repositoryName,
   )
   try {
+    const newVersion = await getLatestNodeVersion()
     const dockerfilePath = join(clonedRepo.path, 'Dockerfile')
 
     let currentContent: string
@@ -37,7 +40,7 @@ export const computeNewDockerfileContent = async (
         return {
           status: 'success',
           changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${options.newVersion}`,
+          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
         }
       }
       throw error
@@ -45,10 +48,10 @@ export const computeNewDockerfileContent = async (
 
     const newContent = computeNewDockerfileContentCore(
       currentContent,
-      options.newVersion,
+      newVersion,
     )
     const hasChanges = currentContent !== newContent
-    const pullRequestTitle = `ci: update Node.js to version ${options.newVersion}`
+    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     return {
       status: 'success',

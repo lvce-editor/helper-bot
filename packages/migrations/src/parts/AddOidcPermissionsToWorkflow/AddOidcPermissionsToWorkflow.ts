@@ -3,9 +3,7 @@ import { join } from 'node:path'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
-const addOidcPermissionsToWorkflowContent = (
-  content: string,
-): string => {
+const addOidcPermissionsToWorkflowContent = (content: string): string => {
   // Check if permissions section already exists
   if (content.includes('permissions:')) {
     return content
@@ -49,10 +47,7 @@ export const addOidcPermissionsToWorkflow = async (
     options.repositoryName,
   )
   try {
-    const workflowPath = join(
-      clonedRepo.path,
-      '.github/workflows/release.yml',
-    )
+    const workflowPath = join(clonedRepo.path, '.github/workflows/release.yml')
 
     let originalContent: string
     try {

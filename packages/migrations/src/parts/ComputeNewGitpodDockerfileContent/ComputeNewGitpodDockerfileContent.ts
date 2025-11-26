@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
+import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const computeNewGitpodDockerfileContentCore = (
@@ -18,9 +19,7 @@ const computeNewGitpodDockerfileContentCore = (
 }
 
 export interface ComputeNewGitpodDockerfileContentOptions
-  extends BaseMigrationOptions {
-  newVersion: string
-}
+  extends BaseMigrationOptions {}
 
 export const computeNewGitpodDockerfileContent = async (
   options: ComputeNewGitpodDockerfileContentOptions,
@@ -30,6 +29,7 @@ export const computeNewGitpodDockerfileContent = async (
     options.repositoryName,
   )
   try {
+    const newVersion = await getLatestNodeVersion()
     const gitpodDockerfilePath = join(clonedRepo.path, '.gitpod.Dockerfile')
 
     let currentContent: string
@@ -40,7 +40,7 @@ export const computeNewGitpodDockerfileContent = async (
         return {
           status: 'success',
           changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${options.newVersion}`,
+          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
         }
       }
       throw error
@@ -48,10 +48,10 @@ export const computeNewGitpodDockerfileContent = async (
 
     const newContent = computeNewGitpodDockerfileContentCore(
       currentContent,
-      options.newVersion,
+      newVersion,
     )
     const hasChanges = currentContent !== newContent
-    const pullRequestTitle = `ci: update Node.js to version ${options.newVersion}`
+    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     return {
       status: 'success',
