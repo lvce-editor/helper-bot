@@ -1,4 +1,4 @@
-import { test, expect } from '@jest/globals'
+import { test, expect, jest } from '@jest/globals'
 import { join } from 'node:path'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
@@ -36,7 +36,7 @@ test('generates new package files with updated dependency', async () => {
     },
   })
 
-  const mockExec = createMockExec(async (file, args, options) => {
+  const mockExecFn = jest.fn(async (file, args, options) => {
     if (file === 'npm' && args?.[0] === 'install') {
       // Write a mock package-lock.json after npm install
       const cwd = options?.cwd
@@ -50,6 +50,7 @@ test('generates new package files with updated dependency', async () => {
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
   })
+  const mockExec = createMockExec(mockExecFn)
 
   const result = await getNewPackageFiles({
     repositoryOwner: 'test',
@@ -76,14 +77,34 @@ test('generates new package files with updated dependency', async () => {
   expect(result.pullRequestTitle).toBe(
     'feature: update shared to version 2.0.0',
   )
+
+  expect(mockExecFn).toHaveBeenCalledTimes(1)
+  expect(mockExecFn).toHaveBeenCalledWith(
+    'npm',
+    [
+      'install',
+      '--ignore-scripts',
+      '--prefer-online',
+      '--cache',
+      expect.stringMatching(
+        /update-dependencies-test-package-shared-2\.0\.0-tmp-cache/,
+      ),
+    ],
+    {
+      cwd: expect.stringMatching(
+        /update-dependencies-test-package-shared-2\.0\.0-tmp$/,
+      ),
+    },
+  )
 })
 
 test('handles missing package.json', async () => {
   const clonedRepoPath = '/test/repo'
   const mockFs = createMockFs()
-  const mockExec = createMockExec(async () => {
+  const mockExecFn = jest.fn(async () => {
     throw new Error('Should not be called')
   })
+  const mockExec = createMockExec(mockExecFn)
 
   const result = await getNewPackageFiles({
     repositoryOwner: 'test',
@@ -101,4 +122,5 @@ test('handles missing package.json', async () => {
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
+  expect(mockExecFn).not.toHaveBeenCalled()
 })

@@ -1,16 +1,16 @@
 import type { ExecFunction } from '../Types/Types.ts'
 
 export const createMockExec = (
-  implementation?: (
+  mockFn?: (
     file: string,
     args?: readonly string[],
     options?: { cwd?: string },
   ) => Promise<{ stdout: string; stderr: string; exitCode: number }>,
 ): ExecFunction => {
-  return async (file, args, options) => {
-    if (implementation) {
-      return await implementation(file, args, options)
-    }
+  if (mockFn) {
+    return mockFn as ExecFunction
+  }
+  return async () => {
     return { stdout: '', stderr: '', exitCode: 0 }
   }
 }
