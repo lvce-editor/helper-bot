@@ -5,13 +5,18 @@ import { computeNewDockerfileContent } from '../ComputeNewDockerfileContent/Comp
 import { computeNewGitpodDockerfileContent } from '../ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 import { computeEnsureLernaExcludedContent } from '../ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+import { wrapCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
-  getNewPackageFiles,
-  addOidcPermissionsToWorkflow,
-  computeNewNvmrcContent,
-  computeNewDockerfileContent,
-  computeNewGitpodDockerfileContent,
-  computeEnsureLernaExcludedContent,
-  removeNpmTokenFromWorkflow,
+  getNewPackageFiles: wrapCommand(getNewPackageFiles),
+  addOidcPermissionsToWorkflow: wrapCommand(addOidcPermissionsToWorkflow),
+  computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
+  computeNewDockerfileContent: wrapCommand(computeNewDockerfileContent),
+  computeNewGitpodDockerfileContent: wrapCommand(
+    computeNewGitpodDockerfileContent,
+  ),
+  computeEnsureLernaExcludedContent: wrapCommand(
+    computeEnsureLernaExcludedContent,
+  ),
+  removeNpmTokenFromWorkflow: wrapCommand(removeNpmTokenFromWorkflow),
 }

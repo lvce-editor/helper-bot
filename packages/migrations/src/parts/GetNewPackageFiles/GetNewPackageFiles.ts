@@ -1,23 +1,18 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { execa } from 'execa'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
-export interface GetNewPackageFilesParams {
-  oldPackageJson: any
-  dependencyName: string
-  dependencyKey: string
-  newVersion: string
-}
-
-export interface GetNewPackageFilesResult {
+const getNewPackageFilesCore = async (
+  fs: typeof import('node:fs/promises'),
+  oldPackageJson: any,
+  dependencyName: string,
+  dependencyKey: string,
+  newVersion: string,
+): Promise<{
   newPackageJsonString: string
   newPackageLockJsonString: string
-}
-
-export const getNewPackageFiles = async (
-  params: GetNewPackageFilesParams,
-): Promise<GetNewPackageFilesResult> => {
-  const { oldPackageJson, dependencyName, dependencyKey, newVersion } = params
+}> => {
   const name = oldPackageJson.name
   const tmpFolder = join(
     tmpdir(),
@@ -33,9 +28,11 @@ export const getNewPackageFiles = async (
       `^${newVersion}`
     const oldPackageJsonStringified =
       JSON.stringify(oldPackageJson, null, 2) + '\n'
-    await mkdir(tmpFolder, { recursive: true })
-    await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
-    const { execa } = await import('execa')
+    await fs.mkdir(tmpFolder, { recursive: true })
+    await fs.writeFile(
+      join(tmpFolder, 'package.json'),
+      oldPackageJsonStringified,
+    )
     await execa(
       `npm`,
       [
@@ -49,7 +46,7 @@ export const getNewPackageFiles = async (
         cwd: tmpFolder,
       },
     )
-    const newPackageLockJsonString = await readFile(
+    const newPackageLockJsonString = await fs.readFile(
       join(tmpFolder, 'package-lock.json'),
       'utf8',
     )
@@ -61,10 +58,80 @@ export const getNewPackageFiles = async (
     throw new Error(`Failed to update dependencies: ${error}`)
   } finally {
     for (const folder of toRemove) {
-      await rm(folder, {
+      await fs.rm(folder, {
         recursive: true,
         force: true,
       })
+    }
+  }
+}
+
+export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
+  dependencyName: string
+  dependencyKey: string
+  newVersion: string
+  packageJsonPath: string
+  packageLockJsonPath: string
+}
+
+export const getNewPackageFiles = async (
+  options: GetNewPackageFilesOptions,
+): Promise<MigrationResult> => {
+  try {
+    const packageJsonPath = join(
+      options.clonedRepoPath,
+      options.packageJsonPath,
+    )
+
+    let oldPackageJson: any
+    try {
+      const packageJsonContent = await options.fs.readFile(
+        packageJsonPath,
+        'utf8',
+      )
+      oldPackageJson = JSON.parse(packageJsonContent)
+    } catch (error: any) {
+      if (error && error.code === 'ENOENT') {
+        return {
+          status: 'success',
+          changedFiles: [],
+          pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
+        }
+      }
+      throw error
+    }
+
+    const result = await getNewPackageFilesCore(
+      options.fs,
+      oldPackageJson,
+      options.dependencyName,
+      options.dependencyKey,
+      options.newVersion,
+    )
+
+    const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
+
+    return {
+      status: 'success',
+      changedFiles: [
+        {
+          path: options.packageJsonPath,
+          content: result.newPackageJsonString,
+        },
+        {
+          path: options.packageLockJsonPath,
+          content: result.newPackageLockJsonString,
+        },
+      ],
+      pullRequestTitle,
+    }
+  } catch (error) {
+    return {
+      status: 'error',
+      changedFiles: [],
+      pullRequestTitle: `feature: update dependencies`,
+      errorCode: 'GET_NEW_PACKAGE_FILES_FAILED',
+      errorMessage: error instanceof Error ? error.message : String(error),
     }
   }
 }

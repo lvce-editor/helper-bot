@@ -1,17 +1,9 @@
-export interface ComputeEnsureLernaExcludedContentParams {
-  currentContent: string
-}
+import { join } from 'node:path'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
-export interface ComputeEnsureLernaExcludedContentResult {
-  newContent: string
-  hasChanges: boolean
-}
-
-export const computeEnsureLernaExcludedContent = (
-  params: ComputeEnsureLernaExcludedContentParams,
-): ComputeEnsureLernaExcludedContentResult => {
-  const { currentContent } = params
-
+const computeEnsureLernaExcludedContentCore = (
+  currentContent: string,
+): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
   const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g
   const matches = [...currentContent.matchAll(ncuRegex)]
@@ -56,5 +48,63 @@ export const computeEnsureLernaExcludedContent = (
   return {
     newContent: updatedContent,
     hasChanges,
+  }
+}
+
+export interface ComputeEnsureLernaExcludedContentOptions
+  extends BaseMigrationOptions {}
+
+export const computeEnsureLernaExcludedContent = async (
+  options: ComputeEnsureLernaExcludedContentOptions,
+): Promise<MigrationResult> => {
+  try {
+    const scriptPath = join(
+      options.clonedRepoPath,
+      'scripts/update-dependencies.sh',
+    )
+
+    let currentContent: string
+    try {
+      currentContent = await options.fs.readFile(scriptPath, 'utf8')
+    } catch (error: any) {
+      if (error && error.code === 'ENOENT') {
+        return {
+          status: 'success',
+          changedFiles: [],
+          pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+        }
+      }
+      throw error
+    }
+
+    const result = computeEnsureLernaExcludedContentCore(currentContent)
+    const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
+
+    if (!result.hasChanges) {
+      return {
+        status: 'success',
+        changedFiles: [],
+        pullRequestTitle,
+      }
+    }
+
+    return {
+      status: 'success',
+      changedFiles: [
+        {
+          path: 'scripts/update-dependencies.sh',
+          content: result.newContent,
+        },
+      ],
+      pullRequestTitle,
+    }
+  } catch (error) {
+    return {
+      status: 'error',
+      changedFiles: [],
+      pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+      errorCode: 'COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    }
   }
 }
