@@ -26,6 +26,7 @@ test('computes new nvmrc content when version should be updated', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -61,6 +62,7 @@ test('returns same content when existing version is newer', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -92,6 +94,7 @@ test('handles missing .nvmrc file', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')

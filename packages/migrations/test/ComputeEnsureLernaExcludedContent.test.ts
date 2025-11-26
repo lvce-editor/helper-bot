@@ -36,6 +36,7 @@ updateDependencies`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -83,6 +84,7 @@ updateDependencies`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -101,6 +103,7 @@ test('handles missing update-dependencies.sh script', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')

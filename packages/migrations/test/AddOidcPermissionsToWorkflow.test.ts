@@ -37,6 +37,7 @@ jobs:
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -77,6 +78,7 @@ jobs:
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -109,6 +111,7 @@ test('handles missing release.yml file', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
