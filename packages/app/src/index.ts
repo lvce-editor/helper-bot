@@ -1,82 +1,9 @@
 import { availableParallelism } from 'node:os'
-import { Context, Probot } from 'probot'
+import { Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
 import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
 import { getAvailableMigrations } from './migrations/getAvailableMigrations.js'
-import { applyMigrationResult } from './migrations/applyMigrationResult.js'
-import dependenciesConfig from './dependencies.json' with { type: 'json' }
-import { updateDependencies } from './updateDependencies.js'
-import { captureException } from '../migrations/src/index.js'
-
-const dependencies = dependenciesConfig.dependencies
-
-const handleReleaseReleased = async (context: Context<'release'>) => {
-  const { payload, octokit } = context
-  const tagName = payload.release.tag_name
-  const owner = payload.repository.owner.login
-  const repositoryName = payload.repository.name
-
-  const migrationsRpc = await createMigrationsRpc()
-
-  try {
-    // Call handleReleaseReleased migration
-    const migrationResult = await migrationsRpc.invoke('handleReleaseReleased', {
-      repositoryOwner: owner,
-      repositoryName,
-      tagName,
-    })
-
-    if (migrationResult.status === 'error') {
-      console.error('Migration failed:', migrationResult.errorMessage)
-      return
-    }
-
-    // Apply builtin extensions changes to lvce-editor repo if any
-    if (repositoryName !== 'renderer-process' && migrationResult.changedFiles.length > 0) {
-      const targetFilePath =
-        'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
-      const builtinExtensionsFiles = migrationResult.changedFiles.filter(
-        (file) => file.path === targetFilePath,
-      )
-
-      if (builtinExtensionsFiles.length > 0) {
-        const targetOwner = owner
-        const targetRepo = 'lvce-editor'
-        const version = tagName.replace('v', '')
-        const newBranch = `update-version/${repositoryName}-${tagName}`
-        const commitMessage = `feature: update ${repositoryName} to version ${tagName}`
-
-        await applyMigrationResult(
-          {
-            octokit,
-            owner: targetOwner,
-            repo: targetRepo,
-            baseBranch: 'main',
-            migrationsRpc,
-          },
-          builtinExtensionsFiles,
-          migrationResult.pullRequestTitle,
-          commitMessage,
-          newBranch,
-        )
-      }
-    }
-
-    // Call updateDependencies for each matching dependency
-    for (const dependency of dependencies) {
-      if (dependency.fromRepo === repositoryName) {
-        try {
-          await updateDependencies(context, dependency)
-        } catch (error) {
-          captureException(error as Error)
-        }
-      }
-    }
-  } catch (error) {
-    captureException(error as Error)
-  }
-}
 
 const handleHelloWorld = (req: any, res: any) => {
   res.send('Hello World')
