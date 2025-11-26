@@ -48,13 +48,17 @@ test('returns success message when permissions already exist', async () => {
       },
       git: {
         // @ts-ignore
-        getRef: jest.fn().mockResolvedValue({ data: { object: { sha: 'base-sha' } } }),
+        getRef: jest
+          .fn()
+          .mockResolvedValue({ data: { object: { sha: 'base-sha' } } }),
         // @ts-ignore
         createRef: jest.fn().mockResolvedValue({}),
         // @ts-ignore
         createTree: jest.fn().mockResolvedValue({ data: { sha: 'tree-sha' } }),
         // @ts-ignore
-        createCommit: jest.fn().mockResolvedValue({ data: { sha: 'commit-sha' } }),
+        createCommit: jest
+          .fn()
+          .mockResolvedValue({ data: { sha: 'commit-sha' } }),
       },
       pulls: {
         // @ts-ignore
@@ -101,9 +105,13 @@ test('adds OIDC permissions to release.yml and creates PR', async () => {
         // @ts-ignore
         getRef: jest.fn().mockResolvedValue(getRefResp),
         // @ts-ignore
+        getCommit: jest.fn().mockResolvedValue({ data: { sha: 'base-sha' } }),
+        // @ts-ignore
         createTree: jest.fn().mockResolvedValue({ data: { sha: 'tree-sha' } }),
         // @ts-ignore
-        createCommit: jest.fn().mockResolvedValue({ data: { sha: 'commit-sha' } }),
+        createCommit: jest
+          .fn()
+          .mockResolvedValue({ data: { sha: 'commit-sha' } }),
         // @ts-ignore
         createRef: jest.fn().mockResolvedValue({}),
       },
@@ -170,6 +178,7 @@ jobs:
   expect(octokit.rest.pulls.create).toHaveBeenCalled()
   expect(octokit.graphql).toHaveBeenCalledWith(
     expect.stringContaining('enablePullRequestAutoMerge'),
+    {},
   )
 })
 
@@ -186,9 +195,13 @@ test('adds permissions at the end when no jobs section exists', async () => {
         // @ts-ignore
         getRef: jest.fn().mockResolvedValue(getRefResp),
         // @ts-ignore
+        getCommit: jest.fn().mockResolvedValue({ data: { sha: 'base-sha' } }),
+        // @ts-ignore
         createTree: jest.fn().mockResolvedValue({ data: { sha: 'tree-sha' } }),
         // @ts-ignore
-        createCommit: jest.fn().mockResolvedValue({ data: { sha: 'commit-sha' } }),
+        createCommit: jest
+          .fn()
+          .mockResolvedValue({ data: { sha: 'commit-sha' } }),
         // @ts-ignore
         createRef: jest.fn().mockResolvedValue({}),
       },

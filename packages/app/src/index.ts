@@ -8,16 +8,13 @@ import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { captureException } from './errorHandling.js'
 import { availableParallelism } from 'node:os'
 import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.js'
-import {
-  handleUpdateNodeVersion,
-  handleUpdateDependencies,
-  handleEnsureLernaExcluded,
-  handleUpdateGithubActions as handleUpdateGithubActionsMigration,
-  handleAddGitattributes,
-  handleAddOidcPermissions,
-  handleRemoveNpmToken,
-} from './migrations/endpoints.js'
+import { handleUpdateGithubActions as handleUpdateGithubActionsMigration } from './migrations/endpoints.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
+import {
+  getAvailableMigrations,
+  MIGRATION_MAP,
+} from './migrations/getAvailableMigrations.js'
+import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -76,64 +73,37 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     }),
   )
 
-  // Migration endpoints
-  router.post(
-    '/migrations/update-node-version',
-    handleUpdateNodeVersion({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-      migrationsRpc,
-    }),
+  // Get available migrations and register them dynamically
+  const availableMigrations = await getAvailableMigrations(migrationsRpc)
+  console.log(
+    `Available RPC commands: ${availableMigrations.allRpcCommands.join(', ')}`,
   )
+  console.log(`Migrations: ${availableMigrations.migrations.join(', ')}`)
+  console.log(`Special migrations: ${availableMigrations.special.join(', ')}`)
 
-  router.post(
-    '/migrations/update-dependencies',
-    handleUpdateDependencies({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-      migrationsRpc,
-    }),
-  )
+  // Register all migrations dynamically (1:1 mapping to RPC functions)
+  for (const endpointName of availableMigrations.migrations) {
+    const rpcMethodName = MIGRATION_MAP[endpointName]
+    if (rpcMethodName) {
+      router.post(
+        `/migrations/${endpointName}`,
+        createGenericMigrationHandler(
+          rpcMethodName,
+          app,
+          process.env.DEPENDENCIES_SECRET,
+          migrationsRpc,
+        ),
+      )
+      console.log(
+        `Registered migration endpoint: /migrations/${endpointName} -> ${rpcMethodName}`,
+      )
+    }
+  }
 
-  router.post(
-    '/migrations/ensure-lerna-excluded',
-    handleEnsureLernaExcluded({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-      migrationsRpc,
-    }),
-  )
-
+  // Register special migrations (not yet moved to RPC)
   router.post(
     '/migrations/update-github-actions',
     handleUpdateGithubActionsMigration({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-      migrationsRpc,
-    }),
-  )
-
-  router.post(
-    '/migrations/add-gitattributes',
-    handleAddGitattributes({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-      migrationsRpc,
-    }),
-  )
-
-  router.post(
-    '/migrations/add-oidc-permissions',
-    handleAddOidcPermissions({
-      app,
-      secret: process.env.DEPENDENCIES_SECRET,
-      migrationsRpc,
-    }),
-  )
-
-  router.post(
-    '/migrations/remove-npm-token',
-    handleRemoveNpmToken({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
       migrationsRpc,

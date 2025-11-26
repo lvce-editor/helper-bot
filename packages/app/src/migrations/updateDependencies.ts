@@ -69,31 +69,6 @@ const getPackageRefs = async (
   }
 }
 
-const getPackageRefs = async (
-  octokit: MigrationParams['octokit'],
-  owner: string,
-  repo: string,
-  packageJsonPath: string,
-  packageLockJsonPath: string,
-) => {
-  const [packageJsonRef, packageLockJsonRef] = await Promise.all([
-    octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: packageJsonPath,
-    }),
-    octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: packageLockJsonPath,
-    }),
-  ])
-  return {
-    packageJsonRef,
-    packageLockJsonRef,
-  }
-}
-
 const updateDependenciesForRepo = async (
   params: MigrationParams,
   config: any,
