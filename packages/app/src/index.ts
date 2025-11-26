@@ -10,7 +10,6 @@ import {
 import { applyMigrationResult } from './migrations/applyMigrationResult.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { updateDependencies } from './updateDependencies.js'
-import { captureException, cloneRepositoryTmp } from '../migrations/src/index.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -23,31 +22,33 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
   const migrationsRpc = await createMigrationsRpc()
 
   try {
-    // Call handleReleaseReleased migration
-    await migrationsRpc.invoke('handleReleaseReleased', {
-      repositoryOwner: owner,
-      repositoryName,
-      tagName,
-    })
+    // Clone the target repo for builtin extensions update if needed
+    let clonedRepo: Awaited<ReturnType<typeof cloneRepositoryTmp>> | null = null
+    let targetOwner: string | undefined
+    let targetRepo: string | undefined
+    let targetFilePath: string | undefined
 
-    // Handle updateBuiltinExtensions separately since it updates a different repo
     if (repositoryName !== 'renderer-process') {
-      const targetOwner = owner
-      const targetRepo = 'lvce-editor'
-      const targetFilePath =
+      targetOwner = owner
+      targetRepo = 'lvce-editor'
+      targetFilePath =
         'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
 
-      // Clone the target repo
-      const clonedRepo = await cloneRepositoryTmp(targetOwner, targetRepo)
+      clonedRepo = await cloneRepositoryTmp(targetOwner, targetRepo)
+    }
 
-      try {
-        const updateResult = await migrationsRpc.invoke('updateBuiltinExtensions', {
-          repositoryOwner: targetOwner,
-          repositoryName: targetRepo,
+    try {
+      // Call handleReleaseReleased migration with all necessary options
+      const migrationResult = await migrationsRpc.invoke(
+        'handleReleaseReleased',
+        {
+          repositoryOwner: owner,
+          repositoryName,
           tagName,
-          releasedRepositoryName: repositoryName,
+          targetOwner,
+          targetRepo,
           targetFilePath,
-          clonedRepoPath: clonedRepo.path,
+          clonedRepoPath: clonedRepo?.path,
           fs: (await import('node:fs/promises')).default,
           fetch: globalThis.fetch,
           exec: async (
@@ -63,13 +64,22 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
               exitCode: result.exitCode ?? 0,
             }
           },
-        })
+        },
+      )
 
-        if (
-          updateResult.status === 'success' &&
-          updateResult.changedFiles.length > 0
-        ) {
-          // Apply the migration result to the target repo
+      // Apply builtin extensions changes if any
+      if (
+        migrationResult.status === 'success' &&
+        migrationResult.changedFiles.length > 0 &&
+        targetOwner &&
+        targetRepo
+      ) {
+        // Filter changed files for builtin extensions (they have the target file path)
+        const builtinExtensionsFiles = migrationResult.changedFiles.filter(
+          (file) => file.path === targetFilePath,
+        )
+
+        if (builtinExtensionsFiles.length > 0) {
           const version = tagName.replace('v', '')
           const newBranch = `update-version/${repositoryName}-${tagName}`
           const commitMessage = `feature: update ${repositoryName} to version ${tagName}`
@@ -82,13 +92,15 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
               baseBranch: 'main',
               migrationsRpc,
             },
-            updateResult.changedFiles,
-            updateResult.pullRequestTitle,
+            builtinExtensionsFiles,
+            migrationResult.pullRequestTitle,
             commitMessage,
             newBranch,
           )
         }
-      } finally {
+      }
+    } finally {
+      if (clonedRepo) {
         await clonedRepo[Symbol.asyncDispose]()
       }
     }
