@@ -14,4 +14,3 @@ export const createMockExec = (
     return { stdout: '', stderr: '', exitCode: 0 }
   }
 }
-

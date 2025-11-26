@@ -7,4 +7,3 @@ export const createMockFetch = (
     } as Response
   }
 }
-

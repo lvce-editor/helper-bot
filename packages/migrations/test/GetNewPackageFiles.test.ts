@@ -30,7 +30,7 @@ test('generates new package files with updated dependency', async () => {
     2,
   )
 
-  const mockExec: ExecFunction = async (file, args, options) => {
+  const mockExec = createMockExec(async (file, args, options) => {
     if (file === 'npm' && args?.[0] === 'install') {
       // Write a mock package-lock.json after npm install
       const cwd = options?.cwd
@@ -40,10 +40,10 @@ test('generates new package files with updated dependency', async () => {
           mockPackageLockJson,
         )
       }
-      return {} as any
+      return { stdout: '', stderr: '', exitCode: 0 }
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
-  }
+  })
 
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
@@ -83,9 +83,9 @@ test('generates new package files with updated dependency', async () => {
 })
 
 test('handles missing package.json', async () => {
-  const mockExec: ExecFunction = async () => {
+  const mockExec = createMockExec(async () => {
     throw new Error('Should not be called')
-  }
+  })
 
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {

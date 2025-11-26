@@ -1,10 +1,8 @@
 import { test, expect } from '@jest/globals'
-import * as FsPromises from 'node:fs/promises'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
+import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { computeNewNvmrcContent } from '../src/parts/ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 
 const mockExec = createMockExec()
@@ -15,71 +13,64 @@ const mockFetch = createMockFetch([
 ])
 
 test('computes new nvmrc content when version should be updated', async () => {
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs({
+    files: {
+      [join(clonedRepoPath, '.nvmrc')]: 'v18.0.0',
+    },
+  })
 
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    await FsPromises.writeFile(join(tempDir, '.nvmrc'), 'v18.0.0')
+  const result = await computeNewNvmrcContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    exec: mockExec,
+  })
 
-    const result = await computeNewNvmrcContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: mockExec,
-    })
-
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toHaveLength(1)
-    expect(result.changedFiles[0].path).toBe('.nvmrc')
-    expect(result.changedFiles[0].content).toBe('v20.0.0\n')
-    expect(result.pullRequestTitle).toBe(
-      'ci: update Node.js to version v20.0.0',
-    )
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(1)
+  expect(result.changedFiles[0].path).toBe('.nvmrc')
+  expect(result.changedFiles[0].content).toBe('v20.0.0\n')
+  expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
 })
 
 test('returns same content when existing version is newer', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    await FsPromises.writeFile(join(tempDir, '.nvmrc'), 'v22.0.0')
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs({
+    files: {
+      [join(clonedRepoPath, '.nvmrc')]: 'v22.0.0',
+    },
+  })
 
-    const result = await computeNewNvmrcContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: mockExec,
-    })
+  const result = await computeNewNvmrcContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    exec: mockExec,
+  })
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toEqual([])
-    expect(result.pullRequestTitle).toBe(
-      'ci: update Node.js to version v20.0.0',
-    )
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
+  expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
 })
 
 test('handles missing .nvmrc file', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    const result = await computeNewNvmrcContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: mockExec,
-    })
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs()
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toEqual([])
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  const result = await computeNewNvmrcContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    exec: mockExec,
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })
