@@ -18,18 +18,3 @@ export interface MigrationResult {
   message?: string
   error?: string
 }
-
-export interface Migration {
-  name: string
-  description: string
-  run: (params: MigrationParams) => Promise<MigrationResult>
-}
-
-export interface MigrationEndpointParams {
-  app: any
-  secret: string | undefined
-  migrationsRpc: {
-    invoke: (method: string, ...args: any[]) => Promise<any>
-    dispose: () => Promise<void>
-  }
-}

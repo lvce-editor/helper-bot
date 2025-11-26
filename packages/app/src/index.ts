@@ -1,21 +1,21 @@
 import { availableParallelism } from 'node:os'
 import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
-import { captureException } from '../migrations/src/index.js'
 import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
 import {
   getAvailableMigrations,
   MIGRATION_MAP,
 } from './migrations/getAvailableMigrations.js'
-import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
+import { applyMigrationResult } from './migrations/applyMigrationResult.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { updateDependencies } from './updateDependencies.js'
+import { captureException, cloneRepositoryTmp } from '../migrations/src/index.js'
 
 const dependencies = dependenciesConfig.dependencies
 
-const updateRepositoryDependencies = async (context: Context<'release'>) => {
-  const { payload } = context
+const handleReleaseReleased = async (context: Context<'release'>) => {
+  const { payload, octokit } = context
   const tagName = payload.release.tag_name
   const owner = payload.repository.owner.login
   const repositoryName = payload.repository.name
@@ -23,32 +23,89 @@ const updateRepositoryDependencies = async (context: Context<'release'>) => {
   const migrationsRpc = await createMigrationsRpc()
 
   try {
-    await migrationsRpc.invoke('updateRepositoryDependencies', {
+    // Call handleReleaseReleased migration
+    await migrationsRpc.invoke('handleReleaseReleased', {
       repositoryOwner: owner,
       repositoryName,
       tagName,
     })
+
+    // Handle updateBuiltinExtensions separately since it updates a different repo
+    if (repositoryName !== 'renderer-process') {
+      const targetOwner = owner
+      const targetRepo = 'lvce-editor'
+      const targetFilePath =
+        'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
+
+      // Clone the target repo
+      const clonedRepo = await cloneRepositoryTmp(targetOwner, targetRepo)
+
+      try {
+        const updateResult = await migrationsRpc.invoke('updateBuiltinExtensions', {
+          repositoryOwner: targetOwner,
+          repositoryName: targetRepo,
+          tagName,
+          releasedRepositoryName: repositoryName,
+          targetFilePath,
+          clonedRepoPath: clonedRepo.path,
+          fs: (await import('node:fs/promises')).default,
+          fetch: globalThis.fetch,
+          exec: async (
+            file: string,
+            args?: readonly string[],
+            options?: { cwd?: string },
+          ) => {
+            const { execa } = await import('execa')
+            const result = await execa(file, args as string[], options)
+            return {
+              stdout: result.stdout,
+              stderr: result.stderr,
+              exitCode: result.exitCode ?? 0,
+            }
+          },
+        })
+
+        if (
+          updateResult.status === 'success' &&
+          updateResult.changedFiles.length > 0
+        ) {
+          // Apply the migration result to the target repo
+          const version = tagName.replace('v', '')
+          const newBranch = `update-version/${repositoryName}-${tagName}`
+          const commitMessage = `feature: update ${repositoryName} to version ${tagName}`
+
+          await applyMigrationResult(
+            {
+              octokit,
+              owner: targetOwner,
+              repo: targetRepo,
+              baseBranch: 'main',
+              migrationsRpc,
+            },
+            updateResult.changedFiles,
+            updateResult.pullRequestTitle,
+            commitMessage,
+            newBranch,
+          )
+        }
+      } finally {
+        await clonedRepo[Symbol.asyncDispose]()
+      }
+    }
+
+    // Call updateDependencies for each matching dependency
+    for (const dependency of dependencies) {
+      if (dependency.fromRepo === repositoryName) {
+        try {
+          await updateDependencies(context, dependency)
+        } catch (error) {
+          captureException(error as Error)
+        }
+      }
+    }
   } catch (error) {
     captureException(error as Error)
   }
-
-  // Call updateDependencies for each matching dependency
-  for (const dependency of dependencies) {
-    if (dependency.fromRepo === repositoryName) {
-      try {
-        await updateDependencies(context, dependency)
-      } catch (error) {
-        captureException(error as Error)
-      }
-    }
-  }
-}
-
-const handleReleaseReleased = async (context: Context<'release'>) => {
-  await Promise.all([
-    updateBuiltinExtensions(context),
-    updateRepositoryDependencies(context),
-  ])
 }
 
 const handleHelloWorld = (req: any, res: any) => {

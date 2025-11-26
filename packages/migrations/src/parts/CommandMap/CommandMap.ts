@@ -5,8 +5,10 @@ import { computeNewDockerfileContent } from '../ComputeNewDockerfileContent/Comp
 import { computeNewGitpodDockerfileContent } from '../ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 import { computeNewNvmrcContent } from '../ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
+import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseReleased.ts'
 import { listCommands } from '../ListCommands/ListCommands.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+import { updateBuiltinExtensions } from '../UpdateBuiltinExtensions/UpdateBuiltinExtensions.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
@@ -30,5 +32,7 @@ export const commandMap = {
   addGitattributes: wrapCommand(addGitattributes),
   updateGithubActions: wrapCommand(updateGithubActions),
   updateRepositoryDependencies: wrapCommand(updateRepositoryDependencies),
+  updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),
+  handleReleaseReleased: wrapCommand(handleReleaseReleased),
   listCommands: wrapCommand(listCommands),
 }
