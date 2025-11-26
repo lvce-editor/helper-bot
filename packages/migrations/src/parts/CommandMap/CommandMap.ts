@@ -10,6 +10,7 @@ import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/Remove
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
+import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
 import { wrapCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
@@ -28,5 +29,6 @@ export const commandMap = {
   updateDependencies: wrapCommand(updateDependencies),
   addGitattributes: wrapCommand(addGitattributes),
   updateGithubActions: wrapCommand(updateGithubActions),
+  updateRepositoryDependencies: wrapCommand(updateRepositoryDependencies),
   listCommands: wrapCommand(listCommands),
 }

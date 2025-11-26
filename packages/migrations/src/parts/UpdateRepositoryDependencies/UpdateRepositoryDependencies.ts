@@ -1,16 +1,8 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import dependenciesConfig from '../../dependencies.json' with { type: 'json' }
-
-const quickJoin = (parentFolder: string, childPath: string): string => {
-  if (!parentFolder) {
-    return childPath
-  }
-  return parentFolder + '/' + childPath
-}
 
 export interface UpdateRepositoryDependenciesOptions
   extends BaseMigrationOptions {
@@ -24,7 +16,6 @@ export const updateRepositoryDependencies = async (
   try {
     const dependencies = dependenciesConfig.dependencies
     const releasedRepo = options.repositoryName
-    const version = options.tagName.replace('v', '')
 
     // Find dependencies that match this repository
     const matchingDependencies = dependencies.filter(
@@ -39,66 +30,11 @@ export const updateRepositoryDependencies = async (
       })
     }
 
-    // Update each matching dependency
-    const results: MigrationResult[] = []
-    for (const dependency of matchingDependencies) {
-      try {
-        const packageJsonPath = quickJoin(dependency.toFolder, 'package.json')
-        const packageLockJsonPath = quickJoin(
-          dependency.toFolder,
-          'package-lock.json',
-        )
-
-        const result = await updateDependencies({
-          ...options,
-          dependencyName: dependency.asName || dependency.fromRepo,
-          newVersion: version,
-          packageJsonPath,
-          packageLockJsonPath,
-        })
-
-        results.push(result)
-      } catch (error) {
-        results.push(
-          createMigrationResult({
-            status: 'error',
-            changedFiles: [],
-            pullRequestTitle: `feature: update dependencies for ${releasedRepo}`,
-            errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
-            errorMessage: stringifyError(error),
-          }),
-        )
-      }
-    }
-
-    // Check if any updates were successful
-    const hasChanges = results.some(
-      (result) => result.changedFiles.length > 0,
-    )
-    const hasErrors = results.some((result) => result.status === 'error')
-
-    if (hasErrors) {
-      const errorMessages = results
-        .filter((r) => r.status === 'error')
-        .map((r) => r.errorMessage)
-        .filter(Boolean)
-        .join('; ')
-
-      return createMigrationResult({
-        status: 'error',
-        changedFiles: [],
-        pullRequestTitle: `feature: update dependencies for ${releasedRepo}`,
-        errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
-        errorMessage: errorMessages || 'Failed to update some dependencies',
-      })
-    }
-
-    // Combine all changed files from successful updates
-    const allChangedFiles = results.flatMap((result) => result.changedFiles)
-
+    // Return success - the actual updates are handled by the app calling updateDependencies for each target repo
+    // This migration just provides the list of dependencies that need to be updated
     return createMigrationResult({
       status: 'success',
-      changedFiles: allChangedFiles,
+      changedFiles: [],
       pullRequestTitle: `feature: update dependencies for ${releasedRepo}`,
     })
   } catch (error) {
