@@ -13,7 +13,7 @@ const getNewPackageFilesCore = async (
   newPackageJsonString: string
   newPackageLockJsonString: string
 }> => {
-  const {name} = oldPackageJson
+  const { name } = oldPackageJson
   const tmpFolder = join(
     tmpdir(),
     `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
@@ -29,10 +29,23 @@ const getNewPackageFilesCore = async (
     const oldPackageJsonStringified =
       JSON.stringify(oldPackageJson, null, 2) + '\n'
     await fs.mkdir(tmpFolder, { recursive: true })
-    await fs.writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
-    await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', tmpCacheFolder], {
-      cwd: tmpFolder,
-    })
+    await fs.writeFile(
+      join(tmpFolder, 'package.json'),
+      oldPackageJsonStringified,
+    )
+    await exec(
+      'npm',
+      [
+        'install',
+        '--ignore-scripts',
+        '--prefer-online',
+        '--cache',
+        tmpCacheFolder,
+      ],
+      {
+        cwd: tmpFolder,
+      },
+    )
     const newPackageLockJsonString = await fs.readFile(
       join(tmpFolder, 'package-lock.json'),
       'utf8',

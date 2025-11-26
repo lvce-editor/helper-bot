@@ -31,6 +31,7 @@ RUN npm install`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -71,6 +72,7 @@ COPY . .`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -99,6 +101,7 @@ test('handles missing Dockerfile', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')

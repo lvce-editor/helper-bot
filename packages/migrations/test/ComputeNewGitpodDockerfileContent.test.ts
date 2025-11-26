@@ -31,6 +31,7 @@ RUN nvm install 18.0.0 \\
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')
@@ -67,6 +68,7 @@ test('handles missing .gitpod.Dockerfile', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
+      exec: execa,
     })
 
     expect(result.status).toBe('success')

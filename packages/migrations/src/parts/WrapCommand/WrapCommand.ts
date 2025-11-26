@@ -26,4 +26,3 @@ export const wrapCommand = <T extends BaseMigrationOptions>(
     }
   }
 }
-
