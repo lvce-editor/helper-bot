@@ -9,6 +9,7 @@ interface RpcMigrationResult {
   pullRequestTitle: string
   errorCode?: string
   errorMessage?: string
+  statusCode: number
 }
 
 const shortCommitMessageRepos = [

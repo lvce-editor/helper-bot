@@ -3,6 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   dependencyName: string
@@ -31,11 +32,11 @@ export const updateDependencies = async (
       oldPackageJson = JSON.parse(packageJsonContent)
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
+        return createMigrationResult({
           status: 'success',
           changedFiles: [],
           pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
-        }
+        })
       }
       throw error
     }
@@ -64,22 +65,22 @@ export const updateDependencies = async (
       dependencyKey = 'optionalDependencies'
       oldDependency = oldPackageJson.optionalDependencies[dependencyName]
     } else {
-      return {
+      return createMigrationResult({
         status: 'success',
         changedFiles: [],
         pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
         errorCode: 'DEPENDENCY_NOT_FOUND',
         errorMessage: `Dependency ${dependencyName} not found in ${options.packageJsonPath}`,
-      }
+      })
     }
 
     const oldVersion = oldDependency.slice(1)
     if (oldVersion === options.newVersion) {
-      return {
+      return createMigrationResult({
         status: 'success',
         changedFiles: [],
         pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
-      }
+      })
     }
 
     // Call getNewPackageFiles with the detected dependency key
@@ -88,12 +89,12 @@ export const updateDependencies = async (
       dependencyKey,
     })
   } catch (error) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
-    }
+    })
   }
 }

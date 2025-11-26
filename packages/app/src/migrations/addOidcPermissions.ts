@@ -7,6 +7,7 @@ interface RpcMigrationResult {
   pullRequestTitle: string
   errorCode?: string
   errorMessage?: string
+  statusCode: number
 }
 
 export const addOidcPermissionsMigration: Migration = {

@@ -29,4 +29,5 @@ export interface MigrationResult {
   pullRequestTitle: string
   errorCode?: string
   errorMessage?: string
+  statusCode: number
 }

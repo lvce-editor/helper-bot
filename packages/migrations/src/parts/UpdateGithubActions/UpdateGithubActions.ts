@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const WORKFLOWS_DIR = '.github/workflows'
 
@@ -48,11 +49,11 @@ export const updateGithubActions = async (
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // No workflows directory, nothing to do
-        return {
+        return createMigrationResult({
           status: 'success',
           changedFiles: [],
           pullRequestTitle: 'ci: update CI OS versions',
-        }
+        })
       }
       throw error
     }
@@ -99,17 +100,17 @@ export const updateGithubActions = async (
       }
     }
 
-    return {
+    return createMigrationResult({
       status: 'success',
       changedFiles,
       pullRequestTitle: 'ci: update CI OS versions',
-    }
+    })
   } catch (error: any) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle: 'ci: update CI OS versions',
       errorMessage: error instanceof Error ? error.message : String(error),
-    }
+    })
   }
 }

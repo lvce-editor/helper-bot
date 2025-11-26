@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 
@@ -16,16 +17,16 @@ export const addGitattributes = async (
     // Check if .gitattributes already exists
     try {
       await options.fs.readFile(gitattributesPath, 'utf8')
-      return {
+      return createMigrationResult({
         status: 'success',
         changedFiles: [],
         pullRequestTitle: 'ci: add .gitattributes file',
-      }
+      })
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // File doesn't exist, create it
         await options.fs.writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
-        return {
+        return createMigrationResult({
           status: 'success',
           changedFiles: [
             {
@@ -34,17 +35,17 @@ export const addGitattributes = async (
             },
           ],
           pullRequestTitle: 'ci: add .gitattributes file',
-        }
+        })
       }
       throw error
     }
   } catch (error) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle: 'ci: add .gitattributes file',
       errorCode: 'ADD_GITATTRIBUTES_FAILED',
       errorMessage: stringifyError(error),
-    }
+    })
   }
 }

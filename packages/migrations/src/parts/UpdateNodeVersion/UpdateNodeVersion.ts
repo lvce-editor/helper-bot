@@ -4,6 +4,7 @@ import { computeNewDockerfileContent } from '../ComputeNewDockerfileContent/Comp
 import { computeNewGitpodDockerfileContent } from '../ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 export type UpdateNodeVersionOptions = BaseMigrationOptions
 
@@ -20,26 +21,26 @@ export const updateNodeVersion = async (
 
     // Check for errors
     if (nvmrcResult.status === 'error') {
-      return {
+      return createMigrationResult({
         status: 'error',
         changedFiles: [],
         pullRequestTitle: 'ci: update Node.js version',
         errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
         errorMessage: nvmrcResult.errorMessage || 'Failed to compute .nvmrc content',
-      }
+      })
     }
     if (dockerfileResult.status === 'error') {
-      return {
+      return createMigrationResult({
         status: 'error',
         changedFiles: [],
         pullRequestTitle: 'ci: update Node.js version',
         errorCode: ERROR_CODES.COMPUTE_DOCKERFILE_CONTENT_FAILED,
         errorMessage:
           dockerfileResult.errorMessage || 'Failed to compute Dockerfile content',
-      }
+      })
     }
     if (gitpodResult.status === 'error') {
-      return {
+      return createMigrationResult({
         status: 'error',
         changedFiles: [],
         pullRequestTitle: 'ci: update Node.js version',
@@ -47,7 +48,7 @@ export const updateNodeVersion = async (
         errorMessage:
           gitpodResult.errorMessage ||
           'Failed to compute .gitpod.Dockerfile content',
-      }
+      })
     }
 
     // Combine all changed files
@@ -58,26 +59,26 @@ export const updateNodeVersion = async (
     ]
 
     if (allChangedFiles.length === 0) {
-      return {
+      return createMigrationResult({
         status: 'success',
         changedFiles: [],
         pullRequestTitle: nvmrcResult.pullRequestTitle,
-      }
+      })
     }
 
     // Use the pull request title from any of the results (they should all be the same)
-    return {
+    return createMigrationResult({
       status: 'success',
       changedFiles: allChangedFiles,
       pullRequestTitle: nvmrcResult.pullRequestTitle,
-    }
+    })
   } catch (error) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle: 'ci: update Node.js version',
       errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
       errorMessage: stringifyError(error),
-    }
+    })
   }
 }

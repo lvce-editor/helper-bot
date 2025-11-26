@@ -9,6 +9,7 @@ interface RpcMigrationResult {
   pullRequestTitle: string
   errorCode?: string
   errorMessage?: string
+  statusCode: number
 }
 
 const verifySecret = (
@@ -145,14 +146,7 @@ export const createGenericMigrationHandler = (
       )) as RpcMigrationResult
 
       if (rpcResult.status === 'error') {
-        // Check for special error codes that should return different status codes
-        const statusCode =
-          rpcResult.errorCode === 'DEPENDENCY_NOT_FOUND' ||
-          rpcResult.errorCode === 'FORBIDDEN'
-            ? 400
-            : 424
-
-        res.status(statusCode).json({
+        res.status(rpcResult.statusCode).json({
           error: `Failed to run ${rpcMethodName} migration`,
           details: rpcResult.errorMessage || 'Unknown error',
           code:

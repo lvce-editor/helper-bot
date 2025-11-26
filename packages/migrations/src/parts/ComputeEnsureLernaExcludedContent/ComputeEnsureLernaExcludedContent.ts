@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const computeEnsureLernaExcludedContentCore = (
   currentContent: Readonly<string>,
@@ -69,11 +70,11 @@ export const computeEnsureLernaExcludedContent = async (
       currentContent = await options.fs.readFile(scriptPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
+        return createMigrationResult({
           status: 'success',
           changedFiles: [],
           pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
-        }
+        })
       }
       throw error
     }
@@ -82,14 +83,14 @@ export const computeEnsureLernaExcludedContent = async (
     const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
 
     if (!result.hasChanges) {
-      return {
+      return createMigrationResult({
         status: 'success',
         changedFiles: [],
         pullRequestTitle,
-      }
+      })
     }
 
-    return {
+    return createMigrationResult({
       status: 'success',
       changedFiles: [
         {
@@ -98,14 +99,14 @@ export const computeEnsureLernaExcludedContent = async (
         },
       ],
       pullRequestTitle,
-    }
+    })
   } catch (error) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
       errorCode: ERROR_CODES.COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED,
       errorMessage: stringifyError(error),
-    }
+    })
   }
 }
