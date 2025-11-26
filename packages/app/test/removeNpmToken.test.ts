@@ -243,7 +243,9 @@ jobs:
   const updateCall = octokit.repos.createOrUpdateFileContents.mock.calls[0]
   const updatedContent = Buffer.from(updateCall[0].content, 'base64').toString()
 
-  expect(updatedContent).not.toContain('NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}')
+  expect(updatedContent).not.toContain(
+    'NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}',
+  )
   expect(updatedContent).not.toContain('env:')
 })
 

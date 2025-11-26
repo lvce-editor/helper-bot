@@ -26,7 +26,10 @@ const parseVersion = (content: string): number => {
   return parseInt(content)
 }
 
-const updateNvmrc = async (newVersion: string, root: string): Promise<boolean> => {
+const updateNvmrc = async (
+  newVersion: string,
+  root: string,
+): Promise<boolean> => {
   try {
     const nvmrcPath = join(root, '.nvmrc')
     const content = await readFile(nvmrcPath, 'utf-8')
@@ -42,7 +45,10 @@ const updateNvmrc = async (newVersion: string, root: string): Promise<boolean> =
   return true
 }
 
-const updateDockerfile = async (newVersion: string, root: string): Promise<void> => {
+const updateDockerfile = async (
+  newVersion: string,
+  root: string,
+): Promise<void> => {
   try {
     const dockerfilePath = join(root, 'Dockerfile')
     const content = await readFile(dockerfilePath, 'utf-8')
@@ -56,7 +62,10 @@ const updateDockerfile = async (newVersion: string, root: string): Promise<void>
   }
 }
 
-const updateGitpodDockerfile = async (newVersion: string, root: string): Promise<void> => {
+const updateGitpodDockerfile = async (
+  newVersion: string,
+  root: string,
+): Promise<void> => {
   try {
     const gitpodPath = join(root, '.gitpod.Dockerfile')
     const content = await readFile(gitpodPath, 'utf-8')
@@ -70,7 +79,10 @@ const updateGitpodDockerfile = async (newVersion: string, root: string): Promise
   }
 }
 
-const updateNodeVersionFiles = async (newVersion: string, root: string): Promise<boolean> => {
+const updateNodeVersionFiles = async (
+  newVersion: string,
+  root: string,
+): Promise<boolean> => {
   const shouldContinueUpdating = await updateNvmrc(newVersion, root)
   if (!shouldContinueUpdating) {
     return false
@@ -84,7 +96,8 @@ const updateNodeVersionFiles = async (newVersion: string, root: string): Promise
 
 export const updateNodeVersionMigration: Migration = {
   name: 'updateNodeVersion',
-  description: 'Update Node.js version in .nvmrc, Dockerfile, and .gitpod.Dockerfile',
+  description:
+    'Update Node.js version in .nvmrc, Dockerfile, and .gitpod.Dockerfile',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params
@@ -102,7 +115,11 @@ export const updateNodeVersionMigration: Migration = {
 
       try {
         // Clone the repository
-        await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
+        await execa('git', [
+          'clone',
+          `https://github.com/${owner}/${repo}.git`,
+          tempDir,
+        ])
 
         // Update files
         const hasChanges = await updateNodeVersionFiles(newVersion, tempDir)
@@ -130,7 +147,11 @@ export const updateNodeVersionMigration: Migration = {
         const newBranch = `update-node-version-${Date.now()}`
         await execa('git', ['checkout', '-b', newBranch], { cwd: tempDir })
         await execa('git', ['add', '.'], { cwd: tempDir })
-        await execa('git', ['commit', '-m', `ci: update Node.js to version ${newVersion}`], { cwd: tempDir })
+        await execa(
+          'git',
+          ['commit', '-m', `ci: update Node.js to version ${newVersion}`],
+          { cwd: tempDir },
+        )
         await execa('git', ['push', 'origin', newBranch], { cwd: tempDir })
 
         // Create pull request
