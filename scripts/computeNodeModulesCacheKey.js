@@ -1,1 +1,1 @@
-import '../packages/build/src/computeNodeModulesCacheKey.js'
+import '../packages/build/src/computeNodeModulesCacheKey.ts'
