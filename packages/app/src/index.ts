@@ -7,6 +7,7 @@ import { getAvailableMigrations } from './migrations/getAvailableMigrations.js'
 import { applyMigrationResult } from './migrations/applyMigrationResult.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { updateDependencies } from './updateDependencies.js'
+import { captureException } from '../migrations/src/index.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -19,86 +20,46 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
   const migrationsRpc = await createMigrationsRpc()
 
   try {
-    // Clone the target repo for builtin extensions update if needed
-    let clonedRepo: Awaited<ReturnType<typeof cloneRepositoryTmp>> | null = null
-    let targetOwner: string | undefined
-    let targetRepo: string | undefined
-    let targetFilePath: string | undefined
+    // Call handleReleaseReleased migration
+    const migrationResult = await migrationsRpc.invoke('handleReleaseReleased', {
+      repositoryOwner: owner,
+      repositoryName,
+      tagName,
+    })
 
-    if (repositoryName !== 'renderer-process') {
-      targetOwner = owner
-      targetRepo = 'lvce-editor'
-      targetFilePath =
-        'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
-
-      clonedRepo = await cloneRepositoryTmp(targetOwner, targetRepo)
+    if (migrationResult.status === 'error') {
+      console.error('Migration failed:', migrationResult.errorMessage)
+      return
     }
 
-    try {
-      // Call handleReleaseReleased migration with all necessary options
-      const migrationResult = await migrationsRpc.invoke(
-        'migrations/handle-release-released',
-        {
-          repositoryOwner: owner,
-          repositoryName,
-          tagName,
-          targetOwner,
-          targetRepo,
-          targetFilePath,
-          clonedRepoPath: clonedRepo?.path,
-          fs: (await import('node:fs/promises')).default,
-          fetch: globalThis.fetch,
-          exec: async (
-            file: string,
-            args?: readonly string[],
-            options?: { cwd?: string },
-          ) => {
-            const { execa } = await import('execa')
-            const result = await execa(file, args as string[], options)
-            return {
-              stdout: result.stdout,
-              stderr: result.stderr,
-              exitCode: result.exitCode ?? 0,
-            }
-          },
-        },
+    // Apply builtin extensions changes to lvce-editor repo if any
+    if (repositoryName !== 'renderer-process' && migrationResult.changedFiles.length > 0) {
+      const targetFilePath =
+        'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
+      const builtinExtensionsFiles = migrationResult.changedFiles.filter(
+        (file) => file.path === targetFilePath,
       )
 
-      // Apply builtin extensions changes if any
-      if (
-        migrationResult.status === 'success' &&
-        migrationResult.changedFiles.length > 0 &&
-        targetOwner &&
-        targetRepo
-      ) {
-        // Filter changed files for builtin extensions (they have the target file path)
-        const builtinExtensionsFiles = migrationResult.changedFiles.filter(
-          (file) => file.path === targetFilePath,
+      if (builtinExtensionsFiles.length > 0) {
+        const targetOwner = owner
+        const targetRepo = 'lvce-editor'
+        const version = tagName.replace('v', '')
+        const newBranch = `update-version/${repositoryName}-${tagName}`
+        const commitMessage = `feature: update ${repositoryName} to version ${tagName}`
+
+        await applyMigrationResult(
+          {
+            octokit,
+            owner: targetOwner,
+            repo: targetRepo,
+            baseBranch: 'main',
+            migrationsRpc,
+          },
+          builtinExtensionsFiles,
+          migrationResult.pullRequestTitle,
+          commitMessage,
+          newBranch,
         )
-
-        if (builtinExtensionsFiles.length > 0) {
-          const version = tagName.replace('v', '')
-          const newBranch = `update-version/${repositoryName}-${tagName}`
-          const commitMessage = `feature: update ${repositoryName} to version ${tagName}`
-
-          await applyMigrationResult(
-            {
-              octokit,
-              owner: targetOwner,
-              repo: targetRepo,
-              baseBranch: 'main',
-              migrationsRpc,
-            },
-            builtinExtensionsFiles,
-            migrationResult.pullRequestTitle,
-            commitMessage,
-            newBranch,
-          )
-        }
-      }
-    } finally {
-      if (clonedRepo) {
-        await clonedRepo[Symbol.asyncDispose]()
       }
     }
 
