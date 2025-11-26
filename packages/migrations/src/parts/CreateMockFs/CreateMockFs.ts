@@ -4,48 +4,64 @@ export interface MockFsOptions {
   files?: Record<string, string>
 }
 
+class MockFs {
+  files: Record<string, string>
+
+  constructor(options: MockFsOptions = {}) {
+    this.files = { ...options.files }
+  }
+
+  async readFile(
+    path: string | Buffer | URL,
+    encoding?: string,
+  ): Promise<string> {
+    const pathStr = typeof path === 'string' ? path : path.toString()
+    if (this.files[pathStr] === undefined) {
+      const error = new Error('ENOENT: no such file or directory')
+      // @ts-ignore
+      error.code = 'ENOENT'
+      throw error
+    }
+    return this.files[pathStr]
+  }
+
+  async writeFile(
+    path: string | Buffer | URL,
+    data: string | Buffer,
+  ): Promise<void> {
+    const pathStr = typeof path === 'string' ? path : path.toString()
+    const dataStr = typeof data === 'string' ? data : data.toString()
+    this.files[pathStr] = dataStr
+  }
+
+  async mkdir(path: string | Buffer | URL, options?: any): Promise<void> {
+    // Mock implementation - just track that directory exists
+    const pathStr = typeof path === 'string' ? path : path.toString()
+    if (!this.files[pathStr]) {
+      this.files[pathStr] = '[DIRECTORY]'
+    }
+  }
+
+  async rm(path: string | Buffer | URL, options?: any): Promise<void> {
+    const pathStr = typeof path === 'string' ? path : path.toString()
+    delete this.files[pathStr]
+    // Also remove all files that start with this path
+    Object.keys(this.files).forEach((key) => {
+      if (key.startsWith(pathStr)) {
+        delete this.files[key]
+      }
+    })
+  }
+
+  async mkdtemp(prefix: string): Promise<string> {
+    const tempPath = `${prefix}${Math.random().toString(36).substring(7)}`
+    this.files[tempPath] = '[DIRECTORY]'
+    return tempPath
+  }
+}
+
 export const createMockFs = (
   options: MockFsOptions = {},
 ): typeof FsPromises => {
-  const files: Record<string, string> = { ...options.files }
-
-  return {
-    readFile: async (path: string | Buffer | URL, encoding?: string) => {
-      const pathStr = typeof path === 'string' ? path : path.toString()
-      if (files[pathStr] === undefined) {
-        const error = new Error('ENOENT: no such file or directory')
-        // @ts-ignore
-        error.code = 'ENOENT'
-        throw error
-      }
-      return files[pathStr]
-    },
-    writeFile: async (path: string | Buffer | URL, data: string | Buffer) => {
-      const pathStr = typeof path === 'string' ? path : path.toString()
-      const dataStr = typeof data === 'string' ? data : data.toString()
-      files[pathStr] = dataStr
-    },
-    mkdir: async (path: string | Buffer | URL, options?: any) => {
-      // Mock implementation - just track that directory exists
-      const pathStr = typeof path === 'string' ? path : path.toString()
-      if (!files[pathStr]) {
-        files[pathStr] = '[DIRECTORY]'
-      }
-    },
-    rm: async (path: string | Buffer | URL, options?: any) => {
-      const pathStr = typeof path === 'string' ? path : path.toString()
-      delete files[pathStr]
-      // Also remove all files that start with this path
-      Object.keys(files).forEach((key) => {
-        if (key.startsWith(pathStr)) {
-          delete files[key]
-        }
-      })
-    },
-    mkdtemp: async (prefix: string) => {
-      const tempPath = `${prefix}${Math.random().toString(36).substring(7)}`
-      files[tempPath] = '[DIRECTORY]'
-      return tempPath
-    },
-  } as typeof FsPromises
+  return new MockFs(options) as unknown as typeof FsPromises
 }
