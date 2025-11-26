@@ -17,6 +17,7 @@ import {
   handleAddOidcPermissions,
   handleRemoveNpmToken,
 } from './migrations/endpoints.js'
+import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -55,6 +56,9 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   }
   const installationId = parseInt(installationIdString)
 
+  // Create RPC connection to migrations worker
+  const migrationsRpc = await createMigrationsRpc()
+
   router.post(
     '/update-dependencies',
     handleDependencies({
@@ -78,6 +82,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleUpdateNodeVersion({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
+      migrationsRpc,
     }),
   )
 
@@ -86,6 +91,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleUpdateDependencies({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
+      migrationsRpc,
     }),
   )
 
@@ -94,6 +100,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleEnsureLernaExcluded({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
+      migrationsRpc,
     }),
   )
 
@@ -102,6 +109,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleUpdateGithubActionsMigration({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
+      migrationsRpc,
     }),
   )
 
@@ -110,6 +118,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleAddGitattributes({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
+      migrationsRpc,
     }),
   )
 
@@ -118,6 +127,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleAddOidcPermissions({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
+      migrationsRpc,
     }),
   )
 
@@ -126,6 +136,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleRemoveNpmToken({
       app,
       secret: process.env.DEPENDENCIES_SECRET,
+      migrationsRpc,
     }),
   )
 }

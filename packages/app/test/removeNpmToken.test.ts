@@ -3,26 +3,38 @@ import { removeNpmTokenMigration } from '../src/migrations/removeNpmToken.js'
 
 const encode = (s: string): string => Buffer.from(s).toString('base64')
 
+const createMockMigrationsRpc = (result: any) => ({
+  invoke: jest.fn().mockResolvedValue(result),
+  dispose: jest.fn().mockResolvedValue(undefined),
+})
+
 test('returns success message when release.yml does not exist', async () => {
   const octokit: any = {
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest.fn().mockRejectedValueOnce({ status: 404 }),
+        getContent: jest.fn(),
       },
     },
   }
+
+  const migrationsRpc = createMockMigrationsRpc({
+    status: 'success',
+    changedFiles: [],
+    pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
+  })
 
   const result = await removeNpmTokenMigration.run({
     // @ts-ignore
     octokit,
     owner: 'org',
     repo: 'repo',
+    migrationsRpc,
   })
 
   expect(result).toEqual({
     success: true,
-    message: 'release.yml not found',
+    message: 'No NODE_AUTH_TOKEN found in release.yml',
   })
 })
 

@@ -1,49 +1,12 @@
 import type { Migration, MigrationParams, MigrationResult } from './types.js'
+import { applyMigrationResult } from './applyMigrationResult.js'
 
-const WORKFLOWS_DIR = '.github/workflows'
-
-const enableAutoSquash = async (octokit: any, pullRequestData: any) => {
-  await octokit.graphql(
-    `mutation MyMutation {
-  enablePullRequestAutoMerge(input: { pullRequestId: "${pullRequestData.data.node_id}", mergeMethod: SQUASH }) {
-    clientMutationId
-  }
-}
-`,
-  )
-}
-
-const addOidcPermissionsToWorkflow = (content: string): string => {
-  // Check if permissions section already exists
-  if (content.includes('permissions:')) {
-    return content
-  }
-
-  // Find the jobs section and add permissions before it
-  const lines = content.split('\n')
-  const jobsIndex = lines.findIndex((line) => line.trim().startsWith('jobs:'))
-
-  if (jobsIndex === -1) {
-    // If no jobs section found, add permissions at the end of the file
-    lines.push('')
-    lines.push('permissions:')
-    lines.push('  id-token: write # Required for OIDC')
-    lines.push('  contents: write')
-    return lines.join('\n')
-  }
-
-  // Insert permissions before the jobs section
-  const newLines = [
-    ...lines.slice(0, jobsIndex),
-    '',
-    'permissions:',
-    '  id-token: write # Required for OIDC',
-    '  contents: write',
-    '',
-    ...lines.slice(jobsIndex),
-  ]
-
-  return newLines.join('\n')
+interface RpcMigrationResult {
+  status: 'success' | 'error'
+  changedFiles: Array<{ path: string; content: string }>
+  pullRequestTitle: string
+  errorCode?: string
+  errorMessage?: string
 }
 
 export const addOidcPermissionsMigration: Migration = {
@@ -52,103 +15,45 @@ export const addOidcPermissionsMigration: Migration = {
     'Add OpenID Connect permissions to release.yml workflow files for secure npm publishing',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
-      const { octokit, owner, repo, baseBranch = 'main' } = params
+      const { owner, repo, baseBranch = 'main', migrationsRpc } = params
 
-      // Check if release.yml exists
-      let releaseWorkflow
-      try {
-        const result = await octokit.rest.repos.getContent({
-          owner,
-          repo,
-          path: `${WORKFLOWS_DIR}/release.yml`,
-          ref: baseBranch,
-        })
+      // Call RPC function to add OIDC permissions to workflow
+      const rpcResult = (await migrationsRpc.invoke(
+        'addOidcPermissionsToWorkflow',
+        {
+          repositoryOwner: owner,
+          repositoryName: repo,
+        },
+      )) as RpcMigrationResult
 
-        if (!('content' in result.data)) {
-          return {
-            success: true,
-            message: 'release.yml is not a file',
-          }
+      if (rpcResult.status === 'error') {
+        return {
+          success: false,
+          error:
+            rpcResult.errorMessage ||
+            'Failed to add OIDC permissions to workflow',
         }
-
-        releaseWorkflow = result.data
-      } catch (error: any) {
-        if (error && error.status === 404) {
-          return {
-            success: true,
-            message: 'release.yml not found',
-          }
-        }
-        throw error
       }
 
-      // Decode the content
-      const originalContent = Buffer.from(
-        releaseWorkflow.content,
-        'base64',
-      ).toString()
-
-      // Add OIDC permissions
-      const updatedContent = addOidcPermissionsToWorkflow(originalContent)
-
-      // Check if content actually changed
-      if (originalContent === updatedContent) {
+      if (rpcResult.changedFiles.length === 0) {
         return {
           success: true,
           message: 'OIDC permissions already present in release.yml',
         }
       }
 
-      // Create a new branch
+      const pullRequestTitle = rpcResult.pullRequestTitle
+      const commitMessage = pullRequestTitle
       const newBranch = `add-oidc-permissions-${Date.now()}`
 
-      // Get the main branch reference
-      const mainBranchRef = await octokit.rest.git.getRef({
-        owner,
-        repo,
-        ref: `heads/${baseBranch}`,
-      })
-
-      // Create the new branch
-      await octokit.rest.git.createRef({
-        owner,
-        repo,
-        ref: `refs/heads/${newBranch}`,
-        sha: mainBranchRef.data.object.sha,
-      })
-
-      // Update the file
-      const updatedContentBase64 =
-        Buffer.from(updatedContent).toString('base64')
-
-      await octokit.repos.createOrUpdateFileContents({
-        owner,
-        repo,
-        path: `${WORKFLOWS_DIR}/release.yml`,
-        message: 'feature: update permissions for open id connect publishing',
-        content: updatedContentBase64,
-        branch: newBranch,
-        sha: releaseWorkflow.sha,
-      })
-
-      // Create a pull request
-      const pullRequestData = await octokit.rest.pulls.create({
-        owner,
-        repo,
-        title: 'feature: update permissions for open id connect publishing',
-        head: newBranch,
-        base: baseBranch,
-      })
-
-      // Enable auto squash merge
-      await enableAutoSquash(octokit, pullRequestData)
-
-      return {
-        success: true,
-        changedFiles: 1,
+      // Apply the migration result
+      return await applyMigrationResult(
+        params,
+        rpcResult.changedFiles,
+        pullRequestTitle,
+        commitMessage,
         newBranch,
-        message: 'OIDC permissions added to release.yml successfully',
-      }
+      )
     } catch (error) {
       return {
         success: false,

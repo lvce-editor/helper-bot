@@ -81,6 +81,7 @@ const createMigrationHandler = (
         owner,
         repo,
         baseBranch: (req.query.baseBranch as string) || 'main',
+        migrationsRpc: params.migrationsRpc,
       })
 
       if (!result.success) {

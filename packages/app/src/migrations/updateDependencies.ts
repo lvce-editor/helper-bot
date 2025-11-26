@@ -1,10 +1,15 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { createPullRequest } from '../createPullRequest.js'
 import { captureException } from '../errorHandling.js'
 import dependenciesConfig from '../dependencies.json' with { type: 'json' }
 import type { Migration, MigrationParams, MigrationResult } from './types.js'
+import { applyMigrationResult } from './applyMigrationResult.js'
+
+interface RpcMigrationResult {
+  status: 'success' | 'error'
+  changedFiles: Array<{ path: string; content: string }>
+  pullRequestTitle: string
+  errorCode?: string
+  errorMessage?: string
+}
 
 const shortCommitMessageRepos = [
   'renderer-process',
@@ -31,85 +36,6 @@ const getCommitMessage = (releasedRepo: string, tagName: string): string => {
   }
   return `feature: update ${releasedRepo} extension to version ${tagName}`
 }
-
-const enableAutoSquash = async (
-  octokit: MigrationParams['octokit'],
-  pullRequestData: any,
-): Promise<void> => {
-  await octokit.graphql(
-    `mutation MyMutation {
-  enablePullRequestAutoMerge(input: { pullRequestId: "${pullRequestData.data.node_id}", mergeMethod: SQUASH }) {
-    clientMutationId
-  }
-}
-`,
-    {},
-  )
-}
-
-const getNewPackageFiles = async (
-  oldPackageJson: any,
-  dependencyName: string,
-  dependencyKey: string,
-  newVersion: string,
-): Promise<{
-  newPackageJsonString: string
-  newPackageLockJsonString: string
-}> => {
-  const name = oldPackageJson.name
-  const tmpFolder = join(
-    tmpdir(),
-    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
-  )
-  const tmpCacheFolder = join(
-    tmpdir(),
-    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`,
-  )
-  const toRemove = [tmpFolder, tmpCacheFolder]
-  try {
-    oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
-      `^${newVersion}`
-    const oldPackageJsonStringified =
-      JSON.stringify(oldPackageJson, null, 2) + '\n'
-    await mkdir(tmpFolder, { recursive: true })
-    await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
-    const { execa } = await import('execa')
-    await execa(
-      `npm`,
-      [
-        'install',
-        '--ignore-scripts',
-        '--prefer-online',
-        '--cache',
-        tmpCacheFolder,
-      ],
-      {
-        cwd: tmpFolder,
-      },
-    )
-    const newPackageLockJsonString = await readFile(
-      join(tmpFolder, 'package-lock.json'),
-      'utf8',
-    )
-    return {
-      newPackageJsonString: oldPackageJsonStringified,
-      newPackageLockJsonString,
-    }
-  } catch (error) {
-    captureException(error as Error)
-    throw new Error(`Failed to update dependencies: ${error}`)
-  } finally {
-    for (const folder of toRemove) {
-      await rm(folder, {
-        recursive: true,
-        force: true,
-      })
-    }
-  }
-}
-
-const modeFile: '100644' = '100644'
-const typeFile: 'blob' = 'blob'
 
 const quickJoin = (parentFolder: string, childPath: string): string => {
   if (!parentFolder) {
@@ -143,12 +69,37 @@ const getPackageRefs = async (
   }
 }
 
+const getPackageRefs = async (
+  octokit: MigrationParams['octokit'],
+  owner: string,
+  repo: string,
+  packageJsonPath: string,
+  packageLockJsonPath: string,
+) => {
+  const [packageJsonRef, packageLockJsonRef] = await Promise.all([
+    octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: packageJsonPath,
+    }),
+    octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: packageLockJsonPath,
+    }),
+  ])
+  return {
+    packageJsonRef,
+    packageLockJsonRef,
+  }
+}
+
 const updateDependenciesForRepo = async (
   params: MigrationParams,
   config: any,
   tagName: string,
 ): Promise<MigrationResult> => {
-  const { octokit, owner, baseBranch = 'main' } = params
+  const { octokit, owner, baseBranch = 'main', migrationsRpc } = params
   const releasedRepo = config.fromRepo
   const packageJsonPath = quickJoin(config.toFolder, 'package.json')
   const packageLockJsonPath = quickJoin(config.toFolder, 'package-lock.json')
@@ -156,7 +107,10 @@ const updateDependenciesForRepo = async (
 
   const newBranch = `update-version/${releasedRepo}-${tagName}`
   const repoToUpdate = config.toRepo
+  const dependencyNameShort = config.asName || releasedRepo
+  const dependencyName = `@lvce-editor/${dependencyNameShort}`
 
+  // First, read package.json to determine which dependency key to use
   const { packageJsonRef, packageLockJsonRef } = await getPackageRefs(
     octokit,
     owner,
@@ -178,8 +132,7 @@ const updateDependenciesForRepo = async (
   const filesJsonBase64 = packageJsonRef.data.content
   const filesJsonDecoded = Buffer.from(filesJsonBase64, 'base64').toString()
   const filesJsonValue = JSON.parse(filesJsonDecoded)
-  const dependencyNameShort = config.asName || releasedRepo
-  const dependencyName = `@lvce-editor/${dependencyNameShort}`
+
   let dependencyKey = ''
   let oldDependency = ''
   if (
@@ -206,55 +159,51 @@ const updateDependenciesForRepo = async (
       message: `Dependency ${dependencyName} not found in ${packageJsonPath} of ${repoToUpdate}`,
     }
   }
-  const oldVersion = oldDependency.slice(1)
 
+  const oldVersion = oldDependency.slice(1)
   if (oldVersion === version) {
     return {
       success: true,
       message: 'Same version, no update needed',
     }
   }
-  const { newPackageJsonString, newPackageLockJsonString } =
-    await getNewPackageFiles(
-      filesJsonValue,
-      config.fromRepo,
-      dependencyKey,
-      version,
-    )
 
-  const commitableFiles = [
-    {
-      path: packageJsonPath,
-      mode: modeFile,
-      type: typeFile,
-      content: newPackageJsonString,
-    },
-    {
-      path: packageLockJsonPath,
-      mode: modeFile,
-      type: typeFile,
-      content: newPackageLockJsonString,
-    },
-  ]
+  // Call RPC function to get new package files
+  const rpcResult = (await migrationsRpc.invoke('getNewPackageFiles', {
+    repositoryOwner: owner,
+    repositoryName: repoToUpdate,
+    dependencyName: releasedRepo,
+    dependencyKey,
+    newVersion: version,
+    packageJsonPath,
+    packageLockJsonPath,
+  })) as RpcMigrationResult
 
-  const pullRequestData = await createPullRequest({
-    octokit,
-    baseBranch,
-    newBranch,
-    commitableFiles,
-    commitMessage: getCommitMessage(releasedRepo, tagName),
-    owner,
-    pullRequestTitle: `feature: update ${releasedRepo} to version ${tagName}`,
-    repo: repoToUpdate,
-  })
-  await enableAutoSquash(octokit, pullRequestData)
-
-  return {
-    success: true,
-    changedFiles: 2,
-    newBranch,
-    message: `Updated ${releasedRepo} to version ${tagName}`,
+  if (rpcResult.status === 'error') {
+    return {
+      success: false,
+      error: rpcResult.errorMessage || 'Failed to get new package files',
+    }
   }
+
+  if (rpcResult.changedFiles.length === 0) {
+    return {
+      success: true,
+      message: 'No changes needed',
+    }
+  }
+
+  const commitMessage = getCommitMessage(releasedRepo, tagName)
+  const pullRequestTitle = rpcResult.pullRequestTitle
+
+  // Apply the migration result
+  return await applyMigrationResult(
+    { ...params, repo: repoToUpdate },
+    rpcResult.changedFiles,
+    pullRequestTitle,
+    commitMessage,
+    newBranch,
+  )
 }
 
 export const updateDependenciesMigration: Migration = {

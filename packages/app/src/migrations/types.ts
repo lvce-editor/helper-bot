@@ -5,6 +5,10 @@ export interface MigrationParams {
   owner: string
   repo: string
   baseBranch?: string
+  migrationsRpc: {
+    invoke: (method: string, ...args: any[]) => Promise<any>
+    dispose: () => Promise<void>
+  }
 }
 
 export interface MigrationResult {
@@ -24,4 +28,8 @@ export interface Migration {
 export interface MigrationEndpointParams {
   app: any
   secret: string | undefined
+  migrationsRpc: {
+    invoke: (method: string, ...args: any[]) => Promise<any>
+    dispose: () => Promise<void>
+  }
 }
