@@ -1,5 +1,4 @@
 import type { Probot } from 'probot'
-import { handleDependencies } from './dependencies.js'
 import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
 import { getAvailableMigrations } from './migrations/getAvailableMigrations.js'
@@ -20,19 +19,11 @@ export const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   if (!installationIdString) {
     throw new Error('installation id not found')
   }
+  // @ts-ignore
   const installationId = parseInt(installationIdString)
 
   // Create RPC connection to migrations worker
   const migrationsRpc = await createMigrationsRpc()
-
-  router.post(
-    '/update-dependencies',
-    handleDependencies({
-      app,
-      installationId,
-      secret: process.env.DEPENDENCIES_SECRET,
-    }),
-  )
 
   // Get available migrations and register them dynamically
   const availableMigrations = await getAvailableMigrations(migrationsRpc)
@@ -59,4 +50,3 @@ export const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     )
   }
 }
-
