@@ -1,11 +1,10 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execa } from 'execa'
-import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const getNewPackageFilesCore = async (
+  fs: typeof import('node:fs/promises'),
   oldPackageJson: any,
   dependencyName: string,
   dependencyKey: string,
@@ -29,8 +28,11 @@ const getNewPackageFilesCore = async (
       `^${newVersion}`
     const oldPackageJsonStringified =
       JSON.stringify(oldPackageJson, null, 2) + '\n'
-    await mkdir(tmpFolder, { recursive: true })
-    await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
+    await fs.mkdir(tmpFolder, { recursive: true })
+    await fs.writeFile(
+      join(tmpFolder, 'package.json'),
+      oldPackageJsonStringified,
+    )
     await execa(
       `npm`,
       [
@@ -44,7 +46,7 @@ const getNewPackageFilesCore = async (
         cwd: tmpFolder,
       },
     )
-    const newPackageLockJsonString = await readFile(
+    const newPackageLockJsonString = await fs.readFile(
       join(tmpFolder, 'package-lock.json'),
       'utf8',
     )
@@ -56,7 +58,7 @@ const getNewPackageFilesCore = async (
     throw new Error(`Failed to update dependencies: ${error}`)
   } finally {
     for (const folder of toRemove) {
-      await rm(folder, {
+      await fs.rm(folder, {
         recursive: true,
         force: true,
       })
@@ -75,16 +77,18 @@ export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
 export const getNewPackageFiles = async (
   options: GetNewPackageFilesOptions,
 ): Promise<MigrationResult> => {
-  const clonedRepo = await cloneRepositoryTmp(
-    options.repositoryOwner,
-    options.repositoryName,
-  )
   try {
-    const packageJsonPath = join(clonedRepo.path, options.packageJsonPath)
+    const packageJsonPath = join(
+      options.clonedRepoPath,
+      options.packageJsonPath,
+    )
 
     let oldPackageJson: any
     try {
-      const packageJsonContent = await readFile(packageJsonPath, 'utf8')
+      const packageJsonContent = await options.fs.readFile(
+        packageJsonPath,
+        'utf8',
+      )
       oldPackageJson = JSON.parse(packageJsonContent)
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
@@ -98,6 +102,7 @@ export const getNewPackageFiles = async (
     }
 
     const result = await getNewPackageFilesCore(
+      options.fs,
       oldPackageJson,
       options.dependencyName,
       options.dependencyKey,
@@ -128,7 +133,5 @@ export const getNewPackageFiles = async (
       errorCode: 'GET_NEW_PACKAGE_FILES_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
-  } finally {
-    await clonedRepo[Symbol.asyncDispose]()
   }
 }

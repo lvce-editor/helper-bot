@@ -1,6 +1,11 @@
+import type * as FsPromises from 'node:fs/promises'
+
 export interface BaseMigrationOptions {
   repositoryOwner: string
   repositoryName: string
+  fs: typeof FsPromises
+  clonedRepoPath: string
+  fetch: typeof globalThis.fetch
   [key: string]: any
 }
 

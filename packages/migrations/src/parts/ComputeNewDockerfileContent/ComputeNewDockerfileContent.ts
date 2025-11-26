@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
@@ -24,17 +22,13 @@ export interface ComputeNewDockerfileContentOptions
 export const computeNewDockerfileContent = async (
   options: ComputeNewDockerfileContentOptions,
 ): Promise<MigrationResult> => {
-  const clonedRepo = await cloneRepositoryTmp(
-    options.repositoryOwner,
-    options.repositoryName,
-  )
   try {
-    const newVersion = await getLatestNodeVersion()
-    const dockerfilePath = join(clonedRepo.path, 'Dockerfile')
+    const newVersion = await getLatestNodeVersion(options.fetch)
+    const dockerfilePath = join(options.clonedRepoPath, 'Dockerfile')
 
     let currentContent: string
     try {
-      currentContent = await readFile(dockerfilePath, 'utf8')
+      currentContent = await options.fs.readFile(dockerfilePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
@@ -73,7 +67,5 @@ export const computeNewDockerfileContent = async (
       errorCode: 'COMPUTE_DOCKERFILE_CONTENT_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
-  } finally {
-    await clonedRepo[Symbol.asyncDispose]()
   }
 }

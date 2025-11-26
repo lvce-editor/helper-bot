@@ -1,24 +1,9 @@
-import { test, expect, jest } from '@jest/globals'
-
-const mockExeca = {
-  execa: jest.fn(),
-}
-
-const mockFs = {
-  readFile: jest.fn(),
-  mkdtemp: jest.fn(),
-  rm: jest.fn(),
-}
-
-jest.unstable_mockModule('execa', () => mockExeca)
-jest.unstable_mockModule('node:fs/promises', () => mockFs)
-jest.unstable_mockModule('node:os', () => ({
-  tmpdir: () => '/test',
-}))
-
-const { removeNpmTokenFromWorkflow } = await import(
-  '../src/parts/RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
-)
+import { test, expect } from '@jest/globals'
+import * as FsPromises from 'node:fs/promises'
+import { removeNpmTokenFromWorkflow } from '../src/parts/RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 test('removes NODE_AUTH_TOKEN from workflow', async () => {
   const content = `name: release
@@ -43,31 +28,38 @@ jobs:
       - name: Publish to npm
         run: npm publish`
 
-  // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
-  // @ts-ignore
-  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
-  // @ts-ignore
-  mockFs.readFile.mockResolvedValue(content)
-  // @ts-ignore
-  mockFs.rm.mockResolvedValue(undefined)
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
+  try {
+    await FsPromises.mkdir(join(tempDir, '.github/workflows'), {
+      recursive: true,
+    })
+    await FsPromises.writeFile(
+      join(tempDir, '.github/workflows/release.yml'),
+      content,
+    )
 
-  const result = await removeNpmTokenFromWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-  })
+    const result = await removeNpmTokenFromWorkflow({
+      repositoryOwner: 'test',
+      repositoryName: 'repo',
+      fs: FsPromises,
+      clonedRepoPath: tempDir,
+      fetch: globalThis.fetch,
+    })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
-  expect(result.changedFiles[0].content).not.toContain(
-    'NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}',
-  )
-  expect(result.changedFiles[0].content).toContain('Setup Node.js')
-  expect(result.changedFiles[0].content).toContain('Publish to npm')
-  expect(result.pullRequestTitle).toBe(
-    'ci: remove NODE_AUTH_TOKEN from release workflow',
-  )
+    expect(result.status).toBe('success')
+    expect(result.changedFiles).toHaveLength(1)
+    expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
+    expect(result.changedFiles[0].content).not.toContain(
+      'NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}',
+    )
+    expect(result.changedFiles[0].content).toContain('Setup Node.js')
+    expect(result.changedFiles[0].content).toContain('Publish to npm')
+    expect(result.pullRequestTitle).toBe(
+      'ci: remove NODE_AUTH_TOKEN from release workflow',
+    )
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
 })
 
 test('returns same content when NODE_AUTH_TOKEN is not found', async () => {
@@ -82,46 +74,48 @@ jobs:
     name: create-release
     runs-on: ubuntu-24.04`
 
-  // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
-  // @ts-ignore
-  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
-  // @ts-ignore
-  mockFs.readFile.mockResolvedValue(content)
-  // @ts-ignore
-  mockFs.rm.mockResolvedValue(undefined)
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
+  try {
+    await FsPromises.mkdir(join(tempDir, '.github/workflows'), {
+      recursive: true,
+    })
+    await FsPromises.writeFile(
+      join(tempDir, '.github/workflows/release.yml'),
+      content,
+    )
 
-  const result = await removeNpmTokenFromWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-  })
+    const result = await removeNpmTokenFromWorkflow({
+      repositoryOwner: 'test',
+      repositoryName: 'repo',
+      fs: FsPromises,
+      clonedRepoPath: tempDir,
+      fetch: globalThis.fetch,
+    })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe(
-    'ci: remove NODE_AUTH_TOKEN from release workflow',
-  )
+    expect(result.status).toBe('success')
+    expect(result.changedFiles).toEqual([])
+    expect(result.pullRequestTitle).toBe(
+      'ci: remove NODE_AUTH_TOKEN from release workflow',
+    )
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
 })
 
 test('handles missing release.yml file', async () => {
-  const error = new Error('File not found')
-  // @ts-ignore
-  error.code = 'ENOENT'
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
+  try {
+    const result = await removeNpmTokenFromWorkflow({
+      repositoryOwner: 'test',
+      repositoryName: 'repo',
+      fs: FsPromises,
+      clonedRepoPath: tempDir,
+      fetch: globalThis.fetch,
+    })
 
-  // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
-  // @ts-ignore
-  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
-  // @ts-ignore
-  mockFs.readFile.mockRejectedValue(error)
-  // @ts-ignore
-  mockFs.rm.mockResolvedValue(undefined)
-
-  const result = await removeNpmTokenFromWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+    expect(result.status).toBe('success')
+    expect(result.changedFiles).toEqual([])
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
 })

@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
@@ -43,17 +41,13 @@ export interface ComputeNewNvmrcContentOptions extends BaseMigrationOptions {}
 export const computeNewNvmrcContent = async (
   options: ComputeNewNvmrcContentOptions,
 ): Promise<MigrationResult> => {
-  const clonedRepo = await cloneRepositoryTmp(
-    options.repositoryOwner,
-    options.repositoryName,
-  )
   try {
-    const newVersion = await getLatestNodeVersion()
-    const nvmrcPath = join(clonedRepo.path, '.nvmrc')
+    const newVersion = await getLatestNodeVersion(options.fetch)
+    const nvmrcPath = join(options.clonedRepoPath, '.nvmrc')
 
     let currentContent: string
     try {
-      currentContent = await readFile(nvmrcPath, 'utf8')
+      currentContent = await options.fs.readFile(nvmrcPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
@@ -98,7 +92,5 @@ export const computeNewNvmrcContent = async (
       errorCode: 'COMPUTE_NVMRC_CONTENT_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
-  } finally {
-    await clonedRepo[Symbol.asyncDispose]()
   }
 }

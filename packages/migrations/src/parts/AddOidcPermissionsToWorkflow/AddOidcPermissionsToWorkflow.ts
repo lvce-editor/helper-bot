@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const addOidcPermissionsToWorkflowContent = (content: string): string => {
@@ -42,16 +40,15 @@ export interface AddOidcPermissionsToWorkflowOptions
 export const addOidcPermissionsToWorkflow = async (
   options: AddOidcPermissionsToWorkflowOptions,
 ): Promise<MigrationResult> => {
-  const clonedRepo = await cloneRepositoryTmp(
-    options.repositoryOwner,
-    options.repositoryName,
-  )
   try {
-    const workflowPath = join(clonedRepo.path, '.github/workflows/release.yml')
+    const workflowPath = join(
+      options.clonedRepoPath,
+      '.github/workflows/release.yml',
+    )
 
     let originalContent: string
     try {
-      originalContent = await readFile(workflowPath, 'utf8')
+      originalContent = await options.fs.readFile(workflowPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
@@ -96,7 +93,5 @@ export const addOidcPermissionsToWorkflow = async (
       errorCode: 'ADD_OIDC_PERMISSIONS_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
-  } finally {
-    await clonedRepo[Symbol.asyncDispose]()
   }
 }

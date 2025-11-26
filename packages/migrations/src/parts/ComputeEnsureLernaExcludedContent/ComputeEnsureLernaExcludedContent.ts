@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const computeEnsureLernaExcludedContentCore = (
@@ -59,16 +57,15 @@ export interface ComputeEnsureLernaExcludedContentOptions
 export const computeEnsureLernaExcludedContent = async (
   options: ComputeEnsureLernaExcludedContentOptions,
 ): Promise<MigrationResult> => {
-  const clonedRepo = await cloneRepositoryTmp(
-    options.repositoryOwner,
-    options.repositoryName,
-  )
   try {
-    const scriptPath = join(clonedRepo.path, 'scripts/update-dependencies.sh')
+    const scriptPath = join(
+      options.clonedRepoPath,
+      'scripts/update-dependencies.sh',
+    )
 
     let currentContent: string
     try {
-      currentContent = await readFile(scriptPath, 'utf8')
+      currentContent = await options.fs.readFile(scriptPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
@@ -109,7 +106,5 @@ export const computeEnsureLernaExcludedContent = async (
       errorCode: 'COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED',
       errorMessage: error instanceof Error ? error.message : String(error),
     }
-  } finally {
-    await clonedRepo[Symbol.asyncDispose]()
   }
 }

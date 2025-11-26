@@ -1,24 +1,9 @@
-import { test, expect, jest } from '@jest/globals'
-
-const mockExeca = {
-  execa: jest.fn(),
-}
-
-const mockFs = {
-  readFile: jest.fn(),
-  mkdtemp: jest.fn(),
-  rm: jest.fn(),
-}
-
-jest.unstable_mockModule('execa', () => mockExeca)
-jest.unstable_mockModule('node:fs/promises', () => mockFs)
-jest.unstable_mockModule('node:os', () => ({
-  tmpdir: () => '/test',
-}))
-
-const { computeEnsureLernaExcludedContent } = await import(
-  '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
-)
+import { test, expect } from '@jest/globals'
+import * as FsPromises from 'node:fs/promises'
+import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 test('adds lerna exclusion to ncu command', async () => {
   const content = `#!/bin/bash
@@ -37,29 +22,34 @@ function updateDependencies {
 
 updateDependencies`
 
-  // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
-  // @ts-ignore
-  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
-  // @ts-ignore
-  mockFs.readFile.mockResolvedValue(content)
-  // @ts-ignore
-  mockFs.rm.mockResolvedValue(undefined)
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
+  try {
+    await FsPromises.mkdir(join(tempDir, 'scripts'), { recursive: true })
+    await FsPromises.writeFile(
+      join(tempDir, 'scripts/update-dependencies.sh'),
+      content,
+    )
 
-  const result = await computeEnsureLernaExcludedContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-  })
+    const result = await computeEnsureLernaExcludedContent({
+      repositoryOwner: 'test',
+      repositoryName: 'repo',
+      fs: FsPromises,
+      clonedRepoPath: tempDir,
+      fetch: globalThis.fetch,
+    })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('scripts/update-dependencies.sh')
-  expect(result.changedFiles[0].content).toContain(
-    'OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`',
-  )
-  expect(result.pullRequestTitle).toBe(
-    'ci: ensure lerna is excluded from ncu commands',
-  )
+    expect(result.status).toBe('success')
+    expect(result.changedFiles).toHaveLength(1)
+    expect(result.changedFiles[0].path).toBe('scripts/update-dependencies.sh')
+    expect(result.changedFiles[0].content).toContain(
+      'OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`',
+    )
+    expect(result.pullRequestTitle).toBe(
+      'ci: ensure lerna is excluded from ncu commands',
+    )
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
 })
 
 test('returns same content when lerna is already excluded', async () => {
@@ -79,43 +69,43 @@ function updateDependencies {
 
 updateDependencies`
 
-  // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
-  // @ts-ignore
-  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
-  // @ts-ignore
-  mockFs.readFile.mockResolvedValue(content)
-  // @ts-ignore
-  mockFs.rm.mockResolvedValue(undefined)
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
+  try {
+    await FsPromises.mkdir(join(tempDir, 'scripts'), { recursive: true })
+    await FsPromises.writeFile(
+      join(tempDir, 'scripts/update-dependencies.sh'),
+      content,
+    )
 
-  const result = await computeEnsureLernaExcludedContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-  })
+    const result = await computeEnsureLernaExcludedContent({
+      repositoryOwner: 'test',
+      repositoryName: 'repo',
+      fs: FsPromises,
+      clonedRepoPath: tempDir,
+      fetch: globalThis.fetch,
+    })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+    expect(result.status).toBe('success')
+    expect(result.changedFiles).toEqual([])
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
 })
 
 test('handles missing update-dependencies.sh script', async () => {
-  const error = new Error('File not found')
-  // @ts-ignore
-  error.code = 'ENOENT'
+  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
+  try {
+    const result = await computeEnsureLernaExcludedContent({
+      repositoryOwner: 'test',
+      repositoryName: 'repo',
+      fs: FsPromises,
+      clonedRepoPath: tempDir,
+      fetch: globalThis.fetch,
+    })
 
-  // @ts-ignore
-  mockExeca.execa.mockResolvedValue({})
-  // @ts-ignore
-  mockFs.mkdtemp.mockResolvedValue('/test/tmp-repo')
-  // @ts-ignore
-  mockFs.readFile.mockRejectedValue(error)
-  // @ts-ignore
-  mockFs.rm.mockResolvedValue(undefined)
-
-  const result = await computeEnsureLernaExcludedContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-  })
-
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+    expect(result.status).toBe('success')
+    expect(result.changedFiles).toEqual([])
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
 })
