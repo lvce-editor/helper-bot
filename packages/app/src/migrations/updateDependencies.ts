@@ -1,7 +1,6 @@
-import { captureException } from '../../../migrations/src/index.js'
 import dependenciesConfig from '../dependencies.json' with { type: 'json' }
-import type { Migration, MigrationParams, MigrationResult } from './types.js'
 import { applyMigrationResult } from './applyMigrationResult.js'
+import type { Migration, MigrationParams, MigrationResult } from './types.js'
 
 interface RpcMigrationResult {
   status: 'success' | 'error'
@@ -234,7 +233,6 @@ export const updateDependenciesMigration: Migration = {
           )
           results.push(result)
         } catch (error) {
-          captureException(error as Error)
           results.push({
             success: false,
             error: error instanceof Error ? error.message : String(error),
