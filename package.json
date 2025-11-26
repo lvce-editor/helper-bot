@@ -1,58 +1,24 @@
 {
-  "name": "@lvce-editor/helper-bot",
+  "name": "@lvce-editor/helper-bot-monorepo",
   "version": "0.0.0-dev",
   "description": "GitHub App to automaticlly update lvce editor extensions to latest versions.",
   "author": "Lvce Editor",
   "type": "module",
   "license": "MIT",
-  "main": "dist/index.js",
   "scripts": {
-    "start": "probot run ./dist/index.js",
+    "start": "cd packages/app && npm start",
     "build": "tsc -b",
-    "test": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
-    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
+    "test": "lerna run test",
+    "postinstall": "lerna bootstrap --ci",
     "format": "prettier --write ."
   },
-  "dependencies": {
-    "@lvce-editor/verror": "^1.7.0",
-    "@sentry/node": "^10.27.0",
-    "execa": "^9.6.0",
-    "probot": "^13.4.5"
-  },
   "devDependencies": {
-    "@jest/globals": "^30.2.0",
-    "@swc-node/jest": "^1.9.1",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.1",
-    "jest": "^30.2.0",
-    "nock": "^14.0.10",
     "prettier": "^3.6.2",
-    "ts-jest": "^29.4.5",
     "typescript": "^5.9.3",
     "@lerna/legacy-package-management": "^8.2.4",
     "lerna": "^8.2.4",
     "@lvce-editor/eslint-config": "^2.25.0",
     "eslint": "^9.39.1"
-  },
-  "jest": {
-    "injectGlobals": false,
-    "extensionsToTreatAsEsm": [
-      ".ts"
-    ],
-    "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    },
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "useESM": true
-        }
-      ]
-    },
-    "testMatch": [
-      "**/test/**"
-    ]
   },
   "prettier": {
     "semi": false,
