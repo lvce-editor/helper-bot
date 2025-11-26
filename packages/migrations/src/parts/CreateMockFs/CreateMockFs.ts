@@ -49,4 +49,3 @@ export const createMockFs = (
     },
   } as typeof FsPromises
 }
-
