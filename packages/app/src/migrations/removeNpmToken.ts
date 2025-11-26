@@ -42,7 +42,9 @@ export const removeNpmTokenMigration: Migration = {
 
         if (!('content' in result.data)) {
           return {
-            success: true,
+            status: 'success',
+            changedFiles: 0,
+            pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
             message: 'release.yml is not a file',
           }
         }
@@ -51,7 +53,9 @@ export const removeNpmTokenMigration: Migration = {
       } catch (error: any) {
         if (error && error.status === 404) {
           return {
-            success: true,
+            status: 'success',
+            changedFiles: 0,
+            pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
             message: 'release.yml not found',
           }
         }
@@ -67,10 +71,14 @@ export const removeNpmTokenMigration: Migration = {
       // Remove npm token
       const updatedContent = removeNpmTokenFromWorkflow(originalContent)
 
+      const pullRequestTitle = 'ci: remove NODE_AUTH_TOKEN from release workflow'
+
       // Check if content actually changed
       if (originalContent === updatedContent) {
         return {
-          success: true,
+          status: 'success',
+          changedFiles: 0,
+          pullRequestTitle,
           message: 'No NODE_AUTH_TOKEN found in release.yml',
         }
       }
@@ -108,10 +116,11 @@ export const removeNpmTokenMigration: Migration = {
       })
 
       // Create a pull request
+      const pullRequestTitle = 'ci: remove NODE_AUTH_TOKEN from release workflow'
       const pullRequestData = await octokit.rest.pulls.create({
         owner,
         repo,
-        title: 'ci: remove NODE_AUTH_TOKEN from release workflow',
+        title: pullRequestTitle,
         head: newBranch,
         base: baseBranch,
       })
@@ -120,15 +129,19 @@ export const removeNpmTokenMigration: Migration = {
       await enableAutoSquash(octokit, pullRequestData)
 
       return {
-        success: true,
+        status: 'success',
         changedFiles: 1,
+        pullRequestTitle,
         newBranch,
         message: 'NODE_AUTH_TOKEN removed from release.yml successfully',
       }
     } catch (error) {
       return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
+        status: 'error',
+        changedFiles: 0,
+        pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
+        errorCode: 'REMOVE_NPM_TOKEN_FAILED',
+        errorMessage: error instanceof Error ? error.message : String(error),
       }
     }
   },

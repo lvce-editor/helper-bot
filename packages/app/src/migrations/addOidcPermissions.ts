@@ -66,7 +66,9 @@ export const addOidcPermissionsMigration: Migration = {
 
         if (!('content' in result.data)) {
           return {
-            success: true,
+            status: 'success',
+            changedFiles: 0,
+            pullRequestTitle: 'feature: update permissions for open id connect publishing',
             message: 'release.yml is not a file',
           }
         }
@@ -75,7 +77,9 @@ export const addOidcPermissionsMigration: Migration = {
       } catch (error: any) {
         if (error && error.status === 404) {
           return {
-            success: true,
+            status: 'success',
+            changedFiles: 0,
+            pullRequestTitle: 'feature: update permissions for open id connect publishing',
             message: 'release.yml not found',
           }
         }
@@ -91,10 +95,14 @@ export const addOidcPermissionsMigration: Migration = {
       // Add OIDC permissions
       const updatedContent = addOidcPermissionsToWorkflow(originalContent)
 
+      const pullRequestTitle = 'feature: update permissions for open id connect publishing'
+
       // Check if content actually changed
       if (originalContent === updatedContent) {
         return {
-          success: true,
+          status: 'success',
+          changedFiles: 0,
+          pullRequestTitle,
           message: 'OIDC permissions already present in release.yml',
         }
       }
@@ -132,10 +140,11 @@ export const addOidcPermissionsMigration: Migration = {
       })
 
       // Create a pull request
+      const pullRequestTitle = 'feature: update permissions for open id connect publishing'
       const pullRequestData = await octokit.rest.pulls.create({
         owner,
         repo,
-        title: 'feature: update permissions for open id connect publishing',
+        title: pullRequestTitle,
         head: newBranch,
         base: baseBranch,
       })
@@ -144,15 +153,19 @@ export const addOidcPermissionsMigration: Migration = {
       await enableAutoSquash(octokit, pullRequestData)
 
       return {
-        success: true,
+        status: 'success',
         changedFiles: 1,
+        pullRequestTitle,
         newBranch,
         message: 'OIDC permissions added to release.yml successfully',
       }
     } catch (error) {
       return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
+        status: 'error',
+        changedFiles: 0,
+        pullRequestTitle: 'feature: update permissions for open id connect publishing',
+        errorCode: 'ADD_OIDC_PERMISSIONS_FAILED',
+        errorMessage: error instanceof Error ? error.message : String(error),
       }
     }
   },

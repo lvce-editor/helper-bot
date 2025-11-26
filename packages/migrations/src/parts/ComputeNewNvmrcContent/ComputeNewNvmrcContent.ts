@@ -1,3 +1,5 @@
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+
 export interface ComputeNewNvmrcContentParams {
   currentContent: string
   newVersion: string
@@ -16,10 +18,10 @@ const parseVersion = (content: string): number => {
   return parseInt(trimmed)
 }
 
-export const computeNewNvmrcContent = (
-  params: ComputeNewNvmrcContentParams,
+const computeNewNvmrcContentCore = (
+  currentContent: string,
+  newVersion: string,
 ): ComputeNewNvmrcContentResult => {
-  const { currentContent, newVersion } = params
   try {
     const existingVersionNumber = parseVersion(currentContent)
     const newVersionNumber = parseVersion(newVersion)
@@ -38,6 +40,53 @@ export const computeNewNvmrcContent = (
     return {
       newContent: `${newVersion}\n`,
       shouldUpdate: true,
+    }
+  }
+}
+
+export interface ComputeNewNvmrcContentOptions extends BaseMigrationOptions {
+  currentContent: string
+  newVersion: string
+}
+
+export const computeNewNvmrcContent = async (
+  options: ComputeNewNvmrcContentOptions,
+): Promise<MigrationResult> => {
+  try {
+    const { currentContent, newVersion } = options
+    const result = computeNewNvmrcContentCore(currentContent, newVersion)
+
+    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
+
+    if (!result.shouldUpdate) {
+      return {
+        status: 'success',
+        changedFiles: [],
+        pullRequestTitle,
+      }
+    }
+
+    const hasChanges = currentContent !== result.newContent
+
+    return {
+      status: 'success',
+      changedFiles: hasChanges
+        ? [
+            {
+              path: '.nvmrc',
+              content: result.newContent,
+            },
+          ]
+        : [],
+      pullRequestTitle,
+    }
+  } catch (error) {
+    return {
+      status: 'error',
+      changedFiles: [],
+      pullRequestTitle: `ci: update Node.js version`,
+      errorCode: 'COMPUTE_NVMRC_CONTENT_FAILED',
+      errorMessage: error instanceof Error ? error.message : String(error),
     }
   }
 }

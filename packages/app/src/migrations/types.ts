@@ -8,11 +8,13 @@ export interface MigrationParams {
 }
 
 export interface MigrationResult {
-  success: boolean
-  changedFiles?: number
+  status: 'success' | 'error'
+  changedFiles: number
+  pullRequestTitle: string
+  errorCode?: string
+  errorMessage?: string
   newBranch?: string
   message?: string
-  error?: string
 }
 
 export interface Migration {

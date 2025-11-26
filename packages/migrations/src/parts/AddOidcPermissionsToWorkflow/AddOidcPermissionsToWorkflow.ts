@@ -1,3 +1,5 @@
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+
 export interface AddOidcPermissionsToWorkflowParams {
   content: string
 }
@@ -6,10 +8,9 @@ export interface AddOidcPermissionsToWorkflowResult {
   updatedContent: string
 }
 
-export const addOidcPermissionsToWorkflow = (
-  params: AddOidcPermissionsToWorkflowParams,
+const addOidcPermissionsToWorkflowContent = (
+  content: string,
 ): AddOidcPermissionsToWorkflowResult => {
-  const { content } = params
   // Check if permissions section already exists
   if (content.includes('permissions:')) {
     return {
@@ -45,5 +46,48 @@ export const addOidcPermissionsToWorkflow = (
 
   return {
     updatedContent: newLines.join('\n'),
+  }
+}
+
+export interface AddOidcPermissionsToWorkflowOptions extends BaseMigrationOptions {
+  content: string
+}
+
+export const addOidcPermissionsToWorkflow = async (
+  options: AddOidcPermissionsToWorkflowOptions,
+): Promise<MigrationResult> => {
+  try {
+    const { content } = options
+    const result = addOidcPermissionsToWorkflowContent(content)
+
+    const hasChanges = content !== result.updatedContent
+    const pullRequestTitle = 'feature: update permissions for open id connect publishing'
+
+    if (!hasChanges) {
+      return {
+        status: 'success',
+        changedFiles: [],
+        pullRequestTitle,
+      }
+    }
+
+    return {
+      status: 'success',
+      changedFiles: [
+        {
+          path: '.github/workflows/release.yml',
+          content: result.updatedContent,
+        },
+      ],
+      pullRequestTitle,
+    }
+  } catch (error) {
+    return {
+      status: 'error',
+      changedFiles: [],
+      pullRequestTitle: 'feature: update permissions for open id connect publishing',
+      errorCode: 'ADD_OIDC_PERMISSIONS_FAILED',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    }
   }
 }

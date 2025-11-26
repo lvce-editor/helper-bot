@@ -57,16 +57,26 @@ test('generates new package files with updated dependency', async () => {
   mockFs.rm.mockResolvedValue(undefined)
 
   const result = await getNewPackageFiles({
+    repository: 'test/repo',
     oldPackageJson,
     dependencyName: 'test-dependency',
     dependencyKey: 'dependencies',
     newVersion: '2.0.0',
+    packageJsonPath: 'package.json',
+    packageLockJsonPath: 'package-lock.json',
   })
 
-  expect(result.newPackageJsonString).toContain(
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(2)
+  expect(result.changedFiles[0].path).toBe('package.json')
+  expect(result.changedFiles[0].content).toContain(
     '"@lvce-editor/test-dependency": "^2.0.0"',
   )
-  expect(result.newPackageLockJsonString).toBe(mockPackageLockJson)
+  expect(result.changedFiles[1].path).toBe('package-lock.json')
+  expect(result.changedFiles[1].content).toBe(mockPackageLockJson)
+  expect(result.pullRequestTitle).toBe(
+    'feature: update test-dependency to version 2.0.0',
+  )
 
   // Verify execa was called with npm install
   expect(mockExeca.execa).toHaveBeenCalledWith(
@@ -110,18 +120,23 @@ test('handles devDependencies', async () => {
   mockFs.rm.mockResolvedValue(undefined)
 
   const result = await getNewPackageFiles({
+    repository: 'test/repo',
     oldPackageJson,
     dependencyName: 'test-dev-dependency',
     dependencyKey: 'devDependencies',
     newVersion: '2.0.0',
+    packageJsonPath: 'package.json',
+    packageLockJsonPath: 'package-lock.json',
   })
 
-  expect(result.newPackageJsonString).toContain(
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(2)
+  expect(result.changedFiles[0].content).toContain(
     '"@lvce-editor/test-dev-dependency": "^2.0.0"',
   )
 })
 
-test('throws error when npm install fails', async () => {
+test('handles error when npm install fails', async () => {
   const oldPackageJson = {
     name: 'test-package',
     version: '1.0.0',
@@ -139,12 +154,18 @@ test('throws error when npm install fails', async () => {
   // @ts-ignore
   mockFs.rm.mockResolvedValue(undefined)
 
-  await expect(
-    getNewPackageFiles({
-      oldPackageJson,
-      dependencyName: 'test-dependency',
-      dependencyKey: 'dependencies',
-      newVersion: '2.0.0',
-    }),
-  ).rejects.toThrow('Failed to update dependencies: Error: npm install failed')
+  const result = await getNewPackageFiles({
+    repository: 'test/repo',
+    oldPackageJson,
+    dependencyName: 'test-dependency',
+    dependencyKey: 'dependencies',
+    newVersion: '2.0.0',
+    packageJsonPath: 'package.json',
+    packageLockJsonPath: 'package-lock.json',
+  })
+
+  expect(result.status).toBe('error')
+  expect(result.changedFiles).toEqual([])
+  expect(result.errorCode).toBe('GET_NEW_PACKAGE_FILES_FAILED')
+  expect(result.errorMessage).toContain('npm install failed')
 })

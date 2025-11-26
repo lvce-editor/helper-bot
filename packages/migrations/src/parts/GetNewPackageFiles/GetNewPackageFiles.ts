@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 export interface GetNewPackageFilesParams {
   oldPackageJson: any
@@ -14,10 +15,12 @@ export interface GetNewPackageFilesResult {
   newPackageLockJsonString: string
 }
 
-export const getNewPackageFiles = async (
-  params: GetNewPackageFilesParams,
+const getNewPackageFilesCore = async (
+  oldPackageJson: any,
+  dependencyName: string,
+  dependencyKey: string,
+  newVersion: string,
 ): Promise<GetNewPackageFilesResult> => {
-  const { oldPackageJson, dependencyName, dependencyKey, newVersion } = params
   const name = oldPackageJson.name
   const tmpFolder = join(
     tmpdir(),
@@ -65,6 +68,62 @@ export const getNewPackageFiles = async (
         recursive: true,
         force: true,
       })
+    }
+  }
+}
+
+export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
+  oldPackageJson: any
+  dependencyName: string
+  dependencyKey: string
+  newVersion: string
+  packageJsonPath: string
+  packageLockJsonPath: string
+}
+
+export const getNewPackageFiles = async (
+  options: GetNewPackageFilesOptions,
+): Promise<MigrationResult> => {
+  try {
+    const {
+      oldPackageJson,
+      dependencyName,
+      dependencyKey,
+      newVersion,
+      packageJsonPath,
+      packageLockJsonPath,
+    } = options
+
+    const result = await getNewPackageFilesCore(
+      oldPackageJson,
+      dependencyName,
+      dependencyKey,
+      newVersion,
+    )
+
+    const pullRequestTitle = `feature: update ${dependencyName} to version ${newVersion}`
+
+    return {
+      status: 'success',
+      changedFiles: [
+        {
+          path: packageJsonPath,
+          content: result.newPackageJsonString,
+        },
+        {
+          path: packageLockJsonPath,
+          content: result.newPackageLockJsonString,
+        },
+      ],
+      pullRequestTitle,
+    }
+  } catch (error) {
+    return {
+      status: 'error',
+      changedFiles: [],
+      pullRequestTitle: `feature: update dependencies`,
+      errorCode: 'GET_NEW_PACKAGE_FILES_FAILED',
+      errorMessage: error instanceof Error ? error.message : String(error),
     }
   }
 }

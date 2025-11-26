@@ -1,7 +1,7 @@
 import { test, expect } from '@jest/globals'
 import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 
-test('adds lerna exclusion to ncu command', () => {
+test('adds lerna exclusion to ncu command', async () => {
   const content = `#!/bin/bash
 
 function updateDependencies {
@@ -18,15 +18,23 @@ function updateDependencies {
 
 updateDependencies`
 
-  const result = computeEnsureLernaExcludedContent({ currentContent: content })
+  const result = await computeEnsureLernaExcludedContent({
+    repository: 'test/repo',
+    currentContent: content,
+  })
 
-  expect(result.hasChanges).toBe(true)
-  expect(result.newContent).toContain(
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(1)
+  expect(result.changedFiles[0].path).toBe('scripts/update-dependencies.sh')
+  expect(result.changedFiles[0].content).toContain(
     'OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`',
+  )
+  expect(result.pullRequestTitle).toBe(
+    'ci: ensure lerna is excluded from ncu commands',
   )
 })
 
-test('returns same content when lerna is already excluded', () => {
+test('returns same content when lerna is already excluded', async () => {
   const content = `#!/bin/bash
 
 function updateDependencies {
@@ -43,25 +51,31 @@ function updateDependencies {
 
 updateDependencies`
 
-  const result = computeEnsureLernaExcludedContent({ currentContent: content })
+  const result = await computeEnsureLernaExcludedContent({
+    repository: 'test/repo',
+    currentContent: content,
+  })
 
-  expect(result.hasChanges).toBe(false)
-  expect(result.newContent).toBe(content)
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })
 
-test('handles script without ncu command', () => {
+test('handles script without ncu command', async () => {
   const content = `#!/bin/bash
 
 echo "This script does not contain ncu command"
 echo "It just does some other stuff"`
 
-  const result = computeEnsureLernaExcludedContent({ currentContent: content })
+  const result = await computeEnsureLernaExcludedContent({
+    repository: 'test/repo',
+    currentContent: content,
+  })
 
-  expect(result.hasChanges).toBe(false)
-  expect(result.newContent).toBe(content)
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })
 
-test('handles ncu command with no exclusions', () => {
+test('handles ncu command with no exclusions', async () => {
   const content = `#!/bin/bash
 
 function updateDependencies {
@@ -78,13 +92,17 @@ function updateDependencies {
 
 updateDependencies`
 
-  const result = computeEnsureLernaExcludedContent({ currentContent: content })
+  const result = await computeEnsureLernaExcludedContent({
+    repository: 'test/repo',
+    currentContent: content,
+  })
 
-  expect(result.hasChanges).toBe(true)
-  expect(result.newContent).toContain('OUTPUT=`ncu -u -x lerna`')
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(1)
+  expect(result.changedFiles[0].content).toContain('OUTPUT=`ncu -u -x lerna`')
 })
 
-test('handles multiple ncu commands', () => {
+test('handles multiple ncu commands', async () => {
   const content = `#!/bin/bash
 
 function updateDependencies {
@@ -95,16 +113,27 @@ function updateDependencies {
 
 updateDependencies`
 
-  const result = computeEnsureLernaExcludedContent({ currentContent: content })
+  const result = await computeEnsureLernaExcludedContent({
+    repository: 'test/repo',
+    currentContent: content,
+  })
 
-  expect(result.hasChanges).toBe(true)
-  expect(result.newContent).toContain('OUTPUT=`ncu -u -x probot -x lerna`')
-  expect(result.newContent).toContain('OUTPUT=`ncu -u -x jest -x lerna`')
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(1)
+  expect(result.changedFiles[0].content).toContain(
+    'OUTPUT=`ncu -u -x probot -x lerna`',
+  )
+  expect(result.changedFiles[0].content).toContain(
+    'OUTPUT=`ncu -u -x jest -x lerna`',
+  )
 })
 
-test('handles empty content', () => {
-  const result = computeEnsureLernaExcludedContent({ currentContent: '' })
+test('handles empty content', async () => {
+  const result = await computeEnsureLernaExcludedContent({
+    repository: 'test/repo',
+    currentContent: '',
+  })
 
-  expect(result.hasChanges).toBe(false)
-  expect(result.newContent).toBe('')
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })
