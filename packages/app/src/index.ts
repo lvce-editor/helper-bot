@@ -1,18 +1,17 @@
-import './errorHandling.js'
+import { availableParallelism } from 'node:os'
 import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
-import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
-import { updateDependencies } from './updateDependencies.js'
-import { handleCheckRun } from './handleCheckRun.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
+import './errorHandling.js'
 import { captureException } from './errorHandling.js'
-import { availableParallelism } from 'node:os'
+import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
 import {
   getAvailableMigrations,
   MIGRATION_MAP,
 } from './migrations/getAvailableMigrations.js'
-import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
+import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
+import { updateDependencies } from './updateDependencies.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -96,17 +95,6 @@ export default (app: Probot, { getRouter }: any) => {
   console.log(`cpus: ${availableParallelism()}`)
   enableCustomRoutes(app, getRouter)
   app.on('release.released', handleReleaseReleased)
-  app.on('check_suite.completed', (context) => {
-    console.log('Check suite completed event received')
-    console.log('Event payload:', JSON.stringify(context.payload, null, 2))
-    console.log(`Received check suite: ${context.payload.repository.full_name}`)
-    const authorizedCommitter = process.env.AUTHORIZED_COMMITTER
-    console.log('Authorized committer:', authorizedCommitter)
-    if (!authorizedCommitter) {
-      console.log('No authorized committer set')
-      return
-    }
-    return handleCheckRun(context, authorizedCommitter)
-  })
+
   console.log('Event handlers registered')
 }
