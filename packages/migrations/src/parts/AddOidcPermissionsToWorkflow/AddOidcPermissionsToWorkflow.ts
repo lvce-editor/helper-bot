@@ -95,7 +95,9 @@ export const addOidcPermissionsToWorkflow = async (
       errorMessage:
         error instanceof Error
           ? error.message
-          : (typeof error === 'string' ? error : JSON.stringify(error)),
+          : typeof error === 'string'
+            ? error
+            : JSON.stringify(error),
     }
   }
 }

@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const computeEnsureLernaExcludedContentCore = (
-  currentContent: string,
+  currentContent: Readonly<string>,
 ): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
   const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g

@@ -3,8 +3,8 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 
 const computeNewGitpodDockerfileContentCore = (
-  currentContent: string,
-  newVersion: string,
+  currentContent: Readonly<string>,
+  newVersion: Readonly<string>,
 ): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v')
