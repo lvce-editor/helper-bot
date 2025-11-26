@@ -1,13 +1,13 @@
 import { join } from 'node:path'
-import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 
 const parseVersion = (content: string): number => {
   const trimmed = content.trim()
   if (trimmed.startsWith('v')) {
-    return parseInt(trimmed.slice(1))
+    return Number.parseInt(trimmed.slice(1))
   }
-  return parseInt(trimmed)
+  return Number.parseInt(trimmed)
 }
 
 const computeNewNvmrcContentCore = (
@@ -27,7 +27,7 @@ const computeNewNvmrcContentCore = (
       newContent: `${newVersion}\n`,
       shouldUpdate: true,
     }
-  } catch (error) {
+  } catch {
     // If parsing fails, assume we should update
     return {
       newContent: `${newVersion}\n`,

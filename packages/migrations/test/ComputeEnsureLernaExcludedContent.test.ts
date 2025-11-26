@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
-import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 
 test('adds lerna exclusion to ncu command', async () => {
   const content = `#!/bin/bash

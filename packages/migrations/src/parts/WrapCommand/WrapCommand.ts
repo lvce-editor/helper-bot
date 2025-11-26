@@ -1,12 +1,13 @@
+import { execa } from 'execa'
 import * as FsPromises from 'node:fs/promises'
-import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 
 export const wrapCommand = <T extends BaseMigrationOptions>(
   command: (options: T) => Promise<MigrationResult>,
 ) => {
   return async (
-    options: Omit<T, 'fs' | 'clonedRepoPath' | 'fetch'>,
+    options: Omit<T, 'fs' | 'clonedRepoPath' | 'fetch' | 'exec'>,
   ): Promise<MigrationResult> => {
     const clonedRepo = await cloneRepositoryTmp(
       options.repositoryOwner,
@@ -18,9 +19,11 @@ export const wrapCommand = <T extends BaseMigrationOptions>(
         fs: FsPromises,
         clonedRepoPath: clonedRepo.path,
         fetch: globalThis.fetch,
+        exec: execa,
       } as T)
     } finally {
       await clonedRepo[Symbol.asyncDispose]()
     }
   }
 }
+

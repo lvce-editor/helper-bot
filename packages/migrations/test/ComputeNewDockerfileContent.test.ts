@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
-import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 
 test('updates node version in Dockerfile', async () => {
   const content = `FROM node:18.0.0

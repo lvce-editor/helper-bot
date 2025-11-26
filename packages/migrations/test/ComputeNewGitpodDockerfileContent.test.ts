@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
-import { computeNewGitpodDockerfileContent } from '../src/parts/ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { computeNewGitpodDockerfileContent } from '../src/parts/ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 
 test('updates node version in gitpod dockerfile', async () => {
   const content = `FROM gitpod/workspace-full

@@ -1,4 +1,13 @@
+import type { ExecaReturnValue } from 'execa'
 import type * as FsPromises from 'node:fs/promises'
+
+export interface ExecFunction {
+  (
+    file: string,
+    args?: readonly string[],
+    options?: { cwd?: string },
+  ): Promise<ExecaReturnValue>
+}
 
 export interface BaseMigrationOptions {
   repositoryOwner: string
@@ -6,6 +15,7 @@ export interface BaseMigrationOptions {
   fs: typeof FsPromises
   clonedRepoPath: string
   fetch: typeof globalThis.fetch
+  exec: ExecFunction
   [key: string]: any
 }
 

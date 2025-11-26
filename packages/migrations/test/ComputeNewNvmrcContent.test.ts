@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
-import { computeNewNvmrcContent } from '../src/parts/ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { computeNewNvmrcContent } from '../src/parts/ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 
 test('computes new nvmrc content when version should be updated', async () => {
   const mockFetch = async () => {

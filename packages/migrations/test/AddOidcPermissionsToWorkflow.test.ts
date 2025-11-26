@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
-import { addOidcPermissionsToWorkflow } from '../src/parts/AddOidcPermissionsToWorkflow/AddOidcPermissionsToWorkflow.ts'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { addOidcPermissionsToWorkflow } from '../src/parts/AddOidcPermissionsToWorkflow/AddOidcPermissionsToWorkflow.ts'
 
 test('returns same content when permissions already exist', async () => {
   const content = `name: release

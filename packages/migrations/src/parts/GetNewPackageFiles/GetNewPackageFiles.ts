@@ -1,10 +1,10 @@
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { execa } from 'execa'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const getNewPackageFilesCore = async (
   fs: typeof import('node:fs/promises'),
+  exec: BaseMigrationOptions['exec'],
   oldPackageJson: any,
   dependencyName: string,
   dependencyKey: string,
@@ -13,7 +13,7 @@ const getNewPackageFilesCore = async (
   newPackageJsonString: string
   newPackageLockJsonString: string
 }> => {
-  const name = oldPackageJson.name
+  const {name} = oldPackageJson
   const tmpFolder = join(
     tmpdir(),
     `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
@@ -29,23 +29,10 @@ const getNewPackageFilesCore = async (
     const oldPackageJsonStringified =
       JSON.stringify(oldPackageJson, null, 2) + '\n'
     await fs.mkdir(tmpFolder, { recursive: true })
-    await fs.writeFile(
-      join(tmpFolder, 'package.json'),
-      oldPackageJsonStringified,
-    )
-    await execa(
-      `npm`,
-      [
-        'install',
-        '--ignore-scripts',
-        '--prefer-online',
-        '--cache',
-        tmpCacheFolder,
-      ],
-      {
-        cwd: tmpFolder,
-      },
-    )
+    await fs.writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
+    await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', tmpCacheFolder], {
+      cwd: tmpFolder,
+    })
     const newPackageLockJsonString = await fs.readFile(
       join(tmpFolder, 'package-lock.json'),
       'utf8',
@@ -103,6 +90,7 @@ export const getNewPackageFiles = async (
 
     const result = await getNewPackageFilesCore(
       options.fs,
+      options.exec,
       oldPackageJson,
       options.dependencyName,
       options.dependencyKey,

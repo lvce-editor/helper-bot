@@ -7,7 +7,7 @@ const removeNpmTokenFromWorkflowContent = (content: string): string => {
   const npmTokenPattern =
     /^\s*env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*$/gm
 
-  return content.replace(npmTokenPattern, '')
+  return content.replaceAll(npmTokenPattern, '')
 }
 
 export interface RemoveNpmTokenFromWorkflowOptions

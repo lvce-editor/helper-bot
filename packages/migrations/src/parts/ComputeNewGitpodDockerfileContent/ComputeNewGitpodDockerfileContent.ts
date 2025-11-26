@@ -1,6 +1,6 @@
 import { join } from 'node:path'
-import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 
 const computeNewGitpodDockerfileContentCore = (
   currentContent: string,

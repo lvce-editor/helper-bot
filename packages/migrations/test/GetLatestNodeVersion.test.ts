@@ -11,11 +11,11 @@ test('returns latest LTS version', async () => {
   const mockFetch = async () => {
     return {
       json: async () => mockVersions,
-    }
+    } as Response
   }
 
   const version = await getLatestNodeVersion(
-    mockFetch as typeof globalThis.fetch,
+    mockFetch as unknown as typeof globalThis.fetch,
   )
 
   expect(version).toBe('v20.0.0')
