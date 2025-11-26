@@ -1,6 +1,7 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
 import { updateBuiltinExtensions } from '../UpdateBuiltinExtensions/UpdateBuiltinExtensions.ts'
+import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -8,9 +9,6 @@ import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts
 export interface HandleReleaseReleasedOptions extends BaseMigrationOptions {
   tagName: string
   repositoryName: string
-  targetOwner?: string
-  targetRepo?: string
-  targetFilePath?: string
 }
 
 export const handleReleaseReleased = async (
@@ -33,26 +31,35 @@ export const handleReleaseReleased = async (
 
     allChangedFiles.push(...repositoryDependenciesResult.changedFiles)
 
-    // Handle updateBuiltinExtensions if target repo is provided and not renderer-process
-    if (
-      releasedRepo !== 'renderer-process' &&
-      options.targetOwner &&
-      options.targetRepo &&
-      options.targetFilePath &&
-      options.clonedRepoPath
-    ) {
-      const builtinExtensionsResult = await updateBuiltinExtensions({
-        ...options,
-        tagName: options.tagName,
-        releasedRepositoryName: releasedRepo,
-        targetFilePath: options.targetFilePath,
-      })
+    // Handle updateBuiltinExtensions if not renderer-process
+    if (releasedRepo !== 'renderer-process') {
+      const targetOwner = options.repositoryOwner
+      const targetRepo = 'lvce-editor'
+      const targetFilePath =
+        'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
 
-      if (builtinExtensionsResult.status === 'error') {
-        return builtinExtensionsResult
+      // Clone the target repo for builtin extensions update
+      const clonedTargetRepo = await cloneRepositoryTmp(targetOwner, targetRepo)
+
+      try {
+        const builtinExtensionsResult = await updateBuiltinExtensions({
+          ...options,
+          repositoryOwner: targetOwner,
+          repositoryName: targetRepo,
+          tagName: options.tagName,
+          releasedRepositoryName: releasedRepo,
+          targetFilePath,
+          clonedRepoPath: clonedTargetRepo.path,
+        })
+
+        if (builtinExtensionsResult.status === 'error') {
+          return builtinExtensionsResult
+        }
+
+        allChangedFiles.push(...builtinExtensionsResult.changedFiles)
+      } finally {
+        await clonedTargetRepo[Symbol.asyncDispose]()
       }
-
-      allChangedFiles.push(...builtinExtensionsResult.changedFiles)
     }
 
     return createMigrationResult({

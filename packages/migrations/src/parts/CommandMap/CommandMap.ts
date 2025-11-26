@@ -17,22 +17,22 @@ import { wrapCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
   getNewPackageFiles: wrapCommand(getNewPackageFiles),
-  addOidcPermissionsToWorkflow: wrapCommand(addOidcPermissionsToWorkflow),
+  'migrations/add-oidc-permissions': wrapCommand(addOidcPermissionsToWorkflow),
   computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
   computeNewDockerfileContent: wrapCommand(computeNewDockerfileContent),
   computeNewGitpodDockerfileContent: wrapCommand(
     computeNewGitpodDockerfileContent,
   ),
-  computeEnsureLernaExcludedContent: wrapCommand(
+  'migrations/ensure-lerna-excluded': wrapCommand(
     computeEnsureLernaExcludedContent,
   ),
-  removeNpmTokenFromWorkflow: wrapCommand(removeNpmTokenFromWorkflow),
-  updateNodeVersion: wrapCommand(updateNodeVersion),
-  updateDependencies: wrapCommand(updateDependencies),
-  addGitattributes: wrapCommand(addGitattributes),
-  updateGithubActions: wrapCommand(updateGithubActions),
+  'migrations/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
+  'migrations/update-node-version': wrapCommand(updateNodeVersion),
+  'migrations/update-dependencies': wrapCommand(updateDependencies),
+  'migrations/add-gitattributes': wrapCommand(addGitattributes),
+  'migrations/update-github-actions': wrapCommand(updateGithubActions),
   updateRepositoryDependencies: wrapCommand(updateRepositoryDependencies),
   updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),
-  handleReleaseReleased: wrapCommand(handleReleaseReleased),
+  'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
   listCommands: wrapCommand(listCommands),
 }

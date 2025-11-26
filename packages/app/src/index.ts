@@ -3,10 +3,7 @@ import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
 import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
-import {
-  getAvailableMigrations,
-  MIGRATION_MAP,
-} from './migrations/getAvailableMigrations.js'
+import { getAvailableMigrations } from './migrations/getAvailableMigrations.js'
 import { applyMigrationResult } from './migrations/applyMigrationResult.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { updateDependencies } from './updateDependencies.js'
