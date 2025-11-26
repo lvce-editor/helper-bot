@@ -3,28 +3,22 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { ExecFunction } from '../src/parts/Types/Types.ts'
+import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
+import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
 import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 
-const mockExec: ExecFunction = async () => {
-  return { stdout: '', stderr: '', exitCode: 0 }
-}
+const mockExec = createMockExec()
+const mockFetch = createMockFetch([
+  { version: 'v20.0.0', lts: 'Iron' },
+  { version: 'v19.0.0', lts: false },
+  { version: 'v18.0.0', lts: 'Hydrogen' },
+])
 
 test('updates node version in Dockerfile', async () => {
   const content = `FROM node:18.0.0
 WORKDIR /app
 COPY . .
 RUN npm install`
-
-  const mockFetch = async () => {
-    return {
-      json: async () => [
-        { version: 'v20.0.0', lts: 'Iron' },
-        { version: 'v19.0.0', lts: false },
-        { version: 'v18.0.0', lts: 'Hydrogen' },
-      ],
-    } as Response
-  }
 
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
@@ -57,16 +51,6 @@ test('returns same content when no node version found', async () => {
 WORKDIR /app
 COPY . .`
 
-  const mockFetch = async () => {
-    return {
-      json: async () => [
-        { version: 'v20.0.0', lts: 'Iron' },
-        { version: 'v19.0.0', lts: false },
-        { version: 'v18.0.0', lts: 'Hydrogen' },
-      ],
-    } as Response
-  }
-
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
     await FsPromises.writeFile(join(tempDir, 'Dockerfile'), content)
@@ -88,16 +72,6 @@ COPY . .`
 })
 
 test('handles missing Dockerfile', async () => {
-  const mockFetch = async () => {
-    return {
-      json: async () => [
-        { version: 'v20.0.0', lts: 'Iron' },
-        { version: 'v19.0.0', lts: false },
-        { version: 'v18.0.0', lts: 'Hydrogen' },
-      ],
-    } as Response
-  }
-
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
     const result = await computeNewDockerfileContent({

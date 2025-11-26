@@ -3,12 +3,10 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { ExecFunction } from '../src/parts/Types/Types.ts'
+import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { removeNpmTokenFromWorkflow } from '../src/parts/RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
 
-const mockExec: ExecFunction = async () => {
-  return { stdout: '', stderr: '', exitCode: 0 }
-}
+const mockExec = createMockExec()
 
 test('removes NODE_AUTH_TOKEN from workflow', async () => {
   const content = `name: release

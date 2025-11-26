@@ -3,7 +3,7 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { ExecFunction } from '../src/parts/Types/Types.ts'
+import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { getNewPackageFiles } from '../src/parts/GetNewPackageFiles/GetNewPackageFiles.ts'
 
 test('generates new package files with updated dependency', async () => {

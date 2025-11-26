@@ -3,12 +3,10 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { ExecFunction } from '../src/parts/Types/Types.ts'
+import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 
-const mockExec: ExecFunction = async () => {
-  return { stdout: '', stderr: '', exitCode: 0 }
-}
+const mockExec = createMockExec()
 
 test('adds lerna exclusion to ncu command', async () => {
   const content = `#!/bin/bash

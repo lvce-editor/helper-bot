@@ -42,16 +42,6 @@ test('computes new nvmrc content when version should be updated', async () => {
 })
 
 test('returns same content when existing version is newer', async () => {
-  const mockFetch = async () => {
-    return {
-      json: async () => [
-        { version: 'v20.0.0', lts: 'Iron' },
-        { version: 'v19.0.0', lts: false },
-        { version: 'v18.0.0', lts: 'Hydrogen' },
-      ],
-    } as Response
-  }
-
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
     await FsPromises.writeFile(join(tempDir, '.nvmrc'), 'v22.0.0')
@@ -76,16 +66,6 @@ test('returns same content when existing version is newer', async () => {
 })
 
 test('handles missing .nvmrc file', async () => {
-  const mockFetch = async () => {
-    return {
-      json: async () => [
-        { version: 'v20.0.0', lts: 'Iron' },
-        { version: 'v19.0.0', lts: false },
-        { version: 'v18.0.0', lts: 'Hydrogen' },
-      ],
-    } as Response
-  }
-
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
     const result = await computeNewNvmrcContent({

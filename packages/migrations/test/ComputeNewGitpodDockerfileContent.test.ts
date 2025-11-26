@@ -3,28 +3,22 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { ExecFunction } from '../src/parts/Types/Types.ts'
+import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
+import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
 import { computeNewGitpodDockerfileContent } from '../src/parts/ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 
-const mockExec: ExecFunction = async () => {
-  return { stdout: '', stderr: '', exitCode: 0 }
-}
+const mockExec = createMockExec()
+const mockFetch = createMockFetch([
+  { version: 'v20.0.0', lts: 'Iron' },
+  { version: 'v19.0.0', lts: false },
+  { version: 'v18.0.0', lts: 'Hydrogen' },
+])
 
 test('updates node version in gitpod dockerfile', async () => {
   const content = `FROM gitpod/workspace-full
 RUN nvm install 18.0.0 \\
  && nvm use 18.0.0 \\
  && nvm alias default 18.0.0`
-
-  const mockFetch = async () => {
-    return {
-      json: async () => [
-        { version: 'v20.0.0', lts: 'Iron' },
-        { version: 'v19.0.0', lts: false },
-        { version: 'v18.0.0', lts: 'Hydrogen' },
-      ],
-    } as Response
-  }
 
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
@@ -55,16 +49,6 @@ RUN nvm install 18.0.0 \\
 })
 
 test('handles missing .gitpod.Dockerfile', async () => {
-  const mockFetch = async () => {
-    return {
-      json: async () => [
-        { version: 'v20.0.0', lts: 'Iron' },
-        { version: 'v19.0.0', lts: false },
-        { version: 'v18.0.0', lts: 'Hydrogen' },
-      ],
-    } as Response
-  }
-
   const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
   try {
     const result = await computeNewGitpodDockerfileContent({
