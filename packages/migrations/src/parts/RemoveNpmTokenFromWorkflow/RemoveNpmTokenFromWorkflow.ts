@@ -1,6 +1,7 @@
 import { join } from 'node:path'
-import { stringifyError } from '../StringifyError/StringifyError.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const removeNpmTokenFromWorkflowContent = (
   content: Readonly<string>,
@@ -65,7 +66,7 @@ export const removeNpmTokenFromWorkflow = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
-      errorCode: 'REMOVE_NPM_TOKEN_FAILED',
+      errorCode: ERROR_CODES.REMOVE_NPM_TOKEN_FAILED,
       errorMessage: stringifyError(error),
     }
   }

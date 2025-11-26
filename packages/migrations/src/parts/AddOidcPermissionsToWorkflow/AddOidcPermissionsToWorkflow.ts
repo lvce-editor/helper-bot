@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const addOidcPermissionsToWorkflowContent = (
@@ -92,7 +93,7 @@ export const addOidcPermissionsToWorkflow = async (
       changedFiles: [],
       pullRequestTitle:
         'feature: update permissions for open id connect publishing',
-      errorCode: 'ADD_OIDC_PERMISSIONS_FAILED',
+      errorCode: ERROR_CODES.ADD_OIDC_PERMISSIONS_FAILED,
       errorMessage: stringifyError(error),
     }
   }

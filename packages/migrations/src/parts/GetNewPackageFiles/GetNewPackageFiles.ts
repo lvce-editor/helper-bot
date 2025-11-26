@@ -1,8 +1,9 @@
 import type * as FsPromises from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { stringifyError } from '../StringifyError/StringifyError.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const getNewPackageFilesCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -133,7 +134,7 @@ export const getNewPackageFiles = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `feature: update dependencies`,
-      errorCode: 'GET_NEW_PACKAGE_FILES_FAILED',
+      errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
       errorMessage: stringifyError(error),
     }
   }
