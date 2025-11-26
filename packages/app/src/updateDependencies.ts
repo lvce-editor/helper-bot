@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from 'probot'
 import { createPullRequest } from './createPullRequest.js'
-import { captureException } from './errorHandling.js'
+import { captureException } from '../migrations/src/index.js'
 
 const shortCommitMessageRepos = [
   'renderer-process',

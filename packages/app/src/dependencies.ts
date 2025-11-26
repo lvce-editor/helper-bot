@@ -10,7 +10,7 @@ import { Context, Probot } from 'probot'
 import { commitAndPush } from './commitAndPush.js'
 import { createQueue } from './createQueue.js'
 import { updateNodeVersion } from './updateNodeVersion.js'
-import { captureException } from './errorHandling.js'
+import { captureException } from '../migrations/src/index.js'
 import { ensureLernaExcluded } from './ensureLernaExcluded.js'
 
 const TEMP_CLONE_PREFIX = 'update-dependencies-'

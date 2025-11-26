@@ -1,8 +1,7 @@
 import { availableParallelism } from 'node:os'
 import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
-import './errorHandling.js'
-import { captureException } from './errorHandling.js'
+import { captureException } from '../migrations/src/index.js'
 import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
 import { createMigrationsRpc } from './migrations/createMigrationsRpc.js'
 import {

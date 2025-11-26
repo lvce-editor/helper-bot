@@ -1,4 +1,4 @@
-import { captureException } from '../errorHandling.js'
+import { captureException } from '../../../migrations/src/index.js'
 import dependenciesConfig from '../dependencies.json' with { type: 'json' }
 import type { Migration, MigrationParams, MigrationResult } from './types.js'
 import { applyMigrationResult } from './applyMigrationResult.js'
