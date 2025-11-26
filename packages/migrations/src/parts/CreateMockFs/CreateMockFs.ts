@@ -46,15 +46,15 @@ class MockFs {
     const pathStr = typeof path === 'string' ? path : path.toString()
     delete this.files[pathStr]
     // Also remove all files that start with this path
-    Object.keys(this.files).forEach((key) => {
+    for (const key of Object.keys(this.files)) {
       if (key.startsWith(pathStr)) {
         delete this.files[key]
       }
-    })
+    }
   }
 
   async mkdtemp(prefix: string): Promise<string> {
-    const tempPath = `${prefix}${Math.random().toString(36).substring(7)}`
+    const tempPath = `${prefix}${Math.random().toString(36).slice(7)}`
     this.files[tempPath] = '[DIRECTORY]'
     return tempPath
   }

@@ -20,7 +20,7 @@ export const wrapCommand = <T extends BaseMigrationOptions>(
         clonedRepoPath: clonedRepo.path,
         fetch: globalThis.fetch,
         exec: execa,
-      } as T)
+      } as unknown as T)
     } finally {
       await clonedRepo[Symbol.asyncDispose]()
     }
