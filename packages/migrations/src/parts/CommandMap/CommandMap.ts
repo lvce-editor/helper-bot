@@ -4,6 +4,7 @@ import { computeNewNvmrcContent } from '../ComputeNewNvmrcContent/ComputeNewNvmr
 import { computeNewDockerfileContent } from '../ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 import { computeNewGitpodDockerfileContent } from '../ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 import { computeEnsureLernaExcludedContent } from '../ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
+import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
 
 export const commandMap = {
   getNewPackageFiles,
@@ -12,4 +13,5 @@ export const commandMap = {
   computeNewDockerfileContent,
   computeNewGitpodDockerfileContent,
   computeEnsureLernaExcludedContent,
+  removeNpmTokenFromWorkflow,
 }
