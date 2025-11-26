@@ -1,8 +1,10 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const computeEnsureLernaExcludedContentCore = (
-  currentContent: string,
+  currentContent: Readonly<string>,
 ): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
   const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g
@@ -51,11 +53,10 @@ const computeEnsureLernaExcludedContentCore = (
   }
 }
 
-export interface ComputeEnsureLernaExcludedContentOptions
-  extends BaseMigrationOptions {}
+export type ComputeEnsureLernaExcludedContentOptions = BaseMigrationOptions
 
 export const computeEnsureLernaExcludedContent = async (
-  options: ComputeEnsureLernaExcludedContentOptions,
+  options: Readonly<ComputeEnsureLernaExcludedContentOptions>,
 ): Promise<MigrationResult> => {
   try {
     const scriptPath = join(
@@ -103,8 +104,8 @@ export const computeEnsureLernaExcludedContent = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
-      errorCode: 'COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorCode: ERROR_CODES.COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED,
+      errorMessage: stringifyError(error),
     }
   }
 }

@@ -1,19 +1,22 @@
+import type * as FsPromises from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { execa } from 'execa'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const getNewPackageFilesCore = async (
-  fs: typeof import('node:fs/promises'),
+  fs: Readonly<typeof FsPromises>,
+  exec: BaseMigrationOptions['exec'],
   oldPackageJson: any,
-  dependencyName: string,
-  dependencyKey: string,
-  newVersion: string,
+  dependencyName: Readonly<string>,
+  dependencyKey: Readonly<string>,
+  newVersion: Readonly<string>,
 ): Promise<{
   newPackageJsonString: string
   newPackageLockJsonString: string
 }> => {
-  const name = oldPackageJson.name
+  const { name } = oldPackageJson
   const tmpFolder = join(
     tmpdir(),
     `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
@@ -33,8 +36,8 @@ const getNewPackageFilesCore = async (
       join(tmpFolder, 'package.json'),
       oldPackageJsonStringified,
     )
-    await execa(
-      `npm`,
+    await exec(
+      'npm',
       [
         'install',
         '--ignore-scripts',
@@ -55,7 +58,7 @@ const getNewPackageFilesCore = async (
       newPackageLockJsonString,
     }
   } catch (error) {
-    throw new Error(`Failed to update dependencies: ${error}`)
+    throw new Error(`Failed to update dependencies: ${stringifyError(error)}`)
   } finally {
     for (const folder of toRemove) {
       await fs.rm(folder, {
@@ -75,7 +78,7 @@ export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
 }
 
 export const getNewPackageFiles = async (
-  options: GetNewPackageFilesOptions,
+  options: Readonly<GetNewPackageFilesOptions>,
 ): Promise<MigrationResult> => {
   try {
     const packageJsonPath = join(
@@ -103,6 +106,7 @@ export const getNewPackageFiles = async (
 
     const result = await getNewPackageFilesCore(
       options.fs,
+      options.exec,
       oldPackageJson,
       options.dependencyName,
       options.dependencyKey,
@@ -130,8 +134,8 @@ export const getNewPackageFiles = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `feature: update dependencies`,
-      errorCode: 'GET_NEW_PACKAGE_FILES_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
+      errorMessage: stringifyError(error),
     }
   }
 }

@@ -52,7 +52,10 @@ const getNewPackageFiles = async (
   dependencyName: string,
   dependencyKey: string,
   newVersion: string,
-): Promise<{ newPackageJsonString: string; newPackageLockJsonString: string }> => {
+): Promise<{
+  newPackageJsonString: string
+  newPackageLockJsonString: string
+}> => {
   const name = oldPackageJson.name
   const tmpFolder = join(
     tmpdir(),
@@ -320,7 +323,8 @@ export const updateDependenciesMigration: Migration = {
       return {
         success: failed.length === 0,
         message: `Updated ${successful.length} dependencies, ${failed.length} failed`,
-        error: failed.length > 0 ? failed.map((r) => r.error).join('; ') : undefined,
+        error:
+          failed.length > 0 ? failed.map((r) => r.error).join('; ') : undefined,
       }
     } catch (error) {
       return {

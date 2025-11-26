@@ -1,7 +1,7 @@
+import { execa } from 'execa'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { execa } from 'execa'
 
 export interface CloneRepositoryTmpResult {
   path: string
@@ -22,7 +22,7 @@ export const cloneRepositoryTmp = async (
 
   return {
     path: tempDir,
-    async [Symbol.asyncDispose]() {
+    async [Symbol.asyncDispose](): Promise<void> {
       await rm(tempDir, { recursive: true, force: true })
     },
   }

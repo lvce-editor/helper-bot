@@ -16,7 +16,8 @@ const enableAutoSquash = async (octokit: any, pullRequestData: any) => {
 const removeNpmTokenFromWorkflow = (content: string): string => {
   // Pattern to match the env section with NODE_AUTH_TOKEN
   // This matches the exact pattern: env: followed by NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-  const npmTokenPattern = /^\s*env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*$/gm
+  const npmTokenPattern =
+    /^\s*env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*$/gm
 
   const updatedContent = content.replace(npmTokenPattern, '')
 
@@ -25,7 +26,8 @@ const removeNpmTokenFromWorkflow = (content: string): string => {
 
 export const removeNpmTokenMigration: Migration = {
   name: 'removeNpmToken',
-  description: 'Remove NODE_AUTH_TOKEN from release.yml workflow files since npm now supports OpenID Connect publishing',
+  description:
+    'Remove NODE_AUTH_TOKEN from release.yml workflow files since npm now supports OpenID Connect publishing',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params

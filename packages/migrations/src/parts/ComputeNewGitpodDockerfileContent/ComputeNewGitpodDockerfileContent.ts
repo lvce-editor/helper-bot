@@ -1,10 +1,12 @@
 import { join } from 'node:path'
-import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const computeNewGitpodDockerfileContentCore = (
-  currentContent: string,
-  newVersion: string,
+  currentContent: Readonly<string>,
+  newVersion: Readonly<string>,
 ): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v')
@@ -16,11 +18,10 @@ const computeNewGitpodDockerfileContentCore = (
   )
 }
 
-export interface ComputeNewGitpodDockerfileContentOptions
-  extends BaseMigrationOptions {}
+export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
 
 export const computeNewGitpodDockerfileContent = async (
-  options: ComputeNewGitpodDockerfileContentOptions,
+  options: Readonly<ComputeNewGitpodDockerfileContentOptions>,
 ): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
@@ -67,8 +68,8 @@ export const computeNewGitpodDockerfileContent = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
-      errorCode: 'COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorCode: ERROR_CODES.COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED,
+      errorMessage: stringifyError(error),
     }
   }
 }

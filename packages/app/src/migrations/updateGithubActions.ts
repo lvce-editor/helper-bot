@@ -42,7 +42,10 @@ export const updateGithubActionsMigration: Migration = {
       }
     } catch (error) {
       // Check if it's a 404 error (no workflows found)
-      if (error instanceof Error && (error.message.includes('404') || error.message.includes('Not found'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('404') || error.message.includes('Not found'))
+      ) {
         return {
           success: true,
           message: 'No workflows found',

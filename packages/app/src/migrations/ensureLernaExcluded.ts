@@ -3,7 +3,9 @@ import { join } from 'node:path'
 import { createPullRequest } from '../createPullRequest.js'
 import type { Migration, MigrationParams, MigrationResult } from './types.js'
 
-const ensureLernaExcludedInFile = async (scriptPath: string): Promise<boolean> => {
+const ensureLernaExcludedInFile = async (
+  scriptPath: string,
+): Promise<boolean> => {
   try {
     const scriptContent = await readFile(scriptPath, 'utf8')
 
@@ -62,7 +64,8 @@ const ensureLernaExcludedInFile = async (scriptPath: string): Promise<boolean> =
 
 export const ensureLernaExcludedMigration: Migration = {
   name: 'ensureLernaExcluded',
-  description: 'Ensure lerna is excluded from ncu commands in update-dependencies.sh',
+  description:
+    'Ensure lerna is excluded from ncu commands in update-dependencies.sh',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params
@@ -77,7 +80,11 @@ export const ensureLernaExcludedMigration: Migration = {
 
       try {
         // Clone the repository
-        await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
+        await execa('git', [
+          'clone',
+          `https://github.com/${owner}/${repo}.git`,
+          tempDir,
+        ])
 
         // Check for update-dependencies.sh script
         const scriptPath = join(tempDir, 'scripts', 'update-dependencies.sh')
@@ -97,7 +104,8 @@ export const ensureLernaExcludedMigration: Migration = {
         if (!hasChanges) {
           return {
             success: true,
-            message: 'Lerna is already excluded in update-dependencies.sh script',
+            message:
+              'Lerna is already excluded in update-dependencies.sh script',
           }
         }
 
@@ -117,7 +125,11 @@ export const ensureLernaExcludedMigration: Migration = {
         const newBranch = `ensure-lerna-excluded-${Date.now()}`
         await execa('git', ['checkout', '-b', newBranch], { cwd: tempDir })
         await execa('git', ['add', '.'], { cwd: tempDir })
-        await execa('git', ['commit', '-m', 'ci: ensure lerna is excluded from ncu commands'], { cwd: tempDir })
+        await execa(
+          'git',
+          ['commit', '-m', 'ci: ensure lerna is excluded from ncu commands'],
+          { cwd: tempDir },
+        )
         await execa('git', ['push', 'origin', newBranch], { cwd: tempDir })
 
         // Create pull request

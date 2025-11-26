@@ -17,7 +17,9 @@ jest.unstable_mockModule('node:fs/promises', () => mockFs)
 jest.unstable_mockModule('execa', () => ({ execa: mockExeca }))
 jest.unstable_mockModule('node:os', () => mockOs)
 
-const { removeGitpodSectionMigration } = await import('../src/migrations/removeGitpodSection.js')
+const { removeGitpodSectionMigration } = await import(
+  '../src/migrations/removeGitpodSection.js'
+)
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -86,7 +88,10 @@ Here's how to use the project.`
       },
       pulls: {
         create: jest.fn().mockResolvedValue({
-          data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
+          data: {
+            number: 123,
+            html_url: 'https://github.com/owner/repo/pull/123',
+          },
         }),
       },
     },
@@ -231,7 +236,10 @@ Here's how to use it.`
       },
       pulls: {
         create: jest.fn().mockResolvedValue({
-          data: { number: 123, html_url: 'https://github.com/owner/repo/pull/123' },
+          data: {
+            number: 123,
+            html_url: 'https://github.com/owner/repo/pull/123',
+          },
         }),
       },
     },

@@ -1,18 +1,20 @@
 import { join } from 'node:path'
-import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const parseVersion = (content: string): number => {
   const trimmed = content.trim()
   if (trimmed.startsWith('v')) {
-    return parseInt(trimmed.slice(1))
+    return Number.parseInt(trimmed.slice(1))
   }
-  return parseInt(trimmed)
+  return Number.parseInt(trimmed)
 }
 
 const computeNewNvmrcContentCore = (
-  currentContent: string,
-  newVersion: string,
+  currentContent: Readonly<string>,
+  newVersion: Readonly<string>,
 ): { newContent: string; shouldUpdate: boolean } => {
   try {
     const existingVersionNumber = parseVersion(currentContent)
@@ -27,7 +29,7 @@ const computeNewNvmrcContentCore = (
       newContent: `${newVersion}\n`,
       shouldUpdate: true,
     }
-  } catch (error) {
+  } catch {
     // If parsing fails, assume we should update
     return {
       newContent: `${newVersion}\n`,
@@ -36,10 +38,10 @@ const computeNewNvmrcContentCore = (
   }
 }
 
-export interface ComputeNewNvmrcContentOptions extends BaseMigrationOptions {}
+export type ComputeNewNvmrcContentOptions = BaseMigrationOptions
 
 export const computeNewNvmrcContent = async (
-  options: ComputeNewNvmrcContentOptions,
+  options: Readonly<ComputeNewNvmrcContentOptions>,
 ): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
@@ -89,8 +91,8 @@ export const computeNewNvmrcContent = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
-      errorCode: 'COMPUTE_NVMRC_CONTENT_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
+      errorMessage: stringifyError(error),
     }
   }
 }

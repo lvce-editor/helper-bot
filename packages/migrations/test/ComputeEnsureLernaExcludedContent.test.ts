@@ -1,9 +1,10 @@
 import { test, expect } from '@jest/globals'
-import * as FsPromises from 'node:fs/promises'
-import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
+import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
+import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
+
+const mockExec = createMockExec()
 
 test('adds lerna exclusion to ncu command', async () => {
   const content = `#!/bin/bash
@@ -22,34 +23,31 @@ function updateDependencies {
 
 updateDependencies`
 
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    await FsPromises.mkdir(join(tempDir, 'scripts'), { recursive: true })
-    await FsPromises.writeFile(
-      join(tempDir, 'scripts/update-dependencies.sh'),
-      content,
-    )
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs({
+    files: {
+      [join(clonedRepoPath, 'scripts/update-dependencies.sh')]: content,
+    },
+  })
 
-    const result = await computeEnsureLernaExcludedContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: globalThis.fetch,
-    })
+  const result = await computeEnsureLernaExcludedContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
+  })
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toHaveLength(1)
-    expect(result.changedFiles[0].path).toBe('scripts/update-dependencies.sh')
-    expect(result.changedFiles[0].content).toContain(
-      'OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`',
-    )
-    expect(result.pullRequestTitle).toBe(
-      'ci: ensure lerna is excluded from ncu commands',
-    )
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(1)
+  expect(result.changedFiles[0].path).toBe('scripts/update-dependencies.sh')
+  expect(result.changedFiles[0].content).toContain(
+    'OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`',
+  )
+  expect(result.pullRequestTitle).toBe(
+    'ci: ensure lerna is excluded from ncu commands',
+  )
 })
 
 test('returns same content when lerna is already excluded', async () => {
@@ -69,43 +67,39 @@ function updateDependencies {
 
 updateDependencies`
 
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    await FsPromises.mkdir(join(tempDir, 'scripts'), { recursive: true })
-    await FsPromises.writeFile(
-      join(tempDir, 'scripts/update-dependencies.sh'),
-      content,
-    )
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs({
+    files: {
+      [join(clonedRepoPath, 'scripts/update-dependencies.sh')]: content,
+    },
+  })
 
-    const result = await computeEnsureLernaExcludedContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: globalThis.fetch,
-    })
+  const result = await computeEnsureLernaExcludedContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
+  })
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toEqual([])
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })
 
 test('handles missing update-dependencies.sh script', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    const result = await computeEnsureLernaExcludedContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: globalThis.fetch,
-    })
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs()
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toEqual([])
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  const result = await computeEnsureLernaExcludedContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })
