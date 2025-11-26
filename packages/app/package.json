@@ -14,8 +14,6 @@
   "dependencies": {
     "@lvce-editor/rpc": "^4.20.0",
     "@lvce-editor/verror": "^1.7.0",
-    "@sentry/node": "^10.27.0",
-    "execa": "^9.6.0",
     "probot": "^13.4.5"
   },
   "jest": {
