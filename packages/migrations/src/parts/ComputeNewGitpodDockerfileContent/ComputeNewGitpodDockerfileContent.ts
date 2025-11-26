@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
@@ -67,7 +68,7 @@ export const computeNewGitpodDockerfileContent = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
-      errorCode: 'COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED',
+      errorCode: ERROR_CODES.COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED,
       errorMessage: stringifyError(error),
     }
   }

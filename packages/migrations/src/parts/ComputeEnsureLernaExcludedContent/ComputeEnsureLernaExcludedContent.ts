@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const computeEnsureLernaExcludedContentCore = (
@@ -103,7 +104,7 @@ export const computeEnsureLernaExcludedContent = async (
       status: 'error',
       changedFiles: [],
       pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
-      errorCode: 'COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED',
+      errorCode: ERROR_CODES.COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED,
       errorMessage: stringifyError(error),
     }
   }
