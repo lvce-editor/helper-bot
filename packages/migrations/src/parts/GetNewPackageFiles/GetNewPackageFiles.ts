@@ -1,14 +1,16 @@
+import type * as FsPromises from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const getNewPackageFilesCore = async (
-  fs: typeof import('node:fs/promises'),
+  fs: Readonly<typeof FsPromises>,
   exec: BaseMigrationOptions['exec'],
   oldPackageJson: any,
-  dependencyName: string,
-  dependencyKey: string,
-  newVersion: string,
+  dependencyName: Readonly<string>,
+  dependencyKey: Readonly<string>,
+  newVersion: Readonly<string>,
 ): Promise<{
   newPackageJsonString: string
   newPackageLockJsonString: string
@@ -55,7 +57,7 @@ const getNewPackageFilesCore = async (
       newPackageLockJsonString,
     }
   } catch (error) {
-    throw new Error(`Failed to update dependencies: ${error}`)
+    throw new Error(`Failed to update dependencies: ${stringifyError(error)}`)
   } finally {
     for (const folder of toRemove) {
       await fs.rm(folder, {
@@ -132,12 +134,7 @@ export const getNewPackageFiles = async (
       changedFiles: [],
       pullRequestTitle: `feature: update dependencies`,
       errorCode: 'GET_NEW_PACKAGE_FILES_FAILED',
-      errorMessage:
-        error instanceof Error
-          ? error.message
-          : (typeof error === 'string'
-            ? error
-            : JSON.stringify(error)),
+      errorMessage: stringifyError(error),
     }
   }
 }

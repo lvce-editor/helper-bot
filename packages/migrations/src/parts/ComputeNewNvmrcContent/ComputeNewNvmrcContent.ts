@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const parseVersion = (content: string): number => {
   const trimmed = content.trim()
@@ -90,12 +91,7 @@ export const computeNewNvmrcContent = async (
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
       errorCode: 'COMPUTE_NVMRC_CONTENT_FAILED',
-      errorMessage:
-        error instanceof Error
-          ? error.message
-          : (typeof error === 'string'
-            ? error
-            : JSON.stringify(error)),
+      errorMessage: stringifyError(error),
     }
   }
 }
