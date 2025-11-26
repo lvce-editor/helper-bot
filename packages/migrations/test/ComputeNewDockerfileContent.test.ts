@@ -3,7 +3,12 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { ExecFunction } from '../src/parts/Types/Types.ts'
 import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
+
+const mockExec: ExecFunction = async () => {
+  return { stdout: '', stderr: '', exitCode: 0 }
+}
 
 test('updates node version in Dockerfile', async () => {
   const content = `FROM node:18.0.0
@@ -31,7 +36,7 @@ RUN npm install`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -72,7 +77,7 @@ COPY . .`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -101,7 +106,7 @@ test('handles missing Dockerfile', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')

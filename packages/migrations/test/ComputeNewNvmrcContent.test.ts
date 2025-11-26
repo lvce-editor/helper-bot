@@ -3,7 +3,12 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { ExecFunction } from '../src/parts/Types/Types.ts'
 import { computeNewNvmrcContent } from '../src/parts/ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
+
+const mockExec: ExecFunction = async () => {
+  return { stdout: '', stderr: '', exitCode: 0 }
+}
 
 test('computes new nvmrc content when version should be updated', async () => {
   const mockFetch = async () => {
@@ -26,7 +31,7 @@ test('computes new nvmrc content when version should be updated', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -62,7 +67,7 @@ test('returns same content when existing version is newer', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -94,7 +99,7 @@ test('handles missing .nvmrc file', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')

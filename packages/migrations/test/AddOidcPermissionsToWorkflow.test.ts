@@ -3,7 +3,12 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { ExecFunction } from '../src/parts/Types/Types.ts'
 import { addOidcPermissionsToWorkflow } from '../src/parts/AddOidcPermissionsToWorkflow/AddOidcPermissionsToWorkflow.ts'
+
+const mockExec: ExecFunction = async () => {
+  return { stdout: '', stderr: '', exitCode: 0 }
+}
 
 test('returns same content when permissions already exist', async () => {
   const content = `name: release
@@ -37,7 +42,7 @@ jobs:
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -78,7 +83,7 @@ jobs:
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -111,7 +116,7 @@ test('handles missing release.yml file', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')

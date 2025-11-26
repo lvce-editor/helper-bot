@@ -3,7 +3,12 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { ExecFunction } from '../src/parts/Types/Types.ts'
 import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
+
+const mockExec: ExecFunction = async () => {
+  return { stdout: '', stderr: '', exitCode: 0 }
+}
 
 test('adds lerna exclusion to ncu command', async () => {
   const content = `#!/bin/bash
@@ -36,7 +41,7 @@ updateDependencies`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -84,7 +89,7 @@ updateDependencies`
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -103,7 +108,7 @@ test('handles missing update-dependencies.sh script', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')

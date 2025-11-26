@@ -3,7 +3,12 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { ExecFunction } from '../src/parts/Types/Types.ts'
 import { computeNewGitpodDockerfileContent } from '../src/parts/ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
+
+const mockExec: ExecFunction = async () => {
+  return { stdout: '', stderr: '', exitCode: 0 }
+}
 
 test('updates node version in gitpod dockerfile', async () => {
   const content = `FROM gitpod/workspace-full
@@ -31,7 +36,7 @@ RUN nvm install 18.0.0 \\
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -68,7 +73,7 @@ test('handles missing .gitpod.Dockerfile', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')

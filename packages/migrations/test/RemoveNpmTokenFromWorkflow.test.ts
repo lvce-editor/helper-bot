@@ -3,7 +3,12 @@ import * as FsPromises from 'node:fs/promises'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { ExecFunction } from '../src/parts/Types/Types.ts'
 import { removeNpmTokenFromWorkflow } from '../src/parts/RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+
+const mockExec: ExecFunction = async () => {
+  return { stdout: '', stderr: '', exitCode: 0 }
+}
 
 test('removes NODE_AUTH_TOKEN from workflow', async () => {
   const content = `name: release
@@ -44,7 +49,7 @@ jobs:
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -91,7 +96,7 @@ jobs:
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')
@@ -113,7 +118,7 @@ test('handles missing release.yml file', async () => {
       fs: FsPromises,
       clonedRepoPath: tempDir,
       fetch: globalThis.fetch,
-      exec: execa,
+      exec: mockExec,
     })
 
     expect(result.status).toBe('success')

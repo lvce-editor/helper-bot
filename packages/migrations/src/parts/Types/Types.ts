@@ -1,4 +1,3 @@
-import type { ExecaReturnValue } from 'execa'
 import type * as FsPromises from 'node:fs/promises'
 
 export interface ExecFunction {
@@ -6,7 +5,7 @@ export interface ExecFunction {
     file: string,
     args?: readonly string[],
     options?: { cwd?: string },
-  ): Promise<ExecaReturnValue>
+  ): Promise<{ stdout: string; stderr: string; exitCode: number }>
 }
 
 export interface BaseMigrationOptions {
