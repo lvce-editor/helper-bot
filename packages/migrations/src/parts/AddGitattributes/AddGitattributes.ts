@@ -25,7 +25,11 @@ export const addGitattributes = async (
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // File doesn't exist, create it
-        await options.fs.writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
+        await options.fs.writeFile(
+          gitattributesPath,
+          GITATTRIBUTES_CONTENT,
+          'utf8',
+        )
         return createMigrationResult({
           status: 'success',
           changedFiles: [

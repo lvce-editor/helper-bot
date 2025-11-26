@@ -1,7 +1,6 @@
 import { availableParallelism } from 'node:os'
 import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
-import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import './errorHandling.js'
 import { captureException } from './errorHandling.js'
 import { createGenericMigrationHandler } from './migrations/createGenericMigrationHandler.js'
@@ -11,16 +10,37 @@ import {
   MIGRATION_MAP,
 } from './migrations/getAvailableMigrations.js'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
+import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { updateDependencies } from './updateDependencies.js'
 
 const dependencies = dependenciesConfig.dependencies
 
 const updateRepositoryDependencies = async (context: Context<'release'>) => {
+  const { payload } = context
+  const tagName = payload.release.tag_name
+  const owner = payload.repository.owner.login
+  const repositoryName = payload.repository.name
+
+  const migrationsRpc = await createMigrationsRpc()
+
+  try {
+    await migrationsRpc.invoke('updateRepositoryDependencies', {
+      repositoryOwner: owner,
+      repositoryName,
+      tagName,
+    })
+  } catch (error) {
+    captureException(error as Error)
+  }
+
+  // Call updateDependencies for each matching dependency
   for (const dependency of dependencies) {
-    try {
-      await updateDependencies(context, dependency)
-    } catch (error) {
-      captureException(error as Error)
+    if (dependency.fromRepo === repositoryName) {
+      try {
+        await updateDependencies(context, dependency)
+      } catch (error) {
+        captureException(error as Error)
+      }
     }
   }
 }
