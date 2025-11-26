@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const addOidcPermissionsToWorkflowContent = (
   content: Readonly<string>,
@@ -54,12 +55,12 @@ export const addOidcPermissionsToWorkflow = async (
       originalContent = await options.fs.readFile(workflowPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
+        return createMigrationResult({
           status: 'success',
           changedFiles: [],
           pullRequestTitle:
             'feature: update permissions for open id connect publishing',
-        }
+        })
       }
       throw error
     }
@@ -70,14 +71,14 @@ export const addOidcPermissionsToWorkflow = async (
       'feature: update permissions for open id connect publishing'
 
     if (!hasChanges) {
-      return {
+      return createMigrationResult({
         status: 'success',
         changedFiles: [],
         pullRequestTitle,
-      }
+      })
     }
 
-    return {
+    return createMigrationResult({
       status: 'success',
       changedFiles: [
         {
@@ -86,15 +87,15 @@ export const addOidcPermissionsToWorkflow = async (
         },
       ],
       pullRequestTitle,
-    }
+    })
   } catch (error) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle:
         'feature: update permissions for open id connect publishing',
       errorCode: ERROR_CODES.ADD_OIDC_PERMISSIONS_FAILED,
       errorMessage: stringifyError(error),
-    }
+    })
   }
 }

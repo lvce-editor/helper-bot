@@ -6,6 +6,11 @@ import {
   updateGithubActionsMigration,
 } from '../src/migrations/index.js'
 
+const createMockMigrationsRpc = (result: any) => ({
+  invoke: jest.fn().mockResolvedValue(result),
+  dispose: jest.fn().mockResolvedValue(undefined),
+})
+
 // Mock execa to prevent actual git operations
 jest.unstable_mockModule('execa', () => ({
   execa: jest.fn().mockImplementation((command: any, args: any) => {
@@ -62,14 +67,21 @@ test('updateNodeVersionMigration should return success when no changes needed', 
     },
   }
 
+  const migrationsRpc = createMockMigrationsRpc({
+    status: 'success',
+    changedFiles: [],
+    pullRequestTitle: 'ci: update Node.js to version v24.0.0',
+  })
+
   const result = await updateNodeVersionMigration.run({
     octokit: mockOctokit as any,
     owner: 'test-owner',
     repo: 'test-repo',
+    migrationsRpc,
   })
 
   expect(result.success).toBe(true)
-  expect(result.message).toContain('No changes needed')
+  expect(result.message).toContain('Node version is already up to date')
 })
 
 test('updateDependenciesMigration should return success when no dependencies found', async () => {
@@ -102,14 +114,23 @@ test('ensureLernaExcludedMigration should return success when no script found', 
     },
   }
 
+  const migrationsRpc = createMockMigrationsRpc({
+    status: 'success',
+    changedFiles: [],
+    pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+  })
+
   const result = await ensureLernaExcludedMigration.run({
     octokit: mockOctokit as any,
     owner: 'test-owner',
     repo: 'test-repo',
+    migrationsRpc,
   })
 
   expect(result.success).toBe(true)
-  expect(result.message).toContain('No update-dependencies.sh script found')
+  expect(result.message).toContain(
+    'Lerna is already excluded in update-dependencies.sh script',
+  )
 })
 
 test('updateGithubActionsMigration should return success when no workflows found', async () => {

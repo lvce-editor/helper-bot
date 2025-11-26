@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const getNewPackageFilesCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -95,11 +96,11 @@ export const getNewPackageFiles = async (
       oldPackageJson = JSON.parse(packageJsonContent)
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
+        return createMigrationResult({
           status: 'success',
           changedFiles: [],
           pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
-        }
+        })
       }
       throw error
     }
@@ -115,7 +116,7 @@ export const getNewPackageFiles = async (
 
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
-    return {
+    return createMigrationResult({
       status: 'success',
       changedFiles: [
         {
@@ -128,14 +129,14 @@ export const getNewPackageFiles = async (
         },
       ],
       pullRequestTitle,
-    }
+    })
   } catch (error) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `feature: update dependencies`,
       errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
       errorMessage: stringifyError(error),
-    }
+    })
   }
 }

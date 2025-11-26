@@ -3,6 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const computeNewDockerfileContentCore = (
   currentContent: Readonly<string>,
@@ -32,11 +33,11 @@ export const computeNewDockerfileContent = async (
       currentContent = await options.fs.readFile(dockerfilePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
+        return createMigrationResult({
           status: 'success',
           changedFiles: [],
           pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
-        }
+        })
       }
       throw error
     }
@@ -48,7 +49,7 @@ export const computeNewDockerfileContent = async (
     const hasChanges = currentContent !== newContent
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
-    return {
+    return createMigrationResult({
       status: 'success',
       changedFiles: hasChanges
         ? [
@@ -59,14 +60,14 @@ export const computeNewDockerfileContent = async (
           ]
         : [],
       pullRequestTitle,
-    }
+    })
   } catch (error) {
-    return {
+    return createMigrationResult({
       status: 'error',
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
       errorCode: ERROR_CODES.COMPUTE_DOCKERFILE_CONTENT_FAILED,
       errorMessage: stringifyError(error),
-    }
+    })
   }
 }
