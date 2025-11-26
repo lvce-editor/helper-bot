@@ -1,9 +1,7 @@
 import { test, expect } from '@jest/globals'
-import * as FsPromises from 'node:fs/promises'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
+import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { addOidcPermissionsToWorkflow } from '../src/parts/AddOidcPermissionsToWorkflow/AddOidcPermissionsToWorkflow.ts'
 
 const mockExec = createMockExec()
@@ -24,33 +22,27 @@ jobs:
     name: create-release
     runs-on: ubuntu-24.04`
 
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    await FsPromises.mkdir(join(tempDir, '.github/workflows'), {
-      recursive: true,
-    })
-    await FsPromises.writeFile(
-      join(tempDir, '.github/workflows/release.yml'),
-      content,
-    )
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs({
+    files: {
+      [join(clonedRepoPath, '.github/workflows/release.yml')]: content,
+    },
+  })
 
-    const result = await addOidcPermissionsToWorkflow({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: globalThis.fetch,
-      exec: mockExec,
-    })
+  const result = await addOidcPermissionsToWorkflow({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
+  })
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toEqual([])
-    expect(result.pullRequestTitle).toBe(
-      'feature: update permissions for open id connect publishing',
-    )
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
+  expect(result.pullRequestTitle).toBe(
+    'feature: update permissions for open id connect publishing',
+  )
 })
 
 test('adds permissions before jobs section', async () => {
@@ -65,61 +57,53 @@ jobs:
     name: create-release
     runs-on: ubuntu-24.04`
 
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    await FsPromises.mkdir(join(tempDir, '.github/workflows'), {
-      recursive: true,
-    })
-    await FsPromises.writeFile(
-      join(tempDir, '.github/workflows/release.yml'),
-      content,
-    )
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs({
+    files: {
+      [join(clonedRepoPath, '.github/workflows/release.yml')]: content,
+    },
+  })
 
-    const result = await addOidcPermissionsToWorkflow({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: globalThis.fetch,
-      exec: mockExec,
-    })
+  const result = await addOidcPermissionsToWorkflow({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
+  })
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toHaveLength(1)
-    expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
-    expect(result.changedFiles[0].content).toContain('permissions:')
-    expect(result.changedFiles[0].content).toContain(
-      'id-token: write # Required for OIDC',
-    )
-    expect(result.changedFiles[0].content).toContain('contents: write')
-    expect(result.changedFiles[0].content).toContain('jobs:')
-    const jobsIndex = result.changedFiles[0].content.indexOf('jobs:')
-    const permissionsIndex =
-      result.changedFiles[0].content.indexOf('permissions:')
-    expect(permissionsIndex).toBeLessThan(jobsIndex)
-    expect(result.pullRequestTitle).toBe(
-      'feature: update permissions for open id connect publishing',
-    )
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(1)
+  expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
+  expect(result.changedFiles[0].content).toContain('permissions:')
+  expect(result.changedFiles[0].content).toContain(
+    'id-token: write # Required for OIDC',
+  )
+  expect(result.changedFiles[0].content).toContain('contents: write')
+  expect(result.changedFiles[0].content).toContain('jobs:')
+  const jobsIndex = result.changedFiles[0].content.indexOf('jobs:')
+  const permissionsIndex =
+    result.changedFiles[0].content.indexOf('permissions:')
+  expect(permissionsIndex).toBeLessThan(jobsIndex)
+  expect(result.pullRequestTitle).toBe(
+    'feature: update permissions for open id connect publishing',
+  )
 })
 
 test('handles missing release.yml file', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    const result = await addOidcPermissionsToWorkflow({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: globalThis.fetch,
-      exec: mockExec,
-    })
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs()
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toEqual([])
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  const result = await addOidcPermissionsToWorkflow({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })

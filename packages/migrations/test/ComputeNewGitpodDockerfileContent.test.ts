@@ -1,10 +1,8 @@
 import { test, expect } from '@jest/globals'
-import * as FsPromises from 'node:fs/promises'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
+import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { computeNewGitpodDockerfileContent } from '../src/parts/ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 
 const mockExec = createMockExec()
@@ -20,49 +18,45 @@ RUN nvm install 18.0.0 \\
  && nvm use 18.0.0 \\
  && nvm alias default 18.0.0`
 
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    await FsPromises.writeFile(join(tempDir, '.gitpod.Dockerfile'), content)
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs({
+    files: {
+      [join(clonedRepoPath, '.gitpod.Dockerfile')]: content,
+    },
+  })
 
-    const result = await computeNewGitpodDockerfileContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: mockExec,
-    })
+  const result = await computeNewGitpodDockerfileContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    exec: mockExec,
+  })
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toHaveLength(1)
-    expect(result.changedFiles[0].path).toBe('.gitpod.Dockerfile')
-    expect(result.changedFiles[0].content).toContain('nvm install 20.0.0')
-    expect(result.changedFiles[0].content).toContain('nvm use 20.0.0')
-    expect(result.changedFiles[0].content).toContain('nvm alias default 20.0.0')
-    expect(result.changedFiles[0].content).not.toContain('18.0.0')
-    expect(result.pullRequestTitle).toBe(
-      'ci: update Node.js to version v20.0.0',
-    )
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toHaveLength(1)
+  expect(result.changedFiles[0].path).toBe('.gitpod.Dockerfile')
+  expect(result.changedFiles[0].content).toContain('nvm install 20.0.0')
+  expect(result.changedFiles[0].content).toContain('nvm use 20.0.0')
+  expect(result.changedFiles[0].content).toContain('nvm alias default 20.0.0')
+  expect(result.changedFiles[0].content).not.toContain('18.0.0')
+  expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
 })
 
 test('handles missing .gitpod.Dockerfile', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'test-'))
-  try {
-    const result = await computeNewGitpodDockerfileContent({
-      repositoryOwner: 'test',
-      repositoryName: 'repo',
-      fs: FsPromises,
-      clonedRepoPath: tempDir,
-      fetch: mockFetch as unknown as typeof globalThis.fetch,
-      exec: mockExec,
-    })
+  const clonedRepoPath = '/test/repo'
+  const mockFs = createMockFs()
 
-    expect(result.status).toBe('success')
-    expect(result.changedFiles).toEqual([])
-  } finally {
-    await rm(tempDir, { recursive: true, force: true })
-  }
+  const result = await computeNewGitpodDockerfileContent({
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    exec: mockExec,
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual([])
 })
