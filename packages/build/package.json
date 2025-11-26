@@ -1,0 +1,13 @@
+{
+  "name": "build",
+  "version": "0.0.0-dev",
+  "main": "index.js",
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.14.1"
+  }
+}
