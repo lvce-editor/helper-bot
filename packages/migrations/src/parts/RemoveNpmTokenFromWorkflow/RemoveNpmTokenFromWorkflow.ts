@@ -68,9 +68,9 @@ export const removeNpmTokenFromWorkflow = async (
       errorMessage:
         error instanceof Error
           ? error.message
-          : typeof error === 'string'
+          : (typeof error === 'string'
             ? error
-            : JSON.stringify(error),
+            : JSON.stringify(error)),
     }
   }
 }
