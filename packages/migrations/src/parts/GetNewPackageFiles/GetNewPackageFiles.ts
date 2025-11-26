@@ -75,7 +75,7 @@ export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
 }
 
 export const getNewPackageFiles = async (
-  options: GetNewPackageFilesOptions,
+  options: Readonly<GetNewPackageFilesOptions>,
 ): Promise<MigrationResult> => {
   try {
     const packageJsonPath = join(
@@ -132,7 +132,12 @@ export const getNewPackageFiles = async (
       changedFiles: [],
       pullRequestTitle: `feature: update dependencies`,
       errorCode: 'GET_NEW_PACKAGE_FILES_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : JSON.stringify(error),
     }
   }
 }

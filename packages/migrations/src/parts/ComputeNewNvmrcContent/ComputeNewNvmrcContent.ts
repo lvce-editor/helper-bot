@@ -11,8 +11,8 @@ const parseVersion = (content: string): number => {
 }
 
 const computeNewNvmrcContentCore = (
-  currentContent: string,
-  newVersion: string,
+  currentContent: Readonly<string>,
+  newVersion: Readonly<string>,
 ): { newContent: string; shouldUpdate: boolean } => {
   try {
     const existingVersionNumber = parseVersion(currentContent)
@@ -36,10 +36,10 @@ const computeNewNvmrcContentCore = (
   }
 }
 
-export interface ComputeNewNvmrcContentOptions extends BaseMigrationOptions {}
+export type ComputeNewNvmrcContentOptions = BaseMigrationOptions
 
 export const computeNewNvmrcContent = async (
-  options: ComputeNewNvmrcContentOptions,
+  options: Readonly<ComputeNewNvmrcContentOptions>,
 ): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
@@ -90,7 +90,10 @@ export const computeNewNvmrcContent = async (
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
       errorCode: 'COMPUTE_NVMRC_CONTENT_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : (typeof error === 'string' ? error : JSON.stringify(error)),
     }
   }
 }

@@ -1,7 +1,9 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
-const removeNpmTokenFromWorkflowContent = (content: string): string => {
+const removeNpmTokenFromWorkflowContent = (
+  content: Readonly<string>,
+): string => {
   // Pattern to match the env section with NODE_AUTH_TOKEN
   // This matches the exact pattern: env: followed by NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
   const npmTokenPattern =
@@ -10,11 +12,10 @@ const removeNpmTokenFromWorkflowContent = (content: string): string => {
   return content.replaceAll(npmTokenPattern, '')
 }
 
-export interface RemoveNpmTokenFromWorkflowOptions
-  extends BaseMigrationOptions {}
+export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
 
 export const removeNpmTokenFromWorkflow = async (
-  options: RemoveNpmTokenFromWorkflowOptions,
+  options: Readonly<RemoveNpmTokenFromWorkflowOptions>,
 ): Promise<MigrationResult> => {
   try {
     const workflowPath = join(
@@ -64,7 +65,12 @@ export const removeNpmTokenFromWorkflow = async (
       changedFiles: [],
       pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
       errorCode: 'REMOVE_NPM_TOKEN_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : JSON.stringify(error),
     }
   }
 }

@@ -1,7 +1,9 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
-const addOidcPermissionsToWorkflowContent = (content: string): string => {
+const addOidcPermissionsToWorkflowContent = (
+  content: Readonly<string>,
+): string => {
   // Check if permissions section already exists
   if (content.includes('permissions:')) {
     return content
@@ -34,11 +36,10 @@ const addOidcPermissionsToWorkflowContent = (content: string): string => {
   return newLines.join('\n')
 }
 
-export interface AddOidcPermissionsToWorkflowOptions
-  extends BaseMigrationOptions {}
+export type AddOidcPermissionsToWorkflowOptions = BaseMigrationOptions
 
 export const addOidcPermissionsToWorkflow = async (
-  options: AddOidcPermissionsToWorkflowOptions,
+  options: Readonly<AddOidcPermissionsToWorkflowOptions>,
 ): Promise<MigrationResult> => {
   try {
     const workflowPath = join(
@@ -91,7 +92,10 @@ export const addOidcPermissionsToWorkflow = async (
       pullRequestTitle:
         'feature: update permissions for open id connect publishing',
       errorCode: 'ADD_OIDC_PERMISSIONS_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : (typeof error === 'string' ? error : JSON.stringify(error)),
     }
   }
 }

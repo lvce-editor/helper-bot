@@ -16,11 +16,10 @@ const computeNewGitpodDockerfileContentCore = (
   )
 }
 
-export interface ComputeNewGitpodDockerfileContentOptions
-  extends BaseMigrationOptions {}
+export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
 
 export const computeNewGitpodDockerfileContent = async (
-  options: ComputeNewGitpodDockerfileContentOptions,
+  options: Readonly<ComputeNewGitpodDockerfileContentOptions>,
 ): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
@@ -68,7 +67,12 @@ export const computeNewGitpodDockerfileContent = async (
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
       errorCode: 'COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : JSON.stringify(error),
     }
   }
 }

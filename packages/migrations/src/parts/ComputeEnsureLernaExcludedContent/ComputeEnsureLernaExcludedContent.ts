@@ -51,11 +51,10 @@ const computeEnsureLernaExcludedContentCore = (
   }
 }
 
-export interface ComputeEnsureLernaExcludedContentOptions
-  extends BaseMigrationOptions {}
+export type ComputeEnsureLernaExcludedContentOptions = BaseMigrationOptions
 
 export const computeEnsureLernaExcludedContent = async (
-  options: ComputeEnsureLernaExcludedContentOptions,
+  options: Readonly<ComputeEnsureLernaExcludedContentOptions>,
 ): Promise<MigrationResult> => {
   try {
     const scriptPath = join(
@@ -104,7 +103,12 @@ export const computeEnsureLernaExcludedContent = async (
       changedFiles: [],
       pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
       errorCode: 'COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : JSON.stringify(error),
     }
   }
 }

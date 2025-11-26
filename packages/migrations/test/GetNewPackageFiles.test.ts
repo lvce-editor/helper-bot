@@ -36,7 +36,13 @@ test('generates new package files with updated dependency', async () => {
     },
   })
 
-  const mockExecFn = jest.fn(async (file, args, options) => {
+  const mockExecFn = jest.fn<
+    (
+      file: string,
+      args?: readonly string[],
+      options?: { cwd?: string },
+    ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
+  >(async (file, args, options) => {
     if (file === 'npm' && args?.[0] === 'install') {
       // Write a mock package-lock.json after npm install
       const cwd = options?.cwd

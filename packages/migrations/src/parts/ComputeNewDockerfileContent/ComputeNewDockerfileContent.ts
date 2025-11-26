@@ -3,8 +3,8 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 
 const computeNewDockerfileContentCore = (
-  currentContent: string,
-  newVersion: string,
+  currentContent: Readonly<string>,
+  newVersion: Readonly<string>,
 ): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v')
@@ -16,11 +16,10 @@ const computeNewDockerfileContentCore = (
   )
 }
 
-export interface ComputeNewDockerfileContentOptions
-  extends BaseMigrationOptions {}
+export type ComputeNewDockerfileContentOptions = BaseMigrationOptions
 
 export const computeNewDockerfileContent = async (
-  options: ComputeNewDockerfileContentOptions,
+  options: Readonly<ComputeNewDockerfileContentOptions>,
 ): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
@@ -65,7 +64,10 @@ export const computeNewDockerfileContent = async (
       changedFiles: [],
       pullRequestTitle: `ci: update Node.js version`,
       errorCode: 'COMPUTE_DOCKERFILE_CONTENT_FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : (typeof error === 'string' ? error : JSON.stringify(error)),
     }
   }
 }
