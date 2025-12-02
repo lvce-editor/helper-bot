@@ -21,7 +21,7 @@
     "@lvce-editor/eslint-config": "^2.26.0",
     "eslint": "^9.39.1",
     "lerna": "^8.2.4",
-    "prettier": "^3.7.1",
+    "prettier": "^3.7.3",
     "typescript": "^5.9.3"
   }
 }
