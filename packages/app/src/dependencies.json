@@ -201,6 +201,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "status-bar-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "constants",
       "toRepo": "rpc-registry",
       "toFolder": "packages/rpc-registry"
