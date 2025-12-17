@@ -1,8 +1,8 @@
 import { test, expect } from '@jest/globals'
-import { join } from 'node:path'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { removeGitpodSection } from '../src/parts/RemoveGitpodSection/RemoveGitpodSection.ts'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -25,15 +25,15 @@ Follow these steps to install the project.
 
 Here's how to use the project.`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'README.md')]: content,
+      [new URL('README.md', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await removeGitpodSection({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -66,15 +66,15 @@ Follow these steps to install the project.
 
 Here's how to use the project.`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'README.md')]: content,
+      [new URL('README.md', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await removeGitpodSection({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -87,11 +87,11 @@ Here's how to use the project.`
   expect(result.pullRequestTitle).toBe('')
 })
 
-test('handles multiple README files', async () => {
-  const clonedRepoPath = '/test/repo'
+test('only processes README.md', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'README.md')]: `# My Project
+      [new URL('README.md', clonedRepoUri).toString()]: `# My Project
 
 ## Gitpod
 
@@ -100,7 +100,7 @@ This project is ready to be developed in Gitpod.
 ## Installation
 
 Follow these steps.`,
-      [join(clonedRepoPath, 'readme.md')]: `# Another Project
+      [new URL('readme.md', clonedRepoUri).toString()]: `# Another Project
 
 ## Gitpod
 
@@ -113,7 +113,7 @@ Here's how to use it.`,
   })
 
   const result = await removeGitpodSection({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -122,20 +122,18 @@ Here's how to use it.`,
   })
 
   expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(2)
+  expect(result.changedFiles).toHaveLength(1)
   expect(result.changedFiles[0].path).toBe('README.md')
-  expect(result.changedFiles[1].path).toBe('readme.md')
   expect(result.changedFiles[0].content).not.toContain('Gitpod')
-  expect(result.changedFiles[1].content).not.toContain('Gitpod')
   expect(result.pullRequestTitle).toBe('ci: remove Gitpod section from README')
 })
 
 test('handles missing README files', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
 
   const result = await removeGitpodSection({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,

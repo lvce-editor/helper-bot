@@ -5,7 +5,7 @@ export interface ExecFunction {
 }
 
 export interface BaseMigrationOptions {
-  readonly clonedRepoPath: string
+  readonly clonedRepoUri: string
   readonly exec: ExecFunction
   readonly fetch: typeof globalThis.fetch
   readonly fs: typeof FsPromises

@@ -1,5 +1,5 @@
 import { test, expect, jest } from '@jest/globals'
-import { join } from 'node:path'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { getNewPackageFiles } from '../src/parts/GetNewPackageFiles/GetNewPackageFiles.ts'
@@ -28,10 +28,10 @@ test('generates new package files with updated dependency', async () => {
     2,
   )
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'package.json')]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -42,7 +42,7 @@ test('generates new package files with updated dependency', async () => {
       // Write a mock package-lock.json after npm install
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(join(cwd, 'package-lock.json'), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -51,7 +51,7 @@ test('generates new package files with updated dependency', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await getNewPackageFiles({
-    clonedRepoPath,
+    clonedRepoUri,
     dependencyKey: 'dependencies',
     dependencyName: 'shared',
     exec: mockExec,
@@ -85,7 +85,7 @@ test('generates new package files with updated dependency', async () => {
 })
 
 test('handles missing package.json', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExecFn = jest.fn(async () => {
     throw new Error('Should not be called')
@@ -93,7 +93,7 @@ test('handles missing package.json', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await getNewPackageFiles({
-    clonedRepoPath,
+    clonedRepoUri,
     dependencyKey: 'dependencies',
     dependencyName: 'test-dependency',
     exec: mockExec,

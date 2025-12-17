@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -16,7 +15,7 @@ export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
 export const computeNewGitpodDockerfileContent = async (options: Readonly<ComputeNewGitpodDockerfileContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const gitpodDockerfilePath = join(options.clonedRepoPath, '.gitpod.Dockerfile')
+    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).toString()
 
     let currentContent: string
     try {

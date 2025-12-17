@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { join } from 'node:path'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
@@ -18,15 +18,15 @@ WORKDIR /app
 COPY . .
 RUN npm install`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'Dockerfile')]: content,
+      [new URL('Dockerfile', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await computeNewDockerfileContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,
@@ -49,15 +49,15 @@ test('returns same content when no node version found', async () => {
 WORKDIR /app
 COPY . .`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'Dockerfile')]: content,
+      [new URL('Dockerfile', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await computeNewDockerfileContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,
@@ -70,11 +70,11 @@ COPY . .`
 })
 
 test('handles missing Dockerfile', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
 
   const result = await computeNewDockerfileContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,

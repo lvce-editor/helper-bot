@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -41,7 +40,7 @@ export type ComputeNewNvmrcContentOptions = BaseMigrationOptions
 export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const nvmrcPath = join(options.clonedRepoPath, '.nvmrc')
+    const nvmrcPath = new URL('.nvmrc', options.clonedRepoUri).toString()
 
     let currentContent: string
     try {

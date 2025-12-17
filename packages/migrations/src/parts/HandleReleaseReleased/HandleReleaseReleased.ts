@@ -5,6 +5,7 @@ import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { updateBuiltinExtensions } from '../UpdateBuiltinExtensions/UpdateBuiltinExtensions.ts'
 import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
+import { pathToUri } from '../UriUtils/UriUtils.ts'
 
 export interface HandleReleaseReleasedOptions extends BaseMigrationOptions {
   repositoryName: string
@@ -41,7 +42,7 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
       try {
         const builtinExtensionsResult = await updateBuiltinExtensions({
           ...options,
-          clonedRepoPath: clonedTargetRepo.path,
+          clonedRepoUri: pathToUri(clonedTargetRepo.path),
           releasedRepositoryName: releasedRepo,
           repositoryName: targetRepo,
           repositoryOwner: targetOwner,

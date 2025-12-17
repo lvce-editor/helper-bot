@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { join } from 'node:path'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { removeNpmTokenFromWorkflow } from '../src/parts/RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
@@ -29,15 +29,15 @@ jobs:
       - name: Publish to npm
         run: npm publish`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, '.github/workflows/release.yml')]: content,
+      [new URL('.github/workflows/release.yml', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await removeNpmTokenFromWorkflow({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -68,15 +68,15 @@ jobs:
     name: create-release
     runs-on: ubuntu-24.04`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, '.github/workflows/release.yml')]: content,
+      [new URL('.github/workflows/release.yml', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await removeNpmTokenFromWorkflow({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -90,11 +90,11 @@ jobs:
 })
 
 test('handles missing release.yml file', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
 
   const result = await removeNpmTokenFromWorkflow({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,

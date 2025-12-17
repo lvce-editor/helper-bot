@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -16,7 +15,7 @@ export type ComputeNewDockerfileContentOptions = BaseMigrationOptions
 export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDockerfileContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const dockerfilePath = join(options.clonedRepoPath, 'Dockerfile')
+    const dockerfilePath = new URL('Dockerfile', options.clonedRepoUri).toString()
 
     let currentContent: string
     try {
