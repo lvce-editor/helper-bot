@@ -24,9 +24,9 @@ test('creates package.json when it does not exist', async () => {
     changedFiles: [
       {
         content: `{
+  "description": "",
   "name": "my-repo",
-  "version": "1.0.0",
-  "description": ""
+  "version": "1.0.0"
 }
 `,
         path: 'package.json',

@@ -15,6 +15,7 @@ import { modernDirname } from '../ModernDirname/ModernDirname.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
 import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+import { runLintInCi } from '../RunLintInCi/RunLintInCi.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
@@ -39,6 +40,7 @@ export const commandMap = {
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
   '/migrations2/remove-gitpod-yml': wrapCommand(removeGitpodyml),
   '/migrations2/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
+  '/migrations2/run-lint-in-ci': wrapCommand(runLintInCi),
   '/migrations2/update-dependencies': wrapCommand(updateDependencies),
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
   '/migrations2/update-node-version': wrapCommand(updateNodeVersion),
