@@ -8,23 +8,40 @@ export type RemoveGitpodymlOptions = BaseMigrationOptions
 export const removeGitpodyml = async (options: Readonly<RemoveGitpodymlOptions>): Promise<MigrationResult> => {
   try {
     const gitpodYmlPath = new URL('.gitpod.yml', options.clonedRepoUri).toString()
+    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).toString()
 
-    const fileExists = await options.fs.exists(gitpodYmlPath)
-    if (!fileExists) {
+    const ymlExists = await options.fs.exists(gitpodYmlPath)
+    const dockerfileExists = await options.fs.exists(gitpodDockerfilePath)
+
+    if (!ymlExists && !dockerfileExists) {
       return emptyMigrationResult
     }
 
-    const pullRequestTitle = 'ci: remove .gitpod.yml'
+    const changedFiles = []
+    if (ymlExists) {
+      changedFiles.push({
+        content: '',
+        path: '.gitpod.yml',
+        type: 'deleted' as const,
+      })
+    }
+    if (dockerfileExists) {
+      changedFiles.push({
+        content: '',
+        path: '.gitpod.Dockerfile',
+        type: 'deleted' as const,
+      })
+    }
+
+    const pullRequestTitle = ymlExists && dockerfileExists
+      ? 'ci: remove .gitpod.yml and .gitpod.Dockerfile'
+      : (ymlExists
+        ? 'ci: remove .gitpod.yml'
+        : 'ci: remove .gitpod.Dockerfile')
 
     return {
       branchName: 'feature/remove-gitpod-yml',
-      changedFiles: [
-        {
-          content: '',
-          path: '.gitpod.yml',
-          type: 'deleted',
-        },
-      ],
+      changedFiles,
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
