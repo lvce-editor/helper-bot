@@ -21,7 +21,7 @@ export const addEslintConfig = async (options: Readonly<AddEslintConfigOptions>)
       return emptyMigrationResult
     }
 
-    const pullRequestTitle = 'chore: add eslint.config.js'
+    const pullRequestTitle = 'feature: add eslint.config.js'
 
     return {
       branchName: 'feature/add-eslint-config',

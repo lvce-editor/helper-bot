@@ -30,8 +30,8 @@ export default [...config.default, ...actions.default]
         path: 'eslint.config.js',
       },
     ],
-    commitMessage: 'chore: add eslint.config.js',
-    pullRequestTitle: 'chore: add eslint.config.js',
+    commitMessage: 'feature: add eslint.config.js',
+    pullRequestTitle: 'feature: add eslint.config.js',
     status: 'success',
     statusCode: 200,
   })
