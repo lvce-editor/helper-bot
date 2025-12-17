@@ -6,6 +6,7 @@ import * as MigrationsWorker from '../migrationsWorker.ts'
 export interface ChangedFile {
   readonly content: string
   readonly path: string
+  readonly type?: 'created' | 'updated' | 'deleted'
 }
 
 export interface MigrationResult {
@@ -188,19 +189,35 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
             }
           }
 
-          // Encode content to base64
-          const encodedContent = Buffer.from(changedFile.content).toString('base64')
+          // Handle deleted files
+          if (changedFile.type === 'deleted') {
+            if (!fileSha) {
+              // File doesn't exist, nothing to delete
+              continue
+            }
+            await octokit.rest.repos.deleteFile({
+              owner,
+              repo,
+              path: changedFile.path,
+              message: commitMessage,
+              sha: fileSha,
+              branch: branchName,
+            })
+          } else {
+            // Encode content to base64
+            const encodedContent = Buffer.from(changedFile.content).toString('base64')
 
-          // Update or create the file
-          await octokit.repos.createOrUpdateFileContents({
-            owner,
-            repo,
-            path: changedFile.path,
-            message: commitMessage,
-            content: encodedContent,
-            branch: branchName,
-            ...(fileSha ? { sha: fileSha } : {}),
-          })
+            // Update or create the file
+            await octokit.repos.createOrUpdateFileContents({
+              owner,
+              repo,
+              path: changedFile.path,
+              message: commitMessage,
+              content: encodedContent,
+              branch: branchName,
+              ...(fileSha ? { sha: fileSha } : {}),
+            })
+          }
         }
 
         // Create pull request
