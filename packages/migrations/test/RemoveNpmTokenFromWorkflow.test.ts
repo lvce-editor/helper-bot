@@ -84,7 +84,7 @@ jobs:
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe('ci: remove NODE_AUTH_TOKEN from release workflow')
+  expect(result.pullRequestTitle).toBe('')
 })
 
 test('handles missing release.yml file', async () => {

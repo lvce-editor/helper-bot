@@ -15,3 +15,10 @@ export const createMigrationResult = (result: Omit<MigrationResult, 'statusCode'
     statusCode: getHttpStatusCode(result),
   }
 }
+
+export const emptyMigrationResult: MigrationResult = {
+  changedFiles: [],
+  pullRequestTitle: '',
+  status: 'success',
+  statusCode: 200,
+}
