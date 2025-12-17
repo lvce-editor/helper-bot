@@ -1,5 +1,5 @@
 import './errorHandling.ts'
-import { Context, Probot } from 'probot'
+import { ApplicationFunctionOptions, Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.ts'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
 import { updateDependencies } from './updateDependencies.ts'
@@ -54,7 +54,7 @@ const handleMigrationsList = async (req: any, res: any) => {
   send(res, result)
 }
 
-const enableCustomRoutes = async (app: Probot, getRouter: any) => {
+const enableCustomRoutes = async (app: Probot, getRouter: ApplicationFunctionOptions['getRouter']) => {
   if (!getRouter || typeof getRouter !== 'function') {
     return
   }
@@ -75,6 +75,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
     handleDependencies({
       app,
       installationId,
+      // @ts-ignore
       secret: process.env.DEPENDENCIES_SECRET,
     }),
   )
@@ -148,7 +149,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   await registerMigrations2Endpoints(router, app, process.env.DEPENDENCIES_SECRET)
 }
 
-export default (app: Probot, { getRouter }: any) => {
+export default (app: Probot, { getRouter }: ApplicationFunctionOptions) => {
   console.log('Application starting up...')
   console.log(`cpus: ${availableParallelism()}`)
   enableCustomRoutes(app, getRouter)
