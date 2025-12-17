@@ -1,4 +1,5 @@
 import { expect, test } from '@jest/globals'
+import * as FsPromises from 'node:fs/promises'
 import { getBranchProtection } from '../src/parts/GetBranchProtection/GetBranchProtection.ts'
 
 test('returns rulesets when available', async (): Promise<void> => {
@@ -21,18 +22,24 @@ test('returns rulesets when available', async (): Promise<void> => {
     throw new Error(`Unexpected URL: ${url}`)
   }
 
-  globalThis.fetch = mockFetch as any
-
   const result = await getBranchProtection({
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: mockFetch as any,
+    fs: FsPromises as any,
     githubToken: 'test-token',
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('rulesets')
-  expect(Array.isArray(result.data)).toBe(true)
-  expect(result.data.length).toBe(1)
-  expect(result.data[0].name).toBe('main protection')
+  expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.data.type).toBe('rulesets')
+    expect(Array.isArray(result.data.data)).toBe(true)
+    expect(result.data.data.length).toBe(1)
+    expect(result.data.data[0].name).toBe('main protection')
+    expect(result.changedFiles).toEqual([])
+  }
 })
 
 test('returns classic branch protection when rulesets not available', async (): Promise<void> => {
@@ -63,17 +70,23 @@ test('returns classic branch protection when rulesets not available', async (): 
     throw new Error(`Unexpected URL: ${url}`)
   }
 
-  globalThis.fetch = mockFetch as any
-
   const result = await getBranchProtection({
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: mockFetch as any,
+    fs: FsPromises as any,
     githubToken: 'test-token',
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('classic')
-  expect(result.data.required_status_checks).toBeDefined()
-  expect(result.data.required_status_checks.contexts).toContain('ci/test')
+  expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.data.type).toBe('classic')
+    expect(result.data.data.required_status_checks).toBeDefined()
+    expect(result.data.data.required_status_checks.contexts).toContain('ci/test')
+    expect(result.changedFiles).toEqual([])
+  }
 })
 
 test('returns none when no branch protection is enabled', async (): Promise<void> => {
@@ -98,16 +111,22 @@ test('returns none when no branch protection is enabled', async (): Promise<void
     throw new Error(`Unexpected URL: ${url}`)
   }
 
-  globalThis.fetch = mockFetch as any
-
   const result = await getBranchProtection({
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: mockFetch as any,
+    fs: FsPromises as any,
     githubToken: 'test-token',
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('none')
-  expect(result.data).toBe(null)
+  expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.data.type).toBe('none')
+    expect(result.data.data).toBe(null)
+    expect(result.changedFiles).toEqual([])
+  }
 })
 
 test('uses custom branch name', async (): Promise<void> => {
@@ -135,17 +154,23 @@ test('uses custom branch name', async (): Promise<void> => {
     throw new Error(`Unexpected URL: ${url}`)
   }
 
-  globalThis.fetch = mockFetch as any
-
   const result = await getBranchProtection({
     branch: 'develop',
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: mockFetch as any,
+    fs: FsPromises as any,
     githubToken: 'test-token',
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('classic')
-  expect(result.data.required_status_checks).toBeDefined()
+  expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.data.type).toBe('classic')
+    expect(result.data.data.required_status_checks).toBeDefined()
+    expect(result.changedFiles).toEqual([])
+  }
 })
 
 test('includes authorization header in requests', async (): Promise<void> => {
@@ -175,9 +200,11 @@ test('includes authorization header in requests', async (): Promise<void> => {
     throw new Error(`Unexpected URL: ${url}`)
   }
 
-  globalThis.fetch = mockFetch as any
-
   await getBranchProtection({
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: mockFetch as any,
+    fs: FsPromises as any,
     githubToken: 'secret-token',
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
