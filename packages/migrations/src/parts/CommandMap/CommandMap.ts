@@ -20,7 +20,7 @@ import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateSpecificDependency } from '../UpdateSpecificDependency/UpdateSpecificDependency.ts'
-import { wrapCommand, wrapFunction, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
+import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
   '/hello-world': wrapResponseCommand(handleHelloWorld),
@@ -32,7 +32,7 @@ export const commandMap = {
   '/migrations2/add-lint-script': wrapCommand(addLintScript),
   '/migrations2/add-oidc-permissions': wrapCommand(addOidcPermissionsToWorkflow),
   '/migrations2/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
-  '/migrations2/get-branch-protection': wrapFunction(getBranchProtection),
+  '/migrations2/get-branch-protection': wrapCommand(getBranchProtection),
   '/migrations2/handle-release-released': wrapCommand(handleReleaseReleased),
   '/migrations2/initialize-package-json': wrapCommand(initializePackageJson),
   '/migrations2/js/modern-dirname': wrapCommand(modernDirname),
