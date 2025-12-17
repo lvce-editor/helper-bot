@@ -1,0 +1,47 @@
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
+
+export type RemoveGitpodymlOptions = BaseMigrationOptions
+
+export const removeGitpodyml = async (options: Readonly<RemoveGitpodymlOptions>): Promise<MigrationResult> => {
+  try {
+    const gitpodYmlPath = new URL('.gitpod.yml', options.clonedRepoUri).toString()
+
+    const fileExists = await options.fs.exists(gitpodYmlPath)
+    if (!fileExists) {
+      return emptyMigrationResult
+    }
+
+    const pullRequestTitle = 'ci: remove .gitpod.yml'
+
+    return {
+      branchName: 'feature/remove-gitpod-yml',
+      changedFiles: [
+        {
+          content: '',
+          path: '.gitpod.yml',
+          type: 'deleted',
+        },
+      ],
+      commitMessage: pullRequestTitle,
+      pullRequestTitle,
+      status: 'success',
+      statusCode: 200,
+    }
+  } catch (error) {
+    const errorResult = {
+      errorCode: ERROR_CODES.REMOVE_GITPOD_YML_FAILED,
+      errorMessage: stringifyError(error),
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
+      status: 'error',
+      statusCode: getHttpStatusCode(errorResult),
+    }
+  }
+}

@@ -17,6 +17,7 @@ export interface BaseMigrationOptions {
 export interface ChangedFile {
   readonly content: string
   readonly path: string
+  readonly type?: 'deleted'
 }
 
 export interface MigrationSuccessResult {
