@@ -34,13 +34,22 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
   await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context)])
 }
 
-const handleHelloWorld = async (req: any, res: any) => {
-  const result = await MigrationsWorker.invoke('/hello-world')
+const send = (res: any, result: any) => {
   if (result.type === 'error') {
     res.send(result.error)
   } else {
     res.send(result.text)
   }
+}
+
+const handleHelloWorld = async (req: any, res: any) => {
+  const result = await MigrationsWorker.invoke('/hello-world')
+  send(res, result)
+}
+
+const handleMigrationsList = async (req: any, res: any) => {
+  const result = await MigrationsWorker.invoke('/migrations/list')
+  send(res, result)
 }
 
 const enableCustomRoutes = async (app: Probot, getRouter: any) => {
@@ -50,6 +59,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   const router = getRouter('/my-app')
 
   router.get('/hello-world', handleHelloWorld)
+  router.get('/migrations/list', handleMigrationsList)
 
   const installationIdString = process.env.INSTALLATION_ID
   if (!installationIdString) {
