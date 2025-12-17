@@ -56,7 +56,7 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
       commitMessage: nvmrcResult.pullRequestTitle,
       pullRequestTitle: nvmrcResult.pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {
