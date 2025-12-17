@@ -1,5 +1,6 @@
 import { addDevcontainerJson } from '../AddDevcontainerJson/AddDevcontainerJson.ts'
 import { addEslint } from '../AddEslint/AddEslint.ts'
+import { addEslintConfig } from '../AddEslintConfig/AddEslintConfig.ts'
 import { addGitattributes } from '../AddGitattributes/AddGitattributes.ts'
 import { addLintScript } from '../AddLintScript/AddLintScript.ts'
 import { addOidcPermissionsToWorkflow } from '../AddOidcPermissionsToWorkflow/AddOidcPermissionsToWorkflow.ts'
@@ -24,6 +25,7 @@ export const commandMap = {
   '/meta/list-commands-2': listCommands2,
   '/migrations2/add-devcontainer-json': wrapCommand(addDevcontainerJson),
   '/migrations2/add-eslint': wrapCommand(addEslint),
+  '/migrations2/add-eslint-config': wrapCommand(addEslintConfig),
   '/migrations2/add-gitattributes': wrapCommand(addGitattributes),
   '/migrations2/add-lint-script': wrapCommand(addLintScript),
   '/migrations2/add-oidc-permissions': wrapCommand(addOidcPermissionsToWorkflow),
