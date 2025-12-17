@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import { Context, Probot } from 'probot'
+import type { Context, Probot } from 'probot'
 import { captureException } from '../errorHandling.ts'
 import * as MigrationsWorker from '../migrationsWorker.ts'
 
@@ -10,14 +10,14 @@ export interface ChangedFile {
 }
 
 export interface MigrationResult {
+  readonly branchName?: string
   readonly changedFiles: ChangedFile[]
+  readonly commitMessage?: string
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly pullRequestTitle: string
   readonly status: 'success' | 'error'
   readonly statusCode: number
-  readonly branchName?: string
-  readonly commitMessage?: string
 }
 
 const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
@@ -26,7 +26,7 @@ const verifySecret = (req: Request, res: Response, secret: string | undefined): 
     res.status(401).send('Unauthorized')
     return false
   }
-  const providedToken = authHeader.substring(7) // Remove 'Bearer ' prefix
+  const providedToken = authHeader.slice(7) // Remove 'Bearer ' prefix
   if (providedToken !== secret) {
     res.status(401).send('Unauthorized')
     return false
@@ -49,31 +49,31 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
     if (!verifySecret(req, res, secret)) {
       return
     }
-    const body: any = req.body
+    const {body} = req
 
     console.log('body is')
     console.log(body)
 
     if (!body) {
       res.status(400).json({
-        error: 'Missing post body',
         code: 'MISSING_POST_BODY',
+        error: 'Missing post body',
       })
       return
     }
 
-    const repository = body.repository
+    const {repository} = body
     if (!repository) {
       res.status(400).json({
-        error: 'Missing repository parameter',
         code: 'MISSING_REPOSITORY',
+        error: 'Missing repository parameter',
       })
       return
     }
     if (typeof repository !== 'string' || !repository.includes('/')) {
       res.status(400).json({
-        error: 'Invalid repository parameter',
         code: 'INVALID_REPOSITORY',
+        error: 'Invalid repository parameter',
       })
       return
     }
@@ -108,10 +108,17 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         throw new Error(`failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`)
       }
 
+      // Get the installation token for GitHub API calls
+      const authToken: any = await octokit.auth({
+        type: 'installation',
+      })
+      const githubToken = typeof authToken === 'string' ? authToken : authToken.token
+
       // Call migration worker with the command key and params
       const migrationParams = {
-        repositoryOwner: owner,
+        githubToken,
         repositoryName: repo,
+        repositoryOwner: owner,
         ...body,
       }
       const migrationResult = await MigrationsWorker.invoke(commandKey, migrationParams)
@@ -119,9 +126,16 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       // Check if the result is an error
       if (migrationResult.type === 'error') {
         res.status(500).json({
-          error: migrationResult.error,
           code: 'MIGRATION_WORKER_ERROR',
+          error: migrationResult.error,
         })
+        return
+      }
+
+      // Check if this is a function result (has 'data' property) vs migration result (has 'changedFiles')
+      if ('data' in migrationResult && !('changedFiles' in migrationResult)) {
+        // This is a function result, just return the data
+        res.status(200).json(migrationResult.data)
         return
       }
 
@@ -131,8 +145,8 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       // Handle error result
       if (result.status === 'error') {
         res.status(result.statusCode || 500).json({
-          error: result.errorMessage || 'Migration failed',
           code: result.errorCode || 'MIGRATION_ERROR',
+          error: result.errorMessage || 'Migration failed',
         })
         return
       }
@@ -155,15 +169,15 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         // Get base branch reference
         const baseRef = await octokit.rest.git.getRef({
           owner,
-          repo,
           ref: `heads/${baseBranch}`,
+          repo,
         })
 
         // Create new branch
         await octokit.rest.git.createRef({
           owner,
-          repo,
           ref: `refs/heads/${branchName}`,
+          repo,
           sha: baseRef.data.object.sha,
         })
 
@@ -174,9 +188,9 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
           try {
             const fileContent = await octokit.rest.repos.getContent({
               owner,
-              repo,
               path: changedFile.path,
               ref: baseBranch,
+              repo,
             })
             if ('sha' in fileContent.data) {
               fileSha = fileContent.data.sha
@@ -196,12 +210,12 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
               continue
             }
             await octokit.rest.repos.deleteFile({
-              owner,
-              repo,
-              path: changedFile.path,
-              message: commitMessage,
-              sha: fileSha,
               branch: branchName,
+              message: commitMessage,
+              owner,
+              path: changedFile.path,
+              repo,
+              sha: fileSha,
             })
           } else {
             // Encode content to base64
@@ -209,12 +223,12 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
 
             // Update or create the file
             await octokit.repos.createOrUpdateFileContents({
-              owner,
-              repo,
-              path: changedFile.path,
-              message: commitMessage,
-              content: encodedContent,
               branch: branchName,
+              content: encodedContent,
+              message: commitMessage,
+              owner,
+              path: changedFile.path,
+              repo,
               ...(fileSha ? { sha: fileSha } : {}),
             })
           }
@@ -222,10 +236,10 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
 
         // Create pull request
         const pullRequestData = await octokit.rest.pulls.create({
+          base: baseBranch,
+          head: branchName,
           owner,
           repo,
-          head: branchName,
-          base: baseBranch,
           title: result.pullRequestTitle,
         })
 
@@ -233,26 +247,26 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         await enableAutoSquash(octokit, pullRequestData)
 
         res.status(200).json({
-          message: 'Migration completed successfully',
-          status: 'success',
           branchName,
-          pullRequestNumber: pullRequestData.data.number,
           changedFiles: result.changedFiles.length,
+          message: 'Migration completed successfully',
+          pullRequestNumber: pullRequestData.data.number,
+          status: 'success',
         })
         return
       }
 
       // Success but no repository provided or no changed files
       res.status(200).json({
+        changedFiles: result.changedFiles.length,
         message: 'Migration completed successfully',
         status: 'success',
-        changedFiles: result.changedFiles.length,
       })
     } catch (error) {
       captureException(error as Error)
       res.status(500).json({
-        error: error instanceof Error ? error.message : String(error),
         code: 'MIGRATION_ENDPOINT_ERROR',
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -262,7 +276,7 @@ export const registerMigrations2Endpoints = async (router: any, app: Probot, sec
   // Migrations2 endpoints - dynamically registered
   try {
     const commandsResult = await MigrationsWorker.invoke('/meta/list-commands-2')
-    let commands: string[] = commandsResult
+    const commands: string[] = commandsResult
 
     // Filter commands that start with /migrations2
     const migrations2Commands = commands.filter((cmd: string) => cmd.startsWith('/migrations2'))

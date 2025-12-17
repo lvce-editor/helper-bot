@@ -67,8 +67,8 @@ RUN npm install -g pnpm
   const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', clonedRepoUri).toString()
   const mockFs = createMockFs({
     files: {
-      [gitpodYmlPath]: gitpodYmlContent,
       [gitpodDockerfilePath]: dockerfileContent,
+      [gitpodYmlPath]: gitpodYmlContent,
     },
   })
 
