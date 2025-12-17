@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import type { Context, Probot } from 'probot'
 import { captureException } from '../errorHandling.ts'
 import * as MigrationsWorker from '../migrationsWorker.ts'
+import { VError } from '@lvce-editor/verror'
 
 export interface ChangedFile {
   readonly content: string
@@ -110,10 +111,15 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       }
 
       // Get the installation token for GitHub API calls
-      const authToken: any = await octokit.auth({
-        type: 'installation',
-      })
-      const githubToken = typeof authToken === 'string' ? authToken : authToken.token
+      let githubToken
+      try {
+        const authToken: any = await octokit.auth({
+          type: 'installation',
+        })
+        githubToken = typeof authToken === 'string' ? authToken : authToken.token
+      } catch (error) {
+        throw new VError(error, `Failed to authenticate`)
+      }
 
       // Call migration worker with the command key and params
       const migrationParams = {
@@ -126,6 +132,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
 
       // Check if the result is an error
       if (migrationResult.type === 'error') {
+        console.error(migrationResult.error)
         res.status(500).json({
           code: 'MIGRATION_WORKER_ERROR',
           error: migrationResult.error,
@@ -266,6 +273,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         status: 'success',
       })
     } catch (error) {
+      console.error(error)
       captureException(error as Error)
       res.status(500).json({
         code: 'MIGRATION_ENDPOINT_ERROR',
