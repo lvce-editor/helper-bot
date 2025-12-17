@@ -67,18 +67,22 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     }
 
     return createMigrationResult({
+      branchName: 'feature/update-node-version',
       changedFiles: [
         {
           content: result.newContent,
           path: '.nvmrc',
         },
       ],
+      commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
     })
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: `ci: update Node.js version`,

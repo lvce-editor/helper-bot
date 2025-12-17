@@ -74,6 +74,7 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
     return {
+      branchName: `feature/update-${options.dependencyName}-to-${options.newVersion}`,
       changedFiles: [
         {
           content: result.newPackageJsonString,
@@ -84,13 +85,16 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
           path: options.packageLockJsonPath,
         },
       ],
+      commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
       statusCode: 200,
     }
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: update dependencies`,

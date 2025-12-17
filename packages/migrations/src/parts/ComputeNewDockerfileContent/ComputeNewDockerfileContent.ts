@@ -37,18 +37,22 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
     }
 
     return createMigrationResult({
+      branchName: 'feature/update-node-version',
       changedFiles: [
         {
           content: newContent,
           path: 'Dockerfile',
         },
       ],
+      commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
     })
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.COMPUTE_DOCKERFILE_CONTENT_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: `ci: update Node.js version`,

@@ -62,19 +62,23 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
     }
 
     return {
+      branchName: 'feature/add-oidc-permissions-to-workflow',
       changedFiles: [
         {
           content: updatedContent,
           path: '.github/workflows/release.yml',
         },
       ],
+      commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
       statusCode: 200,
     }
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.ADD_OIDC_PERMISSIONS_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: 'feature: update permissions for open id connect publishing',

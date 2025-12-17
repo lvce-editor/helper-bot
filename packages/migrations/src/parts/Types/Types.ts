@@ -20,12 +20,12 @@ export interface ChangedFile {
 }
 
 export interface MigrationResult {
+  readonly branchName?: string
   readonly changedFiles: ChangedFile[]
+  readonly commitMessage?: string
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly pullRequestTitle: string
   readonly status: 'success' | 'error'
   readonly statusCode: number
-  readonly branchName?: string
-  readonly commitMessage?: string
 }

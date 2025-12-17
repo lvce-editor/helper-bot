@@ -80,6 +80,8 @@ jobs:
   const jobsIndex = result.changedFiles[0].content.indexOf('jobs:')
   const permissionsIndex = result.changedFiles[0].content.indexOf('permissions:')
   expect(permissionsIndex).toBeLessThan(jobsIndex)
+  expect(result.branchName).toBe('feature/add-oidc-permissions-to-workflow')
+  expect(result.commitMessage).toBe('feature: update permissions for open id connect publishing')
 })
 
 test('handles missing release.yml file', async () => {

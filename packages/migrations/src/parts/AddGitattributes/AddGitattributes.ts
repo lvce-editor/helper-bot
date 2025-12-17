@@ -1,7 +1,7 @@
 import { join } from 'node:path'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 
@@ -20,12 +20,14 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
         // File doesn't exist, create it
         await options.fs.writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
         return {
+          branchName: 'feature/add-gitattributes',
           changedFiles: [
             {
               content: GITATTRIBUTES_CONTENT,
               path: '.gitattributes',
             },
           ],
+          commitMessage: 'ci: add .gitattributes file',
           pullRequestTitle: 'ci: add .gitattributes file',
           status: 'success',
           statusCode: 200,
@@ -35,7 +37,9 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
     }
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: 'ADD_GITATTRIBUTES_FAILED',
       errorMessage: stringifyError(error),
       pullRequestTitle: 'ci: add .gitattributes file',

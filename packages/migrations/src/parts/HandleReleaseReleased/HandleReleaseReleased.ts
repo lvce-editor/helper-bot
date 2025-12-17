@@ -60,14 +60,18 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
     }
 
     return {
+      branchName: `feature/handle-release-${releasedRepo}-${options.tagName}`,
       changedFiles: allChangedFiles,
+      commitMessage: `feature: handle release ${releasedRepo}@${options.tagName}`,
       pullRequestTitle: `feature: handle release ${releasedRepo}@${options.tagName}`,
       status: 'success',
       statusCode: 200,
     }
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: handle release ${options.repositoryName}@${options.tagName}`,

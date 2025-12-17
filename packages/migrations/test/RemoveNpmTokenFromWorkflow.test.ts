@@ -52,6 +52,8 @@ jobs:
   expect(result.changedFiles[0].content).toContain('Setup Node.js')
   expect(result.changedFiles[0].content).toContain('Publish to npm')
   expect(result.pullRequestTitle).toBe('ci: remove NODE_AUTH_TOKEN from release workflow')
+  expect(result.branchName).toBe('feature/remove-npm-token-from-workflow')
+  expect(result.commitMessage).toBe('ci: remove NODE_AUTH_TOKEN from release workflow')
 })
 
 test('returns same content when NODE_AUTH_TOKEN is not found', async () => {

@@ -42,6 +42,8 @@ RUN nvm install 18.0.0 \\
   expect(result.changedFiles[0].content).toContain('nvm alias default 20.0.0')
   expect(result.changedFiles[0].content).not.toContain('18.0.0')
   expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
+  expect(result.branchName).toBe('feature/update-node-version')
+  expect(result.commitMessage).toBe('ci: update Node.js to version v20.0.0')
 })
 
 test('handles missing .gitpod.Dockerfile', async () => {

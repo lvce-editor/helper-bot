@@ -34,6 +34,8 @@ test('computes new nvmrc content when version should be updated', async () => {
   expect(result.changedFiles[0].path).toBe('.nvmrc')
   expect(result.changedFiles[0].content).toBe('v20.0.0\n')
   expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
+  expect(result.branchName).toBe('feature/update-node-version')
+  expect(result.commitMessage).toBe('ci: update Node.js to version v20.0.0')
 })
 
 test('returns same content when existing version is newer', async () => {

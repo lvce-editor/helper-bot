@@ -17,7 +17,9 @@ export const createMigrationResult = (result: Omit<MigrationResult, 'statusCode'
 }
 
 export const emptyMigrationResult: MigrationResult = {
+  branchName: '',
   changedFiles: [],
+  commitMessage: '',
   pullRequestTitle: '',
   status: 'success',
   statusCode: 200,
