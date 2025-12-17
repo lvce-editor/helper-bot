@@ -14,21 +14,21 @@ const updateOsVersionsInYaml = (
 ): string => {
   let updated = yamlContent
   if (osVersions.ubuntu) {
-    updated = updated.replace(/ubuntu-\d{2}\.\d{2}/g, `ubuntu-${osVersions.ubuntu}`)
+    updated = updated.replaceAll(/ubuntu-\d{2}\.\d{2}/g, `ubuntu-${osVersions.ubuntu}`)
   }
   if (osVersions.windows) {
-    updated = updated.replace(/windows-\d{4}/g, `windows-${osVersions.windows}`)
+    updated = updated.replaceAll(/windows-\d{4}/g, `windows-${osVersions.windows}`)
   }
   if (osVersions.macos) {
-    updated = updated.replace(/macos-\d+/g, `macos-${osVersions.macos}`)
+    updated = updated.replaceAll(/macos-\d+/g, `macos-${osVersions.macos}`)
   }
   return updated
 }
 
 export interface UpdateGithubActionsOptions extends BaseMigrationOptions {
+  macos?: string
   ubuntu?: string
   windows?: string
-  macos?: string
 }
 
 export const updateGithubActions = async (options: Readonly<UpdateGithubActionsOptions>): Promise<MigrationResult> => {
@@ -44,19 +44,20 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // No workflows directory, nothing to do
-        return createMigrationResult({
-          status: 'success',
+        return {
           changedFiles: [],
           pullRequestTitle: 'ci: update CI OS versions',
-        })
+          status: 'success',
+          statusCode: 200,
+        }
       }
       throw error
     }
 
     const osVersions = {
+      macos: options.macos,
       ubuntu: options.ubuntu,
       windows: options.windows,
-      macos: options.macos,
     }
 
     const changedFiles: Array<{ path: string; content: string }> = []
@@ -83,8 +84,8 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
           // Ensure trailing newline like repo style
           const finalContent = updated.endsWith('\n') ? updated : updated + '\n'
           changedFiles.push({
-            path: relativePath,
             content: finalContent,
+            path: relativePath,
           })
         }
       } catch (error: any) {
@@ -95,17 +96,18 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
       }
     }
 
-    return createMigrationResult({
-      status: 'success',
+    return {
       changedFiles,
       pullRequestTitle: 'ci: update CI OS versions',
-    })
+      status: 'success',
+      statusCode: 200,
+    }
   } catch (error: any) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: 'ci: update CI OS versions',
       errorMessage: error instanceof Error ? error.message : String(error),
+      pullRequestTitle: 'ci: update CI OS versions',
+      status: 'error',
     })
   }
 }

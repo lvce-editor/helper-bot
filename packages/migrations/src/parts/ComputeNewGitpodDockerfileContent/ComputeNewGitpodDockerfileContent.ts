@@ -1,9 +1,9 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const computeNewGitpodDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
@@ -23,11 +23,12 @@ export const computeNewGitpodDockerfileContent = async (options: Readonly<Comput
       currentContent = await options.fs.readFile(gitpodDockerfilePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
+        return {
           changedFiles: [],
           pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
-        })
+          status: 'success',
+          statusCode: 200,
+        }
       }
       throw error
     }
@@ -36,25 +37,26 @@ export const computeNewGitpodDockerfileContent = async (options: Readonly<Comput
     const hasChanges = currentContent !== newContent
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
-    return createMigrationResult({
-      status: 'success',
+    return {
       changedFiles: hasChanges
         ? [
             {
-              path: '.gitpod.Dockerfile',
               content: newContent,
+              path: '.gitpod.Dockerfile',
             },
           ]
         : [],
       pullRequestTitle,
-    })
+      status: 'success',
+      statusCode: 200,
+    }
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: `ci: update Node.js version`,
       errorCode: ERROR_CODES.COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: `ci: update Node.js version`,
+      status: 'error',
     })
   }
 }
