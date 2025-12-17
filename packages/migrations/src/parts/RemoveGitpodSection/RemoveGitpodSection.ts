@@ -7,7 +7,7 @@ const removeGitpodSectionContent = (content: Readonly<string>): string => {
   // Pattern to match Gitpod sections in README
   // This matches sections that start with ## Gitpod or similar headers
   // and includes content until the next header or end of file
-  const gitpodPattern = /^#{1,6}\s*[Gg]itpod.*?(?=^#{1,6}\s|$)/gms
+  const gitpodPattern = /^#{1,6}\s*[Gg]itpod.*?(?=^#{1,6}\s+\w|$)/gms
 
   return content.replaceAll(gitpodPattern, '')
 }
