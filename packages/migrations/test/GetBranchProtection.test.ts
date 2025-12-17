@@ -32,14 +32,22 @@ test('returns rulesets when available', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result).toHaveProperty('data')
-  const successResult = result as Extract<typeof result, { status: 'success' }>
-  expect(successResult.data.type).toBe('rulesets')
-  expect(Array.isArray(successResult.data.data)).toBe(true)
-  expect(successResult.data.data.length).toBe(1)
-  expect(successResult.data.data[0].name).toBe('main protection')
-  expect(successResult.changedFiles).toEqual([])
+  expect(result).toEqual({
+    changedFiles: [],
+    data: {
+      data: [
+        {
+          enforcement: 'active',
+          id: 123,
+          name: 'main protection',
+        },
+      ],
+      type: 'rulesets',
+    },
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns classic branch protection when rulesets not available', async (): Promise<void> => {
@@ -80,13 +88,24 @@ test('returns classic branch protection when rulesets not available', async (): 
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result).toHaveProperty('data')
-  const successResult = result as Extract<typeof result, { status: 'success' }>
-  expect(successResult.data.type).toBe('classic')
-  expect(successResult.data.data.required_status_checks).toBeDefined()
-  expect(successResult.data.data.required_status_checks.contexts).toContain('ci/test')
-  expect(successResult.changedFiles).toEqual([])
+  expect(result).toEqual({
+    changedFiles: [],
+    data: {
+      data: {
+        enforce_admins: {
+          enabled: true,
+        },
+        required_status_checks: {
+          contexts: ['ci/test'],
+          strict: true,
+        },
+      },
+      type: 'classic',
+    },
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns none when no branch protection is enabled', async (): Promise<void> => {
@@ -121,12 +140,16 @@ test('returns none when no branch protection is enabled', async (): Promise<void
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result).toHaveProperty('data')
-  const successResult = result as Extract<typeof result, { status: 'success' }>
-  expect(successResult.data.type).toBe('none')
-  expect(successResult.data.data).toBe(null)
-  expect(successResult.changedFiles).toEqual([])
+  expect(result).toEqual({
+    changedFiles: [],
+    data: {
+      data: null,
+      type: 'none',
+    },
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('uses custom branch name', async (): Promise<void> => {
@@ -165,12 +188,21 @@ test('uses custom branch name', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result).toHaveProperty('data')
-  const successResult = result as Extract<typeof result, { status: 'success' }>
-  expect(successResult.data.type).toBe('classic')
-  expect(successResult.data.data.required_status_checks).toBeDefined()
-  expect(successResult.changedFiles).toEqual([])
+  expect(result).toEqual({
+    changedFiles: [],
+    data: {
+      data: {
+        required_status_checks: {
+          contexts: [],
+          strict: false,
+        },
+      },
+      type: 'classic',
+    },
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('includes authorization header in requests', async (): Promise<void> => {
