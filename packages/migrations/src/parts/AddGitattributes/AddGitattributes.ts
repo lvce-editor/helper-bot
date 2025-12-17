@@ -16,8 +16,6 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
       return emptyMigrationResult
     }
 
-    // File doesn't exist, create it
-    await options.fs.writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
     return {
       branchName: 'feature/add-gitattributes',
       changedFiles: [
@@ -26,8 +24,8 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
           path: '.gitattributes',
         },
       ],
-      commitMessage: 'ci: add .gitattributes file',
-      pullRequestTitle: 'ci: add .gitattributes file',
+      commitMessage: 'feature: add .gitattributes file',
+      pullRequestTitle: 'feature: add .gitattributes file',
       status: 'success',
       statusCode: 200,
     }
