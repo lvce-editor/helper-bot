@@ -11,6 +11,7 @@ const launchMigrationsWorker = async () => {
   const rpc = await NodeWorkerRpcParent.create({
     commandMap: {},
     path: workerUrl,
+    stdio: 'inherit',
   })
   return rpc
 }
