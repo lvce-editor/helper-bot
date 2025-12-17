@@ -39,7 +39,7 @@ const handleHelloWorld = async (req: any, res: any) => {
   if (result.type === 'error') {
     res.send(result.error)
   } else {
-    res.send(result.buffer)
+    res.send(result.text)
   }
   res.send('Hello World')
 }
