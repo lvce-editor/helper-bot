@@ -48,6 +48,8 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
     if (!verifySecret(req, res, secret)) {
       return
     }
+    console.log('req is')
+    console.log(req)
 
     const body: any = req.body
 
