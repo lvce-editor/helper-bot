@@ -3,7 +3,6 @@ import { Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.js'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
 import { updateDependencies } from './updateDependencies.js'
-import { handleCheckRun } from './handleCheckRun.js'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { captureException } from './errorHandling.js'
 import { availableParallelism } from 'node:os'
