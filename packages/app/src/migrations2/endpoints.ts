@@ -64,6 +64,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       return
     }
 
+    console.log('body is')
     console.log(body)
 
     const repository = body.repository
