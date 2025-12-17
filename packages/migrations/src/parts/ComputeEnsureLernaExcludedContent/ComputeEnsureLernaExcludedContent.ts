@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
@@ -57,11 +57,7 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
       currentContent = await options.fs.readFile(scriptPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
-          changedFiles: [],
-          pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
-        })
+        return emptyMigrationResult
       }
       throw error
     }
@@ -70,11 +66,7 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
     const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
 
     if (!result.hasChanges) {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle,
-      })
+      return emptyMigrationResult
     }
 
     return createMigrationResult({

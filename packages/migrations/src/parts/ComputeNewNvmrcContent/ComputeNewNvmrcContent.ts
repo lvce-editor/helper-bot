@@ -3,7 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const parseVersion = (content: string): number => {
   const trimmed = content.trim()
@@ -48,11 +48,7 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
       currentContent = await options.fs.readFile(nvmrcPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
-          changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
-        })
+        return emptyMigrationResult
       }
       throw error
     }
@@ -61,25 +57,23 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     if (!result.shouldUpdate) {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle,
-      })
+      return emptyMigrationResult
     }
 
     const hasChanges = currentContent !== result.newContent
 
+    if (!hasChanges) {
+      return emptyMigrationResult
+    }
+
     return createMigrationResult({
       status: 'success',
-      changedFiles: hasChanges
-        ? [
-            {
-              path: '.nvmrc',
-              content: result.newContent,
-            },
-          ]
-        : [],
+      changedFiles: [
+        {
+          path: '.nvmrc',
+          content: result.newContent,
+        },
+      ],
       pullRequestTitle,
     })
   } catch (error) {

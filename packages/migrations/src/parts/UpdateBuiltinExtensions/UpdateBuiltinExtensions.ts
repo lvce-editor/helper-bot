@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const getNewValue = (value: readonly any[], repoName: string, version: string): any[] => {
   return value.map((item) => {
@@ -26,11 +26,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
   try {
     const releasedRepo = options.releasedRepositoryName
     if (releasedRepo === 'renderer-process') {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-      })
+      return emptyMigrationResult
     }
 
     const version = options.tagName.replace('v', '')
@@ -43,11 +39,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       currentContent = await options.fs.readFile(filePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
-          changedFiles: [],
-          pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-        })
+        return emptyMigrationResult
       }
       throw error
     }
@@ -57,11 +49,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
 
     if (currentContent === filesJsonStringNew) {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-      })
+      return emptyMigrationResult
     }
 
     return createMigrationResult({

@@ -3,7 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   dependencyName: string
@@ -23,11 +23,7 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
       oldPackageJson = JSON.parse(packageJsonContent)
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
-          changedFiles: [],
-          pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
-        })
+        return emptyMigrationResult
       }
       throw error
     }
@@ -47,22 +43,12 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
       dependencyKey = 'optionalDependencies'
       oldDependency = oldPackageJson.optionalDependencies[dependencyName]
     } else {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
-        errorCode: 'DEPENDENCY_NOT_FOUND',
-        errorMessage: `Dependency ${dependencyName} not found in ${options.packageJsonPath}`,
-      })
+      return emptyMigrationResult
     }
 
     const oldVersion = oldDependency.slice(1)
     if (oldVersion === options.newVersion) {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
-      })
+      return emptyMigrationResult
     }
 
     // Call getNewPackageFiles with the detected dependency key

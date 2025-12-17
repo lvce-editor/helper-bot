@@ -3,7 +3,7 @@ import { computeNewNvmrcContent } from '../ComputeNewNvmrcContent/ComputeNewNvmr
 import { computeNewDockerfileContent } from '../ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 export type UpdateNodeVersionOptions = BaseMigrationOptions
 
@@ -36,11 +36,7 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
     const allChangedFiles = [...nvmrcResult.changedFiles, ...dockerfileResult.changedFiles]
 
     if (allChangedFiles.length === 0) {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle: nvmrcResult.pullRequestTitle,
-      })
+      return emptyMigrationResult
     }
 
     // Use the pull request title from any of the results (they should all be the same)

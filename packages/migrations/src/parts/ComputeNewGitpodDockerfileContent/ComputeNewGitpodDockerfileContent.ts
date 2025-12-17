@@ -3,7 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const computeNewGitpodDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
@@ -23,11 +23,7 @@ export const computeNewGitpodDockerfileContent = async (options: Readonly<Comput
       currentContent = await options.fs.readFile(gitpodDockerfilePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
-          changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
-        })
+        return emptyMigrationResult
       }
       throw error
     }
@@ -36,16 +32,18 @@ export const computeNewGitpodDockerfileContent = async (options: Readonly<Comput
     const hasChanges = currentContent !== newContent
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
+    if (!hasChanges) {
+      return emptyMigrationResult
+    }
+
     return createMigrationResult({
       status: 'success',
-      changedFiles: hasChanges
-        ? [
-            {
-              path: '.gitpod.Dockerfile',
-              content: newContent,
-            },
-          ]
-        : [],
+      changedFiles: [
+        {
+          path: '.gitpod.Dockerfile',
+          content: newContent,
+        },
+      ],
       pullRequestTitle,
     })
   } catch (error) {
