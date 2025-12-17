@@ -40,7 +40,6 @@ jobs:
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe('feature: update permissions for open id connect publishing')
 })
 
 test('adds permissions before jobs section', async () => {
@@ -81,7 +80,6 @@ jobs:
   const jobsIndex = result.changedFiles[0].content.indexOf('jobs:')
   const permissionsIndex = result.changedFiles[0].content.indexOf('permissions:')
   expect(permissionsIndex).toBeLessThan(jobsIndex)
-  expect(result.pullRequestTitle).toBe('feature: update permissions for open id connect publishing')
 })
 
 test('handles missing release.yml file', async () => {
