@@ -44,16 +44,7 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // No workflows directory, nothing to do
-<<<<<<< HEAD
         return emptyMigrationResult
-=======
-        return {
-          changedFiles: [],
-          pullRequestTitle: 'ci: update CI OS versions',
-          status: 'success',
-          statusCode: 200,
-        }
->>>>>>> origin/main
       }
       throw error
     }

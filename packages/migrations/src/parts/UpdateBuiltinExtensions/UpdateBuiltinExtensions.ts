@@ -1,13 +1,8 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-<<<<<<< HEAD
-import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-=======
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
->>>>>>> origin/main
 
 const getNewValue = (value: readonly any[], repoName: string, version: string): any[] => {
   return value.map((item) => {

@@ -1,10 +1,7 @@
 import { join } from 'node:path'
-<<<<<<< HEAD
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-=======
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
->>>>>>> origin/main
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
@@ -18,16 +15,7 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
     // Check if .gitattributes already exists
     try {
       await options.fs.readFile(gitattributesPath, 'utf8')
-<<<<<<< HEAD
       return emptyMigrationResult
-=======
-      return {
-        changedFiles: [],
-        pullRequestTitle: 'ci: add .gitattributes file',
-        status: 'success',
-        statusCode: 200,
-      }
->>>>>>> origin/main
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // File doesn't exist, create it
