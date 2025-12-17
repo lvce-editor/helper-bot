@@ -13,6 +13,7 @@ import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseRel
 import { initializePackageJson } from '../InitializePackageJson/InitializePackageJson.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 import { modernDirname } from '../ModernDirname/ModernDirname.ts'
+import { modernizeBranchProtection } from '../ModernizeBranchProtection/ModernizeBranchProtection.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
 import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
@@ -39,6 +40,7 @@ export const commandMap = {
   '/migrations2/initialize-package-json': wrapCommand(initializePackageJson),
   '/migrations2/js/modern-dirname': wrapCommand(modernDirname),
   '/migrations2/list': wrapResponseCommand(handleMigrationsList),
+  '/migrations2/modernize-branch-protection': wrapCommand(modernizeBranchProtection),
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
   '/migrations2/remove-gitpod-yml': wrapCommand(removeGitpodyml),
   '/migrations2/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
