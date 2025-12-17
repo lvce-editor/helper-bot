@@ -16,10 +16,10 @@ export const wrapCommand = <T extends BaseMigrationOptions>(
     try {
       return await command({
         ...options,
-        fs: FsPromises,
         clonedRepoPath: clonedRepo.path,
-        fetch: globalThis.fetch,
         exec: execa,
+        fetch: globalThis.fetch,
+        fs: FsPromises,
       } as unknown as T)
     } finally {
       await clonedRepo[Symbol.asyncDispose]()

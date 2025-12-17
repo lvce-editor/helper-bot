@@ -30,12 +30,12 @@ jobs:
   })
 
   const result = await addOidcPermissionsToWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -65,12 +65,12 @@ jobs:
   })
 
   const result = await addOidcPermissionsToWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -96,12 +96,12 @@ test('handles missing release.yml file', async () => {
   const mockFs = createMockFs()
 
   const result = await addOidcPermissionsToWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')

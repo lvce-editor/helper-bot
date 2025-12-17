@@ -31,9 +31,9 @@ export const removeNpmTokenFromWorkflow = async (
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
-          status: 'success',
           changedFiles: [],
           pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
+          status: 'success',
         }
       }
       throw error
@@ -45,29 +45,29 @@ export const removeNpmTokenFromWorkflow = async (
 
     if (!hasChanges) {
       return {
-        status: 'success',
         changedFiles: [],
         pullRequestTitle,
+        status: 'success',
       }
     }
 
     return {
-      status: 'success',
       changedFiles: [
         {
-          path: '.github/workflows/release.yml',
           content: updatedContent,
+          path: '.github/workflows/release.yml',
         },
       ],
       pullRequestTitle,
+      status: 'success',
     }
   } catch (error) {
     return {
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
       errorCode: ERROR_CODES.REMOVE_NPM_TOKEN_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
+      status: 'error',
     }
   }
 }

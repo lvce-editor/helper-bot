@@ -1,6 +1,6 @@
 interface NodeVersion {
-  version: string
   lts: string | false
+  version: string
 }
 
 export const getLatestNodeVersion = async (

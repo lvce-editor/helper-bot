@@ -53,9 +53,9 @@ export const computeNewNvmrcContent = async (
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
-          status: 'success',
           changedFiles: [],
           pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
+          status: 'success',
         }
       }
       throw error
@@ -66,33 +66,33 @@ export const computeNewNvmrcContent = async (
 
     if (!result.shouldUpdate) {
       return {
-        status: 'success',
         changedFiles: [],
         pullRequestTitle,
+        status: 'success',
       }
     }
 
     const hasChanges = currentContent !== result.newContent
 
     return {
-      status: 'success',
       changedFiles: hasChanges
         ? [
             {
-              path: '.nvmrc',
               content: result.newContent,
+              path: '.nvmrc',
             },
           ]
         : [],
       pullRequestTitle,
+      status: 'success',
     }
   } catch (error) {
     return {
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: `ci: update Node.js version`,
       errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: `ci: update Node.js version`,
+      status: 'error',
     }
   }
 }

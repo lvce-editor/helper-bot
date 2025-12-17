@@ -7,9 +7,9 @@ import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 
 const mockExec = createMockExec()
 const mockFetch = createMockFetch([
-  { version: 'v20.0.0', lts: 'Iron' },
-  { version: 'v19.0.0', lts: false },
-  { version: 'v18.0.0', lts: 'Hydrogen' },
+  { lts: 'Iron', version: 'v20.0.0' },
+  { lts: false, version: 'v19.0.0' },
+  { lts: 'Hydrogen', version: 'v18.0.0' },
 ])
 
 test('updates node version in Dockerfile', async () => {
@@ -26,12 +26,12 @@ RUN npm install`
   })
 
   const result = await computeNewDockerfileContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
     exec: mockExec,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -55,12 +55,12 @@ COPY . .`
   })
 
   const result = await computeNewDockerfileContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
     exec: mockExec,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -72,12 +72,12 @@ test('handles missing Dockerfile', async () => {
   const mockFs = createMockFs()
 
   const result = await computeNewDockerfileContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
     exec: mockExec,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')

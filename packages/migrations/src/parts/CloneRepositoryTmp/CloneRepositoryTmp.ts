@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 export interface CloneRepositoryTmpResult {
-  path: string
   [Symbol.asyncDispose]: () => Promise<void>
+  path: string
 }
 
 export const cloneRepositoryTmp = async (
@@ -23,7 +23,7 @@ export const cloneRepositoryTmp = async (
   return {
     path: tempDir,
     async [Symbol.asyncDispose](): Promise<void> {
-      await rm(tempDir, { recursive: true, force: true })
+      await rm(tempDir, { force: true, recursive: true })
     },
   }
 }

@@ -62,16 +62,16 @@ const getNewPackageFilesCore = async (
   } finally {
     for (const folder of toRemove) {
       await fs.rm(folder, {
-        recursive: true,
         force: true,
+        recursive: true,
       })
     }
   }
 }
 
 export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
-  dependencyName: string
   dependencyKey: string
+  dependencyName: string
   newVersion: string
   packageJsonPath: string
   packageLockJsonPath: string
@@ -96,9 +96,9 @@ export const getNewPackageFiles = async (
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
-          status: 'success',
           changedFiles: [],
           pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
+          status: 'success',
         }
       }
       throw error
@@ -116,26 +116,26 @@ export const getNewPackageFiles = async (
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
     return {
-      status: 'success',
       changedFiles: [
         {
-          path: options.packageJsonPath,
           content: result.newPackageJsonString,
+          path: options.packageJsonPath,
         },
         {
-          path: options.packageLockJsonPath,
           content: result.newPackageLockJsonString,
+          path: options.packageLockJsonPath,
         },
       ],
       pullRequestTitle,
+      status: 'success',
     }
   } catch (error) {
     return {
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: `feature: update dependencies`,
       errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: `feature: update dependencies`,
+      status: 'error',
     }
   }
 }
