@@ -26,4 +26,6 @@ export interface MigrationResult {
   readonly pullRequestTitle: string
   readonly status: 'success' | 'error'
   readonly statusCode: number
+  readonly branchName?: string
+  readonly commitMessage?: string
 }

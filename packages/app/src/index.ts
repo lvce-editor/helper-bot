@@ -16,6 +16,7 @@ import {
   handleAddOidcPermissions,
   handleRemoveNpmToken,
 } from './migrations/endpoints.js'
+import { registerMigrations2Endpoints } from './migrations2/endpoints.js'
 import * as MigrationsWorker from './migrationsWorker.js'
 
 const dependencies = dependenciesConfig.dependencies
@@ -140,6 +141,9 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
       secret: process.env.DEPENDENCIES_SECRET,
     }),
   )
+
+  // Migrations2 endpoints - dynamically registered
+  await registerMigrations2Endpoints(router, app, process.env.DEPENDENCIES_SECRET)
 }
 
 export default (app: Probot, { getRouter }: any) => {
