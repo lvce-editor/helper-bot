@@ -64,7 +64,7 @@ export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T
     try {
       return await command({
         ...options,
-        clonedRepoUri: pathToUri(clonedRepo.path),
+        clonedRepoUri: clonedRepo.uri,
         exec: wrapExeca(),
         fetch: globalThis.fetch,
         fs: wrapFs(),

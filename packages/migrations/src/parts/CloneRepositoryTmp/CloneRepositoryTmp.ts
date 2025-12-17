@@ -2,10 +2,11 @@ import { execa } from 'execa'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 export interface CloneRepositoryTmpResult {
-  [Symbol.asyncDispose]: () => Promise<void>
-  path: string
+  readonly [Symbol.asyncDispose]: () => Promise<void>
+  readonly uri: string
 }
 
 export const cloneRepositoryTmp = async (owner: string, repo: string): Promise<CloneRepositoryTmpResult> => {
@@ -13,8 +14,9 @@ export const cloneRepositoryTmp = async (owner: string, repo: string): Promise<C
 
   await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
 
+  const clonedUri = pathToFileURL(tempDir).href + '/'
   return {
-    path: tempDir,
+    uri: clonedUri,
     async [Symbol.asyncDispose](): Promise<void> {
       await rm(tempDir, { force: true, recursive: true })
     },
