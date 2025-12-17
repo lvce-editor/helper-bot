@@ -26,16 +26,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
   try {
     const releasedRepo = options.releasedRepositoryName
     if (releasedRepo === 'renderer-process') {
-<<<<<<< HEAD
       return emptyMigrationResult
-=======
-      return {
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-        status: 'success',
-        statusCode: 200,
-      }
->>>>>>> origin/main
     }
 
     const version = options.tagName.replace('v', '')
@@ -48,16 +39,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       currentContent = await options.fs.readFile(filePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-<<<<<<< HEAD
         return emptyMigrationResult
-=======
-        return {
-          changedFiles: [],
-          pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-          status: 'success',
-          statusCode: 200,
-        }
->>>>>>> origin/main
       }
       throw error
     }
@@ -67,16 +49,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
 
     if (currentContent === filesJsonStringNew) {
-<<<<<<< HEAD
       return emptyMigrationResult
-=======
-      return {
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-        status: 'success',
-        statusCode: 200,
-      }
->>>>>>> origin/main
     }
 
     return {
