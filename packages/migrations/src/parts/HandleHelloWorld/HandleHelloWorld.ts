@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 
 export const handleHelloWorld = async (): Promise<Response> => {
@@ -5,4 +6,8 @@ export const handleHelloWorld = async (): Promise<Response> => {
   return Response.json({
     migrations: x,
   })
+=======
+export const handleHelloWorld = async () => {
+  return new Response('Hello World')
+>>>>>>> origin/main
 }
