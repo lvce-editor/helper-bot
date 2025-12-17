@@ -248,18 +248,7 @@ export const registerMigrations2Endpoints = async (router: any, app: Probot, sec
   // Migrations2 endpoints - dynamically registered
   try {
     const commandsResult = await MigrationsWorker.invoke('/meta/list-commands-2')
-    let commands: string[] = []
-
-    if (commandsResult.type === 'error') {
-      console.warn('Failed to query migrations2 commands:', commandsResult.error)
-    } else {
-      // The RPC system returns the commands array directly, no serialization needed
-      commands = commandsResult.text
-      if (!Array.isArray(commands)) {
-        console.warn('Unexpected format for commands list, expected array')
-        commands = []
-      }
-    }
+    let commands: string[] = commandsResult
 
     // Filter commands that start with /migrations2
     const migrations2Commands = commands.filter((cmd: string) => cmd.startsWith('/migrations2'))
