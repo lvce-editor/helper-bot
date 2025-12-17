@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
@@ -48,12 +48,7 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
       currentContent = await options.fs.readFile(nvmrcPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
-          changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
-          status: 'success',
-          statusCode: 200,
-        }
+        return emptyMigrationResult
       }
       throw error
     }
@@ -62,29 +57,25 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     if (!result.shouldUpdate) {
-      return {
-        changedFiles: [],
-        pullRequestTitle,
-        status: 'success',
-        statusCode: 200,
-      }
+      return emptyMigrationResult
     }
 
     const hasChanges = currentContent !== result.newContent
 
-    return {
-      changedFiles: hasChanges
-        ? [
-            {
-              content: result.newContent,
-              path: '.nvmrc',
-            },
-          ]
-        : [],
+    if (!hasChanges) {
+      return emptyMigrationResult
+    }
+
+    return createMigrationResult({
+      changedFiles: [
+        {
+          content: result.newContent,
+          path: '.nvmrc',
+        },
+      ],
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
-    }
+    })
   } catch (error) {
     return createMigrationResult({
       changedFiles: [],

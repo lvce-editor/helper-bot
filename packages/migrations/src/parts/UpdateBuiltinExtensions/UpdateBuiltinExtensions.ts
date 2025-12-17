@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const getNewValue = (value: readonly any[], repoName: string, version: string): any[] => {
@@ -26,12 +26,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
   try {
     const releasedRepo = options.releasedRepositoryName
     if (releasedRepo === 'renderer-process') {
-      return {
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-        status: 'success',
-        statusCode: 200,
-      }
+      return emptyMigrationResult
     }
 
     const version = options.tagName.replace('v', '')
@@ -44,12 +39,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       currentContent = await options.fs.readFile(filePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
-          changedFiles: [],
-          pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-          status: 'success',
-          statusCode: 200,
-        }
+        return emptyMigrationResult
       }
       throw error
     }
@@ -59,12 +49,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
 
     if (currentContent === filesJsonStringNew) {
-      return {
-        changedFiles: [],
-        pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-        status: 'success',
-        statusCode: 200,
-      }
+      return emptyMigrationResult
     }
 
     return {

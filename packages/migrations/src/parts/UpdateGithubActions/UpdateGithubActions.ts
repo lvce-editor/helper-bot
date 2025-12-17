@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const WORKFLOWS_DIR = '.github/workflows'
 
@@ -44,12 +44,7 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // No workflows directory, nothing to do
-        return {
-          changedFiles: [],
-          pullRequestTitle: 'ci: update CI OS versions',
-          status: 'success',
-          statusCode: 200,
-        }
+        return emptyMigrationResult
       }
       throw error
     }

@@ -1,8 +1,8 @@
 import { test, expect } from '@jest/globals'
 import { join } from 'node:path'
+import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { removeGitpodSection } from '../src/parts/RemoveGitpodSection/RemoveGitpodSection.ts'
-import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 
 const mockExec = createMockExec()
 
@@ -33,12 +33,12 @@ Here's how to use the project.`
   })
 
   const result = await removeGitpodSection({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -72,12 +72,12 @@ Here's how to use the project.`
   })
 
   const result = await removeGitpodSection({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -111,12 +111,12 @@ Here's how to use it.`,
   })
 
   const result = await removeGitpodSection({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -133,12 +133,12 @@ test('handles missing README files', async () => {
   const mockFs = createMockFs()
 
   const result = await removeGitpodSection({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')

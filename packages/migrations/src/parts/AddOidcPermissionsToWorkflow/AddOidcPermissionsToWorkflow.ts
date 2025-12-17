@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const addOidcPermissionsToWorkflowContent = (content: Readonly<string>): string => {
@@ -48,12 +48,7 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
       originalContent = await options.fs.readFile(workflowPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
-          changedFiles: [],
-          pullRequestTitle: 'feature: update permissions for open id connect publishing',
-          status: 'success',
-          statusCode: 200,
-        }
+        return emptyMigrationResult
       }
       throw error
     }
@@ -63,12 +58,7 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
     const pullRequestTitle = 'feature: update permissions for open id connect publishing'
 
     if (!hasChanges) {
-      return {
-        changedFiles: [],
-        pullRequestTitle,
-        status: 'success',
-        statusCode: 200,
-      }
+      return emptyMigrationResult
     }
 
     return {

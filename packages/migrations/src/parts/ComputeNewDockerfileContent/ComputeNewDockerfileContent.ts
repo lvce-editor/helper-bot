@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
@@ -23,12 +23,7 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
       currentContent = await options.fs.readFile(dockerfilePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
-          changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
-          status: 'success',
-          statusCode: 200,
-        }
+        return emptyMigrationResult
       }
       throw error
     }
@@ -37,19 +32,20 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
     const hasChanges = currentContent !== newContent
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
-    return {
-      changedFiles: hasChanges
-        ? [
-            {
-              content: newContent,
-              path: 'Dockerfile',
-            },
-          ]
-        : [],
+    if (!hasChanges) {
+      return emptyMigrationResult
+    }
+
+    return createMigrationResult({
+      changedFiles: [
+        {
+          content: newContent,
+          path: 'Dockerfile',
+        },
+      ],
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
-    }
+    })
   } catch (error) {
     return createMigrationResult({
       changedFiles: [],

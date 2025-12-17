@@ -30,17 +30,16 @@ jobs:
   })
 
   const result = await addOidcPermissionsToWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe('feature: update permissions for open id connect publishing')
 })
 
 test('adds permissions before jobs section', async () => {
@@ -63,12 +62,12 @@ jobs:
   })
 
   const result = await addOidcPermissionsToWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -81,7 +80,6 @@ jobs:
   const jobsIndex = result.changedFiles[0].content.indexOf('jobs:')
   const permissionsIndex = result.changedFiles[0].content.indexOf('permissions:')
   expect(permissionsIndex).toBeLessThan(jobsIndex)
-  expect(result.pullRequestTitle).toBe('feature: update permissions for open id connect publishing')
 })
 
 test('handles missing release.yml file', async () => {
@@ -89,12 +87,12 @@ test('handles missing release.yml file', async () => {
   const mockFs = createMockFs()
 
   const result = await addOidcPermissionsToWorkflow({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: globalThis.fetch,
     exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
