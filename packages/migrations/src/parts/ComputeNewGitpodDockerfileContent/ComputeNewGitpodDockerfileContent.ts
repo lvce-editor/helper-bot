@@ -37,14 +37,14 @@ export const computeNewGitpodDockerfileContent = async (options: Readonly<Comput
     }
 
     return createMigrationResult({
-      status: 'success',
       changedFiles: [
         {
-          path: '.gitpod.Dockerfile',
           content: newContent,
+          path: '.gitpod.Dockerfile',
         },
       ],
       pullRequestTitle,
+      status: 'success',
     })
   } catch (error) {
     return createMigrationResult({

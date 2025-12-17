@@ -37,14 +37,14 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
     }
 
     return createMigrationResult({
-      status: 'success',
       changedFiles: [
         {
-          path: 'Dockerfile',
           content: newContent,
+          path: 'Dockerfile',
         },
       ],
       pullRequestTitle,
+      status: 'success',
     })
   } catch (error) {
     return createMigrationResult({

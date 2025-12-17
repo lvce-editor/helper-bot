@@ -5,36 +5,36 @@ import { computeNewDockerfileContent } from '../ComputeNewDockerfileContent/Comp
 import { computeNewGitpodDockerfileContent } from '../ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 import { computeNewNvmrcContent } from '../ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
+import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
 import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseReleased.ts'
+import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 import { listCommands } from '../ListCommands/ListCommands.ts'
-import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
+import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
 import { updateBuiltinExtensions } from '../UpdateBuiltinExtensions/UpdateBuiltinExtensions.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
-import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
+import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
 import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
-import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
-import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 
 export const commandMap = {
-  getNewPackageFiles: wrapCommand(getNewPackageFiles),
+  '/hello-world': wrapResponseCommand(handleHelloWorld),
+  '/meta/list-commands-2': listCommands2,
+  '/migrations/add-gitattributes': wrapCommand(addGitattributes),
   '/migrations/add-oidc-permissions': wrapCommand(addOidcPermissionsToWorkflow),
-  computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
+  '/migrations/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
+  '/migrations/remove-gitpod-section': wrapCommand(removeGitpodSection),
+  '/migrations/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
+  '/migrations/update-dependencies': wrapCommand(updateDependencies),
+  '/migrations/update-github-actions': wrapCommand(updateGithubActions),
+  '/migrations/update-node-version': wrapCommand(updateNodeVersion),
   computeNewDockerfileContent: wrapCommand(computeNewDockerfileContent),
   computeNewGitpodDockerfileContent: wrapCommand(computeNewGitpodDockerfileContent),
-  '/migrations/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
-  '/migrations/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
-  '/migrations/remove-gitpod-section': wrapCommand(removeGitpodSection),
-  '/migrations/update-node-version': wrapCommand(updateNodeVersion),
-  '/migrations/update-dependencies': wrapCommand(updateDependencies),
-  '/migrations/add-gitattributes': wrapCommand(addGitattributes),
-  '/migrations/update-github-actions': wrapCommand(updateGithubActions),
-  updateRepositoryDependencies: wrapCommand(updateRepositoryDependencies),
-  updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),
-  'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
-  '/hello-world': wrapResponseCommand(handleHelloWorld),
+  computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
+  getNewPackageFiles: wrapCommand(getNewPackageFiles),
   listCommands: wrapCommand(listCommands),
-  '/meta/list-commands-2': listCommands2,
+  'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
+  updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),
+  updateRepositoryDependencies: wrapCommand(updateRepositoryDependencies),
 }

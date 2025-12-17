@@ -67,14 +67,14 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     }
 
     return createMigrationResult({
-      status: 'success',
       changedFiles: [
         {
-          path: '.nvmrc',
           content: result.newContent,
+          path: '.nvmrc',
         },
       ],
       pullRequestTitle,
+      status: 'success',
     })
   } catch (error) {
     return createMigrationResult({
