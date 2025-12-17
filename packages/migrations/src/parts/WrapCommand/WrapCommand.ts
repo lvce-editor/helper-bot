@@ -1,8 +1,8 @@
 import { execa } from 'execa'
 import { constants } from 'node:fs'
 import * as FsPromises from 'node:fs/promises'
-import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import type { BaseMigrationOptions, ExecFunction, MigrationResult } from '../Types/Types.ts'
+import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
 
 const wrapExeca = (): ExecFunction => {

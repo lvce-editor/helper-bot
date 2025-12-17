@@ -16,9 +16,9 @@ export const cloneRepositoryTmp = async (owner: string, repo: string): Promise<C
 
   const clonedUri = pathToFileURL(tempDir).href + '/'
   return {
-    uri: clonedUri,
     async [Symbol.asyncDispose](): Promise<void> {
       await rm(tempDir, { force: true, recursive: true })
     },
+    uri: clonedUri,
   }
 }
