@@ -1,10 +1,10 @@
 import { test, expect, jest } from '@jest/globals'
-import { join } from 'node:path'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { updateSpecificDependency } from '../src/parts/UpdateSpecificDependency/UpdateSpecificDependency.ts'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
-test.skip('updates dependency successfully', async () => {
+test('updates dependency successfully', async () => {
   const oldPackageJson = {
     dependencies: {
       '@lvce-editor/test-with-playwright': '^1.0.0',
@@ -28,10 +28,10 @@ test.skip('updates dependency successfully', async () => {
     2,
   )
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'packages/e2e/package.json')]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -41,7 +41,7 @@ test.skip('updates dependency successfully', async () => {
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(join(cwd, 'package-lock.json'), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -50,7 +50,7 @@ test.skip('updates dependency successfully', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -69,13 +69,13 @@ test.skip('updates dependency successfully', async () => {
   expect(result.changedFiles[1].path).toBe('packages/e2e/package-lock.json')
 })
 
-test.skip('validates missing fromRepo parameter', async () => {
-  const clonedRepoPath = '/test/repo'
+test('validates missing fromRepo parameter', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExec = createMockExec()
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: '',
@@ -92,13 +92,13 @@ test.skip('validates missing fromRepo parameter', async () => {
   expect(result.changedFiles).toEqual([])
 })
 
-test.skip('validates missing toRepo parameter', async () => {
-  const clonedRepoPath = '/test/repo'
+test('validates missing toRepo parameter', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExec = createMockExec()
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -115,13 +115,13 @@ test.skip('validates missing toRepo parameter', async () => {
   expect(result.changedFiles).toEqual([])
 })
 
-test.skip('validates missing toFolder parameter', async () => {
-  const clonedRepoPath = '/test/repo'
+test('validates missing toFolder parameter', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExec = createMockExec()
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -138,13 +138,13 @@ test.skip('validates missing toFolder parameter', async () => {
   expect(result.changedFiles).toEqual([])
 })
 
-test.skip('validates missing tagName parameter', async () => {
-  const clonedRepoPath = '/test/repo'
+test('validates missing tagName parameter', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExec = createMockExec()
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -161,13 +161,13 @@ test.skip('validates missing tagName parameter', async () => {
   expect(result.changedFiles).toEqual([])
 })
 
-test.skip('validates missing repositoryOwner parameter', async () => {
-  const clonedRepoPath = '/test/repo'
+test('validates missing repositoryOwner parameter', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExec = createMockExec()
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -184,12 +184,12 @@ test.skip('validates missing repositoryOwner parameter', async () => {
   expect(result.changedFiles).toEqual([])
 })
 
-test.skip('validates missing clonedRepoPath parameter', async () => {
+test('validates missing clonedRepoUri parameter', async () => {
   const mockFs = createMockFs()
   const mockExec = createMockExec()
 
   const result = await updateSpecificDependency({
-    clonedRepoPath: '',
+    clonedRepoUri: '',
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -202,18 +202,18 @@ test.skip('validates missing clonedRepoPath parameter', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid or missing clonedRepoPath parameter')
+  expect(result.errorMessage).toBe('Invalid or missing clonedRepoUri parameter')
   expect(result.changedFiles).toEqual([])
 })
 
-test.skip('validates invalid asName parameter', async () => {
-  const clonedRepoPath = '/test/repo'
+test('validates invalid asName parameter', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExec = createMockExec()
 
   const result = await updateSpecificDependency({
     asName: '',
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -230,8 +230,8 @@ test.skip('validates invalid asName parameter', async () => {
   expect(result.changedFiles).toEqual([])
 })
 
-test.skip('handles missing package.json', async () => {
-  const clonedRepoPath = '/test/repo'
+test('handles missing package.json', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
   const mockExecFn = jest.fn(async () => {
     throw new Error('Should not be called')
@@ -239,7 +239,7 @@ test.skip('handles missing package.json', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -256,7 +256,7 @@ test.skip('handles missing package.json', async () => {
   expect(mockExecFn).not.toHaveBeenCalled()
 })
 
-test.skip('handles dependency not found in package.json', async () => {
+test('handles dependency not found in package.json', async () => {
   const oldPackageJson = {
     dependencies: {
       '@lvce-editor/other-package': '^1.0.0',
@@ -265,10 +265,10 @@ test.skip('handles dependency not found in package.json', async () => {
     version: '1.0.0',
   }
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'packages/e2e/package.json')]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
   const mockExecFn = jest.fn(async () => {
@@ -277,7 +277,7 @@ test.skip('handles dependency not found in package.json', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -294,7 +294,7 @@ test.skip('handles dependency not found in package.json', async () => {
   expect(mockExecFn).not.toHaveBeenCalled()
 })
 
-test.skip('handles dependency already at target version', async () => {
+test('handles dependency already at target version', async () => {
   const oldPackageJson = {
     dependencies: {
       '@lvce-editor/test-with-playwright': '^2.0.0',
@@ -303,10 +303,10 @@ test.skip('handles dependency already at target version', async () => {
     version: '1.0.0',
   }
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'packages/e2e/package.json')]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
   const mockExecFn = jest.fn(async () => {
@@ -315,7 +315,7 @@ test.skip('handles dependency already at target version', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',
@@ -332,7 +332,7 @@ test.skip('handles dependency already at target version', async () => {
   expect(mockExecFn).not.toHaveBeenCalled()
 })
 
-test.skip('uses asName when provided', async () => {
+test('uses asName when provided', async () => {
   const oldPackageJson = {
     dependencies: {
       '@lvce-editor/source-control-worker': '^1.0.0',
@@ -356,10 +356,10 @@ test.skip('uses asName when provided', async () => {
     2,
   )
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'packages/renderer-worker/package.json')]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/renderer-worker/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -369,7 +369,7 @@ test.skip('uses asName when provided', async () => {
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(join(cwd, 'package-lock.json'), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -379,7 +379,7 @@ test.skip('uses asName when provided', async () => {
 
   const result = await updateSpecificDependency({
     asName: 'source-control-worker',
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'source-control-view',
@@ -398,7 +398,7 @@ test.skip('uses asName when provided', async () => {
   expect(result.changedFiles[1].path).toBe('packages/renderer-worker/package-lock.json')
 })
 
-test.skip('handles devDependencies', async () => {
+test('handles devDependencies', async () => {
   const oldPackageJson = {
     devDependencies: {
       '@lvce-editor/test-with-playwright': '^1.0.0',
@@ -422,10 +422,10 @@ test.skip('handles devDependencies', async () => {
     2,
   )
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'packages/e2e/package.json')]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -435,7 +435,7 @@ test.skip('handles devDependencies', async () => {
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(join(cwd, 'package-lock.json'), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -444,7 +444,7 @@ test.skip('handles devDependencies', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await updateSpecificDependency({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fromRepo: 'test-with-playwright',

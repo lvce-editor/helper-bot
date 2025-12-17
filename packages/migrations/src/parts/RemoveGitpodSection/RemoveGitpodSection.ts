@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -17,37 +16,33 @@ export type RemoveGitpodSectionOptions = BaseMigrationOptions
 
 export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionOptions>): Promise<MigrationResult> => {
   try {
-    const readmePaths = ['README.md', 'readme.md', 'Readme.md', 'README.MD', 'readme.MD']
-    const changedFiles: Array<{ path: string; content: string }> = []
+    const readmePath = 'README.md'
+    const fullPath = new URL(readmePath, options.clonedRepoUri).toString()
 
-    for (const readmePath of readmePaths) {
-      const fullPath = join(options.clonedRepoPath, readmePath)
-
-      let originalContent: string
-      try {
-        originalContent = await options.fs.readFile(fullPath, 'utf8')
-      } catch (error: any) {
-        if (error && error.code === 'ENOENT') {
-          // File doesn't exist, skip
-          continue
-        }
-        throw error
+    let originalContent: string
+    try {
+      originalContent = await options.fs.readFile(fullPath, 'utf8')
+    } catch (error: any) {
+      if (error && error.code === 'ENOENT') {
+        // File doesn't exist, return empty result
+        return emptyMigrationResult
       }
-
-      const updatedContent = removeGitpodSectionContent(originalContent)
-      const hasChanges = originalContent !== updatedContent
-
-      if (hasChanges) {
-        changedFiles.push({
-          content: updatedContent,
-          path: readmePath,
-        })
-      }
+      throw error
     }
 
-    if (changedFiles.length === 0) {
+    const updatedContent = removeGitpodSectionContent(originalContent)
+    const hasChanges = originalContent !== updatedContent
+
+    if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const changedFiles: Array<{ path: string; content: string }> = [
+      {
+        content: updatedContent,
+        path: readmePath,
+      },
+    ]
 
     const pullRequestTitle = 'ci: remove Gitpod section from README'
 

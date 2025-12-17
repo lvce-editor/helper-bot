@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { join } from 'node:path'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { computeNewGitpodDockerfileContent } from '../src/parts/ComputeNewGitpodDockerfileContent/ComputeNewGitpodDockerfileContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
@@ -18,15 +18,15 @@ RUN nvm install 18.0.0 \\
  && nvm use 18.0.0 \\
  && nvm alias default 18.0.0`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, '.gitpod.Dockerfile')]: content,
+      [new URL('.gitpod.Dockerfile', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await computeNewGitpodDockerfileContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,
@@ -47,11 +47,11 @@ RUN nvm install 18.0.0 \\
 })
 
 test('handles missing .gitpod.Dockerfile', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
 
   const result = await computeNewGitpodDockerfileContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,

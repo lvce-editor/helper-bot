@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -14,7 +13,7 @@ export interface UpdateDependenciesOptions extends BaseMigrationOptions {
 
 export const updateDependencies = async (options: Readonly<UpdateDependenciesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = join(options.clonedRepoPath, options.packageJsonPath)
+    const packageJsonPath = new URL(options.packageJsonPath, options.clonedRepoUri).toString()
 
     // Read package.json to determine dependency key
     let oldPackageJson: any

@@ -1,8 +1,8 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { normalizePath } from '../UriUtils/UriUtils.ts'
 
 const getNewValue = (value: readonly any[], repoName: string, version: string): any[] => {
   return value.map((item) => {
@@ -32,7 +32,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     const version = options.tagName.replace('v', '')
 
     // Read the builtinExtensions.json file from the cloned target repo
-    const filePath = join(options.clonedRepoPath, options.targetFilePath)
+    const filePath = new URL(options.targetFilePath, options.clonedRepoUri).toString()
 
     let currentContent: string
     try {
@@ -57,7 +57,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       changedFiles: [
         {
           content: filesJsonStringNew,
-          path: options.targetFilePath,
+          path: normalizePath(options.targetFilePath),
         },
       ],
       commitMessage: `feature: update ${releasedRepo} to version ${options.tagName}`,

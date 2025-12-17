@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
@@ -9,7 +8,7 @@ export type AddGitattributesOptions = BaseMigrationOptions
 
 export const addGitattributes = async (options: Readonly<AddGitattributesOptions>): Promise<MigrationResult> => {
   try {
-    const gitattributesPath = join(options.clonedRepoPath, '.gitattributes')
+    const gitattributesPath = new URL('.gitattributes', options.clonedRepoUri).toString()
 
     // Check if .gitattributes already exists
     try {

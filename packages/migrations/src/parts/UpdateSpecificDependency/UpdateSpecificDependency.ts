@@ -1,9 +1,9 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, createValidationErrorMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
+import { normalizePath } from '../UriUtils/UriUtils.ts'
 
 export interface UpdateSpecificDependencyOptions extends BaseMigrationOptions {
   asName?: string
@@ -40,14 +40,15 @@ export const updateSpecificDependency = async (options: Readonly<UpdateSpecificD
       return createValidationErrorMigrationResult('Invalid asName parameter (must be a non-empty string if provided)', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
     }
 
-    if (!options.clonedRepoPath || typeof options.clonedRepoPath !== 'string' || options.clonedRepoPath.trim() === '') {
-      return createValidationErrorMigrationResult('Invalid or missing clonedRepoPath parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+    if (!options.clonedRepoUri || typeof options.clonedRepoUri !== 'string' || options.clonedRepoUri.trim() === '') {
+      return createValidationErrorMigrationResult('Invalid or missing clonedRepoUri parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
     }
 
     const version = options.tagName.replace('v', '')
     const dependencyName = options.asName || options.fromRepo
-    const packageJsonPath = join(options.toFolder, 'package.json')
-    const packageLockJsonPath = join(options.toFolder, 'package-lock.json')
+    const normalizedToFolder = normalizePath(options.toFolder)
+    const packageJsonPath = normalizePath(`${normalizedToFolder}/package.json`)
+    const packageLockJsonPath = normalizePath(`${normalizedToFolder}/package-lock.json`)
 
     // Update the dependency using the already cloned repository
     const result = await updateDependencies({

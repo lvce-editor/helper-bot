@@ -5,6 +5,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
 
 const getNewPackageFilesCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -20,16 +21,18 @@ const getNewPackageFilesCore = async (
   const { name } = oldPackageJson
   const tmpFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`)
   const tmpCacheFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`)
-  const toRemove = [tmpFolder, tmpCacheFolder]
+  const tmpFolderUri = pathToUri(tmpFolder)
+  const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
+  const toRemove = [tmpFolderUri, tmpCacheFolderUri]
   try {
     oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] = `^${newVersion}`
     const oldPackageJsonStringified = JSON.stringify(oldPackageJson, null, 2) + '\n'
-    await fs.mkdir(tmpFolder, { recursive: true })
-    await fs.writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
-    await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', tmpCacheFolder], {
-      cwd: tmpFolder,
+    await fs.mkdir(tmpFolderUri, { recursive: true })
+    await fs.writeFile(new URL('package.json', tmpFolderUri).toString(), oldPackageJsonStringified)
+    await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)], {
+      cwd: tmpFolderUri,
     })
-    const newPackageLockJsonString = await fs.readFile(join(tmpFolder, 'package-lock.json'), 'utf8')
+    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).toString(), 'utf8')
     return {
       newPackageJsonString: oldPackageJsonStringified,
       newPackageLockJsonString,
@@ -47,16 +50,16 @@ const getNewPackageFilesCore = async (
 }
 
 export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
-  dependencyKey: string
-  dependencyName: string
-  newVersion: string
-  packageJsonPath: string
-  packageLockJsonPath: string
+  readonly dependencyKey: string
+  readonly dependencyName: string
+  readonly newVersion: string
+  readonly packageJsonPath: string
+  readonly packageLockJsonPath: string
 }
 
 export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = join(options.clonedRepoPath, options.packageJsonPath)
+    const packageJsonPath = new URL(options.packageJsonPath, options.clonedRepoUri).toString()
 
     let oldPackageJson: any
     try {
@@ -73,16 +76,20 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
 
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
+    // Normalize paths in changedFiles to use forward slashes
+    const normalizedPackageJsonPath = options.packageJsonPath.replace(/\\/g, '/')
+    const normalizedPackageLockJsonPath = options.packageLockJsonPath.replace(/\\/g, '/')
+
     return {
       branchName: `feature/update-${options.dependencyName}-to-${options.newVersion}`,
       changedFiles: [
         {
           content: result.newPackageJsonString,
-          path: options.packageJsonPath,
+          path: normalizedPackageJsonPath,
         },
         {
           content: result.newPackageLockJsonString,
-          path: options.packageLockJsonPath,
+          path: normalizedPackageLockJsonPath,
         },
       ],
       commitMessage: pullRequestTitle,

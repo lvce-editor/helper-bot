@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { join } from 'node:path'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
@@ -23,15 +23,15 @@ function updateDependencies {
 
 updateDependencies`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'scripts/update-dependencies.sh')]: content,
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await computeEnsureLernaExcludedContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -65,15 +65,15 @@ function updateDependencies {
 
 updateDependencies`
 
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'scripts/update-dependencies.sh')]: content,
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: content,
     },
   })
 
   const result = await computeEnsureLernaExcludedContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -86,11 +86,11 @@ updateDependencies`
 })
 
 test('handles missing update-dependencies.sh script', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
 
   const result = await computeEnsureLernaExcludedContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,

@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { join } from 'node:path'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { computeNewNvmrcContent } from '../src/parts/ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
@@ -13,15 +13,15 @@ const mockFetch = createMockFetch([
 ])
 
 test('computes new nvmrc content when version should be updated', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, '.nvmrc')]: 'v18.0.0',
+      [new URL('.nvmrc', clonedRepoUri).toString()]: 'v18.0.0',
     },
   })
 
   const result = await computeNewNvmrcContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,
@@ -39,15 +39,15 @@ test('computes new nvmrc content when version should be updated', async () => {
 })
 
 test('returns same content when existing version is newer', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, '.nvmrc')]: 'v22.0.0',
+      [new URL('.nvmrc', clonedRepoUri).toString()]: 'v22.0.0',
     },
   })
 
   const result = await computeNewNvmrcContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,
@@ -61,11 +61,11 @@ test('returns same content when existing version is newer', async () => {
 })
 
 test('handles missing .nvmrc file', async () => {
-  const clonedRepoPath = '/test/repo'
+  const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
 
   const result = await computeNewNvmrcContent({
-    clonedRepoPath,
+    clonedRepoUri,
     exec: mockExec,
     fetch: mockFetch as unknown as typeof globalThis.fetch,
     fs: mockFs,

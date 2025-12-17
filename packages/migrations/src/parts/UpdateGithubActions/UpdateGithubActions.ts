@@ -1,6 +1,6 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { normalizePath } from '../UriUtils/UriUtils.ts'
 
 const WORKFLOWS_DIR = '.github/workflows'
 
@@ -33,7 +33,7 @@ export interface UpdateGithubActionsOptions extends BaseMigrationOptions {
 
 export const updateGithubActions = async (options: Readonly<UpdateGithubActionsOptions>): Promise<MigrationResult> => {
   try {
-    const workflowsPath = join(options.clonedRepoPath, WORKFLOWS_DIR)
+    const workflowsPath = new URL(WORKFLOWS_DIR, options.clonedRepoUri).toString()
 
     // Check if workflows directory exists
     let entries: any[]
@@ -68,8 +68,8 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
         continue
       }
 
-      const filePath = join(workflowsPath, fileName)
-      const relativePath = join(WORKFLOWS_DIR, fileName)
+      const filePath = new URL(fileName, workflowsPath).toString()
+      const relativePath = normalizePath(new URL(fileName, WORKFLOWS_DIR).toString())
 
       try {
         const content = await options.fs.readFile(filePath, 'utf8')

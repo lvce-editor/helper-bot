@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -50,7 +49,7 @@ export type ComputeEnsureLernaExcludedContentOptions = BaseMigrationOptions
 
 export const computeEnsureLernaExcludedContent = async (options: Readonly<ComputeEnsureLernaExcludedContentOptions>): Promise<MigrationResult> => {
   try {
-    const scriptPath = join(options.clonedRepoPath, 'scripts/update-dependencies.sh')
+    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
 
     let currentContent: string
     try {

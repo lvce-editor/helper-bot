@@ -1,4 +1,3 @@
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
@@ -16,7 +15,7 @@ export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
 
 export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmTokenFromWorkflowOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = join(options.clonedRepoPath, '.github/workflows/release.yml')
+    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
 
     let originalContent: string
     try {
