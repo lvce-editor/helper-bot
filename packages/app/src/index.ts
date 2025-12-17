@@ -41,7 +41,6 @@ const handleHelloWorld = async (req: any, res: any) => {
   } else {
     res.send(result.buffer)
   }
-  res.send('Hello World')
 }
 
 const enableCustomRoutes = async (app: Probot, getRouter: any) => {
