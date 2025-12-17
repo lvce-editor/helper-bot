@@ -279,6 +279,6 @@ export const registerMigrations2Endpoints = async (router: any, app: Probot, sec
     }
   } catch (error) {
     console.error('Failed to register migrations2 endpoints:', error)
-    captureException(error as Error)
+    process.exit(1)
   }
 }
