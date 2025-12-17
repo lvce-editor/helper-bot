@@ -30,8 +30,8 @@ const collectFiles = async (
       }
       await collectFiles(fs, entryPath, fileList)
     } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.ts'))) {
-        fileList.push(entryPath)
-      }
+      fileList.push(entryPath)
+    }
   }
 
   return fileList
