@@ -11,6 +11,7 @@
     "postinstall": "lerna bootstrap --ci",
     "lint": "eslint . && prettier --check .",
     "start": "cd packages/app && npm start",
+    "dev": "cd packages/app && npm run dev",
     "test": "lerna run test"
   },
   "prettier": {
