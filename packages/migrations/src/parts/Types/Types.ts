@@ -40,6 +40,6 @@ export type MigrationResult = MigrationSuccessResult | MigrationErrorResult
 
 export type MigrationSuccessResultWithoutStatusCode = Omit<MigrationSuccessResult, 'statusCode'>
 
-export type MigrationErrorResultWithoutStatusCode = Omit<MigrationErrorResult, 'statusCode'>
+export type MigrationErrorResultWithoutStatusCode = Omit<MigrationErrorResult, 'statusCode' | 'changedFiles'>
 
 export type MigrationResultWithoutStatusCode = MigrationSuccessResultWithoutStatusCode | MigrationErrorResultWithoutStatusCode

@@ -59,10 +59,17 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
       statusCode: 200,
     }
   } catch (error) {
-    return createMigrationResult({
+    const errorResult = {
       errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
       errorMessage: stringifyError(error),
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }

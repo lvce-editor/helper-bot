@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createValidationErrorMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { createMigrationResult, createValidationErrorMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
