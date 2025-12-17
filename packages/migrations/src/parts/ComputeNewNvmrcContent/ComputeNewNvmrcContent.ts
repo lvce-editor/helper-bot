@@ -53,7 +53,7 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     }
 
     const result = computeNewNvmrcContentCore(currentContent, newVersion)
-    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
+    const pullRequestTitle = `feature: update Node.js to version ${newVersion}`
 
     if (!result.shouldUpdate) {
       return emptyMigrationResult
