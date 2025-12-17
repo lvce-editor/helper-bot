@@ -33,7 +33,7 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
   await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context)])
 }
 
-const handleHelloWorld = (req: any, res: any) => {
+const handleHelloWorld = async (req: any, res: any) => {
   res.send('Hello World')
 }
 
