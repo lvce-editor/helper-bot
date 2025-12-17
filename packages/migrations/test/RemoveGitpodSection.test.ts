@@ -49,7 +49,8 @@ Here's how to use the project.`
   expect(result.changedFiles[0].content).toContain('## Installation')
   expect(result.changedFiles[0].content).toContain('## Usage')
   expect(result.pullRequestTitle).toBe('ci: remove Gitpod section from README')
-})
+  expect(result.branchName).toBe('feature/remove-gitpod-section')
+  expect(result.commitMessage).toBe('ci: remove Gitpod section from README')
 
 test('returns same content when Gitpod section is not found', async () => {
   const content = `# My Project

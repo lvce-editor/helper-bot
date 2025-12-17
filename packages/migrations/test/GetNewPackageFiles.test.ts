@@ -71,6 +71,8 @@ test('generates new package files with updated dependency', async () => {
   expect(result.changedFiles[1].path).toBe('package-lock.json')
   expect(result.changedFiles[1].content).toBe(mockPackageLockJson)
   expect(result.pullRequestTitle).toBe('feature: update shared to version 2.0.0')
+  expect(result.branchName).toBe('feature/update-shared-to-2.0.0')
+  expect(result.commitMessage).toBe('feature: update shared to version 2.0.0')
 
   expect(mockExecFn).toHaveBeenCalledTimes(1)
   expect(mockExecFn).toHaveBeenCalledWith(
