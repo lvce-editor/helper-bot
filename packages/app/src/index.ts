@@ -49,7 +49,7 @@ const handleHelloWorld = async (req: any, res: any) => {
 }
 
 const handleMigrationsList = async (req: any, res: any) => {
-  const result = await MigrationsWorker.invoke('/migrations/list')
+  const result = await MigrationsWorker.invoke('/migrations2/list')
   send(res, result)
 }
 
