@@ -27,6 +27,7 @@ jobs:
         with:
           tag_name: ${{ env.RG_VERSION }}
           name: ${{ env.RG_VERSION }}
+          draft: true
 
   build-release:
     name: build-release
@@ -51,3 +52,10 @@ jobs:
         run: npm ci
         if: steps.npm-cache.outputs.cache-hit != 'true'
       - run: npm test
+
+      - name: Publish GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.create-release.outputs.rg_version }}"
+          gh release edit $VERSION --draft=false
