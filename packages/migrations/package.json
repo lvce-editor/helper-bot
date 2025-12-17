@@ -6,8 +6,8 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "test": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
-    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch"
+    "test": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
+    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch"
   },
   "jest": {
     "injectGlobals": false,
@@ -34,13 +34,5 @@
     "@lvce-editor/verror": "^1.7.0",
     "execa": "^9.6.0"
   },
-  "devDependencies": {
-    "@jest/globals": "^30.2.0",
-    "@swc-node/jest": "^1.9.1",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.1",
-    "jest": "^30.2.0",
-    "nock": "^14.0.10",
-    "ts-jest": "^29.4.5"
-  }
+  "devDependencies": {}
 }
