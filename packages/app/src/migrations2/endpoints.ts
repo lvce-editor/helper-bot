@@ -125,7 +125,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       }
 
       // The RPC system returns the MigrationResult directly, no serialization needed
-      const result: MigrationResult = migrationResult.text
+      const result: MigrationResult = migrationResult
 
       // Handle error result
       if (result.status === 'error') {
