@@ -222,11 +222,7 @@ jobs:
     errorCode: 'RUN_LINT_IN_CI_FAILED',
     errorMessage: 'pr.yml: No suitable location found to add lint step. Expected to find one of: npm run type-check, npm test, or npm run build',
     status: 'error',
-<<<<<<< Updated upstream
-    statusCode: 400,
-=======
     statusCode: 424,
->>>>>>> Stashed changes
   })
 })
 
@@ -341,12 +337,6 @@ jobs:
     repositoryOwner: 'test',
   })
 
-<<<<<<< Updated upstream
-  expect(result.status).toEqual('success')
-  expect(result.changedFiles.length).toEqual(2)
-  expect(result.changedFiles[0].path).toEqual('.github/workflows/pr.yml')
-  expect(result.changedFiles[1].path).toEqual('.github/workflows/ci.yml')
-=======
   expect(result).toEqual({
     branchName: 'ci/add-lint-step',
     changedFiles: [
@@ -390,7 +380,6 @@ jobs:
     status: 'success',
     statusCode: 200,
   })
->>>>>>> Stashed changes
 })
 
 test('preserves indentation when adding lint step', async () => {
@@ -425,10 +414,6 @@ jobs:
     repositoryOwner: 'test',
   })
 
-<<<<<<< Updated upstream
-  expect(result.status).toEqual('success')
-  expect(result.changedFiles[0].content.includes('      - run: npm run lint')).toEqual(true)
-=======
   expect(result).toEqual({
     branchName: 'ci/add-lint-step',
     changedFiles: [
@@ -456,7 +441,6 @@ jobs:
     status: 'success',
     statusCode: 200,
   })
->>>>>>> Stashed changes
 })
 
 test('handles workflow with different indentation styles', async () => {
@@ -484,10 +468,6 @@ jobs:
     repositoryOwner: 'test',
   })
 
-<<<<<<< Updated upstream
-  expect(result.status).toEqual('success')
-  expect(result.changedFiles[0].content.includes('    - run: npm run lint')).toEqual(true)
-=======
   expect(result).toEqual({
     branchName: 'ci/add-lint-step',
     changedFiles: [
@@ -508,7 +488,6 @@ jobs:
     status: 'success',
     statusCode: 200,
   })
->>>>>>> Stashed changes
 })
 
 test('skips files with errors and processes others', async () => {
@@ -556,14 +535,6 @@ jobs:
     repositoryOwner: 'test',
   })
 
-<<<<<<< Updated upstream
-  expect(result.status).toEqual('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toEqual('RUN_LINT_IN_CI_FAILED')
-    expect(result.errorMessage?.includes('pr.yml')).toEqual(true)
-    expect(result.errorMessage?.includes('No suitable location found')).toEqual(true)
-  }
-=======
   expect(result).toEqual({
     changedFiles: [],
     errorCode: 'RUN_LINT_IN_CI_FAILED',
@@ -571,7 +542,6 @@ jobs:
     status: 'error',
     statusCode: 424,
   })
->>>>>>> Stashed changes
 })
 
 test('handles all three workflow files', async () => {
@@ -611,13 +581,6 @@ jobs:
     repositoryOwner: 'test',
   })
 
-<<<<<<< Updated upstream
-  expect(result.status).toEqual('success')
-  expect(result.changedFiles.length).toEqual(3)
-  expect(result.changedFiles[0].path).toEqual('.github/workflows/pr.yml')
-  expect(result.changedFiles[1].path).toEqual('.github/workflows/ci.yml')
-  expect(result.changedFiles[2].path).toEqual('.github/workflows/release.yml')
-=======
   expect(result).toEqual({
     branchName: 'ci/add-lint-step',
     changedFiles: [
@@ -654,7 +617,6 @@ jobs:
     status: 'success',
     statusCode: 200,
   })
->>>>>>> Stashed changes
 })
 
 test('handles workflow with no indentation', async () => {
@@ -680,12 +642,6 @@ steps:
     repositoryOwner: 'test',
   })
 
-<<<<<<< Updated upstream
-  expect(result.status).toEqual('success')
-  if (result.status === 'success') {
-    expect(result.changedFiles[0].content.includes('- run: npm run lint')).toEqual(true)
-  }
-=======
   expect(result).toEqual({
     branchName: 'ci/add-lint-step',
     changedFiles: [
@@ -704,7 +660,6 @@ steps:
     status: 'success',
     statusCode: 200,
   })
->>>>>>> Stashed changes
 })
 
 test('returns empty result when one file has lint and others do not exist', async () => {
@@ -773,12 +728,6 @@ jobs:
     repositoryOwner: 'test',
   })
 
-<<<<<<< Updated upstream
-  expect(result.status).toEqual('success')
-  if (result.status === 'success') {
-    expect(result.changedFiles[0].content.includes('npm run lint')).toEqual(true)
-  }
-=======
   expect(result).toEqual({
     branchName: 'ci/add-lint-step',
     changedFiles: [
@@ -798,5 +747,4 @@ jobs:
     status: 'success',
     statusCode: 200,
   })
->>>>>>> Stashed changes
 })
