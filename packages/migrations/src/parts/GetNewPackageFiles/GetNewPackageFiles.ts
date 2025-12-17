@@ -77,8 +77,8 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
     // Normalize paths in changedFiles to use forward slashes
-    const normalizedPackageJsonPath = options.packageJsonPath.replace(/\\/g, '/')
-    const normalizedPackageLockJsonPath = options.packageLockJsonPath.replace(/\\/g, '/')
+    const normalizedPackageJsonPath = options.packageJsonPath.replaceAll('\\', '/')
+    const normalizedPackageLockJsonPath = options.packageLockJsonPath.replaceAll('\\', '/')
 
     return {
       branchName: `feature/update-${options.dependencyName}-to-${options.newVersion}`,
@@ -99,12 +99,8 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
     }
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: `feature: update dependencies`,
       status: 'error',
     })
   }

@@ -51,12 +51,8 @@ export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmToke
     }
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: ERROR_CODES.REMOVE_NPM_TOKEN_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
       status: 'error',
     })
   }

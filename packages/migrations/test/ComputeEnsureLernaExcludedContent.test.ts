@@ -1,8 +1,8 @@
 import { test, expect } from '@jest/globals'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -39,13 +39,33 @@ updateDependencies`
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('scripts/update-dependencies.sh')
-  expect(result.changedFiles[0].content).toContain('OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`')
-  expect(result.pullRequestTitle).toBe('ci: ensure lerna is excluded from ncu commands')
-  expect(result.branchName).toBe('feature/ensure-lerna-excluded')
-  expect(result.commitMessage).toBe('ci: ensure lerna is excluded from ncu commands')
+  expect(result).toEqual({
+    branchName: 'feature/ensure-lerna-excluded',
+    changedFiles: [
+      {
+        content: `#!/bin/bash
+
+function updateDependencies {
+  echo "updating dependencies..."
+  OUTPUT=\`ncu -u -x probot -x jest -x @jest/globals -x lerna\`
+  SUB='All dependencies match the latest package versions'
+  if [[ "$OUTPUT" == *"$SUB"* ]]; then
+    echo "$OUTPUT"
+  else
+    rm -rf node_modules package-lock.json dist
+    npm install
+  fi
+}
+
+updateDependencies`,
+        path: 'scripts/update-dependencies.sh',
+      },
+    ],
+    commitMessage: 'ci: ensure lerna is excluded from ncu commands',
+    pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns same content when lerna is already excluded', async () => {
@@ -81,8 +101,14 @@ updateDependencies`
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('handles missing update-dependencies.sh script', async () => {
@@ -98,6 +124,12 @@ test('handles missing update-dependencies.sh script', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })

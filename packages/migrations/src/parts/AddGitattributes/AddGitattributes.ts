@@ -36,12 +36,8 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
     }
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: 'ADD_GITATTRIBUTES_FAILED',
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'ci: add .gitattributes file',
       status: 'error',
     })
   }

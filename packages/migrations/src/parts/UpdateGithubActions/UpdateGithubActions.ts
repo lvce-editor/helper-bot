@@ -101,11 +101,7 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
     }
   } catch (error: any) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorMessage: error instanceof Error ? error.message : String(error),
-      pullRequestTitle: 'ci: update CI OS versions',
       status: 'error',
     })
   }

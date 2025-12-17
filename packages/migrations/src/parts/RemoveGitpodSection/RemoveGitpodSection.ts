@@ -56,12 +56,8 @@ export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionO
     }
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: ERROR_CODES.REMOVE_GITPOD_SECTION_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'ci: remove Gitpod section from README',
       status: 'error',
     })
   }

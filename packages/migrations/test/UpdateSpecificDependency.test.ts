@@ -62,11 +62,23 @@ test('updates dependency successfully', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(2)
-  expect(result.changedFiles[0].path).toBe('packages/e2e/package.json')
-  expect(result.changedFiles[0].content).toContain('"@lvce-editor/test-with-playwright": "^2.0.0"')
-  expect(result.changedFiles[1].path).toBe('packages/e2e/package-lock.json')
+  expect(result).toEqual({
+    status: 'success',
+    statusCode: 200,
+    changedFiles: [
+      {
+        path: 'packages/e2e/package.json',
+        content: expect.stringContaining('"@lvce-editor/test-with-playwright": "^2.0.0"'),
+      },
+      {
+        path: 'packages/e2e/package-lock.json',
+        content: mockPackageLockJson,
+      },
+    ],
+    pullRequestTitle: expect.any(String),
+    branchName: expect.any(String),
+    commitMessage: expect.any(String),
+  })
 })
 
 test('validates missing fromRepo parameter', async () => {
@@ -87,9 +99,12 @@ test('validates missing fromRepo parameter', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid or missing fromRepo parameter')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'error',
+    statusCode: 400,
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Invalid or missing fromRepo parameter',
+  })
 })
 
 test('validates missing toRepo parameter', async () => {
@@ -110,9 +125,12 @@ test('validates missing toRepo parameter', async () => {
     toRepo: '',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid or missing toRepo parameter')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'error',
+    statusCode: 400,
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Invalid or missing toRepo parameter',
+  })
 })
 
 test('validates missing toFolder parameter', async () => {
@@ -133,9 +151,12 @@ test('validates missing toFolder parameter', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid or missing toFolder parameter')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'error',
+    statusCode: 400,
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Invalid or missing toFolder parameter',
+  })
 })
 
 test('validates missing tagName parameter', async () => {
@@ -156,9 +177,12 @@ test('validates missing tagName parameter', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid or missing tagName parameter')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'error',
+    statusCode: 400,
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Invalid or missing tagName parameter',
+  })
 })
 
 test('validates missing repositoryOwner parameter', async () => {
@@ -179,9 +203,12 @@ test('validates missing repositoryOwner parameter', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid or missing repositoryOwner parameter')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'error',
+    statusCode: 400,
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Invalid or missing repositoryOwner parameter',
+  })
 })
 
 test('validates missing clonedRepoUri parameter', async () => {
@@ -201,9 +228,12 @@ test('validates missing clonedRepoUri parameter', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid or missing clonedRepoUri parameter')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'error',
+    statusCode: 400,
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Invalid or missing clonedRepoUri parameter',
+  })
 })
 
 test('validates invalid asName parameter', async () => {
@@ -225,9 +255,12 @@ test('validates invalid asName parameter', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorMessage).toBe('Invalid asName parameter (must be a non-empty string if provided)')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'error',
+    statusCode: 400,
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Invalid asName parameter (must be a non-empty string if provided)',
+  })
 })
 
 test('handles missing package.json', async () => {
@@ -251,8 +284,14 @@ test('handles missing package.json', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'success',
+    statusCode: 200,
+    changedFiles: [],
+    pullRequestTitle: '',
+    branchName: '',
+    commitMessage: '',
+  })
   expect(mockExecFn).not.toHaveBeenCalled()
 })
 
@@ -289,8 +328,14 @@ test('handles dependency not found in package.json', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'success',
+    statusCode: 200,
+    changedFiles: [],
+    pullRequestTitle: '',
+    branchName: '',
+    commitMessage: '',
+  })
   expect(mockExecFn).not.toHaveBeenCalled()
 })
 
@@ -327,8 +372,14 @@ test('handles dependency already at target version', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    status: 'success',
+    statusCode: 200,
+    changedFiles: [],
+    pullRequestTitle: '',
+    branchName: '',
+    commitMessage: '',
+  })
   expect(mockExecFn).not.toHaveBeenCalled()
 })
 
@@ -391,11 +442,23 @@ test('uses asName when provided', async () => {
     toRepo: 'lvce-editor',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(2)
-  expect(result.changedFiles[0].path).toBe('packages/renderer-worker/package.json')
-  expect(result.changedFiles[0].content).toContain('"@lvce-editor/source-control-worker": "^2.0.0"')
-  expect(result.changedFiles[1].path).toBe('packages/renderer-worker/package-lock.json')
+  expect(result).toEqual({
+    status: 'success',
+    statusCode: 200,
+    changedFiles: [
+      {
+        path: 'packages/renderer-worker/package.json',
+        content: expect.stringContaining('"@lvce-editor/source-control-worker": "^2.0.0"'),
+      },
+      {
+        path: 'packages/renderer-worker/package-lock.json',
+        content: mockPackageLockJson,
+      },
+    ],
+    pullRequestTitle: expect.any(String),
+    branchName: expect.any(String),
+    commitMessage: expect.any(String),
+  })
 })
 
 test('handles devDependencies', async () => {
@@ -456,9 +519,21 @@ test('handles devDependencies', async () => {
     toRepo: 'test-worker',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(2)
-  expect(result.changedFiles[0].path).toBe('packages/e2e/package.json')
-  expect(result.changedFiles[0].content).toContain('"@lvce-editor/test-with-playwright": "^2.0.0"')
-  expect(result.changedFiles[0].content).toContain('devDependencies')
+  expect(result).toEqual({
+    status: 'success',
+    statusCode: 200,
+    changedFiles: [
+      {
+        path: 'packages/e2e/package.json',
+        content: expect.stringMatching(/.*"@lvce-editor\/test-with-playwright": "\^2\.0\.0".*devDependencies.*/s),
+      },
+      {
+        path: 'packages/e2e/package-lock.json',
+        content: mockPackageLockJson,
+      },
+    ],
+    pullRequestTitle: expect.any(String),
+    branchName: expect.any(String),
+    commitMessage: expect.any(String),
+  })
 })

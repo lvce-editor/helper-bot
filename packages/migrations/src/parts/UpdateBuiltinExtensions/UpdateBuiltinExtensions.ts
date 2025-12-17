@@ -67,12 +67,8 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     }
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: `feature: update ${options.repositoryName} to version ${options.tagName}`,
       status: 'error',
     })
   }

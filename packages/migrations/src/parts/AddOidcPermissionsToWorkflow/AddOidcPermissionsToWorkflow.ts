@@ -42,16 +42,12 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
   try {
     const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
 
-    let originalContent: string
-    try {
-      originalContent = await options.fs.readFile(workflowPath, 'utf8')
-    } catch (error: any) {
-      if (error && error.code === 'ENOENT') {
-        return emptyMigrationResult
-      }
-      throw error
+    const fileExists = await options.fs.exists(workflowPath)
+    if (!fileExists) {
+      return emptyMigrationResult
     }
 
+    const originalContent = await options.fs.readFile(workflowPath, 'utf8')
     const updatedContent = addOidcPermissionsToWorkflowContent(originalContent)
     const hasChanges = originalContent !== updatedContent
     const pullRequestTitle = 'feature: update permissions for open id connect publishing'
@@ -75,12 +71,8 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
     }
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: ERROR_CODES.ADD_OIDC_PERMISSIONS_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'feature: update permissions for open id connect publishing',
       status: 'error',
     })
   }

@@ -8,7 +8,7 @@ export interface BaseMigrationOptions {
   readonly clonedRepoUri: string
   readonly exec: ExecFunction
   readonly fetch: typeof globalThis.fetch
-  readonly fs: typeof FsPromises
+  readonly fs: typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> }
   readonly [key: string]: any
   readonly repositoryName: string
   readonly repositoryOwner: string
@@ -19,13 +19,26 @@ export interface ChangedFile {
   readonly path: string
 }
 
-export interface MigrationResult {
+export interface MigrationSuccessResult {
   readonly branchName?: string
   readonly changedFiles: ChangedFile[]
   readonly commitMessage?: string
-  readonly errorCode?: string
-  readonly errorMessage?: string
   readonly pullRequestTitle: string
-  readonly status: 'success' | 'error'
+  readonly status: 'success'
   readonly statusCode: number
 }
+
+export interface MigrationErrorResult {
+  readonly errorCode?: string
+  readonly errorMessage?: string
+  readonly status: 'error'
+  readonly statusCode: number
+}
+
+export type MigrationResult = MigrationSuccessResult | MigrationErrorResult
+
+export type MigrationSuccessResultWithoutStatusCode = Omit<MigrationSuccessResult, 'statusCode'>
+
+export type MigrationErrorResultWithoutStatusCode = Omit<MigrationErrorResult, 'statusCode'>
+
+export type MigrationResultWithoutStatusCode = MigrationSuccessResultWithoutStatusCode | MigrationErrorResultWithoutStatusCode

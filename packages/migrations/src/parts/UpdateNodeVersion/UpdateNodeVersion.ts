@@ -15,23 +15,15 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
     // Check for errors
     if (nvmrcResult.status === 'error') {
       return createMigrationResult({
-        branchName: '',
-        changedFiles: [],
-        commitMessage: '',
         errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
         errorMessage: nvmrcResult.errorMessage || 'Failed to compute .nvmrc content',
-        pullRequestTitle: 'ci: update Node.js version',
         status: 'error',
       })
     }
     if (dockerfileResult.status === 'error') {
       return createMigrationResult({
-        branchName: '',
-        changedFiles: [],
-        commitMessage: '',
         errorCode: ERROR_CODES.COMPUTE_DOCKERFILE_CONTENT_FAILED,
         errorMessage: dockerfileResult.errorMessage || 'Failed to compute Dockerfile content',
-        pullRequestTitle: 'ci: update Node.js version',
         status: 'error',
       })
     }
@@ -54,12 +46,8 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
     }
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'ci: update Node.js version',
       status: 'error',
     })
   }

@@ -62,12 +62,8 @@ export const updateSpecificDependency = async (options: Readonly<UpdateSpecificD
     return result
   } catch (error) {
     return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: `feature: update ${options.fromRepo} dependency in ${options.toRepo}`,
       status: 'error',
     })
   }
