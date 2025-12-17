@@ -71,11 +71,13 @@ test('successfully migrates from classic to ruleset', async (): Promise<void> =>
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     data: {
       message: 'Successfully migrated branch protection from classic to rulesets',
       migrated: true,
       rulesetId: 456,
     },
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
   })
@@ -115,10 +117,12 @@ test('returns success when no classic protection found', async (): Promise<void>
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     data: {
       message: 'No classic branch protection found',
       migrated: false,
     },
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
   })
@@ -174,11 +178,13 @@ test('returns success when ruleset already exists', async (): Promise<void> => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     data: {
       message: 'Ruleset already exists for this branch',
       migrated: false,
       rulesetId: 123,
     },
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
   })
@@ -236,8 +242,10 @@ test('returns error when creating ruleset fails', async (): Promise<void> => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'CREATE_RULESET_FAILED',
     errorMessage: expect.stringContaining('Failed to create ruleset'),
+    pullRequestTitle: '',
     status: 'error',
   })
 })
@@ -307,8 +315,10 @@ test('returns error when deleting classic protection fails', async (): Promise<v
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'DELETE_CLASSIC_PROTECTION_FAILED',
     errorMessage: expect.stringContaining('Failed to delete classic branch protection'),
+    pullRequestTitle: '',
     status: 'error',
   })
 })
@@ -375,11 +385,13 @@ test('handles custom branch name', async (): Promise<void> => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     data: {
       message: expect.any(String),
       migrated: true,
       rulesetId: 999,
     },
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
   })
@@ -901,10 +913,12 @@ test('handles 403 error when fetching classic protection', async (): Promise<voi
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     data: {
       message: expect.any(String),
       migrated: false,
     },
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
   })
