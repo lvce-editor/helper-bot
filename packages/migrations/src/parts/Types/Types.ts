@@ -5,25 +5,25 @@ export interface ExecFunction {
 }
 
 export interface BaseMigrationOptions {
-  repositoryOwner: string
-  repositoryName: string
-  fs: typeof FsPromises
-  clonedRepoPath: string
-  fetch: typeof globalThis.fetch
-  exec: ExecFunction
-  [key: string]: any
+  readonly repositoryOwner: string
+  readonly repositoryName: string
+  readonly fs: typeof FsPromises
+  readonly clonedRepoPath: string
+  readonly fetch: typeof globalThis.fetch
+  readonly exec: ExecFunction
+  readonly [key: string]: any
 }
 
 export interface ChangedFile {
-  path: string
-  content: string
+  readonly path: string
+  readonly content: string
 }
 
 export interface MigrationResult {
-  status: 'success' | 'error'
-  changedFiles: ChangedFile[]
-  pullRequestTitle: string
-  errorCode?: string
-  errorMessage?: string
-  statusCode: number
+  readonly status: 'success' | 'error'
+  readonly changedFiles: ChangedFile[]
+  readonly pullRequestTitle: string
+  readonly errorCode?: string
+  readonly errorMessage?: string
+  readonly statusCode: number
 }
