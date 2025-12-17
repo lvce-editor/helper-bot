@@ -12,10 +12,7 @@ const parseVersion = (content: string): number => {
   return Number.parseInt(trimmed)
 }
 
-const computeNewNvmrcContentCore = (
-  currentContent: Readonly<string>,
-  newVersion: Readonly<string>,
-): { newContent: string; shouldUpdate: boolean } => {
+const computeNewNvmrcContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): { newContent: string; shouldUpdate: boolean } => {
   try {
     const existingVersionNumber = parseVersion(currentContent)
     const newVersionNumber = parseVersion(newVersion)
@@ -40,9 +37,7 @@ const computeNewNvmrcContentCore = (
 
 export type ComputeNewNvmrcContentOptions = BaseMigrationOptions
 
-export const computeNewNvmrcContent = async (
-  options: Readonly<ComputeNewNvmrcContentOptions>,
-): Promise<MigrationResult> => {
+export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
     const nvmrcPath = join(options.clonedRepoPath, '.nvmrc')

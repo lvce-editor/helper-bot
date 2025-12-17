@@ -40,9 +40,7 @@ jobs:
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe(
-    'feature: update permissions for open id connect publishing',
-  )
+  expect(result.pullRequestTitle).toBe('feature: update permissions for open id connect publishing')
 })
 
 test('adds permissions before jobs section', async () => {
@@ -77,18 +75,13 @@ jobs:
   expect(result.changedFiles).toHaveLength(1)
   expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
   expect(result.changedFiles[0].content).toContain('permissions:')
-  expect(result.changedFiles[0].content).toContain(
-    'id-token: write # Required for OIDC',
-  )
+  expect(result.changedFiles[0].content).toContain('id-token: write # Required for OIDC')
   expect(result.changedFiles[0].content).toContain('contents: write')
   expect(result.changedFiles[0].content).toContain('jobs:')
   const jobsIndex = result.changedFiles[0].content.indexOf('jobs:')
-  const permissionsIndex =
-    result.changedFiles[0].content.indexOf('permissions:')
+  const permissionsIndex = result.changedFiles[0].content.indexOf('permissions:')
   expect(permissionsIndex).toBeLessThan(jobsIndex)
-  expect(result.pullRequestTitle).toBe(
-    'feature: update permissions for open id connect publishing',
-  )
+  expect(result.pullRequestTitle).toBe('feature: update permissions for open id connect publishing')
 })
 
 test('handles missing release.yml file', async () => {

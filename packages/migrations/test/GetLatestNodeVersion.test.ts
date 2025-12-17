@@ -11,9 +11,7 @@ test('returns latest LTS version', async () => {
 
   const mockFetch = createMockFetch(mockVersions)
 
-  const version = await getLatestNodeVersion(
-    mockFetch as unknown as typeof globalThis.fetch,
-  )
+  const version = await getLatestNodeVersion(mockFetch as unknown as typeof globalThis.fetch)
 
   expect(version).toBe('v20.0.0')
 })
@@ -26,7 +24,5 @@ test('throws error when no LTS version found', async () => {
 
   const mockFetch = createMockFetch(mockVersions)
 
-  await expect(
-    getLatestNodeVersion(mockFetch as unknown as typeof globalThis.fetch),
-  ).rejects.toThrow('No LTS version found')
+  await expect(getLatestNodeVersion(mockFetch as unknown as typeof globalThis.fetch)).rejects.toThrow('No LTS version found')
 })

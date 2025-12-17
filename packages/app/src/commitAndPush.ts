@@ -28,11 +28,7 @@ export const commitAndPush = async (
     return false
   }
 
-  const {
-    commitMessage = 'update dependencies',
-    createNewBranch = true,
-    baseBranch = 'main',
-  } = options
+  const { commitMessage = 'update dependencies', createNewBranch = true, baseBranch = 'main' } = options
 
   const branchRef = await octokit.rest.git.getRef({
     owner,

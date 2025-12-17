@@ -8,11 +8,7 @@ import { addOidcPermissionsMigration } from './addOidcPermissions.js'
 import { removeNpmTokenMigration } from './removeNpmToken.js'
 import type { MigrationEndpointParams } from './types.js'
 
-const verifySecret = (
-  req: Request,
-  res: Response,
-  secret: string | undefined,
-): boolean => {
+const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
   const providedSecret = req.query.secret
   if (providedSecret !== secret) {
     res.status(401).send('Unauthorized')
@@ -21,10 +17,7 @@ const verifySecret = (
   return true
 }
 
-const createMigrationHandler = (
-  migration: any,
-  { app, secret }: MigrationEndpointParams,
-) => {
+const createMigrationHandler = (migration: any, { app, secret }: MigrationEndpointParams) => {
   return async (req: Request, res: Response) => {
     if (!verifySecret(req, res, secret)) {
       return
@@ -59,21 +52,15 @@ const createMigrationHandler = (
       } catch (error) {
         // @ts-ignore
         if (error && error.status === 404) {
-          throw new Error(
-            `app not installed on ${owner}/${repo} (missing installation)`,
-          )
+          throw new Error(`app not installed on ${owner}/${repo} (missing installation)`)
         }
-        throw new Error(
-          `failed to get installation for ${owner}/${repo}: ${error}`,
-        )
+        throw new Error(`failed to get installation for ${owner}/${repo}: ${error}`)
       }
       let octokit
       try {
         octokit = await app.auth(installation.id)
       } catch (error) {
-        throw new Error(
-          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`,
-        )
+        throw new Error(`failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`)
       }
 
       const result = await migration.run({
@@ -93,9 +80,7 @@ const createMigrationHandler = (
       }
 
       res.status(200).json({
-        message:
-          result.message ||
-          `${migration.name} migration completed successfully`,
+        message: result.message || `${migration.name} migration completed successfully`,
         changedFiles: result.changedFiles,
         newBranch: result.newBranch,
       })
@@ -109,23 +94,16 @@ const createMigrationHandler = (
   }
 }
 
-export const handleUpdateNodeVersion = (params: MigrationEndpointParams) =>
-  createMigrationHandler(updateNodeVersionMigration, params)
+export const handleUpdateNodeVersion = (params: MigrationEndpointParams) => createMigrationHandler(updateNodeVersionMigration, params)
 
-export const handleUpdateDependencies = (params: MigrationEndpointParams) =>
-  createMigrationHandler(updateDependenciesMigration, params)
+export const handleUpdateDependencies = (params: MigrationEndpointParams) => createMigrationHandler(updateDependenciesMigration, params)
 
-export const handleEnsureLernaExcluded = (params: MigrationEndpointParams) =>
-  createMigrationHandler(ensureLernaExcludedMigration, params)
+export const handleEnsureLernaExcluded = (params: MigrationEndpointParams) => createMigrationHandler(ensureLernaExcludedMigration, params)
 
-export const handleUpdateGithubActions = (params: MigrationEndpointParams) =>
-  createMigrationHandler(updateGithubActionsMigration, params)
+export const handleUpdateGithubActions = (params: MigrationEndpointParams) => createMigrationHandler(updateGithubActionsMigration, params)
 
-export const handleAddGitattributes = (params: MigrationEndpointParams) =>
-  createMigrationHandler(addGitattributesMigration, params)
+export const handleAddGitattributes = (params: MigrationEndpointParams) => createMigrationHandler(addGitattributesMigration, params)
 
-export const handleAddOidcPermissions = (params: MigrationEndpointParams) =>
-  createMigrationHandler(addOidcPermissionsMigration, params)
+export const handleAddOidcPermissions = (params: MigrationEndpointParams) => createMigrationHandler(addOidcPermissionsMigration, params)
 
-export const handleRemoveNpmToken = (params: MigrationEndpointParams) =>
-  createMigrationHandler(removeNpmTokenMigration, params)
+export const handleRemoveNpmToken = (params: MigrationEndpointParams) => createMigrationHandler(removeNpmTokenMigration, params)

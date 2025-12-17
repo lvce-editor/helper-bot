@@ -5,9 +5,7 @@ import type { Migration, MigrationParams, MigrationResult } from './types.js'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 
-export const checkAndAddGitattributes = async (
-  root: string,
-): Promise<boolean> => {
+export const checkAndAddGitattributes = async (root: string): Promise<boolean> => {
   const gitattributesPath = join(root, '.gitattributes')
 
   try {
@@ -46,11 +44,7 @@ export const addGitattributesMigration: Migration = {
 
       try {
         // Clone the repository
-        await execa('git', [
-          'clone',
-          `https://github.com/${owner}/${repo}.git`,
-          tempDir,
-        ])
+        await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
 
         // Check and add .gitattributes file
         const hasChanges = await checkAndAddGitattributes(tempDir)

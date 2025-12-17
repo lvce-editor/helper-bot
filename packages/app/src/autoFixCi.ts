@@ -94,12 +94,7 @@ const handleQueueItem = async (item: QueueItem): Promise<void> => {
 
 const { addToQueue } = createQueue<QueueItem>(handleQueueItem)
 
-export const autoFixCi = async (
-  octokit: ProbotOctokit,
-  owner: string,
-  repo: string,
-  prNumber: number,
-): Promise<void> => {
+export const autoFixCi = async (octokit: ProbotOctokit, owner: string, repo: string, prNumber: number): Promise<void> => {
   await addToQueue({
     octokit,
     owner,

@@ -11,10 +11,7 @@ class MockFs {
     this.files = { ...options.files }
   }
 
-  async readFile(
-    path: string | Buffer | URL,
-    encoding?: string,
-  ): Promise<string> {
+  async readFile(path: string | Buffer | URL, encoding?: string): Promise<string> {
     const pathStr = typeof path === 'string' ? path : path.toString()
     if (this.files[pathStr] === undefined) {
       const error = new Error('ENOENT: no such file or directory')
@@ -25,10 +22,7 @@ class MockFs {
     return this.files[pathStr]
   }
 
-  async writeFile(
-    path: string | Buffer | URL,
-    data: string | Buffer,
-  ): Promise<void> {
+  async writeFile(path: string | Buffer | URL, data: string | Buffer): Promise<void> {
     const pathStr = typeof path === 'string' ? path : path.toString()
     const dataStr = typeof data === 'string' ? data : data.toString()
     this.files[pathStr] = dataStr
@@ -60,8 +54,6 @@ class MockFs {
   }
 }
 
-export const createMockFs = (
-  options: MockFsOptions = {},
-): typeof FsPromises => {
+export const createMockFs = (options: MockFsOptions = {}): typeof FsPromises => {
   return new MockFs(options) as unknown as typeof FsPromises
 }

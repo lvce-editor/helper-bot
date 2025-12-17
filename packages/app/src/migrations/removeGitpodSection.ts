@@ -28,13 +28,7 @@ const removeGitpodSection = async (readmePath: string): Promise<boolean> => {
 }
 
 const updateReadmeFiles = async (root: string): Promise<boolean> => {
-  const readmePaths = [
-    'README.md',
-    'readme.md',
-    'Readme.md',
-    'README.MD',
-    'readme.MD',
-  ]
+  const readmePaths = ['README.md', 'readme.md', 'Readme.md', 'README.MD', 'readme.MD']
 
   let hasChanges = false
 
@@ -51,8 +45,7 @@ const updateReadmeFiles = async (root: string): Promise<boolean> => {
 
 export const removeGitpodSectionMigration: Migration = {
   name: 'removeGitpodSection',
-  description:
-    'Remove Gitpod sections from README files since Gitpod has shut down',
+  description: 'Remove Gitpod sections from README files since Gitpod has shut down',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params
@@ -66,11 +59,7 @@ export const removeGitpodSectionMigration: Migration = {
 
       try {
         // Clone the repository
-        await execa('git', [
-          'clone',
-          `https://github.com/${owner}/${repo}.git`,
-          tempDir,
-        ])
+        await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
 
         // Update README files
         const hasChanges = await updateReadmeFiles(tempDir)
@@ -98,11 +87,7 @@ export const removeGitpodSectionMigration: Migration = {
         const newBranch = `remove-gitpod-section-${Date.now()}`
         await execa('git', ['checkout', '-b', newBranch], { cwd: tempDir })
         await execa('git', ['add', '.'], { cwd: tempDir })
-        await execa(
-          'git',
-          ['commit', '-m', 'ci: remove Gitpod section from README'],
-          { cwd: tempDir },
-        )
+        await execa('git', ['commit', '-m', 'ci: remove Gitpod section from README'], { cwd: tempDir })
         await execa('git', ['push', 'origin', newBranch], { cwd: tempDir })
 
         // Create pull request

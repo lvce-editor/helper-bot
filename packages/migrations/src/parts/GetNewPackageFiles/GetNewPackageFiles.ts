@@ -17,42 +17,18 @@ const getNewPackageFilesCore = async (
   newPackageLockJsonString: string
 }> => {
   const { name } = oldPackageJson
-  const tmpFolder = join(
-    tmpdir(),
-    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
-  )
-  const tmpCacheFolder = join(
-    tmpdir(),
-    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`,
-  )
+  const tmpFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`)
+  const tmpCacheFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`)
   const toRemove = [tmpFolder, tmpCacheFolder]
   try {
-    oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
-      `^${newVersion}`
-    const oldPackageJsonStringified =
-      JSON.stringify(oldPackageJson, null, 2) + '\n'
+    oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] = `^${newVersion}`
+    const oldPackageJsonStringified = JSON.stringify(oldPackageJson, null, 2) + '\n'
     await fs.mkdir(tmpFolder, { recursive: true })
-    await fs.writeFile(
-      join(tmpFolder, 'package.json'),
-      oldPackageJsonStringified,
-    )
-    await exec(
-      'npm',
-      [
-        'install',
-        '--ignore-scripts',
-        '--prefer-online',
-        '--cache',
-        tmpCacheFolder,
-      ],
-      {
-        cwd: tmpFolder,
-      },
-    )
-    const newPackageLockJsonString = await fs.readFile(
-      join(tmpFolder, 'package-lock.json'),
-      'utf8',
-    )
+    await fs.writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
+    await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', tmpCacheFolder], {
+      cwd: tmpFolder,
+    })
+    const newPackageLockJsonString = await fs.readFile(join(tmpFolder, 'package-lock.json'), 'utf8')
     return {
       newPackageJsonString: oldPackageJsonStringified,
       newPackageLockJsonString,
@@ -77,21 +53,13 @@ export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
   packageLockJsonPath: string
 }
 
-export const getNewPackageFiles = async (
-  options: Readonly<GetNewPackageFilesOptions>,
-): Promise<MigrationResult> => {
+export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = join(
-      options.clonedRepoPath,
-      options.packageJsonPath,
-    )
+    const packageJsonPath = join(options.clonedRepoPath, options.packageJsonPath)
 
     let oldPackageJson: any
     try {
-      const packageJsonContent = await options.fs.readFile(
-        packageJsonPath,
-        'utf8',
-      )
+      const packageJsonContent = await options.fs.readFile(packageJsonPath, 'utf8')
       oldPackageJson = JSON.parse(packageJsonContent)
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
@@ -104,14 +72,7 @@ export const getNewPackageFiles = async (
       throw error
     }
 
-    const result = await getNewPackageFilesCore(
-      options.fs,
-      options.exec,
-      oldPackageJson,
-      options.dependencyName,
-      options.dependencyKey,
-      options.newVersion,
-    )
+    const result = await getNewPackageFilesCore(options.fs, options.exec, oldPackageJson, options.dependencyName, options.dependencyKey, options.newVersion)
 
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 

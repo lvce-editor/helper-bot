@@ -48,14 +48,10 @@ jobs:
   expect(result.status).toBe('success')
   expect(result.changedFiles).toHaveLength(1)
   expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
-  expect(result.changedFiles[0].content).not.toContain(
-    'NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}',
-  )
+  expect(result.changedFiles[0].content).not.toContain('NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}')
   expect(result.changedFiles[0].content).toContain('Setup Node.js')
   expect(result.changedFiles[0].content).toContain('Publish to npm')
-  expect(result.pullRequestTitle).toBe(
-    'ci: remove NODE_AUTH_TOKEN from release workflow',
-  )
+  expect(result.pullRequestTitle).toBe('ci: remove NODE_AUTH_TOKEN from release workflow')
 })
 
 test('returns same content when NODE_AUTH_TOKEN is not found', async () => {
@@ -88,9 +84,7 @@ jobs:
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe(
-    'ci: remove NODE_AUTH_TOKEN from release workflow',
-  )
+  expect(result.pullRequestTitle).toBe('ci: remove NODE_AUTH_TOKEN from release workflow')
 })
 
 test('handles missing release.yml file', async () => {

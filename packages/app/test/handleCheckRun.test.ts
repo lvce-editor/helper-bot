@@ -223,18 +223,8 @@ test('handleCheckRun should not run if PR is from a fork', async () => {
 
 test('handleCheckRun should run if all conditions are met', async () => {
   mockExeca.mockImplementation(async () => ({ stdout: '', stderr: '' }))
-  mockCloneRepo.mockImplementation(
-    async (owner: string, repo: string, tmpFolder: string) => {},
-  )
-  mockCommitAndPush.mockImplementation(
-    async (
-      tmpFolder: string,
-      branchName: string,
-      octokit: any,
-      owner: string,
-      repo: string,
-    ) => {},
-  )
+  mockCloneRepo.mockImplementation(async (owner: string, repo: string, tmpFolder: string) => {})
+  mockCommitAndPush.mockImplementation(async (tmpFolder: string, branchName: string, octokit: any, owner: string, repo: string) => {})
   const { handleCheckRun } = await import('../src/handleCheckRun')
   const context = {
     payload: {
@@ -297,22 +287,11 @@ test('handleCheckRun should run if all conditions are met', async () => {
     repo: 'repo',
     pull_number: 1,
   })
-  expect(mockCloneRepo).toHaveBeenCalledWith(
-    'owner',
-    'repo',
-    expect.any(String),
-  )
+  expect(mockCloneRepo).toHaveBeenCalledWith('owner', 'repo', expect.any(String))
   expect(mockExeca).toHaveBeenCalledTimes(3)
-  expect(mockCommitAndPush).toHaveBeenCalledWith(
-    expect.any(String),
-    'feature-branch',
-    context.octokit,
-    'owner',
-    'repo',
-    {
-      baseBranch: 'feature-branch',
-      commitMessage: 'style: fix eslint errors',
-      createNewBranch: false,
-    },
-  )
+  expect(mockCommitAndPush).toHaveBeenCalledWith(expect.any(String), 'feature-branch', context.octokit, 'owner', 'repo', {
+    baseBranch: 'feature-branch',
+    commitMessage: 'style: fix eslint errors',
+    createNewBranch: false,
+  })
 }, 10000)

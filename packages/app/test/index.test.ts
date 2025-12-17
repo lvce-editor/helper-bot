@@ -42,9 +42,7 @@ test('creates a pull request to update versions when a release is created', asyn
       return true
     })
     .reply(200, {})
-    .get(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
-    )
+    .get('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json')
     .reply(200, {
       content: Buffer.from(
         JSON.stringify([
@@ -55,18 +53,14 @@ test('creates a pull request to update versions when a release is created', asyn
         ]),
       ),
     })
-    .put(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
-      (body) => {
-        expect(body).toEqual({
-          branch: 'update-version/language-basics-css-v2.4.0',
-          content:
-            'WwogIHsKICAgICJuYW1lIjogImJ1aWx0aW4ubGFuZ3VhZ2UtYmFzaWNzLWNzcyIsCiAgICAidmVyc2lvbiI6ICIyLjQuMCIKICB9Cl0K',
-          message: 'feature: update language-basics-css to version v2.4.0',
-        })
-        return true
-      },
-    )
+    .put('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json', (body) => {
+      expect(body).toEqual({
+        branch: 'update-version/language-basics-css-v2.4.0',
+        content: 'WwogIHsKICAgICJuYW1lIjogImJ1aWx0aW4ubGFuZ3VhZ2UtYmFzaWNzLWNzcyIsCiAgICAidmVyc2lvbiI6ICIyLjQuMCIKICB9Cl0K',
+        message: 'feature: update language-basics-css to version v2.4.0',
+      })
+      return true
+    })
     .reply(200)
     .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
       expect(body).toEqual({
@@ -114,9 +108,7 @@ test('creates a pull request to update versions when a release is created', asyn
 
 test("doesn't create a pull request when the new file content would be the same", async () => {
   const mock = nock('https://api.github.com')
-    .get(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json',
-    )
+    .get('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json')
     .reply(200, {
       content: Buffer.from(
         JSON.stringify(

@@ -72,11 +72,7 @@ test('creates a pull request to update versions when a release is created', asyn
   })
   // @ts-ignore
   jest.spyOn(fs, 'writeFile').mockImplementation((path, content) => {
-    if (
-      typeof path === 'string' &&
-      path.endsWith('package-lock.json') &&
-      typeof content === 'string'
-    ) {
+    if (typeof path === 'string' && path.endsWith('package-lock.json') && typeof content === 'string') {
       packageLockContent = content
     }
   })
@@ -103,9 +99,7 @@ test('creates a pull request to update versions when a release is created', asyn
     .reply(200, {
       sha: 'starting-commit-sha',
     })
-    .get(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json',
-    )
+    .get('/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json')
     .reply(200, {
       content: Buffer.from(
         JSON.stringify({
@@ -116,9 +110,7 @@ test('creates a pull request to update versions when a release is created', asyn
         }),
       ),
     })
-    .get(
-      '/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage-lock.json',
-    )
+    .get('/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage-lock.json')
     .reply(200, {
       content: Buffer.from(
         JSON.stringify({
@@ -235,14 +227,8 @@ test('creates a pull request to update versions when a release is created', asyn
   })
   expect(mock.pendingMocks()).toEqual([])
   expect(fs.rm).toHaveBeenCalledTimes(2)
-  const testPath = join(
-    '/test',
-    'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp',
-  )
-  const testCachePath = join(
-    '/test',
-    'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp-cache',
-  )
+  const testPath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp')
+  const testCachePath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp-cache')
   expect(fs.rm).toHaveBeenNthCalledWith(1, testPath, {
     force: true,
     recursive: true,

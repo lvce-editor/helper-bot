@@ -1,8 +1,6 @@
 import { readFile, writeFile, chmod } from 'node:fs/promises'
 
-export const ensureLernaExcluded = async (
-  scriptPath: string,
-): Promise<void> => {
+export const ensureLernaExcluded = async (scriptPath: string): Promise<void> => {
   try {
     const scriptContent = await readFile(scriptPath, 'utf8')
 
@@ -31,16 +29,10 @@ export const ensureLernaExcluded = async (
           updatedCommand = ' -x lerna'
         } else {
           // Has existing exclusions, add lerna to the end
-          updatedCommand = ncuCommand.replace(
-            /(-x [^-]+)+$/,
-            (match) => `${match} -x lerna`,
-          )
+          updatedCommand = ncuCommand.replace(/(-x [^-]+)+$/, (match) => `${match} -x lerna`)
         }
 
-        updatedContent = updatedContent.replace(
-          match[0],
-          `OUTPUT=\`ncu -u${updatedCommand}\``,
-        )
+        updatedContent = updatedContent.replace(match[0], `OUTPUT=\`ncu -u${updatedCommand}\``)
         hasChanges = true
       }
     }

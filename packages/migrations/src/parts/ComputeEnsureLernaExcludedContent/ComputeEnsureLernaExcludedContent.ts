@@ -3,9 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
-const computeEnsureLernaExcludedContentCore = (
-  currentContent: Readonly<string>,
-): { newContent: string; hasChanges: boolean } => {
+const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
   const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g
   const matches = [...currentContent.matchAll(ncuRegex)]
@@ -33,16 +31,10 @@ const computeEnsureLernaExcludedContentCore = (
         updatedCommand = ' -x lerna'
       } else {
         // Has existing exclusions, add lerna to the end
-        updatedCommand = ncuCommand.replace(
-          /(-x [^-]+)+$/,
-          (match) => `${match} -x lerna`,
-        )
+        updatedCommand = ncuCommand.replace(/(-x [^-]+)+$/, (match) => `${match} -x lerna`)
       }
 
-      updatedContent = updatedContent.replace(
-        match[0],
-        `OUTPUT=\`ncu -u${updatedCommand}\``,
-      )
+      updatedContent = updatedContent.replace(match[0], `OUTPUT=\`ncu -u${updatedCommand}\``)
       hasChanges = true
     }
   }
@@ -55,14 +47,9 @@ const computeEnsureLernaExcludedContentCore = (
 
 export type ComputeEnsureLernaExcludedContentOptions = BaseMigrationOptions
 
-export const computeEnsureLernaExcludedContent = async (
-  options: Readonly<ComputeEnsureLernaExcludedContentOptions>,
-): Promise<MigrationResult> => {
+export const computeEnsureLernaExcludedContent = async (options: Readonly<ComputeEnsureLernaExcludedContentOptions>): Promise<MigrationResult> => {
   try {
-    const scriptPath = join(
-      options.clonedRepoPath,
-      'scripts/update-dependencies.sh',
-    )
+    const scriptPath = join(options.clonedRepoPath, 'scripts/update-dependencies.sh')
 
     let currentContent: string
     try {

@@ -9,13 +9,9 @@ import { wrapCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
   addOidcPermissionsToWorkflow: wrapCommand(addOidcPermissionsToWorkflow),
-  computeEnsureLernaExcludedContent: wrapCommand(
-    computeEnsureLernaExcludedContent,
-  ),
+  computeEnsureLernaExcludedContent: wrapCommand(computeEnsureLernaExcludedContent),
   computeNewDockerfileContent: wrapCommand(computeNewDockerfileContent),
-  computeNewGitpodDockerfileContent: wrapCommand(
-    computeNewGitpodDockerfileContent,
-  ),
+  computeNewGitpodDockerfileContent: wrapCommand(computeNewGitpodDockerfileContent),
   computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
   getNewPackageFiles: wrapCommand(getNewPackageFiles),
   removeNpmTokenFromWorkflow: wrapCommand(removeNpmTokenFromWorkflow),

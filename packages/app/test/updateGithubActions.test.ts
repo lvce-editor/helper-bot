@@ -47,10 +47,7 @@ test('returns 0 changes when no files require update (and rulesets untouched)', 
       repos: {
         // First call: list workflows; Second: get file
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(workflowsListing)
-          .mockResolvedValueOnce(fileContent),
+        getContent: jest.fn().mockResolvedValueOnce(workflowsListing).mockResolvedValueOnce(fileContent),
       },
     },
     // @ts-ignore
@@ -67,16 +64,8 @@ test('returns 0 changes when no files require update (and rulesets untouched)', 
   })
 
   expect(result).toEqual({ changedFiles: 0 })
-  expect(octokit.request).toHaveBeenNthCalledWith(
-    1,
-    'GET /repos/{owner}/{repo}/rulesets',
-    { owner: 'org', repo: 'repo', includes_parents: true },
-  )
-  expect(octokit.request).toHaveBeenNthCalledWith(
-    2,
-    'GET /repos/{owner}/{repo}/branches/{branch}/protection',
-    { owner: 'org', repo: 'repo', branch: 'main' },
-  )
+  expect(octokit.request).toHaveBeenNthCalledWith(1, 'GET /repos/{owner}/{repo}/rulesets', { owner: 'org', repo: 'repo', includes_parents: true })
+  expect(octokit.request).toHaveBeenNthCalledWith(2, 'GET /repos/{owner}/{repo}/branches/{branch}/protection', { owner: 'org', repo: 'repo', branch: 'main' })
 })
 
 test('updates workflow files and opens PR', async () => {
@@ -114,11 +103,7 @@ test('updates workflow files and opens PR', async () => {
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(workflowsListing)
-          .mockResolvedValueOnce(ciContent)
-          .mockResolvedValueOnce(releaseContent),
+        getContent: jest.fn().mockResolvedValueOnce(workflowsListing).mockResolvedValueOnce(ciContent).mockResolvedValueOnce(releaseContent),
       },
       git: {
         // @ts-ignore
@@ -169,16 +154,8 @@ test('updates workflow files and opens PR', async () => {
     base: 'main',
     title: 'ci: update CI OS versions',
   })
-  expect(octokit.request).toHaveBeenNthCalledWith(
-    1,
-    'GET /repos/{owner}/{repo}/rulesets',
-    { owner: 'org', repo: 'repo', includes_parents: true },
-  )
-  expect(octokit.request).toHaveBeenNthCalledWith(
-    2,
-    'GET /repos/{owner}/{repo}/branches/{branch}/protection',
-    { owner: 'org', repo: 'repo', branch: 'main' },
-  )
+  expect(octokit.request).toHaveBeenNthCalledWith(1, 'GET /repos/{owner}/{repo}/rulesets', { owner: 'org', repo: 'repo', includes_parents: true })
+  expect(octokit.request).toHaveBeenNthCalledWith(2, 'GET /repos/{owner}/{repo}/branches/{branch}/protection', { owner: 'org', repo: 'repo', branch: 'main' })
 })
 
 test('updates branch rulesets required checks contexts', async () => {
@@ -212,11 +189,7 @@ test('updates branch rulesets required checks contexts', async () => {
           {
             type: 'required_status_checks',
             parameters: {
-              checks: [
-                { context: 'pr(macos-14)' },
-                'pr(ubuntu-22.04)',
-                { context: 'lint' },
-              ],
+              checks: [{ context: 'pr(macos-14)' }, 'pr(ubuntu-22.04)', { context: 'lint' }],
             },
           },
         ],
@@ -228,10 +201,7 @@ test('updates branch rulesets required checks contexts', async () => {
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(workflowsListing)
-          .mockResolvedValueOnce(fileContent),
+        getContent: jest.fn().mockResolvedValueOnce(workflowsListing).mockResolvedValueOnce(fileContent),
       },
     },
     // @ts-ignore
@@ -253,15 +223,9 @@ test('updates branch rulesets required checks contexts', async () => {
   })
 
   expect(result).toEqual({ changedFiles: 0 })
-  expect(octokit.request).toHaveBeenNthCalledWith(
-    1,
-    'GET /repos/{owner}/{repo}/rulesets',
-    { owner: 'org', repo: 'repo', includes_parents: true },
-  )
+  expect(octokit.request).toHaveBeenNthCalledWith(1, 'GET /repos/{owner}/{repo}/rulesets', { owner: 'org', repo: 'repo', includes_parents: true })
   // Verify PATCH payload contains updated contexts
-  const patchCall = (octokit.request as any).mock.calls.find((args: any[]) =>
-    String(args[0]).startsWith('PATCH /repos/'),
-  )
+  const patchCall = (octokit.request as any).mock.calls.find((args: any[]) => String(args[0]).startsWith('PATCH /repos/'))
   expect(patchCall).toBeTruthy()
   const patchParams = patchCall[1]
   const patchedRules = patchParams.rules
@@ -301,10 +265,7 @@ test('falls back to classic branch protection and updates contexts', async () =>
     rest: {
       repos: {
         // @ts-ignore
-        getContent: jest
-          .fn()
-          .mockResolvedValueOnce(workflowsListing)
-          .mockResolvedValueOnce(fileContent),
+        getContent: jest.fn().mockResolvedValueOnce(workflowsListing).mockResolvedValueOnce(fileContent),
       },
     },
     // @ts-ignore
@@ -329,9 +290,7 @@ test('falls back to classic branch protection and updates contexts', async () =>
 
   expect(result).toEqual({ changedFiles: 0 })
   const patchCall = (octokit.request as any).mock.calls.find(
-    (c: any[]) =>
-      String(c[0]).includes('/branches/') &&
-      String(c[0]).includes('/protection/required_status_checks'),
+    (c: any[]) => String(c[0]).includes('/branches/') && String(c[0]).includes('/protection/required_status_checks'),
   )
   expect(patchCall).toBeTruthy()
   const patchParams = patchCall[1]

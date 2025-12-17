@@ -31,26 +31,18 @@ test('generates new package files with updated dependency', async () => {
   const clonedRepoPath = '/test/repo'
   const mockFs = createMockFs({
     files: {
-      [join(clonedRepoPath, 'package.json')]:
-        JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [join(clonedRepoPath, 'package.json')]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
   const mockExecFn = jest.fn<
-    (
-      file: string,
-      args?: readonly string[],
-      options?: { cwd?: string },
-    ) => Promise<{ stdout: string; stderr: string; exitCode: number }>
+    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     if (file === 'npm' && args?.[0] === 'install') {
       // Write a mock package-lock.json after npm install
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(
-          join(cwd, 'package-lock.json'),
-          mockPackageLockJson,
-        )
+        await mockFs.writeFile(join(cwd, 'package-lock.json'), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -75,31 +67,17 @@ test('generates new package files with updated dependency', async () => {
   expect(result.status).toBe('success')
   expect(result.changedFiles).toHaveLength(2)
   expect(result.changedFiles[0].path).toBe('package.json')
-  expect(result.changedFiles[0].content).toContain(
-    '"@lvce-editor/shared": "^2.0.0"',
-  )
+  expect(result.changedFiles[0].content).toContain('"@lvce-editor/shared": "^2.0.0"')
   expect(result.changedFiles[1].path).toBe('package-lock.json')
   expect(result.changedFiles[1].content).toBe(mockPackageLockJson)
-  expect(result.pullRequestTitle).toBe(
-    'feature: update shared to version 2.0.0',
-  )
+  expect(result.pullRequestTitle).toBe('feature: update shared to version 2.0.0')
 
   expect(mockExecFn).toHaveBeenCalledTimes(1)
   expect(mockExecFn).toHaveBeenCalledWith(
     'npm',
-    [
-      'install',
-      '--ignore-scripts',
-      '--prefer-online',
-      '--cache',
-      expect.stringMatching(
-        /update-dependencies-test-package-shared-2\.0\.0-tmp-cache/,
-      ),
-    ],
+    ['install', '--ignore-scripts', '--prefer-online', '--cache', expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp-cache/)],
     {
-      cwd: expect.stringMatching(
-        /update-dependencies-test-package-shared-2\.0\.0-tmp$/,
-      ),
+      cwd: expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp$/),
     },
   )
 })

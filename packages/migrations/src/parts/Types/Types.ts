@@ -1,11 +1,7 @@
 import type * as FsPromises from 'node:fs/promises'
 
 export interface ExecFunction {
-  (
-    file: string,
-    args?: readonly string[],
-    options?: { cwd?: string },
-  ): Promise<{ stdout: string; stderr: string; exitCode: number }>
+  (file: string, args?: readonly string[], options?: { cwd?: string }): Promise<{ stdout: string; stderr: string; exitCode: number }>
 }
 
 export interface BaseMigrationOptions {

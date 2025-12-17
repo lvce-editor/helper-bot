@@ -44,10 +44,7 @@ const updateDockerfile = async (newVersion: string, root: string) => {
   try {
     const dockerfilePath = join(root, 'Dockerfile')
     const content = await readFile(dockerfilePath, 'utf-8')
-    const updated = content.replaceAll(
-      /node:\d+\.\d+\.\d+/g,
-      `node:${newVersion.slice(1)}`,
-    )
+    const updated = content.replaceAll(/node:\d+\.\d+\.\d+/g, `node:${newVersion.slice(1)}`)
     await writeFile(dockerfilePath, updated)
   } catch (error) {
     // File doesn't exist, skip
@@ -58,10 +55,7 @@ const updateGitpodDockerfile = async (newVersion: string, root: string) => {
   try {
     const gitpodPath = join(root, '.gitpod.Dockerfile')
     const content = await readFile(gitpodPath, 'utf-8')
-    const updated = content.replaceAll(
-      /(nvm [\w\s]+) \d+\.\d+\.\d+/g,
-      `$1 ${newVersion.slice(1)}`,
-    )
+    const updated = content.replaceAll(/(nvm [\w\s]+) \d+\.\d+\.\d+/g, `$1 ${newVersion.slice(1)}`)
     await writeFile(gitpodPath, updated)
   } catch (error) {
     // File doesn't exist, skip
@@ -78,9 +72,6 @@ export const updateNodeVersion = async ({ root }: UpdateNodeVersionParams) => {
   if (!shouldContinueUpdating) {
     return
   }
-  await Promise.all([
-    updateDockerfile(newVersion, root),
-    updateGitpodDockerfile(newVersion, root),
-  ])
+  await Promise.all([updateDockerfile(newVersion, root), updateGitpodDockerfile(newVersion, root)])
   return newVersion
 }

@@ -30,10 +30,7 @@ const updateRepositoryDependencies = async (context: Context<'release'>) => {
 }
 
 const handleReleaseReleased = async (context: Context<'release'>) => {
-  await Promise.all([
-    updateBuiltinExtensions(context),
-    updateRepositoryDependencies(context),
-  ])
+  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context)])
 }
 
 const handleHelloWorld = (req: any, res: any) => {
