@@ -29,6 +29,7 @@ export interface MigrationSuccessResult {
 }
 
 export interface MigrationErrorResult {
+  readonly changedFiles: ChangedFile[]
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly status: 'error'

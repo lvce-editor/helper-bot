@@ -63,21 +63,21 @@ test('updates dependency successfully', async () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 200,
+    branchName: expect.any(String),
     changedFiles: [
       {
-        path: 'packages/e2e/package.json',
         content: expect.stringContaining('"@lvce-editor/test-with-playwright": "^2.0.0"'),
+        path: 'packages/e2e/package.json',
       },
       {
-        path: 'packages/e2e/package-lock.json',
         content: mockPackageLockJson,
+        path: 'packages/e2e/package-lock.json',
       },
     ],
-    pullRequestTitle: expect.any(String),
-    branchName: expect.any(String),
     commitMessage: expect.any(String),
+    pullRequestTitle: expect.any(String),
+    status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -100,10 +100,10 @@ test('validates missing fromRepo parameter', async () => {
   })
 
   expect(result).toEqual({
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid or missing fromRepo parameter',
     status: 'error',
     statusCode: 400,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    errorMessage: 'Invalid or missing fromRepo parameter',
   })
 })
 
@@ -126,10 +126,10 @@ test('validates missing toRepo parameter', async () => {
   })
 
   expect(result).toEqual({
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid or missing toRepo parameter',
     status: 'error',
     statusCode: 400,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    errorMessage: 'Invalid or missing toRepo parameter',
   })
 })
 
@@ -152,10 +152,10 @@ test('validates missing toFolder parameter', async () => {
   })
 
   expect(result).toEqual({
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid or missing toFolder parameter',
     status: 'error',
     statusCode: 400,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    errorMessage: 'Invalid or missing toFolder parameter',
   })
 })
 
@@ -178,10 +178,10 @@ test('validates missing tagName parameter', async () => {
   })
 
   expect(result).toEqual({
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid or missing tagName parameter',
     status: 'error',
     statusCode: 400,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    errorMessage: 'Invalid or missing tagName parameter',
   })
 })
 
@@ -204,10 +204,10 @@ test('validates missing repositoryOwner parameter', async () => {
   })
 
   expect(result).toEqual({
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid or missing repositoryOwner parameter',
     status: 'error',
     statusCode: 400,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    errorMessage: 'Invalid or missing repositoryOwner parameter',
   })
 })
 
@@ -229,10 +229,10 @@ test('validates missing clonedRepoUri parameter', async () => {
   })
 
   expect(result).toEqual({
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid or missing clonedRepoUri parameter',
     status: 'error',
     statusCode: 400,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    errorMessage: 'Invalid or missing clonedRepoUri parameter',
   })
 })
 
@@ -256,10 +256,10 @@ test('validates invalid asName parameter', async () => {
   })
 
   expect(result).toEqual({
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid asName parameter (must be a non-empty string if provided)',
     status: 'error',
     statusCode: 400,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    errorMessage: 'Invalid asName parameter (must be a non-empty string if provided)',
   })
 })
 
@@ -285,12 +285,12 @@ test('handles missing package.json', async () => {
   })
 
   expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
-    changedFiles: [],
-    pullRequestTitle: '',
-    branchName: '',
-    commitMessage: '',
   })
   expect(mockExecFn).not.toHaveBeenCalled()
 })
@@ -329,12 +329,12 @@ test('handles dependency not found in package.json', async () => {
   })
 
   expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
-    changedFiles: [],
-    pullRequestTitle: '',
-    branchName: '',
-    commitMessage: '',
   })
   expect(mockExecFn).not.toHaveBeenCalled()
 })
@@ -373,12 +373,12 @@ test('handles dependency already at target version', async () => {
   })
 
   expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
-    changedFiles: [],
-    pullRequestTitle: '',
-    branchName: '',
-    commitMessage: '',
   })
   expect(mockExecFn).not.toHaveBeenCalled()
 })
@@ -443,21 +443,21 @@ test('uses asName when provided', async () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 200,
+    branchName: expect.any(String),
     changedFiles: [
       {
-        path: 'packages/renderer-worker/package.json',
         content: expect.stringContaining('"@lvce-editor/source-control-worker": "^2.0.0"'),
+        path: 'packages/renderer-worker/package.json',
       },
       {
-        path: 'packages/renderer-worker/package-lock.json',
         content: mockPackageLockJson,
+        path: 'packages/renderer-worker/package-lock.json',
       },
     ],
-    pullRequestTitle: expect.any(String),
-    branchName: expect.any(String),
     commitMessage: expect.any(String),
+    pullRequestTitle: expect.any(String),
+    status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -520,20 +520,20 @@ test('handles devDependencies', async () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 200,
+    branchName: expect.any(String),
     changedFiles: [
       {
-        path: 'packages/e2e/package.json',
         content: expect.stringMatching(/.*"@lvce-editor\/test-with-playwright": "\^2\.0\.0".*devDependencies.*/s),
+        path: 'packages/e2e/package.json',
       },
       {
-        path: 'packages/e2e/package-lock.json',
         content: mockPackageLockJson,
+        path: 'packages/e2e/package-lock.json',
       },
     ],
-    pullRequestTitle: expect.any(String),
-    branchName: expect.any(String),
     commitMessage: expect.any(String),
+    pullRequestTitle: expect.any(String),
+    status: 'success',
+    statusCode: 200,
   })
 })

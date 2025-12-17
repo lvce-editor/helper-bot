@@ -1,6 +1,6 @@
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 
-export const handleMigrationsList = async () => {
+export const handleMigrationsList = async (): Promise<Response> => {
   const migrations = listCommands2()
   return Response.json({
     migrations: migrations,

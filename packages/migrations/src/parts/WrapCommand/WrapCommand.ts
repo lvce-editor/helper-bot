@@ -50,7 +50,7 @@ const wrapFs = (): typeof FsPromises => {
       const filePath = uriToPath(uri)
       return await FsPromises.rm(filePath, options)
     },
-    writeFile: async (path: string | Buffer | URL, data: string | Buffer | Uint8Array, options?: BufferEncoding | any): Promise<void> => {
+    writeFile: async (path: string | Buffer | URL, data: string | Buffer | Uint8Array, options?: BufferEncoding): Promise<void> => {
       const uri = validateUri(path, 'writeFile', true)
       const filePath = uriToPath(uri)
       return await FsPromises.writeFile(filePath, data, options)
@@ -75,8 +75,8 @@ export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T
   }
 }
 
-export const wrapResponseCommand = (fn: () => Promise<Response>): (() => Promise<any>) => {
-  const wrapped = async () => {
+export const wrapResponseCommand = (fn: () => Promise<Response>): (() => Promise<{ error?: string; headers?: Array<[string, string]>; text?: string; type: string }>) => {
+  const wrapped = async (): Promise<{ error?: string; headers?: Array<[string, string]>; text?: string; type: string }> => {
     try {
       const res = await fn()
       return {
@@ -86,7 +86,7 @@ export const wrapResponseCommand = (fn: () => Promise<Response>): (() => Promise
       }
     } catch (error) {
       return {
-        error: `${error}`,
+        error: error instanceof Error ? error.message : String(error),
         type: 'error',
       }
     }

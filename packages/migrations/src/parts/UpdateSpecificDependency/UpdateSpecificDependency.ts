@@ -17,31 +17,31 @@ export const updateSpecificDependency = async (options: Readonly<UpdateSpecificD
   try {
     // Validate required parameters
     if (!options.fromRepo || typeof options.fromRepo !== 'string' || options.fromRepo.trim() === '') {
-      return createValidationErrorMigrationResult('Invalid or missing fromRepo parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+      return createValidationErrorMigrationResult('Invalid or missing fromRepo parameter')
     }
 
     if (!options.toRepo || typeof options.toRepo !== 'string' || options.toRepo.trim() === '') {
-      return createValidationErrorMigrationResult('Invalid or missing toRepo parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+      return createValidationErrorMigrationResult('Invalid or missing toRepo parameter')
     }
 
     if (!options.toFolder || typeof options.toFolder !== 'string' || options.toFolder.trim() === '') {
-      return createValidationErrorMigrationResult('Invalid or missing toFolder parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+      return createValidationErrorMigrationResult('Invalid or missing toFolder parameter')
     }
 
     if (!options.tagName || typeof options.tagName !== 'string' || options.tagName.trim() === '') {
-      return createValidationErrorMigrationResult('Invalid or missing tagName parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+      return createValidationErrorMigrationResult('Invalid or missing tagName parameter')
     }
 
     if (!options.repositoryOwner || typeof options.repositoryOwner !== 'string' || options.repositoryOwner.trim() === '') {
-      return createValidationErrorMigrationResult('Invalid or missing repositoryOwner parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+      return createValidationErrorMigrationResult('Invalid or missing repositoryOwner parameter')
     }
 
     if (options.asName !== undefined && (typeof options.asName !== 'string' || options.asName.trim() === '')) {
-      return createValidationErrorMigrationResult('Invalid asName parameter (must be a non-empty string if provided)', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+      return createValidationErrorMigrationResult('Invalid asName parameter (must be a non-empty string if provided)')
     }
 
     if (!options.clonedRepoUri || typeof options.clonedRepoUri !== 'string' || options.clonedRepoUri.trim() === '') {
-      return createValidationErrorMigrationResult('Invalid or missing clonedRepoUri parameter', ERROR_CODES.UPDATE_DEPENDENCIES_FAILED)
+      return createValidationErrorMigrationResult('Invalid or missing clonedRepoUri parameter')
     }
 
     const version = options.tagName.replace('v', '')

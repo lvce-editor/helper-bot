@@ -11,7 +11,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 export const getHttpStatusCode = (migrationResult: MigrationResultWithoutStatusCode): number => {
   if (migrationResult.status === 'error') {
     const errorResult: MigrationErrorResultWithoutStatusCode = migrationResult
-    const statusCode = errorResult.errorCode === 'DEPENDENCY_NOT_FOUND' || errorResult.errorCode === 'FORBIDDEN' ? 400 : 424
+    const statusCode = errorResult.errorCode === 'DEPENDENCY_NOT_FOUND' || errorResult.errorCode === 'FORBIDDEN' || errorResult.errorCode === 'VALIDATION_ERROR' ? 400 : 424
     return statusCode
   }
   return 200
@@ -22,6 +22,7 @@ export const createMigrationResult = (result: MigrationResultWithoutStatusCode):
   if (result.status === 'error') {
     const errorResult: MigrationErrorResultWithoutStatusCode = result
     const migrationErrorResult: MigrationErrorResult = {
+      changedFiles: [],
       errorCode: errorResult.errorCode,
       errorMessage: errorResult.errorMessage,
       status: 'error',
@@ -50,7 +51,7 @@ export const emptyMigrationResult: MigrationSuccessResult = {
   statusCode: 200,
 }
 
-export const createValidationErrorMigrationResult = (errorMessage: string, errorCode: string = ERROR_CODES.UPDATE_DEPENDENCIES_FAILED): MigrationResult => {
+export const createValidationErrorMigrationResult = (errorMessage: string, errorCode: string = ERROR_CODES.VALIDATION_ERROR): MigrationResult => {
   return createMigrationResult({
     errorCode,
     errorMessage,
