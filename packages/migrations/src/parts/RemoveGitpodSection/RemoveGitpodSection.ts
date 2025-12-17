@@ -1,8 +1,8 @@
 import { join } from 'node:path'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const removeGitpodSectionContent = (content: Readonly<string>): string => {
   // Pattern to match Gitpod sections in README
@@ -39,8 +39,8 @@ export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionO
 
       if (hasChanges) {
         changedFiles.push({
-          path: readmePath,
           content: updatedContent,
+          path: readmePath,
         })
       }
     }
@@ -51,18 +51,19 @@ export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionO
 
     const pullRequestTitle = 'ci: remove Gitpod section from README'
 
-    return createMigrationResult({
-      status: 'success',
+    return {
       changedFiles,
       pullRequestTitle,
-    })
+      status: 'success',
+      statusCode: 200,
+    }
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: 'ci: remove Gitpod section from README',
       errorCode: ERROR_CODES.REMOVE_GITPOD_SECTION_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: 'ci: remove Gitpod section from README',
+      status: 'error',
     })
   }
 }

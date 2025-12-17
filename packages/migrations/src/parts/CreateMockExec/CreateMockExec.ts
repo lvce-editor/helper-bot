@@ -7,6 +7,6 @@ export const createMockExec = (
     return mockFn as ExecFunction
   }
   return async () => {
-    return { stdout: '', stderr: '', exitCode: 0 }
+    return { exitCode: 0, stderr: '', stdout: '' }
   }
 }

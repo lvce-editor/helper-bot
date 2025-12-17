@@ -9,10 +9,10 @@ export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T
     try {
       return await command({
         ...options,
-        fs: FsPromises,
         clonedRepoPath: clonedRepo.path,
-        fetch: globalThis.fetch,
         exec: execa,
+        fetch: globalThis.fetch,
+        fs: FsPromises,
       } as unknown as T)
     } finally {
       await clonedRepo[Symbol.asyncDispose]()
@@ -25,14 +25,14 @@ export const wrapResponseCommand = (fn: () => Promise<Response>): (() => Promise
     try {
       const res = await fn()
       return {
-        type: 'success',
-        text: await res.text(),
         headers: [...res.headers.entries()],
+        text: await res.text(),
+        type: 'success',
       }
     } catch (error) {
       return {
-        type: 'error',
         error: `${error}`,
+        type: 'error',
       }
     }
   }

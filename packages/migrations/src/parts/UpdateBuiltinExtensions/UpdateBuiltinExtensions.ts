@@ -1,8 +1,8 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const getNewValue = (value: readonly any[], repoName: string, version: string): any[] => {
   return value.map((item) => {
@@ -17,8 +17,8 @@ const getNewValue = (value: readonly any[], repoName: string, version: string): 
 }
 
 export interface UpdateBuiltinExtensionsOptions extends BaseMigrationOptions {
-  tagName: string
   releasedRepositoryName: string
+  tagName: string
   targetFilePath: string
 }
 
@@ -26,11 +26,12 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
   try {
     const releasedRepo = options.releasedRepositoryName
     if (releasedRepo === 'renderer-process') {
-      return createMigrationResult({
-        status: 'success',
+      return {
         changedFiles: [],
         pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-      })
+        status: 'success',
+        statusCode: 200,
+      }
     }
 
     const version = options.tagName.replace('v', '')
@@ -43,11 +44,12 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       currentContent = await options.fs.readFile(filePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
+        return {
           changedFiles: [],
           pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-        })
+          status: 'success',
+          statusCode: 200,
+        }
       }
       throw error
     }
@@ -57,30 +59,32 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
 
     if (currentContent === filesJsonStringNew) {
-      return createMigrationResult({
-        status: 'success',
+      return {
         changedFiles: [],
         pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-      })
+        status: 'success',
+        statusCode: 200,
+      }
     }
 
-    return createMigrationResult({
-      status: 'success',
+    return {
       changedFiles: [
         {
-          path: options.targetFilePath,
           content: filesJsonStringNew,
+          path: options.targetFilePath,
         },
       ],
       pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
-    })
+      status: 'success',
+      statusCode: 200,
+    }
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: `feature: update ${options.repositoryName} to version ${options.tagName}`,
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: `feature: update ${options.repositoryName} to version ${options.tagName}`,
+      status: 'error',
     })
   }
 }

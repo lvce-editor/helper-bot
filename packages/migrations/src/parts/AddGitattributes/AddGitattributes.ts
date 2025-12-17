@@ -1,7 +1,7 @@
 import { join } from 'node:path'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 
@@ -14,35 +14,37 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
     // Check if .gitattributes already exists
     try {
       await options.fs.readFile(gitattributesPath, 'utf8')
-      return createMigrationResult({
-        status: 'success',
+      return {
         changedFiles: [],
         pullRequestTitle: 'ci: add .gitattributes file',
-      })
+        status: 'success',
+        statusCode: 200,
+      }
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         // File doesn't exist, create it
         await options.fs.writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
-        return createMigrationResult({
-          status: 'success',
+        return {
           changedFiles: [
             {
-              path: '.gitattributes',
               content: GITATTRIBUTES_CONTENT,
+              path: '.gitattributes',
             },
           ],
           pullRequestTitle: 'ci: add .gitattributes file',
-        })
+          status: 'success',
+          statusCode: 200,
+        }
       }
       throw error
     }
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: 'ci: add .gitattributes file',
       errorCode: 'ADD_GITATTRIBUTES_FAILED',
       errorMessage: stringifyError(error),
+      pullRequestTitle: 'ci: add .gitattributes file',
+      status: 'error',
     })
   }
 }

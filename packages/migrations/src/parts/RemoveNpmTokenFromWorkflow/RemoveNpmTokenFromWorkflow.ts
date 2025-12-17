@@ -1,8 +1,8 @@
 import { join } from 'node:path'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string => {
   // Pattern to match the env section with NODE_AUTH_TOKEN
@@ -37,23 +37,24 @@ export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmToke
 
     const pullRequestTitle = 'ci: remove NODE_AUTH_TOKEN from release workflow'
 
-    return createMigrationResult({
-      status: 'success',
+    return {
       changedFiles: [
         {
-          path: '.github/workflows/release.yml',
           content: updatedContent,
+          path: '.github/workflows/release.yml',
         },
       ],
       pullRequestTitle,
-    })
+      status: 'success',
+      statusCode: 200,
+    }
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
       errorCode: ERROR_CODES.REMOVE_NPM_TOKEN_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
+      status: 'error',
     })
   }
 }
