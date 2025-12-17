@@ -49,17 +49,12 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       return
     }
 
-    let body: any = {}
-    try {
-      if (req.body && typeof req.body === 'object') {
-        body = req.body
-      } else if (typeof req.body === 'string') {
-        body = JSON.parse(req.body)
-      }
-    } catch (error) {
+    const body: any = req.body
+
+    if (!body) {
       res.status(400).json({
-        error: 'Invalid JSON in request body',
-        code: 'INVALID_JSON',
+        error: 'Missing post body',
+        code: 'MISSING_POST_BODY',
       })
       return
     }
