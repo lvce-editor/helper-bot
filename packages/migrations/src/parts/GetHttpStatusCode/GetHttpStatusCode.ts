@@ -1,4 +1,5 @@
 import type { MigrationResult } from '../Types/Types.ts'
+import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 
 export const getHttpStatusCode = (migrationResult: Omit<MigrationResult, 'statusCode'>): number => {
   if (migrationResult.status === 'error') {
@@ -23,4 +24,16 @@ export const emptyMigrationResult: MigrationResult = {
   pullRequestTitle: '',
   status: 'success',
   statusCode: 200,
+}
+
+export const createValidationErrorMigrationResult = (errorMessage: string, errorCode: string = ERROR_CODES.UPDATE_DEPENDENCIES_FAILED): MigrationResult => {
+  return createMigrationResult({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    errorCode,
+    errorMessage,
+    pullRequestTitle: '',
+    status: 'error',
+  })
 }
