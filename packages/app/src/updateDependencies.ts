@@ -2,8 +2,8 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from 'probot'
-import { createPullRequest } from './createPullRequest.js'
-import { captureException } from './errorHandling.js'
+import { createPullRequest } from './createPullRequest.ts'
+import { captureException } from './errorHandling.ts'
 
 const shortCommitMessageRepos = ['renderer-process', 'editor-worker', 'text-search-worker', 'file-search-worker', 'virtual-dom', 'iframe-worker']
 

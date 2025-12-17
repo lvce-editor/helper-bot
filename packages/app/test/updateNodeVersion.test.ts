@@ -8,7 +8,7 @@ const mockFs = {
 
 jest.unstable_mockModule('node:fs/promises', () => mockFs)
 
-const { updateNodeVersion } = await import('../src/updateNodeVersion.js')
+const { updateNodeVersion } = await import('../src/updateNodeVersion.ts')
 
 test('updates node version in files', async () => {
   if (process.platform === 'win32') {

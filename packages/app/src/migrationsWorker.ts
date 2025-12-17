@@ -1,6 +1,6 @@
 import { NodeWorkerRpcParent } from '@lvce-editor/rpc'
 import { createLazyRpc } from '@lvce-editor/rpc-registry'
-import { migrationsWorkerUrl } from './migrationsWorkerUrl.js'
+import { migrationsWorkerUrl } from './migrationsWorkerUrl.ts'
 
 const rpcId = 87
 

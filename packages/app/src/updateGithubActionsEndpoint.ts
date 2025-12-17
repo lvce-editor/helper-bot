@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
 import { VError } from '@lvce-editor/verror'
-import { updateGithubActions } from './updateGithubActions.js'
+import { updateGithubActions } from './updateGithubActions.ts'
 
 const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
   const providedSecret = req.query.secret

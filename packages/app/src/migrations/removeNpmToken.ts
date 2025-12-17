@@ -1,4 +1,4 @@
-import type { Migration, MigrationParams, MigrationResult } from './types.js'
+import type { Migration, MigrationParams, MigrationResult } from './types.ts'
 
 const WORKFLOWS_DIR = '.github/workflows'
 

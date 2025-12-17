@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express'
-import { updateNodeVersionMigration } from './updateNodeVersion.js'
-import { updateDependenciesMigration } from './updateDependencies.js'
-import { ensureLernaExcludedMigration } from './ensureLernaExcluded.js'
-import { updateGithubActionsMigration } from './updateGithubActions.js'
-import { addGitattributesMigration } from './addGitattributes.js'
-import { addOidcPermissionsMigration } from './addOidcPermissions.js'
-import { removeNpmTokenMigration } from './removeNpmToken.js'
-import type { MigrationEndpointParams } from './types.js'
+import { updateNodeVersionMigration } from './updateNodeVersion.ts'
+import { updateDependenciesMigration } from './updateDependencies.ts'
+import { ensureLernaExcludedMigration } from './ensureLernaExcluded.ts'
+import { updateGithubActionsMigration } from './updateGithubActions.ts'
+import { addGitattributesMigration } from './addGitattributes.ts'
+import { addOidcPermissionsMigration } from './addOidcPermissions.ts'
+import { removeNpmTokenMigration } from './removeNpmToken.ts'
+import type { MigrationEndpointParams } from './types.ts'
 
 const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
   const providedSecret = req.query.secret

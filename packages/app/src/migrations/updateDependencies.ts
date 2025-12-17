@@ -1,10 +1,10 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { createPullRequest } from '../createPullRequest.js'
-import { captureException } from '../errorHandling.js'
+import { createPullRequest } from '../createPullRequest.ts'
+import { captureException } from '../errorHandling.ts'
 import dependenciesConfig from '../dependencies.json' with { type: 'json' }
-import type { Migration, MigrationParams, MigrationResult } from './types.js'
+import type { Migration, MigrationParams, MigrationResult } from './types.ts'
 
 const shortCommitMessageRepos = ['renderer-process', 'editor-worker', 'text-search-worker', 'file-search-worker', 'virtual-dom', 'iframe-worker']
 

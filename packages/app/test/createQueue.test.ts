@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { createQueue } from '../src/createQueue.js'
+import { createQueue } from '../src/createQueue.ts'
 
 test('processes items in order', async () => {
   const processedItems: number[] = []

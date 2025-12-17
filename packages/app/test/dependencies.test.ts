@@ -25,7 +25,7 @@ jest.unstable_mockModule('node:os', () => ({
   tmpdir: () => '/test',
 }))
 
-const { handleDependencies } = await import('../src/dependencies.js')
+const { handleDependencies } = await import('../src/dependencies.ts')
 
 test('verifies secret correctly', async () => {
   const handler = handleDependencies({
@@ -468,7 +468,7 @@ test('handles dependency update failure', async () => {
 })
 
 test('retries updateDependencies and resets folder on ETARGET error', async () => {
-  const { updateDependencies } = await import('../src/dependencies.js')
+  const { updateDependencies } = await import('../src/dependencies.ts')
   const tmpFolder = '/tmp/test-retry-etarget'
   let callCount = 0
   mockExeca.execa.mockImplementation(async (cmd, args) => {

@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { mkdtemp, writeFile, readFile, rm, stat, chmod } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { ensureLernaExcluded } from '../src/ensureLernaExcluded.js'
+import { ensureLernaExcluded } from '../src/ensureLernaExcluded.ts'
 
 test('should add lerna exclusion to update-dependencies.sh script', async () => {
   const tempDir = await mkdtemp(join(tmpdir(), 'test-ensure-lerna-'))

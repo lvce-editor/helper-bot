@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import { Context, Probot } from 'probot'
-import { captureException } from '../errorHandling.js'
-import * as MigrationsWorker from '../migrationsWorker.js'
+import { captureException } from '../errorHandling.ts'
+import * as MigrationsWorker from '../migrationsWorker.ts'
 
 export interface ChangedFile {
   readonly content: string
@@ -48,9 +48,6 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
     if (!verifySecret(req, res, secret)) {
       return
     }
-    console.log('req is')
-    console.log(req)
-
     const body: any = req.body
 
     if (!body) {
