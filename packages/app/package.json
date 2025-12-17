@@ -17,6 +17,7 @@
     "@lvce-editor/rpc-registry": "^5.11.0",
     "@lvce-editor/verror": "^1.7.0",
     "@sentry/node": "^10.31.0",
+    "body-parser": "^2.2.1",
     "execa": "^9.6.1",
     "probot": "^13.4.5"
   },
