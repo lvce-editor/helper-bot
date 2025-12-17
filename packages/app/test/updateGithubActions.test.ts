@@ -12,7 +12,7 @@ test('returns undefined when workflows directory is missing', async () => {
     },
   }
 
-  const { updateGithubActions } = await import('../src/updateGithubActions.js')
+  const { updateGithubActions } = await import('../src/updateGithubActions.ts')
   const result = await updateGithubActions({
     // @ts-ignore
     octokit,
@@ -54,7 +54,7 @@ test('returns 0 changes when no files require update (and rulesets untouched)', 
     request: jest.fn().mockResolvedValueOnce({ data: [] }),
   }
 
-  const { updateGithubActions } = await import('../src/updateGithubActions.js')
+  const { updateGithubActions } = await import('../src/updateGithubActions.ts')
   const result = await updateGithubActions({
     // @ts-ignore
     octokit,
@@ -125,7 +125,7 @@ test('updates workflow files and opens PR', async () => {
     request: jest.fn().mockResolvedValueOnce({ data: [] }),
   }
 
-  const { updateGithubActions } = await import('../src/updateGithubActions.js')
+  const { updateGithubActions } = await import('../src/updateGithubActions.ts')
   const result = await updateGithubActions({
     // @ts-ignore
     octokit,
@@ -213,7 +213,7 @@ test('updates branch rulesets required checks contexts', async () => {
       .mockResolvedValueOnce({}),
   }
 
-  const { updateGithubActions } = await import('../src/updateGithubActions.js')
+  const { updateGithubActions } = await import('../src/updateGithubActions.ts')
   const result = await updateGithubActions({
     // @ts-ignore
     octokit,
@@ -279,7 +279,7 @@ test('falls back to classic branch protection and updates contexts', async () =>
       .mockResolvedValueOnce({}),
   }
 
-  const { updateGithubActions } = await import('../src/updateGithubActions.js')
+  const { updateGithubActions } = await import('../src/updateGithubActions.ts')
   const result = await updateGithubActions({
     // @ts-ignore
     octokit,

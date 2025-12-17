@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { createPullRequest } from '../createPullRequest.js'
-import type { Migration, MigrationParams, MigrationResult } from './types.js'
+import { createPullRequest } from '../createPullRequest.ts'
+import type { Migration, MigrationParams, MigrationResult } from './types.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 

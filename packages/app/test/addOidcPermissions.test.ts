@@ -1,5 +1,5 @@
 import { test, expect, jest } from '@jest/globals'
-import { addOidcPermissionsMigration } from '../src/migrations/addOidcPermissions.js'
+import { addOidcPermissionsMigration } from '../src/migrations/addOidcPermissions.ts'
 
 const encode = (s: string): string => Buffer.from(s).toString('base64')
 

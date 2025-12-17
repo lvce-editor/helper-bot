@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { checkAndAddGitattributes } from '../src/migrations/addGitattributes.js'
+import { checkAndAddGitattributes } from '../src/migrations/addGitattributes.ts'
 
 test('should add .gitattributes file when it does not exist', async () => {
   const tempDir = await mkdtemp(join(tmpdir(), 'test-add-gitattributes-'))

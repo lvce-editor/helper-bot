@@ -17,7 +17,7 @@ jest.unstable_mockModule('node:fs/promises', () => mockFs)
 jest.unstable_mockModule('execa', () => ({ execa: mockExeca }))
 jest.unstable_mockModule('node:os', () => mockOs)
 
-const { removeGitpodSectionMigration } = await import('../src/migrations/removeGitpodSection.js')
+const { removeGitpodSectionMigration } = await import('../src/migrations/removeGitpodSection.ts')
 
 beforeEach(() => {
   jest.clearAllMocks()

@@ -36,7 +36,7 @@ jest.unstable_mockModule('node:os', () => {
   }
 })
 
-const myProbotApp = await import('../src/index.js')
+const myProbotApp = await import('../src/index.ts')
 const execa = await import('execa')
 const fs = await import('node:fs/promises')
 

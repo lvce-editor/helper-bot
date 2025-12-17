@@ -1,7 +1,7 @@
 import { beforeEach, expect, test, afterEach } from '@jest/globals'
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
-import * as myProbotApp from '../src/index.js'
+import * as myProbotApp from '../src/index.ts'
 
 let probot: Probot | undefined
 

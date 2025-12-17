@@ -1,5 +1,5 @@
-import { updateGithubActions as updateGithubActionsCore } from '../updateGithubActions.js'
-import type { Migration, MigrationParams, MigrationResult } from './types.js'
+import { updateGithubActions as updateGithubActionsCore } from '../updateGithubActions.ts'
+import type { Migration, MigrationParams, MigrationResult } from './types.ts'
 
 export const updateGithubActionsMigration: Migration = {
   name: 'updateGithubActions',

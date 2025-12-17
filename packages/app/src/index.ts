@@ -1,12 +1,12 @@
-import './errorHandling.js'
+import './errorHandling.ts'
 import { Context, Probot } from 'probot'
-import { handleDependencies } from './dependencies.js'
-import { updateBuiltinExtensions } from './updateBuiltinExtensions.js'
-import { updateDependencies } from './updateDependencies.js'
+import { handleDependencies } from './dependencies.ts'
+import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
+import { updateDependencies } from './updateDependencies.ts'
 import dependenciesConfig from './dependencies.json' with { type: 'json' }
-import { captureException } from './errorHandling.js'
+import { captureException } from './errorHandling.ts'
 import { availableParallelism } from 'node:os'
-import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.js'
+import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.ts'
 import {
   handleUpdateNodeVersion,
   handleUpdateDependencies,
@@ -15,9 +15,9 @@ import {
   handleAddGitattributes,
   handleAddOidcPermissions,
   handleRemoveNpmToken,
-} from './migrations/endpoints.js'
-import { registerMigrations2Endpoints } from './migrations2/endpoints.js'
-import * as MigrationsWorker from './migrationsWorker.js'
+} from './migrations/endpoints.ts'
+import { registerMigrations2Endpoints } from './migrations2/endpoints.ts'
+import * as MigrationsWorker from './migrationsWorker.ts'
 
 const dependencies = dependenciesConfig.dependencies
 

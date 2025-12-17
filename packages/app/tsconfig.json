@@ -16,7 +16,9 @@
     "strictNullChecks": false,
     "noUnusedLocals": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["src"]
 }

@@ -1,4 +1,4 @@
-import { captureException } from './errorHandling.js'
+import { captureException } from './errorHandling.ts'
 
 type QueueContext<T> = {
   queue: T[]

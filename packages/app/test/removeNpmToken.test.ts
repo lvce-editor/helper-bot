@@ -1,5 +1,5 @@
 import { test, expect, jest } from '@jest/globals'
-import { removeNpmTokenMigration } from '../src/migrations/removeNpmToken.js'
+import { removeNpmTokenMigration } from '../src/migrations/removeNpmToken.ts'
 
 const encode = (s: string): string => Buffer.from(s).toString('base64')
 
