@@ -13,7 +13,8 @@ import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
 import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
-import { wrapCommand } from '../WrapCommand/WrapCommand.ts'
+import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
+import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
 
 export const commandMap = {
   getNewPackageFiles: wrapCommand(getNewPackageFiles),
@@ -30,5 +31,6 @@ export const commandMap = {
   updateRepositoryDependencies: wrapCommand(updateRepositoryDependencies),
   updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),
   'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
+  '/hello-world': wrapResponseCommand(handleHelloWorld),
   listCommands: wrapCommand(listCommands),
 }
