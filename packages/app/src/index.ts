@@ -1,5 +1,5 @@
 import './errorHandling.ts'
-import { ApplicationFunctionOptions, Context, Probot } from 'probot'
+import type { ApplicationFunctionOptions, Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.ts'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
 import { updateDependencies } from './updateDependencies.ts'
