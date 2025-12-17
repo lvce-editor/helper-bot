@@ -13,16 +13,16 @@ import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
+  '/hello-world': wrapResponseCommand(handleHelloWorld),
+  '/meta/list-commands-2': listCommands2,
+  '/migrations/add-gitattributes': wrapCommand(addGitattributes),
   '/migrations/add-oidc-permissions': wrapCommand(addOidcPermissionsToWorkflow),
   '/migrations/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
-  '/migrations/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
-  '/migrations/remove-gitpod-section': wrapCommand(removeGitpodSection),
-  '/migrations/update-node-version': wrapCommand(updateNodeVersion),
-  '/migrations/update-dependencies': wrapCommand(updateDependencies),
-  '/migrations/add-gitattributes': wrapCommand(addGitattributes),
-  '/migrations/update-github-actions': wrapCommand(updateGithubActions),
-  'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
-  '/hello-world': wrapResponseCommand(handleHelloWorld),
+  '/migrations/handle-release-released': wrapCommand(handleReleaseReleased),
   '/migrations/list': wrapResponseCommand(handleMigrationsList),
-  '/meta/list-commands-2': listCommands2,
+  '/migrations/remove-gitpod-section': wrapCommand(removeGitpodSection),
+  '/migrations/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
+  '/migrations/update-dependencies': wrapCommand(updateDependencies),
+  '/migrations/update-github-actions': wrapCommand(updateGithubActions),
+  '/migrations/update-node-version': wrapCommand(updateNodeVersion),
 }
