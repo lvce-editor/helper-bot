@@ -19,9 +19,9 @@ export const initializePackageJson = async (options: Readonly<InitializePackageJ
     const packageJsonContent =
       JSON.stringify(
         {
-          description: '',
           name: options.repositoryName,
           version: '1.0.0',
+          description: '',
         },
         null,
         2,
