@@ -41,8 +41,8 @@ export const addLintScript = async (options: Readonly<AddLintScriptOptions>): Pr
           path: 'package.json',
         },
       ],
-      commitMessage: 'chore: add lint script',
-      pullRequestTitle: 'chore: add lint script',
+      commitMessage: 'feature: add lint script',
+      pullRequestTitle: 'feature: add lint script',
       status: 'success',
       statusCode: 200,
     }
