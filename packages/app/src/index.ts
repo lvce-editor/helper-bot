@@ -16,6 +16,7 @@ import {
   handleAddOidcPermissions,
   handleRemoveNpmToken,
 } from './migrations/endpoints.js'
+import * as MigrationsWorker from './migrationsWorker.js'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -34,6 +35,12 @@ const handleReleaseReleased = async (context: Context<'release'>) => {
 }
 
 const handleHelloWorld = async (req: any, res: any) => {
+  const result = await MigrationsWorker.invoke('/hello-world')
+  if (result.type === 'error') {
+    res.send(result.error)
+  } else {
+    res.send(result.buffer)
+  }
   res.send('Hello World')
 }
 
