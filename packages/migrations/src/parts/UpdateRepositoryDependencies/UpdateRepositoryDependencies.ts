@@ -11,7 +11,7 @@ export interface UpdateRepositoryDependenciesOptions extends BaseMigrationOption
 
 export const updateRepositoryDependencies = async (options: Readonly<UpdateRepositoryDependenciesOptions>): Promise<MigrationResult> => {
   try {
-    const {dependencies} = dependenciesConfig
+    const { dependencies } = dependenciesConfig
     const releasedRepo = options.repositoryName
 
     // Find dependencies that match this repository

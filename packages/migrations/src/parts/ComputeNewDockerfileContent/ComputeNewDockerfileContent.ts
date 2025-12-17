@@ -23,16 +23,7 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
       currentContent = await options.fs.readFile(dockerfilePath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-<<<<<<< HEAD
         return emptyMigrationResult
-=======
-        return {
-          changedFiles: [],
-          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
-          status: 'success',
-          statusCode: 200,
-        }
->>>>>>> origin/main
       }
       throw error
     }
@@ -41,7 +32,6 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
     const hasChanges = currentContent !== newContent
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
-<<<<<<< HEAD
     if (!hasChanges) {
       return emptyMigrationResult
     }
@@ -54,21 +44,8 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
           content: newContent,
         },
       ],
-=======
-    return {
-      changedFiles: hasChanges
-        ? [
-            {
-              content: newContent,
-              path: 'Dockerfile',
-            },
-          ]
-        : [],
->>>>>>> origin/main
       pullRequestTitle,
-      status: 'success',
-      statusCode: 200,
-    }
+    })
   } catch (error) {
     return createMigrationResult({
       changedFiles: [],
