@@ -50,6 +50,9 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
     }
     const body: any = req.body
 
+    console.log('body is')
+    console.log(body)
+
     if (!body) {
       res.status(400).json({
         error: 'Missing post body',
@@ -57,9 +60,6 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       })
       return
     }
-
-    console.log('body is')
-    console.log(body)
 
     const repository = body.repository
     if (!repository) {
