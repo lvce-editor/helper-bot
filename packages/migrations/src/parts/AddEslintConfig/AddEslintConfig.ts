@@ -51,3 +51,4 @@ export const addEslintConfig = async (options: Readonly<AddEslintConfigOptions>)
     }
   }
 }
+
