@@ -4,10 +4,11 @@ import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCod
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string => {
-  // Pattern to match the env section with NODE_AUTH_TOKEN
-  // This matches the exact pattern: env: followed by NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-  const npmTokenPattern = /^\s*env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*$/gm
+  // Pattern to match the env section with NODE_AUTH_TOKEN including the newline after it
+  // This matches: env: followed by newline, NODE_AUTH_TOKEN line, and optional newline
+  const npmTokenPattern = /(\s*)env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*\n?/gm
 
+  // Remove the pattern, preserving the indentation context
   return content.replaceAll(npmTokenPattern, '')
 }
 

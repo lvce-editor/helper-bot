@@ -23,13 +23,16 @@ const addOidcPermissionsToWorkflowContent = (content: Readonly<string>): string 
   }
 
   // Insert permissions before the jobs section
+  // Check if there's already a blank line before jobs - if so, we'll use it as separator
+  const hasBlankLineBefore = jobsIndex > 0 && lines[jobsIndex - 1].trim() === ''
+  const insertIndex = hasBlankLineBefore ? jobsIndex - 1 : jobsIndex
   const newLines = [
-    ...lines.slice(0, jobsIndex),
+    ...lines.slice(0, insertIndex),
     '',
     'permissions:',
     '  id-token: write # Required for OIDC',
     '  contents: write',
-    '',
+    ...(hasBlankLineBefore ? [] : ['']),
     ...lines.slice(jobsIndex),
   ]
 
