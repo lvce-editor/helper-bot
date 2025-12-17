@@ -6,23 +6,23 @@ import { getNewPackageFiles } from '../src/parts/GetNewPackageFiles/GetNewPackag
 
 test('generates new package files with updated dependency', async () => {
   const oldPackageJson = {
+    name: 'test-package',
+    version: '1.0.0',
     dependencies: {
       '@lvce-editor/shared': '^1.0.0',
     },
-    name: 'test-package',
-    version: '1.0.0',
   }
 
   const mockPackageLockJson = JSON.stringify(
     {
+      name: 'test-package',
+      version: '1.0.0',
+      lockfileVersion: 3,
       dependencies: {
         '@lvce-editor/shared': {
           version: '2.0.0',
         },
       },
-      lockfileVersion: 3,
-      name: 'test-package',
-      version: '1.0.0',
     },
     null,
     2,
@@ -44,24 +44,24 @@ test('generates new package files with updated dependency', async () => {
       if (cwd) {
         await mockFs.writeFile(join(cwd, 'package-lock.json'), mockPackageLockJson)
       }
-      return { exitCode: 0, stderr: '', stdout: '' }
+      return { stdout: '', stderr: '', exitCode: 0 }
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
   })
   const mockExec = createMockExec(mockExecFn)
 
   const result = await getNewPackageFiles({
-    clonedRepoPath,
-    dependencyKey: 'dependencies',
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
     dependencyName: 'shared',
-    exec: mockExec,
-    fetch: globalThis.fetch,
-    fs: mockFs,
+    dependencyKey: 'dependencies',
     newVersion: '2.0.0',
     packageJsonPath: 'package.json',
     packageLockJsonPath: 'package-lock.json',
-    repositoryName: 'repo',
-    repositoryOwner: 'test',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
   })
 
   expect(result.status).toBe('success')
@@ -91,17 +91,17 @@ test('handles missing package.json', async () => {
   const mockExec = createMockExec(mockExecFn)
 
   const result = await getNewPackageFiles({
-    clonedRepoPath,
-    dependencyKey: 'dependencies',
+    repositoryOwner: 'test',
+    repositoryName: 'repo',
     dependencyName: 'test-dependency',
-    exec: mockExec,
-    fetch: globalThis.fetch,
-    fs: mockFs,
+    dependencyKey: 'dependencies',
     newVersion: '2.0.0',
     packageJsonPath: 'package.json',
     packageLockJsonPath: 'package-lock.json',
-    repositoryName: 'repo',
-    repositoryOwner: 'test',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
   })
 
   expect(result.status).toBe('success')

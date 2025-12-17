@@ -1,0 +1,320 @@
+{
+  "dependencies": [
+    {
+      "fromRepo": "test-worker",
+      "toRepo": "test-with-playwright",
+      "toFolder": "packages/build"
+    },
+    {
+      "fromRepo": "test-with-playwright",
+      "toRepo": "test-worker",
+      "toFolder": "packages/e2e"
+    },
+    {
+      "fromRepo": "renderer-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "embeds-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "color-picker-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "file-sysem-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "embeds-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/shared-process"
+    },
+    {
+      "fromRepo": "file-system-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/shared-process"
+    },
+    {
+      "fromRepo": "main-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/main-process"
+    },
+    {
+      "fromRepo": "iframe-inspector",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "clipboard-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "references-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "markdown-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "text-measurement-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "menu-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "update-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "debug-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "problems-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "rename-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "terminal-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "test-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "find-widget-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-host-sub-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "title-bar-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "activity-bar-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "explorer-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "settings-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "editor-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "error-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "diff-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "keybindings-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-search-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "list",
+      "toRepo": "extension-search-view",
+      "toFolder": "packages/extension-search-view-worker"
+    },
+    {
+      "fromRepo": "extension-detail-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "iframe-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-host-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "syntax-highlighting-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "about-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "source-action-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "icon-theme-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "extension-management-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "status-bar-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "constants",
+      "toRepo": "rpc-registry",
+      "toFolder": "packages/rpc-registry"
+    },
+    {
+      "fromRepo": "constants",
+      "toRepo": "virtual-dom",
+      "toFolder": "packages/virtual-dom"
+    },
+    {
+      "fromRepo": "constants",
+      "toRepo": "virtual-dom",
+      "toFolder": "packages/virtual-dom-worker"
+    },
+    {
+      "fromRepo": "output-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "source-control-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker",
+      "asName": "source-control-worker"
+    },
+    {
+      "fromRepo": "file-search-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "hover-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "text-search-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "virtual-dom",
+      "toRepo": "renderer-process",
+      "toFolder": "packages/renderer-process"
+    },
+    {
+      "fromRepo": "virtual-dom",
+      "toRepo": "about-view",
+      "toFolder": "packages/about-view"
+    },
+    {
+      "fromRepo": "virtual-dom",
+      "toRepo": "color-picker-worker",
+      "toFolder": "packages/color-picker-worker"
+    },
+    {
+      "fromRepo": "ipc",
+      "toRepo": "renderer-process",
+      "toFolder": "packages/renderer-process"
+    },
+    {
+      "fromRepo": "rpc",
+      "toRepo": "renderer-process",
+      "toFolder": "packages/renderer-process"
+    },
+    {
+      "fromRepo": "rpc-registry",
+      "toRepo": "extension-detail-view",
+      "toFolder": "packages/extension-detail-view-worker"
+    },
+    {
+      "fromRepo": "rpc-registry",
+      "toRepo": "completion-worker",
+      "toFolder": "packages/completion-worker"
+    },
+    {
+      "fromRepo": "preview-injected-code",
+      "toRepo": "preview-process",
+      "toFolder": "packages/preview-process"
+    },
+    {
+      "fromRepo": "ipc",
+      "toRepo": "rpc",
+      "toFolder": "packages/rpc"
+    },
+    {
+      "fromRepo": "command",
+      "toRepo": "rpc",
+      "toFolder": "packages/rpc"
+    },
+    {
+      "fromRepo": "json-rpc",
+      "toRepo": "rpc",
+      "toFolder": "packages/rpc"
+    },
+    {
+      "fromRepo": "rpc",
+      "toRepo": "test-worker",
+      "toFolder": ""
+    },
+    {
+      "fromRepo": "rpc",
+      "toRepo": "typescript-compile-process",
+      "toFolder": ""
+    }
+  ]
+}

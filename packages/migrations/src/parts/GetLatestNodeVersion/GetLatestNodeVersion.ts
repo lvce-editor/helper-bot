@@ -1,6 +1,6 @@
 interface NodeVersion {
-  lts: string | false
   version: string
+  lts: string | false
 }
 
 export const getLatestNodeVersion = async (fetchFn: typeof globalThis.fetch): Promise<string> => {

@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const getNewPackageFilesCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -38,16 +39,16 @@ const getNewPackageFilesCore = async (
   } finally {
     for (const folder of toRemove) {
       await fs.rm(folder, {
-        force: true,
         recursive: true,
+        force: true,
       })
     }
   }
 }
 
 export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
-  dependencyKey: string
   dependencyName: string
+  dependencyKey: string
   newVersion: string
   packageJsonPath: string
   packageLockJsonPath: string
@@ -63,11 +64,11 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
       oldPackageJson = JSON.parse(packageJsonContent)
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
+        return createMigrationResult({
+          status: 'success',
           changedFiles: [],
           pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
-          status: 'success',
-        }
+        })
       }
       throw error
     }
@@ -76,27 +77,27 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
 
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
-    return {
+    return createMigrationResult({
+      status: 'success',
       changedFiles: [
         {
-          content: result.newPackageJsonString,
           path: options.packageJsonPath,
+          content: result.newPackageJsonString,
         },
         {
-          content: result.newPackageLockJsonString,
           path: options.packageLockJsonPath,
+          content: result.newPackageLockJsonString,
         },
       ],
       pullRequestTitle,
-      status: 'success',
-    }
+    })
   } catch (error) {
-    return {
+    return createMigrationResult({
+      status: 'error',
       changedFiles: [],
+      pullRequestTitle: `feature: update dependencies`,
       errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: `feature: update dependencies`,
-      status: 'error',
-    }
+    })
   }
 }
