@@ -18,6 +18,7 @@ import {
 } from './migrations/endpoints.ts'
 import { registerMigrations2Endpoints } from './migrations2/endpoints.ts'
 import * as MigrationsWorker from './migrationsWorker.ts'
+import bodyParser from 'body-parser'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -59,6 +60,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: any) => {
   }
   const router = getRouter('/my-app')
 
+  router.use(bodyParser.json())
   router.get('/hello-world', handleHelloWorld)
   router.get('/migrations/list', handleMigrationsList)
 
