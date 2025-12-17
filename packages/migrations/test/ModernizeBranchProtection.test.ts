@@ -70,12 +70,14 @@ test('successfully migrates from classic to ruleset', async (): Promise<void> =>
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.data).toEqual({
-    message: 'Successfully migrated branch protection from classic to rulesets',
-    migrated: true,
-    rulesetId: 456,
+  expect(result).toEqual({
+    data: {
+      message: 'Successfully migrated branch protection from classic to rulesets',
+      migrated: true,
+      rulesetId: 456,
+    },
+    status: 'success',
+    statusCode: 200,
   })
   expect(fetchUrls).toContain('GET https://api.github.com/repos/test-owner/test-repo/branches/main/protection')
   expect(fetchUrls).toContain('GET https://api.github.com/repos/test-owner/test-repo/rulesets?includes_parents=false')
@@ -112,11 +114,13 @@ test('returns success when no classic protection found', async (): Promise<void>
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.data).toEqual({
-    message: 'No classic branch protection found',
-    migrated: false,
+  expect(result).toEqual({
+    data: {
+      message: 'No classic branch protection found',
+      migrated: false,
+    },
+    status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -169,12 +173,14 @@ test('returns success when ruleset already exists', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.data).toEqual({
-    message: 'Ruleset already exists for this branch',
-    migrated: false,
-    rulesetId: 123,
+  expect(result).toEqual({
+    data: {
+      message: 'Ruleset already exists for this branch',
+      migrated: false,
+      rulesetId: 123,
+    },
+    status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -229,9 +235,11 @@ test('returns error when creating ruleset fails', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('CREATE_RULESET_FAILED')
-  expect(result.errorMessage).toContain('Failed to create ruleset')
+  expect(result).toEqual({
+    errorCode: 'CREATE_RULESET_FAILED',
+    errorMessage: expect.stringContaining('Failed to create ruleset'),
+    status: 'error',
+  })
 })
 
 test('returns error when deleting classic protection fails', async (): Promise<void> => {
@@ -298,9 +306,11 @@ test('returns error when deleting classic protection fails', async (): Promise<v
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('DELETE_CLASSIC_PROTECTION_FAILED')
-  expect(result.errorMessage).toContain('Failed to delete classic branch protection')
+  expect(result).toEqual({
+    errorCode: 'DELETE_CLASSIC_PROTECTION_FAILED',
+    errorMessage: expect.stringContaining('Failed to delete classic branch protection'),
+    status: 'error',
+  })
 })
 
 test('handles custom branch name', async (): Promise<void> => {
@@ -364,10 +374,15 @@ test('handles custom branch name', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.data?.rulesetId).toBe(999)
-  expect(result.data?.migrated).toBe(true)
+  expect(result).toEqual({
+    data: {
+      message: expect.any(String),
+      migrated: true,
+      rulesetId: 999,
+    },
+    status: 'success',
+    statusCode: 200,
+  })
   expect(fetchUrls.some((url) => url.includes('/branches/develop/protection'))).toBe(true)
 })
 
@@ -885,9 +900,14 @@ test('handles 403 error when fetching classic protection', async (): Promise<voi
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.data?.migrated).toBe(false)
+  expect(result).toEqual({
+    data: {
+      message: expect.any(String),
+      migrated: false,
+    },
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('creates correct conditions for branch targeting', async (): Promise<void> => {
