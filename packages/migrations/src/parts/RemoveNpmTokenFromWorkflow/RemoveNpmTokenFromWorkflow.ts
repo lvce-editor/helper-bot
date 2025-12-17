@@ -1,8 +1,8 @@
 import { join } from 'node:path'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string => {
   // Pattern to match the env section with NODE_AUTH_TOKEN
@@ -23,26 +23,19 @@ export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmToke
       originalContent = await options.fs.readFile(workflowPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return createMigrationResult({
-          status: 'success',
-          changedFiles: [],
-          pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
-        })
+        return emptyMigrationResult
       }
       throw error
     }
 
     const updatedContent = removeNpmTokenFromWorkflowContent(originalContent)
     const hasChanges = originalContent !== updatedContent
-    const pullRequestTitle = 'ci: remove NODE_AUTH_TOKEN from release workflow'
 
     if (!hasChanges) {
-      return createMigrationResult({
-        status: 'success',
-        changedFiles: [],
-        pullRequestTitle,
-      })
+      return emptyMigrationResult
     }
+
+    const pullRequestTitle = 'ci: remove NODE_AUTH_TOKEN from release workflow'
 
     return createMigrationResult({
       status: 'success',
