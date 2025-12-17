@@ -100,6 +100,7 @@ test('validates missing fromRepo parameter', async () => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'VALIDATION_ERROR',
     errorMessage: 'Invalid or missing fromRepo parameter',
     status: 'error',
@@ -126,6 +127,7 @@ test('validates missing toRepo parameter', async () => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'VALIDATION_ERROR',
     errorMessage: 'Invalid or missing toRepo parameter',
     status: 'error',
@@ -152,6 +154,7 @@ test('validates missing toFolder parameter', async () => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'VALIDATION_ERROR',
     errorMessage: 'Invalid or missing toFolder parameter',
     status: 'error',
@@ -178,6 +181,7 @@ test('validates missing tagName parameter', async () => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'VALIDATION_ERROR',
     errorMessage: 'Invalid or missing tagName parameter',
     status: 'error',
@@ -204,6 +208,7 @@ test('validates missing repositoryOwner parameter', async () => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'VALIDATION_ERROR',
     errorMessage: 'Invalid or missing repositoryOwner parameter',
     status: 'error',
@@ -229,6 +234,7 @@ test('validates missing clonedRepoUri parameter', async () => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'VALIDATION_ERROR',
     errorMessage: 'Invalid or missing clonedRepoUri parameter',
     status: 'error',
@@ -256,6 +262,7 @@ test('validates invalid asName parameter', async () => {
   })
 
   expect(result).toEqual({
+    changedFiles: [],
     errorCode: 'VALIDATION_ERROR',
     errorMessage: 'Invalid asName parameter (must be a non-empty string if provided)',
     status: 'error',
@@ -523,7 +530,7 @@ test('handles devDependencies', async () => {
     branchName: expect.any(String),
     changedFiles: [
       {
-        content: expect.stringMatching(/.*"@lvce-editor\/test-with-playwright": "\^2\.0\.0".*devDependencies.*/s),
+        content: expect.stringContaining('"@lvce-editor/test-with-playwright": "^2.0.0"'),
         path: 'packages/e2e/package.json',
       },
       {

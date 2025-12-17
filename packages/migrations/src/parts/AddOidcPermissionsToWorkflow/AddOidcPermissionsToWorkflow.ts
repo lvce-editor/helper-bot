@@ -32,7 +32,7 @@ const addOidcPermissionsToWorkflowContent = (content: Readonly<string>): string 
     'permissions:',
     '  id-token: write # Required for OIDC',
     '  contents: write',
-    ...(hasBlankLineBefore ? [] : ['']),
+    '',
     ...lines.slice(jobsIndex),
   ]
 

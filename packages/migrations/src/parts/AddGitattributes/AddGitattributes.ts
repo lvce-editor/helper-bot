@@ -11,28 +11,25 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
     const gitattributesPath = new URL('.gitattributes', options.clonedRepoUri).toString()
 
     // Check if .gitattributes already exists
-    try {
-      await options.fs.readFile(gitattributesPath, 'utf8')
+    const exists = await options.fs.exists(gitattributesPath)
+    if (exists) {
       return emptyMigrationResult
-    } catch (error: any) {
-      if (error && error.code === 'ENOENT') {
-        // File doesn't exist, create it
-        await options.fs.writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
-        return {
-          branchName: 'feature/add-gitattributes',
-          changedFiles: [
-            {
-              content: GITATTRIBUTES_CONTENT,
-              path: '.gitattributes',
-            },
-          ],
-          commitMessage: 'ci: add .gitattributes file',
-          pullRequestTitle: 'ci: add .gitattributes file',
-          status: 'success',
-          statusCode: 200,
-        }
-      }
-      throw error
+    }
+
+    // File doesn't exist, create it
+    await options.fs.writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
+    return {
+      branchName: 'feature/add-gitattributes',
+      changedFiles: [
+        {
+          content: GITATTRIBUTES_CONTENT,
+          path: '.gitattributes',
+        },
+      ],
+      commitMessage: 'ci: add .gitattributes file',
+      pullRequestTitle: 'ci: add .gitattributes file',
+      status: 'success',
+      statusCode: 200,
     }
   } catch (error) {
     const errorResult = {
