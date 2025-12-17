@@ -26,7 +26,7 @@ export const wrapResponseCommand = async (fn: () => Promise<Response>) => {
     return {
       type: 'success',
       buffer: await res.arrayBuffer(),
-      headers: res.headers.entries(),
+      headers: [...res.headers.entries()],
     }
   } catch (error) {
     return {
