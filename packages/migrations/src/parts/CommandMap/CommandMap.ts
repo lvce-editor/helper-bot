@@ -15,6 +15,7 @@ import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.
 import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
 import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
+import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 
 export const commandMap = {
   getNewPackageFiles: wrapCommand(getNewPackageFiles),
@@ -33,4 +34,5 @@ export const commandMap = {
   'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
   '/hello-world': wrapResponseCommand(handleHelloWorld),
   listCommands: wrapCommand(listCommands),
+  '/meta/list-commands-2': listCommands2,
 }
