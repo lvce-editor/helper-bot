@@ -4,9 +4,9 @@ import { getLatestNodeVersion } from '../src/parts/GetLatestNodeVersion/GetLates
 
 test('returns latest LTS version', async () => {
   const mockVersions = [
-    { version: 'v20.0.0', lts: 'Iron' as const },
-    { version: 'v19.0.0', lts: false as const },
-    { version: 'v18.0.0', lts: 'Hydrogen' as const },
+    { lts: 'Iron' as const, version: 'v20.0.0' },
+    { lts: false as const, version: 'v19.0.0' },
+    { lts: 'Hydrogen' as const, version: 'v18.0.0' },
   ]
 
   const mockFetch = createMockFetch(mockVersions)
@@ -20,8 +20,8 @@ test('returns latest LTS version', async () => {
 
 test('throws error when no LTS version found', async () => {
   const mockVersions = [
-    { version: 'v19.0.0', lts: false as const },
-    { version: 'v18.0.0', lts: false as const },
+    { lts: false as const, version: 'v19.0.0' },
+    { lts: false as const, version: 'v18.0.0' },
   ]
 
   const mockFetch = createMockFetch(mockVersions)

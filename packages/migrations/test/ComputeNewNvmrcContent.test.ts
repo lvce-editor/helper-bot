@@ -7,9 +7,9 @@ import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 
 const mockExec = createMockExec()
 const mockFetch = createMockFetch([
-  { version: 'v20.0.0', lts: 'Iron' },
-  { version: 'v19.0.0', lts: false },
-  { version: 'v18.0.0', lts: 'Hydrogen' },
+  { lts: 'Iron', version: 'v20.0.0' },
+  { lts: false, version: 'v19.0.0' },
+  { lts: 'Hydrogen', version: 'v18.0.0' },
 ])
 
 test('computes new nvmrc content when version should be updated', async () => {
@@ -21,12 +21,12 @@ test('computes new nvmrc content when version should be updated', async () => {
   })
 
   const result = await computeNewNvmrcContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
     exec: mockExec,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -45,12 +45,12 @@ test('returns same content when existing version is newer', async () => {
   })
 
   const result = await computeNewNvmrcContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
     exec: mockExec,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')
@@ -63,12 +63,12 @@ test('handles missing .nvmrc file', async () => {
   const mockFs = createMockFs()
 
   const result = await computeNewNvmrcContent({
-    repositoryOwner: 'test',
-    repositoryName: 'repo',
-    fs: mockFs,
     clonedRepoPath,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
     exec: mockExec,
+    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
   })
 
   expect(result.status).toBe('success')

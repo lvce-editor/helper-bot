@@ -12,8 +12,8 @@ const computeEnsureLernaExcludedContentCore = (
 
   if (matches.length === 0) {
     return {
-      newContent: currentContent,
       hasChanges: false,
+      newContent: currentContent,
     }
   }
 
@@ -48,8 +48,8 @@ const computeEnsureLernaExcludedContentCore = (
   }
 
   return {
-    newContent: updatedContent,
     hasChanges,
+    newContent: updatedContent,
   }
 }
 
@@ -70,9 +70,9 @@ export const computeEnsureLernaExcludedContent = async (
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
         return {
-          status: 'success',
           changedFiles: [],
           pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+          status: 'success',
         }
       }
       throw error
@@ -83,29 +83,29 @@ export const computeEnsureLernaExcludedContent = async (
 
     if (!result.hasChanges) {
       return {
-        status: 'success',
         changedFiles: [],
         pullRequestTitle,
+        status: 'success',
       }
     }
 
     return {
-      status: 'success',
       changedFiles: [
         {
-          path: 'scripts/update-dependencies.sh',
           content: result.newContent,
+          path: 'scripts/update-dependencies.sh',
         },
       ],
       pullRequestTitle,
+      status: 'success',
     }
   } catch (error) {
     return {
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
       errorCode: ERROR_CODES.COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+      status: 'error',
     }
   }
 }

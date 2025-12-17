@@ -9,24 +9,24 @@ export interface ExecFunction {
 }
 
 export interface BaseMigrationOptions {
-  repositoryOwner: string
-  repositoryName: string
-  fs: typeof FsPromises
-  clonedRepoPath: string
-  fetch: typeof globalThis.fetch
-  exec: ExecFunction
   [key: string]: any
+  clonedRepoPath: string
+  exec: ExecFunction
+  fetch: typeof globalThis.fetch
+  fs: typeof FsPromises
+  repositoryName: string
+  repositoryOwner: string
 }
 
 export interface ChangedFile {
-  path: string
   content: string
+  path: string
 }
 
 export interface MigrationResult {
-  status: 'success' | 'error'
   changedFiles: ChangedFile[]
-  pullRequestTitle: string
   errorCode?: string
   errorMessage?: string
+  pullRequestTitle: string
+  status: 'success' | 'error'
 }

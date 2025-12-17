@@ -8,15 +8,15 @@ import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/Remove
 import { wrapCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
-  getNewPackageFiles: wrapCommand(getNewPackageFiles),
   addOidcPermissionsToWorkflow: wrapCommand(addOidcPermissionsToWorkflow),
-  computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
+  computeEnsureLernaExcludedContent: wrapCommand(
+    computeEnsureLernaExcludedContent,
+  ),
   computeNewDockerfileContent: wrapCommand(computeNewDockerfileContent),
   computeNewGitpodDockerfileContent: wrapCommand(
     computeNewGitpodDockerfileContent,
   ),
-  computeEnsureLernaExcludedContent: wrapCommand(
-    computeEnsureLernaExcludedContent,
-  ),
+  computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
+  getNewPackageFiles: wrapCommand(getNewPackageFiles),
   removeNpmTokenFromWorkflow: wrapCommand(removeNpmTokenFromWorkflow),
 }
