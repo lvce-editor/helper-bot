@@ -17,6 +17,7 @@ import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/Up
 import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
+import { handleMigrationsList } from '../HandleMigrationsList/HandleMigrationsList.ts'
 
 export const commandMap = {
   getNewPackageFiles: wrapCommand(getNewPackageFiles),
@@ -35,6 +36,7 @@ export const commandMap = {
   updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),
   'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
   '/hello-world': wrapResponseCommand(handleHelloWorld),
+  '/migrations/list': wrapResponseCommand(handleMigrationsList),
   listCommands: wrapCommand(listCommands),
   '/meta/list-commands-2': listCommands2,
 }
