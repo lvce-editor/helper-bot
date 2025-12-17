@@ -162,6 +162,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       // Handle success result
       if (result.changedFiles.length === 0) {
         res.status(200).json({
+          ...(result.data !== undefined ? { data: result.data } : {}),
           message: 'Migration completed successfully with no changes',
           status: 'success',
         })
@@ -257,7 +258,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         res.status(200).json({
           branchName,
           changedFiles: result.changedFiles.length,
-          ...(result.data ? { data: result.data } : {}),
+          ...(result.data !== undefined ? { data: result.data } : {}),
           message: 'Migration completed successfully',
           pullRequestNumber: pullRequestData.data.number,
           status: 'success',
@@ -268,7 +269,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       // Success but no repository provided or no changed files
       res.status(200).json({
         changedFiles: result.changedFiles.length,
-        ...(result.data ? { data: result.data } : {}),
+        ...(result.data !== undefined ? { data: result.data } : {}),
         message: 'Migration completed successfully',
         status: 'success',
       })
