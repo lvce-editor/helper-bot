@@ -222,8 +222,24 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles[0].content).toContain('"eslint": "latest"')
+  expect(result).toEqual({
+    branchName: 'feature/add-eslint',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"eslint": "latest"'),
+        path: 'package.json',
+      },
+      {
+        content: mockPackageLockJson,
+        path: 'package-lock.json',
+      },
+    ],
+    commitMessage: 'chore: add eslint and @lvce-editor/eslint-config',
+    pullRequestTitle: 'chore: add eslint and @lvce-editor/eslint-config',
+    status: 'success',
+    statusCode: 200,
+  })
+
   expect(result.changedFiles[0].content).toContain('"@lvce-editor/eslint-config": "latest"')
   expect(result.changedFiles[0].content).toContain('"typescript": "^5.0.0"')
   expect(mockExecFn).toHaveBeenCalledTimes(1)

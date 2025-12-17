@@ -101,10 +101,12 @@ Here's how to use the project.`
     repo: 'repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.changedFiles).toBe(1)
-  expect(result.newBranch).toMatch(/^remove-gitpod-section-\d+$/)
-  expect(result.message).toBe('Gitpod sections removed from README files')
+  expect(result).toEqual({
+    success: true,
+    changedFiles: 1,
+    newBranch: expect.stringMatching(/^remove-gitpod-section-\d+$/),
+    message: 'Gitpod sections removed from README files',
+  })
   expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining('README.md'), expect.not.stringContaining('## Gitpod'))
 })
 
@@ -145,8 +147,10 @@ Here's how to use the project.`
     repo: 'repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.message).toBe('No Gitpod sections found in README files')
+  expect(result).toEqual({
+    success: true,
+    message: 'No Gitpod sections found in README files',
+  })
 })
 
 test('removeGitpodSectionMigration should handle multiple README files', async () => {
@@ -246,9 +250,11 @@ Here's how to use it.`
     repo: 'repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.changedFiles).toBe(2)
-  expect(result.newBranch).toMatch(/^remove-gitpod-section-\d+$/)
-  expect(result.message).toBe('Gitpod sections removed from README files')
+  expect(result).toEqual({
+    success: true,
+    changedFiles: 2,
+    newBranch: expect.stringMatching(/^remove-gitpod-section-\d+$/),
+    message: 'Gitpod sections removed from README files',
+  })
   expect(mockFs.writeFile).toHaveBeenCalledTimes(2)
 })

@@ -21,8 +21,10 @@ test('returns empty result when release.yml does not exist', async (): Promise<v
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    changedFiles: [],
+    status: 'success',
+  })
 })
 
 test('returns empty result when draft is already present', async (): Promise<void> => {
@@ -61,8 +63,10 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    changedFiles: [],
+    status: 'success',
+  })
 })
 
 test('adds draft: true to create release step', async (): Promise<void> => {
@@ -108,9 +112,15 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles.length).toBe(1)
-  expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
+  expect(result).toEqual({
+    changedFiles: [
+      {
+        content: expect.any(String),
+        path: '.github/workflows/release.yml',
+      },
+    ],
+    status: 'success',
+  })
 
   const updatedContent = result.changedFiles[0].content
 
@@ -152,8 +162,15 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles.length).toBe(1)
+  expect(result).toEqual({
+    changedFiles: [
+      {
+        content: expect.any(String),
+        path: expect.any(String),
+      },
+    ],
+    status: 'success',
+  })
 
   const updatedContent = result.changedFiles[0].content
 
@@ -182,7 +199,10 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
+  expect(result).toEqual({
+    changedFiles: expect.any(Array),
+    status: 'success',
+  })
 
   const updatedContent = result.changedFiles[0].content
   const lines = updatedContent.split('\n')
