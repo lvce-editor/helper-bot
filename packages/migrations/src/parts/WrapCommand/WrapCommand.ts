@@ -20,18 +20,21 @@ export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T
   }
 }
 
-export const wrapResponseCommand = async (fn: () => Promise<Response>) => {
-  try {
-    const res = await fn()
-    return {
-      type: 'success',
-      buffer: await res.arrayBuffer(),
-      headers: [...res.headers.entries()],
-    }
-  } catch (error) {
-    return {
-      type: 'error',
-      error: `${error}`,
+export const wrapResponseCommand = (fn: () => Promise<Response>): (() => Promise<any>) => {
+  const wrapped = async () => {
+    try {
+      const res = await fn()
+      return {
+        type: 'success',
+        buffer: await res.arrayBuffer(),
+        headers: [...res.headers.entries()],
+      }
+    } catch (error) {
+      return {
+        type: 'error',
+        error: `${error}`,
+      }
     }
   }
+  return wrapped
 }
