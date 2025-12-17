@@ -26,7 +26,10 @@ function updateDependencies {
   fi
 }
 
-updateDependencies &&
+                                                       updateDependencies             &&
+cd packages/app                                   && updateDependencies && cd ../.. &&
+cd packages/build                                   && updateDependencies && cd ../.. &&
+cd packages/migrations                                     && updateDependencies && cd ../.. &&
 
 echo "Great Success!"
 
