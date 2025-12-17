@@ -8,6 +8,7 @@ import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
 import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseReleased.ts'
 import { listCommands } from '../ListCommands/ListCommands.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
+import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
 import { updateBuiltinExtensions } from '../UpdateBuiltinExtensions/UpdateBuiltinExtensions.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
@@ -25,6 +26,7 @@ export const commandMap = {
   computeNewGitpodDockerfileContent: wrapCommand(computeNewGitpodDockerfileContent),
   'migrations/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
   'migrations/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
+  'migrations/remove-gitpod-section': wrapCommand(removeGitpodSection),
   'migrations/update-node-version': wrapCommand(updateNodeVersion),
   'migrations/update-dependencies': wrapCommand(updateDependencies),
   'migrations/add-gitattributes': wrapCommand(addGitattributes),
