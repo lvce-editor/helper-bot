@@ -1,6 +1,5 @@
 default_events:
   - release
-  - check_run
 
 default_permissions:
   contents: write
