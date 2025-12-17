@@ -35,82 +35,105 @@ const githubFetch = async (url: string, token: string, fetchFn: typeof globalThi
   }
 }
 
+const getBranchRulesets = async (
+  repositoryOwner: string,
+  repositoryName: string,
+  githubToken: string,
+  fetchFn: typeof globalThis.fetch,
+): Promise<any[] | null> => {
+  try {
+    const rulesetsUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/rulesets?includes_parents=true`
+    const rulesetsResponse = await githubFetch(rulesetsUrl, githubToken, fetchFn)
+
+    if (rulesetsResponse.status === 200 && Array.isArray(rulesetsResponse.data) && rulesetsResponse.data.length > 0) {
+      return rulesetsResponse.data
+    }
+    return null
+  } catch (error: any) {
+    // If rulesets are not enabled or API not available, return null
+    if (error && error.status === 404) {
+      return null
+    }
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to fetch branch rulesets: ${errorMessage}`)
+  }
+}
+
+const getClassicBranchProtection = async (
+  repositoryOwner: string,
+  repositoryName: string,
+  branch: string,
+  githubToken: string,
+  fetchFn: typeof globalThis.fetch,
+): Promise<any | null> => {
+  try {
+    const protectionUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/branches/${branch}/protection`
+    const protectionResponse = await githubFetch(protectionUrl, githubToken, fetchFn)
+
+    if (protectionResponse.status === 200) {
+      return protectionResponse.data
+    }
+
+    // If branch protection is not enabled (404)
+    if (protectionResponse.status === 404) {
+      return null
+    }
+
+    throw new Error(`GitHub API returned status ${protectionResponse.status}: ${JSON.stringify(protectionResponse.data)}`)
+  } catch (error: any) {
+    // If branch protection is not enabled
+    if (error && error.status === 404) {
+      return null
+    }
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to fetch classic branch protection: ${errorMessage}`)
+  }
+}
+
 export const getBranchProtection = async (options: GetBranchProtectionOptions): Promise<MigrationResult> => {
   const { branch = 'main', fetch: fetchFn, githubToken, repositoryName, repositoryOwner } = options
 
   try {
     // Try to get rulesets first (new branch protection)
-    try {
-      const rulesetsUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/rulesets?includes_parents=true`
-      const rulesetsResponse = await githubFetch(rulesetsUrl, githubToken, fetchFn)
-
-      if (rulesetsResponse.status === 200 && Array.isArray(rulesetsResponse.data) && rulesetsResponse.data.length > 0) {
-        return {
-          changedFiles: [],
-          data: {
-            data: rulesetsResponse.data,
-            type: 'rulesets',
-          },
-          pullRequestTitle: '',
-          status: 'success',
-          statusCode: 200,
-        }
-      }
-    } catch (error: any) {
-      // If rulesets are not enabled or API not available, fall through to classic protection
-      if (error && error.status !== 404) {
-        throw error
+    const rulesets = await getBranchRulesets(repositoryOwner, repositoryName, githubToken, fetchFn)
+    if (rulesets) {
+      return {
+        changedFiles: [],
+        data: {
+          data: rulesets,
+          type: 'rulesets',
+        },
+        pullRequestTitle: '',
+        status: 'success',
+        statusCode: 200,
       }
     }
 
     // Fall back to classic branch protection
-    try {
-      const protectionUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/branches/${branch}/protection`
-      const protectionResponse = await githubFetch(protectionUrl, githubToken, fetchFn)
-
-      if (protectionResponse.status === 200) {
-        return {
-          changedFiles: [],
-          data: {
-            data: protectionResponse.data,
-            type: 'classic',
-          },
-          pullRequestTitle: '',
-          status: 'success',
-          statusCode: 200,
-        }
+    const classicProtection = await getClassicBranchProtection(repositoryOwner, repositoryName, branch, githubToken, fetchFn)
+    if (classicProtection) {
+      return {
+        changedFiles: [],
+        data: {
+          data: classicProtection,
+          type: 'classic',
+        },
+        pullRequestTitle: '',
+        status: 'success',
+        statusCode: 200,
       }
+    }
 
-      // If branch protection is not enabled (404)
-      if (protectionResponse.status === 404) {
-        return {
-          changedFiles: [],
-          data: {
-            data: null,
-            type: 'none',
-          },
-          pullRequestTitle: '',
-          status: 'success',
-          statusCode: 200,
-        }
-      }
-
-      throw new Error(`GitHub API returned status ${protectionResponse.status}: ${JSON.stringify(protectionResponse.data)}`)
-    } catch (error: any) {
-      // If branch protection is not enabled
-      if (error && error.status === 404) {
-        return {
-          changedFiles: [],
-          data: {
-            data: null,
-            type: 'none',
-          },
-          pullRequestTitle: '',
-          status: 'success',
-          statusCode: 200,
-        }
-      }
-      throw error
+    // No branch protection found
+    return {
+      changedFiles: [],
+      data: {
+        data: null,
+        type: 'none',
+      },
+      pullRequestTitle: '',
+      status: 'success',
+      statusCode: 200,
     }
   } catch (error) {
     let errorMessage: string
