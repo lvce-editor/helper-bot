@@ -1,8 +1,7 @@
 import { join } from 'node:path'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 
