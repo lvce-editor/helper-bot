@@ -61,17 +61,10 @@ export const updateSpecificDependency = async (options: Readonly<UpdateSpecificD
 
     return result
   } catch (error) {
-    const errorResult = {
+    return createMigrationResult({
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
-      status: 'error' as const,
-    }
-    return {
-      changedFiles: [],
-      errorCode: errorResult.errorCode,
-      errorMessage: errorResult.errorMessage,
       status: 'error',
-      statusCode: getHttpStatusCode(errorResult),
-    }
+    })
   }
 }

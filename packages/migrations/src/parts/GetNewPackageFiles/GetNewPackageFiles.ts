@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
 
@@ -98,10 +98,17 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
       statusCode: 200,
     }
   } catch (error) {
-    return createMigrationResult({
+    const errorResult = {
       errorCode: ERROR_CODES.GET_NEW_PACKAGE_FILES_FAILED,
       errorMessage: stringifyError(error),
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }

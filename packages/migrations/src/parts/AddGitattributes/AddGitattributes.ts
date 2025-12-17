@@ -1,5 +1,5 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
@@ -35,10 +35,17 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
       throw error
     }
   } catch (error) {
-    return createMigrationResult({
+    const errorResult = {
       errorCode: 'ADD_GITATTRIBUTES_FAILED',
       errorMessage: stringifyError(error),
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }
