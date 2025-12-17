@@ -111,3 +111,46 @@ export const wrapResponseCommand = (
   }
   return wrapped
 }
+
+export interface FunctionOptions {
+  readonly repositoryOwner: string
+  readonly repositoryName: string
+  readonly octokit: any
+  [key: string]: any
+}
+
+export const wrapFunction = <T extends FunctionOptions, R>(
+  fn: (options: T) => Promise<R>,
+): ((options: Omit<T, 'octokit'>) => Promise<{ data?: R; error?: string; type: string }>) => {
+  const wrapped = async (options: Omit<T, 'octokit'>): Promise<{ data?: R; error?: string; type: string }> => {
+    try {
+      const result = await fn(options as T)
+      return {
+        data: result,
+        type: 'success',
+      }
+    } catch (error) {
+      let errorMessage: string
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (error && typeof error === 'object') {
+        try {
+          errorMessage = JSON.stringify(error)
+        } catch {
+          errorMessage = 'Unknown error'
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else if (typeof error === 'number' || typeof error === 'boolean') {
+        errorMessage = String(error)
+      } else {
+        errorMessage = 'Unknown error'
+      }
+      return {
+        error: errorMessage,
+        type: 'error',
+      }
+    }
+  }
+  return wrapped
+}
