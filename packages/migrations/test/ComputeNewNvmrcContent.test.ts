@@ -55,7 +55,7 @@ test('returns same content when existing version is newer', async () => {
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
+  expect(result.pullRequestTitle).toBe('')
 })
 
 test('handles missing .nvmrc file', async () => {
