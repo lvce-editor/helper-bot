@@ -17,7 +17,8 @@
     "strictNullChecks": false,
     "noUnusedLocals": true,
     "outDir": "dist",
-    "noEmit": true
+    "noEmit": false,
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["src", "test"]
 }
