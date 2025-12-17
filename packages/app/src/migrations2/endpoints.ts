@@ -20,8 +20,13 @@ export interface MigrationResult {
 }
 
 const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
-  const providedSecret = req.query.secret
-  if (providedSecret !== secret) {
+  const authHeader = req.headers.authorization
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).send('Unauthorized')
+    return false
+  }
+  const providedToken = authHeader.substring(7) // Remove 'Bearer ' prefix
+  if (providedToken !== secret) {
     res.status(401).send('Unauthorized')
     return false
   }
