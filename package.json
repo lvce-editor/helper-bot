@@ -9,6 +9,7 @@
     "build": "tsc -b",
     "format": "prettier --write .",
     "postinstall": "lerna bootstrap --ci",
+    "lint": "eslint . && prettier --check .",
     "start": "cd packages/app && npm start",
     "test": "lerna run test"
   },
