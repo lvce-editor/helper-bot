@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 
 const addOidcPermissionsToWorkflowContent = (content: Readonly<string>): string => {
   // Check if permissions section already exists
@@ -47,11 +48,11 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
       originalContent = await options.fs.readFile(workflowPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
-        return {
+        return createMigrationResult({
+          status: 'success',
           changedFiles: [],
           pullRequestTitle: 'feature: update permissions for open id connect publishing',
-          status: 'success',
-        }
+        })
       }
       throw error
     }
@@ -61,30 +62,30 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
     const pullRequestTitle = 'feature: update permissions for open id connect publishing'
 
     if (!hasChanges) {
-      return {
+      return createMigrationResult({
+        status: 'success',
         changedFiles: [],
         pullRequestTitle,
-        status: 'success',
-      }
+      })
     }
 
-    return {
+    return createMigrationResult({
+      status: 'success',
       changedFiles: [
         {
-          content: updatedContent,
           path: '.github/workflows/release.yml',
+          content: updatedContent,
         },
       ],
       pullRequestTitle,
-      status: 'success',
-    }
+    })
   } catch (error) {
-    return {
+    return createMigrationResult({
+      status: 'error',
       changedFiles: [],
+      pullRequestTitle: 'feature: update permissions for open id connect publishing',
       errorCode: ERROR_CODES.ADD_OIDC_PERMISSIONS_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'feature: update permissions for open id connect publishing',
-      status: 'error',
-    }
+    })
   }
 }

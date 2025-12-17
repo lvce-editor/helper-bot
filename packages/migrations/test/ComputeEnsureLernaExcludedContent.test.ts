@@ -31,12 +31,12 @@ updateDependencies`
   })
 
   const result = await computeEnsureLernaExcludedContent({
-    clonedRepoPath,
-    exec: mockExec,
-    fetch: globalThis.fetch,
-    fs: mockFs,
-    repositoryName: 'repo',
     repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
   })
 
   expect(result.status).toBe('success')
@@ -71,12 +71,12 @@ updateDependencies`
   })
 
   const result = await computeEnsureLernaExcludedContent({
-    clonedRepoPath,
-    exec: mockExec,
-    fetch: globalThis.fetch,
-    fs: mockFs,
-    repositoryName: 'repo',
     repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
   })
 
   expect(result.status).toBe('success')
@@ -88,12 +88,12 @@ test('handles missing update-dependencies.sh script', async () => {
   const mockFs = createMockFs()
 
   const result = await computeEnsureLernaExcludedContent({
-    clonedRepoPath,
-    exec: mockExec,
-    fetch: globalThis.fetch,
-    fs: mockFs,
-    repositoryName: 'repo',
     repositoryOwner: 'test',
+    repositoryName: 'repo',
+    fs: mockFs,
+    clonedRepoPath,
+    fetch: globalThis.fetch,
+    exec: mockExec,
   })
 
   expect(result.status).toBe('success')
