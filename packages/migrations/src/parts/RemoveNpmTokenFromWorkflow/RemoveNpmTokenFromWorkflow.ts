@@ -38,27 +38,27 @@ export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmToke
     const pullRequestTitle = 'ci: remove NODE_AUTH_TOKEN from release workflow'
 
     return {
+      branchName: 'feature/remove-npm-token-from-workflow',
       changedFiles: [
         {
           content: updatedContent,
           path: '.github/workflows/release.yml',
         },
       ],
+      commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
       statusCode: 200,
-      branchName: 'feature/remove-npm-token-from-workflow',
-      commitMessage: pullRequestTitle,
     }
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.REMOVE_NPM_TOKEN_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
       status: 'error',
-      branchName: '',
-      commitMessage: '',
     })
   }
 }

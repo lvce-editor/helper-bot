@@ -37,26 +37,26 @@ export const computeNewGitpodDockerfileContent = async (options: Readonly<Comput
     }
 
     return createMigrationResult({
+      branchName: 'feature/update-node-version',
       changedFiles: [
         {
           content: newContent,
           path: '.gitpod.Dockerfile',
         },
       ],
+      commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      branchName: 'feature/update-node-version',
-      commitMessage: pullRequestTitle,
     })
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.COMPUTE_GITPOD_DOCKERFILE_CONTENT_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: `ci: update Node.js version`,
       status: 'error',
-      branchName: '',
-      commitMessage: '',
     })
   }
 }

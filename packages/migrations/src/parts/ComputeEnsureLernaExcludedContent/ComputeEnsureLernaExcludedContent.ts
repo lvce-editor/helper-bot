@@ -70,27 +70,27 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
     }
 
     return {
+      branchName: 'feature/ensure-lerna-excluded',
       changedFiles: [
         {
           content: result.newContent,
           path: 'scripts/update-dependencies.sh',
         },
       ],
+      commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
       statusCode: 200,
-      branchName: 'feature/ensure-lerna-excluded',
-      commitMessage: pullRequestTitle,
     }
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
       status: 'error',
-      branchName: '',
-      commitMessage: '',
     })
   }
 }

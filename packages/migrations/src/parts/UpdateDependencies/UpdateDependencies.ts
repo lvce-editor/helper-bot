@@ -58,13 +58,13 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
     })
   } catch (error) {
     return createMigrationResult({
+      branchName: '',
       changedFiles: [],
+      commitMessage: '',
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
       status: 'error',
-      branchName: '',
-      commitMessage: '',
     })
   }
 }
