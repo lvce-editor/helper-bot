@@ -217,13 +217,13 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toEqual('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toEqual('RUN_LINT_IN_CI_FAILED')
-    expect(result.errorMessage).toEqual(
-      'pr.yml: No suitable location found to add lint step. Expected to find one of: npm run type-check, npm test, or npm run build',
-    )
-  }
+  expect(result).toEqual({
+    changedFiles: [],
+    errorCode: 'RUN_LINT_IN_CI_FAILED',
+    errorMessage: 'pr.yml: No suitable location found to add lint step. Expected to find one of: npm run type-check, npm test, or npm run build',
+    status: 'error',
+    statusCode: 400,
+  })
 })
 
 test('returns empty result when lint step already exists', async () => {
@@ -376,9 +376,7 @@ jobs:
   })
 
   expect(result.status).toEqual('success')
-  if (result.status === 'success') {
-    expect(result.changedFiles[0].content.includes('      - run: npm run lint')).toEqual(true)
-  }
+  expect(result.changedFiles[0].content.includes('      - run: npm run lint')).toEqual(true)
 })
 
 test('handles workflow with different indentation styles', async () => {
@@ -407,9 +405,7 @@ jobs:
   })
 
   expect(result.status).toEqual('success')
-  if (result.status === 'success') {
-    expect(result.changedFiles[0].content.includes('    - run: npm run lint')).toEqual(true)
-  }
+  expect(result.changedFiles[0].content.includes('    - run: npm run lint')).toEqual(true)
 })
 
 test('skips files with errors and processes others', async () => {
