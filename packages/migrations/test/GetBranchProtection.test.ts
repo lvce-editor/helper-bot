@@ -4,17 +4,17 @@ import { getBranchProtection } from '../src/parts/GetBranchProtection/GetBranchP
 test('returns rulesets when available', async (): Promise<void> => {
   const mockFetch = async (url: string): Promise<Response> => {
     if (url.includes('/rulesets')) {
-      return new Response(
-        JSON.stringify([
+      return Response.json(
+        [
           {
+            enforcement: 'active',
             id: 123,
             name: 'main protection',
-            enforcement: 'active',
           },
-        ]),
+        ],
         {
-          status: 200,
           headers: { 'Content-Type': 'application/json' },
+          status: 200,
         },
       )
     }
@@ -24,9 +24,9 @@ test('returns rulesets when available', async (): Promise<void> => {
   globalThis.fetch = mockFetch as any
 
   const result = await getBranchProtection({
-    repositoryOwner: 'test-owner',
-    repositoryName: 'test-repo',
     githubToken: 'test-token',
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
   })
 
   expect(result.type).toBe('rulesets')
@@ -38,25 +38,25 @@ test('returns rulesets when available', async (): Promise<void> => {
 test('returns classic branch protection when rulesets not available', async (): Promise<void> => {
   const mockFetch = async (url: string): Promise<Response> => {
     if (url.includes('/rulesets')) {
-      return new Response(JSON.stringify([]), {
-        status: 200,
+      return Response.json([], {
         headers: { 'Content-Type': 'application/json' },
+        status: 200,
       })
     }
     if (url.includes('/branches/main/protection')) {
-      return new Response(
-        JSON.stringify({
-          required_status_checks: {
-            strict: true,
-            contexts: ['ci/test'],
-          },
+      return Response.json(
+        {
           enforce_admins: {
             enabled: true,
           },
-        }),
+          required_status_checks: {
+            contexts: ['ci/test'],
+            strict: true,
+          },
+        },
         {
-          status: 200,
           headers: { 'Content-Type': 'application/json' },
+          status: 200,
         },
       )
     }
@@ -66,9 +66,9 @@ test('returns classic branch protection when rulesets not available', async (): 
   globalThis.fetch = mockFetch as any
 
   const result = await getBranchProtection({
-    repositoryOwner: 'test-owner',
-    repositoryName: 'test-repo',
     githubToken: 'test-token',
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
   })
 
   expect(result.type).toBe('classic')
@@ -79,19 +79,19 @@ test('returns classic branch protection when rulesets not available', async (): 
 test('returns none when no branch protection is enabled', async (): Promise<void> => {
   const mockFetch = async (url: string): Promise<Response> => {
     if (url.includes('/rulesets')) {
-      return new Response(JSON.stringify([]), {
-        status: 200,
+      return Response.json([], {
         headers: { 'Content-Type': 'application/json' },
+        status: 200,
       })
     }
     if (url.includes('/branches/main/protection')) {
-      return new Response(
-        JSON.stringify({
-          message: 'Branch not protected',
-        }),
+      return Response.json(
         {
-          status: 404,
+          message: 'Branch not protected',
+        },
+        {
           headers: { 'Content-Type': 'application/json' },
+          status: 404,
         },
       )
     }
@@ -101,9 +101,9 @@ test('returns none when no branch protection is enabled', async (): Promise<void
   globalThis.fetch = mockFetch as any
 
   const result = await getBranchProtection({
-    repositoryOwner: 'test-owner',
-    repositoryName: 'test-repo',
     githubToken: 'test-token',
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
   })
 
   expect(result.type).toBe('none')
@@ -113,22 +113,22 @@ test('returns none when no branch protection is enabled', async (): Promise<void
 test('uses custom branch name', async (): Promise<void> => {
   const mockFetch = async (url: string): Promise<Response> => {
     if (url.includes('/rulesets')) {
-      return new Response(JSON.stringify([]), {
-        status: 200,
+      return Response.json([], {
         headers: { 'Content-Type': 'application/json' },
+        status: 200,
       })
     }
     if (url.includes('/branches/develop/protection')) {
-      return new Response(
-        JSON.stringify({
-          required_status_checks: {
-            strict: false,
-            contexts: [],
-          },
-        }),
+      return Response.json(
         {
-          status: 200,
+          required_status_checks: {
+            contexts: [],
+            strict: false,
+          },
+        },
+        {
           headers: { 'Content-Type': 'application/json' },
+          status: 200,
         },
       )
     }
@@ -138,10 +138,10 @@ test('uses custom branch name', async (): Promise<void> => {
   globalThis.fetch = mockFetch as any
 
   const result = await getBranchProtection({
-    repositoryOwner: 'test-owner',
-    repositoryName: 'test-repo',
     branch: 'develop',
     githubToken: 'test-token',
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
   })
 
   expect(result.type).toBe('classic')
@@ -156,19 +156,19 @@ test('includes authorization header in requests', async (): Promise<void> => {
     fetchCalls.push(authHeader || 'no-auth')
 
     if (url.includes('/rulesets')) {
-      return new Response(JSON.stringify([]), {
-        status: 200,
+      return Response.json([], {
         headers: { 'Content-Type': 'application/json' },
+        status: 200,
       })
     }
     if (url.includes('/branches/main/protection')) {
-      return new Response(
-        JSON.stringify({
-          message: 'Branch not protected',
-        }),
+      return Response.json(
         {
-          status: 404,
+          message: 'Branch not protected',
+        },
+        {
           headers: { 'Content-Type': 'application/json' },
+          status: 404,
         },
       )
     }
@@ -178,9 +178,9 @@ test('includes authorization header in requests', async (): Promise<void> => {
   globalThis.fetch = mockFetch as any
 
   await getBranchProtection({
-    repositoryOwner: 'test-owner',
-    repositoryName: 'test-repo',
     githubToken: 'secret-token',
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
   })
 
   expect(fetchCalls.every((call) => call === 'Bearer secret-token')).toBe(true)

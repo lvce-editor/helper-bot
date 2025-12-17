@@ -113,10 +113,10 @@ export const wrapResponseCommand = (
 }
 
 export interface FunctionOptions {
-  readonly repositoryOwner: string
-  readonly repositoryName: string
-  readonly githubToken?: string
   [key: string]: any
+  readonly githubToken?: string
+  readonly repositoryName: string
+  readonly repositoryOwner: string
 }
 
 export const wrapFunction = <T extends FunctionOptions, R>(

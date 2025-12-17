@@ -1,13 +1,13 @@
 export interface GetBranchProtectionOptions {
-  readonly repositoryOwner: string
-  readonly repositoryName: string
   readonly branch?: string
   readonly githubToken: string
+  readonly repositoryName: string
+  readonly repositoryOwner: string
 }
 
 export interface BranchProtectionData {
-  readonly type: 'rulesets' | 'classic' | 'none'
   readonly data: any
+  readonly type: 'rulesets' | 'classic' | 'none'
 }
 
 const githubFetch = async (url: string, token: string): Promise<{ status: number; data: any }> => {
@@ -30,13 +30,13 @@ const githubFetch = async (url: string, token: string): Promise<{ status: number
   }
 
   return {
-    status: response.status,
     data,
+    status: response.status,
   }
 }
 
 export const getBranchProtection = async (options: GetBranchProtectionOptions): Promise<BranchProtectionData> => {
-  const { repositoryOwner, repositoryName, branch = 'main', githubToken } = options
+  const { branch = 'main', githubToken, repositoryName, repositoryOwner } = options
 
   // Try to get rulesets first (new branch protection)
   try {
@@ -45,8 +45,8 @@ export const getBranchProtection = async (options: GetBranchProtectionOptions): 
 
     if (rulesetsResponse.status === 200 && Array.isArray(rulesetsResponse.data) && rulesetsResponse.data.length > 0) {
       return {
-        type: 'rulesets',
         data: rulesetsResponse.data,
+        type: 'rulesets',
       }
     }
   } catch (error: any) {
@@ -63,16 +63,16 @@ export const getBranchProtection = async (options: GetBranchProtectionOptions): 
 
     if (protectionResponse.status === 200) {
       return {
-        type: 'classic',
         data: protectionResponse.data,
+        type: 'classic',
       }
     }
 
     // If branch protection is not enabled (404)
     if (protectionResponse.status === 404) {
       return {
-        type: 'none',
         data: null,
+        type: 'none',
       }
     }
 
@@ -81,8 +81,8 @@ export const getBranchProtection = async (options: GetBranchProtectionOptions): 
     // If branch protection is not enabled
     if (error && error.status === 404) {
       return {
-        type: 'none',
         data: null,
+        type: 'none',
       }
     }
     throw error
