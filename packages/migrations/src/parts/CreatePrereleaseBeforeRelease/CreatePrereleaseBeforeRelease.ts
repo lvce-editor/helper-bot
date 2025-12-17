@@ -63,7 +63,8 @@ const addDraftToCreateRelease = (content: Readonly<string>): string => {
     lines.splice(insertIndex, 0, draftLine)
   }
 
-  return lines.join('\n')
+  const result = lines.join('\n')
+  return result.endsWith('\n') ? result : result + '\n'
 }
 
 const addPublishReleaseStep = (content: Readonly<string>): string => {
@@ -135,7 +136,8 @@ const addPublishReleaseStep = (content: Readonly<string>): string => {
     lines.splice(endOfLastStep, 0, ...publishStep)
   }
 
-  return lines.join('\n')
+  const result = lines.join('\n')
+  return result.endsWith('\n') ? result : result + '\n'
 }
 
 const createPrereleaseBeforeReleaseContent = (content: Readonly<string>): string => {
