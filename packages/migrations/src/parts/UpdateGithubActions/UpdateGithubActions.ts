@@ -1,5 +1,5 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 
 const WORKFLOWS_DIR = '.github/workflows'
@@ -100,13 +100,15 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
       statusCode: 200,
     }
   } catch (error: any) {
-    return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
+    const errorResult = {
       errorMessage: error instanceof Error ? error.message : String(error),
-      pullRequestTitle: 'ci: update CI OS versions',
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }

@@ -1,8 +1,8 @@
 import { test, expect, jest } from '@jest/globals'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { getNewPackageFiles } from '../src/parts/GetNewPackageFiles/GetNewPackageFiles.ts'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('generates new package files with updated dependency', async () => {
   const oldPackageJson = {
@@ -64,15 +64,30 @@ test('generates new package files with updated dependency', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(2)
-  expect(result.changedFiles[0].path).toBe('package.json')
-  expect(result.changedFiles[0].content).toContain('"@lvce-editor/shared": "^2.0.0"')
-  expect(result.changedFiles[1].path).toBe('package-lock.json')
-  expect(result.changedFiles[1].content).toBe(mockPackageLockJson)
-  expect(result.pullRequestTitle).toBe('feature: update shared to version 2.0.0')
-  expect(result.branchName).toBe('feature/update-shared-to-2.0.0')
-  expect(result.commitMessage).toBe('feature: update shared to version 2.0.0')
+  expect(result).toEqual({
+    branchName: 'feature/update-shared-to-2.0.0',
+    changedFiles: [
+      {
+        content: `{
+  "dependencies": {
+    "@lvce-editor/shared": "^2.0.0"
+  },
+  "name": "test-package",
+  "version": "1.0.0"
+}
+`,
+        path: 'package.json',
+      },
+      {
+        content: mockPackageLockJson,
+        path: 'package-lock.json',
+      },
+    ],
+    commitMessage: 'feature: update shared to version 2.0.0',
+    pullRequestTitle: 'feature: update shared to version 2.0.0',
+    status: 'success',
+    statusCode: 200,
+  })
 
   expect(mockExecFn).toHaveBeenCalledTimes(1)
   expect(mockExecFn).toHaveBeenCalledWith(
@@ -106,7 +121,13 @@ test('handles missing package.json', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
   expect(mockExecFn).not.toHaveBeenCalled()
 })

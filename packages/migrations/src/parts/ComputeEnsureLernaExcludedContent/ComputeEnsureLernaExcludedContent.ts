@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>): { newContent: string; hasChanges: boolean } => {
@@ -82,14 +82,17 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
       statusCode: 200,
     }
   } catch (error) {
-    return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
+    const errorResult = {
       errorCode: ERROR_CODES.COMPUTE_ENSURE_LERNA_EXCLUDED_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }

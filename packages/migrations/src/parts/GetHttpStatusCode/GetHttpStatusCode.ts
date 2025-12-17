@@ -1,23 +1,49 @@
-import type { MigrationResult } from '../Types/Types.ts'
+import type {
+  MigrationErrorResult,
+  MigrationErrorResultWithoutStatusCode,
+  MigrationResult,
+  MigrationResultWithoutStatusCode,
+  MigrationSuccessResult,
+  MigrationSuccessResultWithoutStatusCode,
+} from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 
-export const getHttpStatusCode = (migrationResult: Omit<MigrationResult, 'statusCode'>): number => {
+export const getHttpStatusCode = (migrationResult: MigrationResultWithoutStatusCode): number => {
   if (migrationResult.status === 'error') {
-    const statusCode = migrationResult.errorCode === 'DEPENDENCY_NOT_FOUND' || migrationResult.errorCode === 'FORBIDDEN' ? 400 : 424
+    const errorResult: MigrationErrorResultWithoutStatusCode = migrationResult
+    const statusCode =
+      errorResult.errorCode === 'DEPENDENCY_NOT_FOUND' || errorResult.errorCode === 'FORBIDDEN' || errorResult.errorCode === 'VALIDATION_ERROR' ? 400 : 424
     return statusCode
   }
   return 200
 }
 
-export const createMigrationResult = (result: Omit<MigrationResult, 'statusCode'>): MigrationResult => {
-  return {
-    ...result,
-    // @ts-ignore
-    statusCode: getHttpStatusCode(result),
+export const createMigrationResult = (result: MigrationResultWithoutStatusCode): MigrationResult => {
+  const statusCode = getHttpStatusCode(result)
+  if (result.status === 'error') {
+    const errorResult: MigrationErrorResultWithoutStatusCode = result
+    const migrationErrorResult: MigrationErrorResult = {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
+      status: 'error',
+      statusCode,
+    }
+    return migrationErrorResult
   }
+  const successResult: MigrationSuccessResultWithoutStatusCode = result
+  const migrationSuccessResult: MigrationSuccessResult = {
+    branchName: successResult.branchName,
+    changedFiles: successResult.changedFiles,
+    commitMessage: successResult.commitMessage,
+    pullRequestTitle: successResult.pullRequestTitle,
+    status: 'success',
+    statusCode,
+  }
+  return migrationSuccessResult
 }
 
-export const emptyMigrationResult: MigrationResult = {
+export const emptyMigrationResult: MigrationSuccessResult = {
   branchName: '',
   changedFiles: [],
   commitMessage: '',
@@ -26,14 +52,10 @@ export const emptyMigrationResult: MigrationResult = {
   statusCode: 200,
 }
 
-export const createValidationErrorMigrationResult = (errorMessage: string, errorCode: string = ERROR_CODES.UPDATE_DEPENDENCIES_FAILED): MigrationResult => {
+export const createValidationErrorMigrationResult = (errorMessage: string, errorCode: string = ERROR_CODES.VALIDATION_ERROR): MigrationResult => {
   return createMigrationResult({
-    branchName: '',
-    changedFiles: [],
-    commitMessage: '',
     errorCode,
     errorMessage,
-    pullRequestTitle: '',
     status: 'error',
   })
 }

@@ -1,14 +1,16 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string => {
   // Pattern to match the env section with NODE_AUTH_TOKEN
-  // This matches the exact pattern: env: followed by NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-  const npmTokenPattern = /^\s*env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*$/gm
+  // This matches: env: followed by newline, NODE_AUTH_TOKEN line, and the newline after it
+  // We need to match the entire block including proper newlines
+  const npmTokenPattern = /(\s*)env:\s*\n(\s*)NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*\n/gm
 
-  return content.replaceAll(npmTokenPattern, '')
+  // Replace with a newline to maintain proper YAML structure
+  return content.replaceAll(npmTokenPattern, '\n')
 }
 
 export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
@@ -17,16 +19,12 @@ export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmToke
   try {
     const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
 
-    let originalContent: string
-    try {
-      originalContent = await options.fs.readFile(workflowPath, 'utf8')
-    } catch (error: any) {
-      if (error && error.code === 'ENOENT') {
-        return emptyMigrationResult
-      }
-      throw error
+    const fileExists = await options.fs.exists(workflowPath)
+    if (!fileExists) {
+      return emptyMigrationResult
     }
 
+    const originalContent = await options.fs.readFile(workflowPath, 'utf8')
     const updatedContent = removeNpmTokenFromWorkflowContent(originalContent)
     const hasChanges = originalContent !== updatedContent
 
@@ -50,14 +48,17 @@ export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmToke
       statusCode: 200,
     }
   } catch (error) {
-    return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
+    const errorResult = {
       errorCode: ERROR_CODES.REMOVE_NPM_TOKEN_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }

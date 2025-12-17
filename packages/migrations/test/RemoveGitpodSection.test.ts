@@ -41,16 +41,29 @@ Here's how to use the project.`
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('README.md')
-  expect(result.changedFiles[0].content).not.toContain('## Gitpod')
-  expect(result.changedFiles[0].content).not.toContain('Gitpod')
-  expect(result.changedFiles[0].content).toContain('## Installation')
-  expect(result.changedFiles[0].content).toContain('## Usage')
-  expect(result.pullRequestTitle).toBe('ci: remove Gitpod section from README')
-  expect(result.branchName).toBe('feature/remove-gitpod-section')
-  expect(result.commitMessage).toBe('ci: remove Gitpod section from README')
+  expect(result).toEqual({
+    branchName: 'feature/remove-gitpod-section',
+    changedFiles: [
+      {
+        content: `# My Project
+
+This is a great project.
+
+## Installation
+
+Follow these steps to install the project.
+
+## Usage
+
+Here's how to use the project.`,
+        path: 'README.md',
+      },
+    ],
+    commitMessage: 'ci: remove Gitpod section from README',
+    pullRequestTitle: 'ci: remove Gitpod section from README',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns same content when Gitpod section is not found', async () => {
@@ -82,9 +95,14 @@ Here's how to use the project.`
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe('')
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('only processes README.md', async () => {
@@ -121,11 +139,23 @@ Here's how to use it.`,
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('README.md')
-  expect(result.changedFiles[0].content).not.toContain('Gitpod')
-  expect(result.pullRequestTitle).toBe('ci: remove Gitpod section from README')
+  expect(result).toEqual({
+    branchName: 'feature/remove-gitpod-section',
+    changedFiles: [
+      {
+        content: `# My Project
+
+## Installation
+
+Follow these steps.`,
+        path: 'README.md',
+      },
+    ],
+    commitMessage: 'ci: remove Gitpod section from README',
+    pullRequestTitle: 'ci: remove Gitpod section from README',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('handles missing README files', async () => {
@@ -141,6 +171,12 @@ test('handles missing README files', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })

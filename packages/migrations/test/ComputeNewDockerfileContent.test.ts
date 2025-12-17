@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 const mockFetch = createMockFetch([
@@ -28,20 +28,28 @@ RUN npm install`
   const result = await computeNewDockerfileContent({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('Dockerfile')
-  expect(result.changedFiles[0].content).toContain('node:20.0.0')
-  expect(result.changedFiles[0].content).not.toContain('node:18.0.0')
-  expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
-  expect(result.branchName).toBe('feature/update-node-version')
-  expect(result.commitMessage).toBe('ci: update Node.js to version v20.0.0')
+  expect(result).toEqual({
+    branchName: 'feature/update-node-version',
+    changedFiles: [
+      {
+        content: `FROM node:20.0.0
+WORKDIR /app
+COPY . .
+RUN npm install`,
+        path: 'Dockerfile',
+      },
+    ],
+    commitMessage: 'ci: update Node.js to version v20.0.0',
+    pullRequestTitle: 'ci: update Node.js to version v20.0.0',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns same content when no node version found', async () => {
@@ -59,14 +67,20 @@ COPY . .`
   const result = await computeNewDockerfileContent({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('handles missing Dockerfile', async () => {
@@ -76,12 +90,18 @@ test('handles missing Dockerfile', async () => {
   const result = await computeNewDockerfileContent({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })

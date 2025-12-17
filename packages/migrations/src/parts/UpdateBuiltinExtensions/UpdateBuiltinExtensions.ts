@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 
@@ -66,14 +66,17 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       statusCode: 200,
     }
   } catch (error) {
-    return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
+    const errorResult = {
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: `feature: update ${options.repositoryName} to version ${options.tagName}`,
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }

@@ -23,7 +23,7 @@ export const uriToPath = (uri: string): string => {
 
 export const normalizePath = (path: string): string => {
   // Normalize path separators to forward slashes
-  return path.replace(/\\/g, '/')
+  return path.replaceAll('\\', '/')
 }
 
 export const isUri = (path: string): boolean => {
@@ -39,7 +39,7 @@ export const validateUri = (path: string | Buffer | URL, operation: string, stri
     return uri
   }
   if (path instanceof Buffer) {
-    throw new Error(`${operation} requires a URI, but received a Buffer. Convert to URI first.`)
+    throw new TypeError(`${operation} requires a URI, but received a Buffer. Convert to URI first.`)
   }
   const pathStr = path.toString()
 

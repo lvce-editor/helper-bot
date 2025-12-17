@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import { computeNewNvmrcContent } from '../src/parts/ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 const mockFetch = createMockFetch([
@@ -23,19 +23,25 @@ test('computes new nvmrc content when version should be updated', async () => {
   const result = await computeNewNvmrcContent({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('.nvmrc')
-  expect(result.changedFiles[0].content).toBe('v20.0.0\n')
-  expect(result.pullRequestTitle).toBe('ci: update Node.js to version v20.0.0')
-  expect(result.branchName).toBe('feature/update-node-version')
-  expect(result.commitMessage).toBe('ci: update Node.js to version v20.0.0')
+  expect(result).toEqual({
+    branchName: 'feature/update-node-version',
+    changedFiles: [
+      {
+        content: 'v20.0.0\n',
+        path: '.nvmrc',
+      },
+    ],
+    commitMessage: 'ci: update Node.js to version v20.0.0',
+    pullRequestTitle: 'ci: update Node.js to version v20.0.0',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns same content when existing version is newer', async () => {
@@ -49,15 +55,20 @@ test('returns same content when existing version is newer', async () => {
   const result = await computeNewNvmrcContent({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
-  expect(result.pullRequestTitle).toBe('')
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('handles missing .nvmrc file', async () => {
@@ -67,12 +78,18 @@ test('handles missing .nvmrc file', async () => {
   const result = await computeNewNvmrcContent({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as unknown as typeof globalThis.fetch,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })

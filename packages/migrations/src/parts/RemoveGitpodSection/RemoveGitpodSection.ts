@@ -1,13 +1,14 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const removeGitpodSectionContent = (content: Readonly<string>): string => {
   // Pattern to match Gitpod sections in README
   // This matches sections that start with ## Gitpod or similar headers
   // and includes content until the next header or end of file
-  const gitpodPattern = /^#{1,6}\s*[Gg]itpod.*?(?=^#{1,6}\s|\Z)/gms
+  // Include the newline before the header to properly remove the section
+  const gitpodPattern = /\n#{1,6}\s*[Gg]itpod[\s\S]*?(?=\n#{1,6}\s|$)/g
 
   return content.replaceAll(gitpodPattern, '')
 }
@@ -55,14 +56,17 @@ export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionO
       statusCode: 200,
     }
   } catch (error) {
-    return createMigrationResult({
-      branchName: '',
-      changedFiles: [],
-      commitMessage: '',
+    const errorResult = {
       errorCode: ERROR_CODES.REMOVE_GITPOD_SECTION_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle: 'ci: remove Gitpod section from README',
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }
