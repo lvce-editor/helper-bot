@@ -1,11 +1,17 @@
+import { addDevcontainerJson } from '../AddDevcontainerJson/AddDevcontainerJson.ts'
+import { addEslint } from '../AddEslint/AddEslint.ts'
 import { addGitattributes } from '../AddGitattributes/AddGitattributes.ts'
+import { addLintScript } from '../AddLintScript/AddLintScript.ts'
 import { addOidcPermissionsToWorkflow } from '../AddOidcPermissionsToWorkflow/AddOidcPermissionsToWorkflow.ts'
 import { computeEnsureLernaExcludedContent } from '../ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
 import { handleMigrationsList } from '../HandleMigrationsList/HandleMigrationsList.ts'
 import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseReleased.ts'
+import { initializePackageJson } from '../InitializePackageJson/InitializePackageJson.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
+import { modernDirname } from '../ModernDirname/ModernDirname.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
+import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
@@ -16,12 +22,18 @@ import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 export const commandMap = {
   '/hello-world': wrapResponseCommand(handleHelloWorld),
   '/meta/list-commands-2': listCommands2,
+  '/migrations2/add-devcontainer-json': wrapCommand(addDevcontainerJson),
+  '/migrations2/add-eslint': wrapCommand(addEslint),
   '/migrations2/add-gitattributes': wrapCommand(addGitattributes),
+  '/migrations2/add-lint-script': wrapCommand(addLintScript),
   '/migrations2/add-oidc-permissions': wrapCommand(addOidcPermissionsToWorkflow),
   '/migrations2/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
   '/migrations2/handle-release-released': wrapCommand(handleReleaseReleased),
+  '/migrations2/initialize-package-json': wrapCommand(initializePackageJson),
+  '/migrations2/js/modern-dirname': wrapCommand(modernDirname),
   '/migrations2/list': wrapResponseCommand(handleMigrationsList),
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
+  '/migrations2/remove-gitpod-yml': wrapCommand(removeGitpodyml),
   '/migrations2/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
   '/migrations2/update-dependencies': wrapCommand(updateDependencies),
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
