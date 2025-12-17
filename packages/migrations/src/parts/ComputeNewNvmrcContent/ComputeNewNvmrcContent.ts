@@ -1,9 +1,13 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+<<<<<<< HEAD
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+=======
+>>>>>>> origin/main
 
 const parseVersion = (content: string): number => {
   const trimmed = content.trim()
@@ -48,7 +52,16 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
       currentContent = await options.fs.readFile(nvmrcPath, 'utf8')
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
+<<<<<<< HEAD
         return emptyMigrationResult
+=======
+        return {
+          changedFiles: [],
+          pullRequestTitle: `ci: update Node.js to version ${newVersion}`,
+          status: 'success',
+          statusCode: 200,
+        }
+>>>>>>> origin/main
       }
       throw error
     }
@@ -57,11 +70,21 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     if (!result.shouldUpdate) {
+<<<<<<< HEAD
       return emptyMigrationResult
+=======
+      return {
+        changedFiles: [],
+        pullRequestTitle,
+        status: 'success',
+        statusCode: 200,
+      }
+>>>>>>> origin/main
     }
 
     const hasChanges = currentContent !== result.newContent
 
+<<<<<<< HEAD
     if (!hasChanges) {
       return emptyMigrationResult
     }
@@ -74,15 +97,28 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
           content: result.newContent,
         },
       ],
+=======
+    return {
+      changedFiles: hasChanges
+        ? [
+            {
+              content: result.newContent,
+              path: '.nvmrc',
+            },
+          ]
+        : [],
+>>>>>>> origin/main
       pullRequestTitle,
-    })
+      status: 'success',
+      statusCode: 200,
+    }
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: `ci: update Node.js version`,
       errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: `ci: update Node.js version`,
+      status: 'error',
     })
   }
 }

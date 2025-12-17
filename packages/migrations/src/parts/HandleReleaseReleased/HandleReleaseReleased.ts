@@ -1,14 +1,14 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
-import { updateBuiltinExtensions } from '../UpdateBuiltinExtensions/UpdateBuiltinExtensions.ts'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { updateBuiltinExtensions } from '../UpdateBuiltinExtensions/UpdateBuiltinExtensions.ts'
+import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
 
 export interface HandleReleaseReleasedOptions extends BaseMigrationOptions {
-  tagName: string
   repositoryName: string
+  tagName: string
 }
 
 export const handleReleaseReleased = async (options: Readonly<HandleReleaseReleasedOptions>): Promise<MigrationResult> => {
@@ -19,8 +19,8 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
     // Call updateRepositoryDependencies
     const repositoryDependenciesResult = await updateRepositoryDependencies({
       ...options,
-      tagName: options.tagName,
       repositoryName: releasedRepo,
+      tagName: options.tagName,
     })
 
     if (repositoryDependenciesResult.status === 'error') {
@@ -41,12 +41,12 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
       try {
         const builtinExtensionsResult = await updateBuiltinExtensions({
           ...options,
-          repositoryOwner: targetOwner,
-          repositoryName: targetRepo,
-          tagName: options.tagName,
-          releasedRepositoryName: releasedRepo,
-          targetFilePath,
           clonedRepoPath: clonedTargetRepo.path,
+          releasedRepositoryName: releasedRepo,
+          repositoryName: targetRepo,
+          repositoryOwner: targetOwner,
+          tagName: options.tagName,
+          targetFilePath,
         })
 
         if (builtinExtensionsResult.status === 'error') {
@@ -59,18 +59,19 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
       }
     }
 
-    return createMigrationResult({
-      status: 'success',
+    return {
       changedFiles: allChangedFiles,
       pullRequestTitle: `feature: handle release ${releasedRepo}@${options.tagName}`,
-    })
+      status: 'success',
+      statusCode: 200,
+    }
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: `feature: handle release ${options.repositoryName}@${options.tagName}`,
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: `feature: handle release ${options.repositoryName}@${options.tagName}`,
+      status: 'error',
     })
   }
 }

@@ -1,9 +1,14 @@
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+<<<<<<< HEAD
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+=======
+import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
+>>>>>>> origin/main
 
 export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   dependencyName: string
@@ -23,7 +28,16 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
       oldPackageJson = JSON.parse(packageJsonContent)
     } catch (error: any) {
       if (error && error.code === 'ENOENT') {
+<<<<<<< HEAD
         return emptyMigrationResult
+=======
+        return {
+          changedFiles: [],
+          pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
+          status: 'success',
+          statusCode: 200,
+        }
+>>>>>>> origin/main
       }
       throw error
     }
@@ -43,12 +57,32 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
       dependencyKey = 'optionalDependencies'
       oldDependency = oldPackageJson.optionalDependencies[dependencyName]
     } else {
+<<<<<<< HEAD
       return emptyMigrationResult
+=======
+      return {
+        changedFiles: [],
+        errorCode: 'DEPENDENCY_NOT_FOUND',
+        errorMessage: `Dependency ${dependencyName} not found in ${options.packageJsonPath}`,
+        pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
+        status: 'success',
+        statusCode: 200,
+      }
+>>>>>>> origin/main
     }
 
     const oldVersion = oldDependency.slice(1)
     if (oldVersion === options.newVersion) {
+<<<<<<< HEAD
       return emptyMigrationResult
+=======
+      return {
+        changedFiles: [],
+        pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
+        status: 'success',
+        statusCode: 200,
+      }
+>>>>>>> origin/main
     }
 
     // Call getNewPackageFiles with the detected dependency key
@@ -58,11 +92,11 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
     })
   } catch (error) {
     return createMigrationResult({
-      status: 'error',
       changedFiles: [],
-      pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
+      pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
+      status: 'error',
     })
   }
 }
