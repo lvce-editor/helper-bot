@@ -17,6 +17,12 @@ import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateRepositoryDependencies } from '../UpdateRepositoryDependencies/UpdateRepositoryDependencies.ts'
 import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
+<<<<<<< HEAD
+=======
+import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
+import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
+import { handleMigrationsList } from '../HandleMigrationsList/HandleMigrationsList.ts'
+>>>>>>> origin/main
 
 export const commandMap = {
   '/hello-world': wrapResponseCommand(handleHelloWorld),
@@ -31,8 +37,23 @@ export const commandMap = {
   '/migrations/update-node-version': wrapCommand(updateNodeVersion),
   computeNewDockerfileContent: wrapCommand(computeNewDockerfileContent),
   computeNewGitpodDockerfileContent: wrapCommand(computeNewGitpodDockerfileContent),
+<<<<<<< HEAD
   computeNewNvmrcContent: wrapCommand(computeNewNvmrcContent),
   getNewPackageFiles: wrapCommand(getNewPackageFiles),
+=======
+  '/migrations/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
+  '/migrations/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
+  '/migrations/remove-gitpod-section': wrapCommand(removeGitpodSection),
+  '/migrations/update-node-version': wrapCommand(updateNodeVersion),
+  '/migrations/update-dependencies': wrapCommand(updateDependencies),
+  '/migrations/add-gitattributes': wrapCommand(addGitattributes),
+  '/migrations/update-github-actions': wrapCommand(updateGithubActions),
+  updateRepositoryDependencies: wrapCommand(updateRepositoryDependencies),
+  updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),
+  'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
+  '/hello-world': wrapResponseCommand(handleHelloWorld),
+  '/migrations/list': wrapResponseCommand(handleMigrationsList),
+>>>>>>> origin/main
   listCommands: wrapCommand(listCommands),
   'migrations/handle-release-released': wrapCommand(handleReleaseReleased),
   updateBuiltinExtensions: wrapCommand(updateBuiltinExtensions),

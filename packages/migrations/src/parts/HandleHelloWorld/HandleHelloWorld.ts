@@ -1,5 +1,8 @@
+import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
+
 export const handleHelloWorld = async () => {
-  return new Response('hello World', {
-    status: 200,
+  const x = listCommands2()
+  return Response.json({
+    migrations: x,
   })
 }
