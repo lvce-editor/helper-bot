@@ -1,9 +1,9 @@
 import { execa } from 'execa'
 import { constants } from 'node:fs'
 import * as FsPromises from 'node:fs/promises'
-import type { BaseMigrationOptions, ExecFunction, MigrationResult } from '../Types/Types.ts'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
-import { pathToUri, uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
+import type { BaseMigrationOptions, ExecFunction, MigrationResult } from '../Types/Types.ts'
+import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
 
 const wrapExeca = (): ExecFunction => {
   return async (file: string, args?: readonly string[], options?: { cwd?: string }) => {
@@ -64,7 +64,7 @@ export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T
     try {
       return await command({
         ...options,
-        clonedRepoUri: pathToUri(clonedRepo.path),
+        clonedRepoUri: clonedRepo.uri,
         exec: wrapExeca(),
         fetch: globalThis.fetch,
         fs: wrapFs(),

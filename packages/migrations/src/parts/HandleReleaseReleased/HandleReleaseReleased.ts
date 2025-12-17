@@ -42,7 +42,7 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
       try {
         const builtinExtensionsResult = await updateBuiltinExtensions({
           ...options,
-          clonedRepoUri: pathToUri(clonedTargetRepo.path),
+          clonedRepoUri: pathToUri(clonedTargetRepo.uri),
           releasedRepositoryName: releasedRepo,
           repositoryName: targetRepo,
           repositoryOwner: targetOwner,
