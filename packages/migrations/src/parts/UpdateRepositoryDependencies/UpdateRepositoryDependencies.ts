@@ -1,7 +1,7 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import dependenciesConfig from '../../dependencies.json' with { type: 'json' }
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 export interface UpdateRepositoryDependenciesOptions extends BaseMigrationOptions {
@@ -25,10 +25,17 @@ export const updateRepositoryDependencies = async (options: Readonly<UpdateRepos
     // This migration just provides the list of dependencies that need to be updated
     return emptyMigrationResult
   } catch (error) {
-    return createMigrationResult({
+    const errorResult = {
       errorCode: ERROR_CODES.UPDATE_DEPENDENCIES_FAILED,
       errorMessage: stringifyError(error),
+      status: 'error' as const,
+    }
+    return {
+      changedFiles: [],
+      errorCode: errorResult.errorCode,
+      errorMessage: errorResult.errorMessage,
       status: 'error',
-    })
+      statusCode: getHttpStatusCode(errorResult),
+    }
   }
 }

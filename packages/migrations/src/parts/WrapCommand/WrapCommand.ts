@@ -75,7 +75,9 @@ export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T
   }
 }
 
-export const wrapResponseCommand = (fn: () => Promise<Response>): (() => Promise<{ error?: string; headers?: Array<[string, string]>; text?: string; type: string }>) => {
+export const wrapResponseCommand = (
+  fn: () => Promise<Response>,
+): (() => Promise<{ error?: string; headers?: Array<[string, string]>; text?: string; type: string }>) => {
   const wrapped = async (): Promise<{ error?: string; headers?: Array<[string, string]>; text?: string; type: string }> => {
     try {
       const res = await fn()
@@ -85,8 +87,24 @@ export const wrapResponseCommand = (fn: () => Promise<Response>): (() => Promise
         type: 'success',
       }
     } catch (error) {
+      let errorMessage: string
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (error && typeof error === 'object') {
+        try {
+          errorMessage = JSON.stringify(error)
+        } catch {
+          errorMessage = 'Unknown error'
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else if (typeof error === 'number' || typeof error === 'boolean') {
+        errorMessage = String(error)
+      } else {
+        errorMessage = 'Unknown error'
+      }
       return {
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         type: 'error',
       }
     }

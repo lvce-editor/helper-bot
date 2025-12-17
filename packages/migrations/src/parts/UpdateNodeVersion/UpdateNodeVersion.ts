@@ -2,7 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { computeNewDockerfileContent } from '../ComputeNewDockerfileContent/ComputeNewDockerfileContent.ts'
 import { computeNewNvmrcContent } from '../ComputeNewNvmrcContent/ComputeNewNvmrcContent.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 export type UpdateNodeVersionOptions = BaseMigrationOptions
@@ -14,18 +14,32 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
 
     // Check for errors
     if (nvmrcResult.status === 'error') {
-      return createMigrationResult({
+      const errorResult = {
         errorCode: ERROR_CODES.COMPUTE_NVMRC_CONTENT_FAILED,
         errorMessage: nvmrcResult.errorMessage || 'Failed to compute .nvmrc content',
+        status: 'error' as const,
+      }
+      return {
+        changedFiles: [],
+        errorCode: errorResult.errorCode,
+        errorMessage: errorResult.errorMessage,
         status: 'error',
-      })
+        statusCode: getHttpStatusCode(errorResult),
+      }
     }
     if (dockerfileResult.status === 'error') {
-      return createMigrationResult({
+      const errorResult = {
         errorCode: ERROR_CODES.COMPUTE_DOCKERFILE_CONTENT_FAILED,
         errorMessage: dockerfileResult.errorMessage || 'Failed to compute Dockerfile content',
+        status: 'error' as const,
+      }
+      return {
+        changedFiles: [],
+        errorCode: errorResult.errorCode,
+        errorMessage: errorResult.errorMessage,
         status: 'error',
-      })
+        statusCode: getHttpStatusCode(errorResult),
+      }
     }
 
     // Combine all changed files
