@@ -75,6 +75,8 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
       ],
       pullRequestTitle,
       status: 'success',
+      branchName: 'feature/update-node-version',
+      commitMessage: pullRequestTitle,
     })
   } catch (error) {
     return createMigrationResult({
@@ -83,6 +85,8 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
       errorMessage: stringifyError(error),
       pullRequestTitle: `ci: update Node.js version`,
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

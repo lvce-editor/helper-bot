@@ -87,6 +87,8 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
       pullRequestTitle,
       status: 'success',
       statusCode: 200,
+      branchName: `feature/update-${options.dependencyName}-to-${options.newVersion}`,
+      commitMessage: pullRequestTitle,
     }
   } catch (error) {
     return createMigrationResult({
@@ -95,6 +97,8 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: update dependencies`,
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

@@ -45,6 +45,8 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
       ],
       pullRequestTitle,
       status: 'success',
+      branchName: 'feature/update-node-version',
+      commitMessage: pullRequestTitle,
     })
   } catch (error) {
     return createMigrationResult({
@@ -53,6 +55,8 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
       errorMessage: stringifyError(error),
       pullRequestTitle: `ci: update Node.js version`,
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

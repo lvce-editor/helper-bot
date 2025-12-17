@@ -31,6 +31,8 @@ export const updateRepositoryDependencies = async (options: Readonly<UpdateRepos
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: update dependencies for ${options.repositoryName}`,
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

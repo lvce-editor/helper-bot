@@ -64,6 +64,8 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
       pullRequestTitle: `feature: handle release ${releasedRepo}@${options.tagName}`,
       status: 'success',
       statusCode: 200,
+      branchName: `feature/handle-release-${releasedRepo}-${options.tagName}`,
+      commitMessage: `feature: handle release ${releasedRepo}@${options.tagName}`,
     }
   } catch (error) {
     return createMigrationResult({
@@ -72,6 +74,8 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: handle release ${options.repositoryName}@${options.tagName}`,
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

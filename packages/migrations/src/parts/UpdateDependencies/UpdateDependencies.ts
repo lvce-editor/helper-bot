@@ -63,6 +63,8 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: update ${options.dependencyName} to version ${options.newVersion}`,
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

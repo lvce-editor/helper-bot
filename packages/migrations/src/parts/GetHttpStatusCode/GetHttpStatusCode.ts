@@ -21,4 +21,6 @@ export const emptyMigrationResult: MigrationResult = {
   pullRequestTitle: '',
   status: 'success',
   statusCode: 200,
+  branchName: '',
+  commitMessage: '',
 }

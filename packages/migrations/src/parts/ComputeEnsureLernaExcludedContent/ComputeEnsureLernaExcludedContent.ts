@@ -79,6 +79,8 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
       pullRequestTitle,
       status: 'success',
       statusCode: 200,
+      branchName: 'feature/ensure-lerna-excluded',
+      commitMessage: pullRequestTitle,
     }
   } catch (error) {
     return createMigrationResult({
@@ -87,6 +89,8 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
       errorMessage: stringifyError(error),
       pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

@@ -20,6 +20,8 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
         errorMessage: nvmrcResult.errorMessage || 'Failed to compute .nvmrc content',
         pullRequestTitle: 'ci: update Node.js version',
         status: 'error',
+        branchName: '',
+        commitMessage: '',
       })
     }
     if (dockerfileResult.status === 'error') {
@@ -29,6 +31,8 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
         errorMessage: dockerfileResult.errorMessage || 'Failed to compute Dockerfile content',
         pullRequestTitle: 'ci: update Node.js version',
         status: 'error',
+        branchName: '',
+        commitMessage: '',
       })
     }
 
@@ -45,6 +49,8 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
       pullRequestTitle: nvmrcResult.pullRequestTitle,
       status: 'success',
       statusCode: 200,
+      branchName: 'feature/update-node-version',
+      commitMessage: nvmrcResult.pullRequestTitle,
     }
   } catch (error) {
     return createMigrationResult({
@@ -53,6 +59,8 @@ export const updateNodeVersion = async (options: Readonly<UpdateNodeVersionOptio
       errorMessage: stringifyError(error),
       pullRequestTitle: 'ci: update Node.js version',
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

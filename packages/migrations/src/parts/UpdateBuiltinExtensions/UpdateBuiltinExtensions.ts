@@ -62,6 +62,8 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
       status: 'success',
       statusCode: 200,
+      branchName: `feature/update-${releasedRepo}-to-${options.tagName}`,
+      commitMessage: `feature: update ${releasedRepo} to version ${options.tagName}`,
     }
   } catch (error) {
     return createMigrationResult({
@@ -70,6 +72,8 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       errorMessage: stringifyError(error),
       pullRequestTitle: `feature: update ${options.repositoryName} to version ${options.tagName}`,
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

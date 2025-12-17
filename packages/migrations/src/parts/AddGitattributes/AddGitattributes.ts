@@ -29,6 +29,8 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
           pullRequestTitle: 'ci: add .gitattributes file',
           status: 'success',
           statusCode: 200,
+          branchName: 'feature/add-gitattributes',
+          commitMessage: 'ci: add .gitattributes file',
         }
       }
       throw error
@@ -40,6 +42,8 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
       errorMessage: stringifyError(error),
       pullRequestTitle: 'ci: add .gitattributes file',
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

@@ -96,6 +96,8 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
       pullRequestTitle: 'ci: update CI OS versions',
       status: 'success',
       statusCode: 200,
+      branchName: 'feature/update-ci-os-versions',
+      commitMessage: 'ci: update CI OS versions',
     }
   } catch (error: any) {
     return createMigrationResult({
@@ -103,6 +105,8 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
       errorMessage: error instanceof Error ? error.message : String(error),
       pullRequestTitle: 'ci: update CI OS versions',
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }

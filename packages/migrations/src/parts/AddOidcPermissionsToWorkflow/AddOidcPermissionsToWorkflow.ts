@@ -71,6 +71,8 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
       pullRequestTitle,
       status: 'success',
       statusCode: 200,
+      branchName: 'feature/add-oidc-permissions-to-workflow',
+      commitMessage: pullRequestTitle,
     }
   } catch (error) {
     return createMigrationResult({
@@ -79,6 +81,8 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
       errorMessage: stringifyError(error),
       pullRequestTitle: 'feature: update permissions for open id connect publishing',
       status: 'error',
+      branchName: '',
+      commitMessage: '',
     })
   }
 }
