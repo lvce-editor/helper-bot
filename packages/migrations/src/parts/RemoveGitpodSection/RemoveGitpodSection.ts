@@ -45,7 +45,7 @@ export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionO
       },
     ]
 
-    const pullRequestTitle = 'ci: remove Gitpod section from README'
+    const pullRequestTitle = 'feature: remove Gitpod section from README'
 
     return {
       branchName: 'feature/remove-gitpod-section',
