@@ -13,6 +13,7 @@ export interface MigrationResult {
   readonly branchName?: string
   readonly changedFiles: ChangedFile[]
   readonly commitMessage?: string
+  readonly data?: any
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly pullRequestTitle: string
@@ -49,7 +50,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
     if (!verifySecret(req, res, secret)) {
       return
     }
-    const {body} = req
+    const { body } = req
 
     console.log('body is')
     console.log(body)
@@ -62,7 +63,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       return
     }
 
-    const {repository} = body
+    const { repository } = body
     if (!repository) {
       res.status(400).json({
         code: 'MISSING_REPOSITORY',
@@ -249,6 +250,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         res.status(200).json({
           branchName,
           changedFiles: result.changedFiles.length,
+          ...(result.data ? { data: result.data } : {}),
           message: 'Migration completed successfully',
           pullRequestNumber: pullRequestData.data.number,
           status: 'success',
@@ -259,6 +261,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
       // Success but no repository provided or no changed files
       res.status(200).json({
         changedFiles: result.changedFiles.length,
+        ...(result.data ? { data: result.data } : {}),
         message: 'Migration completed successfully',
         status: 'success',
       })

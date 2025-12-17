@@ -24,6 +24,7 @@ export interface MigrationSuccessResult {
   readonly branchName?: string
   readonly changedFiles: ChangedFile[]
   readonly commitMessage?: string
+  readonly data?: any
   readonly pullRequestTitle: string
   readonly status: 'success'
   readonly statusCode: number
