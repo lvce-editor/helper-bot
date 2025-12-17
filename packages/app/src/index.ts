@@ -1,5 +1,5 @@
 import './errorHandling.ts'
-import { ApplicationFunctionOptions, Context, Probot } from 'probot'
+import type { ApplicationFunctionOptions, Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.ts'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
 import { updateDependencies } from './updateDependencies.ts'
@@ -18,6 +18,7 @@ import {
 } from './migrations/endpoints.ts'
 import { registerMigrations2Endpoints } from './migrations2/endpoints.ts'
 import * as MigrationsWorker from './migrationsWorker.ts'
+import bodyParser from 'body-parser'
 
 const dependencies = dependenciesConfig.dependencies
 
@@ -59,6 +60,7 @@ const enableCustomRoutes = async (app: Probot, getRouter: ApplicationFunctionOpt
   }
   const router = getRouter('/my-app')
 
+  router.use(bodyParser.json())
   router.get('/hello-world', handleHelloWorld)
   router.get('/migrations/list', handleMigrationsList)
 
