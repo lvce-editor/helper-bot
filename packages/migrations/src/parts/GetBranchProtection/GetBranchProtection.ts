@@ -1,3 +1,4 @@
+import { VError } from '@lvce-editor/verror'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 
 export interface GetBranchProtectionOptions extends BaseMigrationOptions {
@@ -54,8 +55,7 @@ const getBranchRulesets = async (
     if (error && error.status === 404) {
       return null
     }
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    throw new Error(`Failed to fetch branch rulesets: ${errorMessage}`)
+    throw new VError(error, `Failed to fetch branch rulesets`)
   }
 }
 
@@ -85,8 +85,10 @@ const getClassicBranchProtection = async (
     if (error && error.status === 404) {
       return null
     }
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    throw new Error(`Failed to fetch classic branch protection: ${errorMessage}`)
+    if (error && error.status === 403) {
+      return null
+    }
+    throw new VError(error, `Failed to fetch classic branch protection`)
   }
 }
 
@@ -136,17 +138,11 @@ export const getBranchProtection = async (options: GetBranchProtectionOptions): 
       statusCode: 200,
     }
   } catch (error) {
-    let errorMessage: string
-    if (error instanceof Error) {
-      errorMessage = error.message
-    } else if (typeof error === 'string') {
-      errorMessage = error
-    } else {
-      errorMessage = 'Unknown error'
-    }
+    console.error(error)
+
     return {
       changedFiles: [],
-      errorMessage,
+      errorMessage: `${error}`,
       status: 'error',
       statusCode: 500,
     }
