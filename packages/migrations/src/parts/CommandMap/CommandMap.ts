@@ -5,6 +5,7 @@ import { addGitattributes } from '../AddGitattributes/AddGitattributes.ts'
 import { addLintScript } from '../AddLintScript/AddLintScript.ts'
 import { addOidcPermissionsToWorkflow } from '../AddOidcPermissionsToWorkflow/AddOidcPermissionsToWorkflow.ts'
 import { computeEnsureLernaExcludedContent } from '../ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
+import { createPrereleaseBeforeRelease } from '../CreatePrereleaseBeforeRelease/CreatePrereleaseBeforeRelease.ts'
 import { getBranchProtection } from '../GetBranchProtection/GetBranchProtection.ts'
 import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
 import { handleMigrationsList } from '../HandleMigrationsList/HandleMigrationsList.ts'
@@ -31,6 +32,7 @@ export const commandMap = {
   '/migrations2/add-gitattributes': wrapCommand(addGitattributes),
   '/migrations2/add-lint-script': wrapCommand(addLintScript),
   '/migrations2/add-oidc-permissions': wrapCommand(addOidcPermissionsToWorkflow),
+  '/migrations2/create-prerelease-before-release': wrapCommand(createPrereleaseBeforeRelease),
   '/migrations2/ensure-lerna-excluded': wrapCommand(computeEnsureLernaExcludedContent),
   '/migrations2/get-branch-protection': wrapFunction(getBranchProtection),
   '/migrations2/handle-release-released': wrapCommand(handleReleaseReleased),
