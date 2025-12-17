@@ -9,8 +9,8 @@ const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string =>
   // We need to match the entire block including proper newlines
   const npmTokenPattern = /(\s*)env:\s*\n(\s*)NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*\n/gm
 
-  // Remove the pattern, preserving the indentation context
-  return content.replaceAll(npmTokenPattern, '')
+  // Replace with a newline to maintain proper YAML structure
+  return content.replaceAll(npmTokenPattern, '\n')
 }
 
 export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
