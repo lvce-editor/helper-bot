@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@lvce-editor/verror": "^1.7.0",
-    "@sentry/node": "^10.27.0",
-    "execa": "^9.6.0",
+    "@sentry/node": "^10.31.0",
+    "execa": "^9.6.1",
     "probot": "^13.4.5"
   },
   "jest": {
