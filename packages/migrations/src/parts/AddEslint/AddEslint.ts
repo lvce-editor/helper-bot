@@ -67,16 +67,8 @@ export const addEslint = async (options: Readonly<AddEslintOptions>): Promise<Mi
     }
 
     // Read package.json
-    let oldPackageJson: any
-    try {
-      const packageJsonContent = await options.fs.readFile(packageJsonPath, 'utf8')
-      oldPackageJson = JSON.parse(packageJsonContent)
-    } catch (error: any) {
-      if (error && error.code === 'ENOENT') {
-        return emptyMigrationResult
-      }
-      throw error
-    }
+    const packageJsonContent = await options.fs.readFile(packageJsonPath, 'utf8')
+    const oldPackageJson = JSON.parse(packageJsonContent)
 
     // Check if eslint is already in devDependencies
     if (oldPackageJson.devDependencies && oldPackageJson.devDependencies['eslint']) {
