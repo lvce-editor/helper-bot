@@ -108,10 +108,17 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         throw new Error(`failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}: ${error}`)
       }
 
+      // Get the installation token for GitHub API calls
+      const authToken: any = await octokit.auth({
+        type: 'installation',
+      })
+      const githubToken = typeof authToken === 'string' ? authToken : authToken.token
+
       // Call migration worker with the command key and params
       const migrationParams = {
         repositoryOwner: owner,
         repositoryName: repo,
+        githubToken,
         ...body,
       }
       const migrationResult = await MigrationsWorker.invoke(commandKey, migrationParams)
@@ -122,6 +129,13 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
           error: migrationResult.error,
           code: 'MIGRATION_WORKER_ERROR',
         })
+        return
+      }
+
+      // Check if this is a function result (has 'data' property) vs migration result (has 'changedFiles')
+      if ('data' in migrationResult && !('changedFiles' in migrationResult)) {
+        // This is a function result, just return the data
+        res.status(200).json(migrationResult.data)
         return
       }
 

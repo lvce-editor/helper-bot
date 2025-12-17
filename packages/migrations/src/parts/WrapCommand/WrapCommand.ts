@@ -115,16 +115,16 @@ export const wrapResponseCommand = (
 export interface FunctionOptions {
   readonly repositoryOwner: string
   readonly repositoryName: string
-  readonly octokit: any
+  readonly githubToken?: string
   [key: string]: any
 }
 
 export const wrapFunction = <T extends FunctionOptions, R>(
   fn: (options: T) => Promise<R>,
-): ((options: Omit<T, 'octokit'>) => Promise<{ data?: R; error?: string; type: string }>) => {
-  const wrapped = async (options: Omit<T, 'octokit'>): Promise<{ data?: R; error?: string; type: string }> => {
+): ((options: T) => Promise<{ data?: R; error?: string; type: string }>) => {
+  const wrapped = async (options: T): Promise<{ data?: R; error?: string; type: string }> => {
     try {
-      const result = await fn(options as T)
+      const result = await fn(options)
       return {
         data: result,
         type: 'success',
