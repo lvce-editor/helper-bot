@@ -37,8 +37,8 @@ test('computes new nvmrc content when version should be updated', async () => {
         path: '.nvmrc',
       },
     ],
-    commitMessage: 'ci: update Node.js to version v20.0.0',
-    pullRequestTitle: 'ci: update Node.js to version v20.0.0',
+    commitMessage: 'feature: update Node.js to version v20.0.0',
+    pullRequestTitle: 'feature: update Node.js to version v20.0.0',
     status: 'success',
     statusCode: 200,
   })
