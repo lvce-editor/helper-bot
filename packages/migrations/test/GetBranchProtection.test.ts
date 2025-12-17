@@ -33,13 +33,13 @@ test('returns rulesets when available', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data.type).toBe('rulesets')
-    expect(Array.isArray(result.data.data)).toBe(true)
-    expect(result.data.data.length).toBe(1)
-    expect(result.data.data[0].name).toBe('main protection')
-    expect(result.changedFiles).toEqual([])
-  }
+  expect(result).toHaveProperty('data')
+  const successResult = result as Extract<typeof result, { status: 'success' }>
+  expect(successResult.data.type).toBe('rulesets')
+  expect(Array.isArray(successResult.data.data)).toBe(true)
+  expect(successResult.data.data.length).toBe(1)
+  expect(successResult.data.data[0].name).toBe('main protection')
+  expect(successResult.changedFiles).toEqual([])
 })
 
 test('returns classic branch protection when rulesets not available', async (): Promise<void> => {
@@ -81,12 +81,12 @@ test('returns classic branch protection when rulesets not available', async (): 
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data.type).toBe('classic')
-    expect(result.data.data.required_status_checks).toBeDefined()
-    expect(result.data.data.required_status_checks.contexts).toContain('ci/test')
-    expect(result.changedFiles).toEqual([])
-  }
+  expect(result).toHaveProperty('data')
+  const successResult = result as Extract<typeof result, { status: 'success' }>
+  expect(successResult.data.type).toBe('classic')
+  expect(successResult.data.data.required_status_checks).toBeDefined()
+  expect(successResult.data.data.required_status_checks.contexts).toContain('ci/test')
+  expect(successResult.changedFiles).toEqual([])
 })
 
 test('returns none when no branch protection is enabled', async (): Promise<void> => {
@@ -122,11 +122,11 @@ test('returns none when no branch protection is enabled', async (): Promise<void
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data.type).toBe('none')
-    expect(result.data.data).toBe(null)
-    expect(result.changedFiles).toEqual([])
-  }
+  expect(result).toHaveProperty('data')
+  const successResult = result as Extract<typeof result, { status: 'success' }>
+  expect(successResult.data.type).toBe('none')
+  expect(successResult.data.data).toBe(null)
+  expect(successResult.changedFiles).toEqual([])
 })
 
 test('uses custom branch name', async (): Promise<void> => {
@@ -166,11 +166,11 @@ test('uses custom branch name', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data.type).toBe('classic')
-    expect(result.data.data.required_status_checks).toBeDefined()
-    expect(result.changedFiles).toEqual([])
-  }
+  expect(result).toHaveProperty('data')
+  const successResult = result as Extract<typeof result, { status: 'success' }>
+  expect(successResult.data.type).toBe('classic')
+  expect(successResult.data.data.required_status_checks).toBeDefined()
+  expect(successResult.changedFiles).toEqual([])
 })
 
 test('includes authorization header in requests', async (): Promise<void> => {
