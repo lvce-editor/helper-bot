@@ -217,9 +217,13 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('RUN_LINT_IN_CI_FAILED')
-  expect(result.errorMessage).toContain('No suitable location found to add lint step')
+  expect(result.status).toEqual('error')
+  if (result.status === 'error') {
+    expect(result.errorCode).toEqual('RUN_LINT_IN_CI_FAILED')
+    expect(result.errorMessage).toEqual(
+      'pr.yml: No suitable location found to add lint step. Expected to find one of: npm run type-check, npm test, or npm run build',
+    )
+  }
 })
 
 test('returns empty result when lint step already exists', async () => {
@@ -333,10 +337,10 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(2)
-  expect(result.changedFiles[0].path).toBe('.github/workflows/pr.yml')
-  expect(result.changedFiles[1].path).toBe('.github/workflows/ci.yml')
+  expect(result.status).toEqual('success')
+  expect(result.changedFiles.length).toEqual(2)
+  expect(result.changedFiles[0].path).toEqual('.github/workflows/pr.yml')
+  expect(result.changedFiles[1].path).toEqual('.github/workflows/ci.yml')
 })
 
 test('preserves indentation when adding lint step', async () => {
@@ -371,8 +375,10 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles[0].content).toContain('      - run: npm run lint')
+  expect(result.status).toEqual('success')
+  if (result.status === 'success') {
+    expect(result.changedFiles[0].content.includes('      - run: npm run lint')).toEqual(true)
+  }
 })
 
 test('handles workflow with different indentation styles', async () => {
@@ -400,8 +406,10 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles[0].content).toContain('    - run: npm run lint')
+  expect(result.status).toEqual('success')
+  if (result.status === 'success') {
+    expect(result.changedFiles[0].content.includes('    - run: npm run lint')).toEqual(true)
+  }
 })
 
 test('skips files with errors and processes others', async () => {
@@ -449,10 +457,12 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('RUN_LINT_IN_CI_FAILED')
-  expect(result.errorMessage).toContain('pr.yml')
-  expect(result.errorMessage).toContain('No suitable location found')
+  expect(result.status).toEqual('error')
+  if (result.status === 'error') {
+    expect(result.errorCode).toEqual('RUN_LINT_IN_CI_FAILED')
+    expect(result.errorMessage?.includes('pr.yml')).toEqual(true)
+    expect(result.errorMessage?.includes('No suitable location found')).toEqual(true)
+  }
 })
 
 test('handles all three workflow files', async () => {
@@ -492,11 +502,11 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(3)
-  expect(result.changedFiles[0].path).toBe('.github/workflows/pr.yml')
-  expect(result.changedFiles[1].path).toBe('.github/workflows/ci.yml')
-  expect(result.changedFiles[2].path).toBe('.github/workflows/release.yml')
+  expect(result.status).toEqual('success')
+  expect(result.changedFiles.length).toEqual(3)
+  expect(result.changedFiles[0].path).toEqual('.github/workflows/pr.yml')
+  expect(result.changedFiles[1].path).toEqual('.github/workflows/ci.yml')
+  expect(result.changedFiles[2].path).toEqual('.github/workflows/release.yml')
 })
 
 test('handles workflow with no indentation', async () => {
@@ -522,8 +532,10 @@ steps:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles[0].content).toContain('- run: npm run lint')
+  expect(result.status).toEqual('success')
+  if (result.status === 'success') {
+    expect(result.changedFiles[0].content.includes('- run: npm run lint')).toEqual(true)
+  }
 })
 
 test('returns empty result when one file has lint and others do not exist', async () => {
@@ -592,6 +604,8 @@ jobs:
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles[0].content).toContain('npm run lint')
+  expect(result.status).toEqual('success')
+  if (result.status === 'success') {
+    expect(result.changedFiles[0].content.includes('npm run lint')).toEqual(true)
+  }
 })
