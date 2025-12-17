@@ -177,9 +177,7 @@ test('creates pull request successfully', async () => {
   })
 
   expect(mockRes.status).toHaveBeenCalledWith(200)
-  expect(mockRes.send).toHaveBeenCalledWith(
-    'Dependencies update PR created successfully',
-  )
+  expect(mockRes.send).toHaveBeenCalledWith('Dependencies update PR created successfully')
 })
 
 test('handles no changes case', async () => {
@@ -291,9 +289,7 @@ test('handles invalid repository owner', async () => {
   }
   await handler(mockReq as any, mockRes as any)
   expect(mockRes.status).toHaveBeenCalledWith(400)
-  expect(mockRes.send).toHaveBeenCalledWith(
-    'Repository owner must be lvce-editor',
-  )
+  expect(mockRes.send).toHaveBeenCalledWith('Repository owner must be lvce-editor')
 })
 
 test('updates existing pull request when one exists', async () => {
@@ -410,9 +406,7 @@ test('updates existing pull request when one exists', async () => {
   })
 
   expect(mockRes.status).toHaveBeenCalledWith(200)
-  expect(mockRes.send).toHaveBeenCalledWith(
-    'Dependencies update PR updated successfully',
-  )
+  expect(mockRes.send).toHaveBeenCalledWith('Dependencies update PR updated successfully')
 
   // Clean up environment variable
   if (originalBotUserId) {
@@ -482,9 +476,7 @@ test('retries updateDependencies and resets folder on ETARGET error', async () =
     if (cmd === 'bash') {
       callCount++
       if (callCount === 1) {
-        const err = new Error(
-          'npm ERR! code ETARGET\nnpm ERR! notarget No matching version found for',
-        )
+        const err = new Error('npm ERR! code ETARGET\nnpm ERR! notarget No matching version found for')
         // Simulate ETARGET error on first call
         throw err
       }

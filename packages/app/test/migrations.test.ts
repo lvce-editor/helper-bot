@@ -1,10 +1,5 @@
 import { jest, test, expect } from '@jest/globals'
-import {
-  updateNodeVersionMigration,
-  updateDependenciesMigration,
-  ensureLernaExcludedMigration,
-  updateGithubActionsMigration,
-} from '../src/migrations/index.js'
+import { updateNodeVersionMigration, updateDependenciesMigration, ensureLernaExcludedMigration, updateGithubActionsMigration } from '../src/migrations/index.js'
 
 // Mock execa to prevent actual git operations
 jest.unstable_mockModule('execa', () => ({

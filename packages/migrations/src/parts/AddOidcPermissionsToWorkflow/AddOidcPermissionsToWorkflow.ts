@@ -3,9 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
-const addOidcPermissionsToWorkflowContent = (
-  content: Readonly<string>,
-): string => {
+const addOidcPermissionsToWorkflowContent = (content: Readonly<string>): string => {
   // Check if permissions section already exists
   if (content.includes('permissions:')) {
     return content
@@ -40,14 +38,9 @@ const addOidcPermissionsToWorkflowContent = (
 
 export type AddOidcPermissionsToWorkflowOptions = BaseMigrationOptions
 
-export const addOidcPermissionsToWorkflow = async (
-  options: Readonly<AddOidcPermissionsToWorkflowOptions>,
-): Promise<MigrationResult> => {
+export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPermissionsToWorkflowOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = join(
-      options.clonedRepoPath,
-      '.github/workflows/release.yml',
-    )
+    const workflowPath = join(options.clonedRepoPath, '.github/workflows/release.yml')
 
     let originalContent: string
     try {
@@ -56,8 +49,7 @@ export const addOidcPermissionsToWorkflow = async (
       if (error && error.code === 'ENOENT') {
         return {
           changedFiles: [],
-          pullRequestTitle:
-            'feature: update permissions for open id connect publishing',
+          pullRequestTitle: 'feature: update permissions for open id connect publishing',
           status: 'success',
         }
       }
@@ -66,8 +58,7 @@ export const addOidcPermissionsToWorkflow = async (
 
     const updatedContent = addOidcPermissionsToWorkflowContent(originalContent)
     const hasChanges = originalContent !== updatedContent
-    const pullRequestTitle =
-      'feature: update permissions for open id connect publishing'
+    const pullRequestTitle = 'feature: update permissions for open id connect publishing'
 
     if (!hasChanges) {
       return {
@@ -92,8 +83,7 @@ export const addOidcPermissionsToWorkflow = async (
       changedFiles: [],
       errorCode: ERROR_CODES.ADD_OIDC_PERMISSIONS_FAILED,
       errorMessage: stringifyError(error),
-      pullRequestTitle:
-        'feature: update permissions for open id connect publishing',
+      pullRequestTitle: 'feature: update permissions for open id connect publishing',
       status: 'error',
     }
   }

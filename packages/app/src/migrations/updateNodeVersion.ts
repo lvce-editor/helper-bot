@@ -26,10 +26,7 @@ const parseVersion = (content: string): number => {
   return parseInt(content)
 }
 
-const updateNvmrc = async (
-  newVersion: string,
-  root: string,
-): Promise<boolean> => {
+const updateNvmrc = async (newVersion: string, root: string): Promise<boolean> => {
   try {
     const nvmrcPath = join(root, '.nvmrc')
     const content = await readFile(nvmrcPath, 'utf-8')
@@ -45,59 +42,40 @@ const updateNvmrc = async (
   return true
 }
 
-const updateDockerfile = async (
-  newVersion: string,
-  root: string,
-): Promise<void> => {
+const updateDockerfile = async (newVersion: string, root: string): Promise<void> => {
   try {
     const dockerfilePath = join(root, 'Dockerfile')
     const content = await readFile(dockerfilePath, 'utf-8')
-    const updated = content.replaceAll(
-      /node:\d+\.\d+\.\d+/g,
-      `node:${newVersion.slice(1)}`,
-    )
+    const updated = content.replaceAll(/node:\d+\.\d+\.\d+/g, `node:${newVersion.slice(1)}`)
     await writeFile(dockerfilePath, updated)
   } catch (error) {
     // File doesn't exist, skip
   }
 }
 
-const updateGitpodDockerfile = async (
-  newVersion: string,
-  root: string,
-): Promise<void> => {
+const updateGitpodDockerfile = async (newVersion: string, root: string): Promise<void> => {
   try {
     const gitpodPath = join(root, '.gitpod.Dockerfile')
     const content = await readFile(gitpodPath, 'utf-8')
-    const updated = content.replaceAll(
-      /(nvm [\w\s]+) \d+\.\d+\.\d+/g,
-      `$1 ${newVersion.slice(1)}`,
-    )
+    const updated = content.replaceAll(/(nvm [\w\s]+) \d+\.\d+\.\d+/g, `$1 ${newVersion.slice(1)}`)
     await writeFile(gitpodPath, updated)
   } catch (error) {
     // File doesn't exist, skip
   }
 }
 
-const updateNodeVersionFiles = async (
-  newVersion: string,
-  root: string,
-): Promise<boolean> => {
+const updateNodeVersionFiles = async (newVersion: string, root: string): Promise<boolean> => {
   const shouldContinueUpdating = await updateNvmrc(newVersion, root)
   if (!shouldContinueUpdating) {
     return false
   }
-  await Promise.all([
-    updateDockerfile(newVersion, root),
-    updateGitpodDockerfile(newVersion, root),
-  ])
+  await Promise.all([updateDockerfile(newVersion, root), updateGitpodDockerfile(newVersion, root)])
   return true
 }
 
 export const updateNodeVersionMigration: Migration = {
   name: 'updateNodeVersion',
-  description:
-    'Update Node.js version in .nvmrc, Dockerfile, and .gitpod.Dockerfile',
+  description: 'Update Node.js version in .nvmrc, Dockerfile, and .gitpod.Dockerfile',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params
@@ -115,11 +93,7 @@ export const updateNodeVersionMigration: Migration = {
 
       try {
         // Clone the repository
-        await execa('git', [
-          'clone',
-          `https://github.com/${owner}/${repo}.git`,
-          tempDir,
-        ])
+        await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
 
         // Update files
         const hasChanges = await updateNodeVersionFiles(newVersion, tempDir)
@@ -147,11 +121,7 @@ export const updateNodeVersionMigration: Migration = {
         const newBranch = `update-node-version-${Date.now()}`
         await execa('git', ['checkout', '-b', newBranch], { cwd: tempDir })
         await execa('git', ['add', '.'], { cwd: tempDir })
-        await execa(
-          'git',
-          ['commit', '-m', `ci: update Node.js to version ${newVersion}`],
-          { cwd: tempDir },
-        )
+        await execa('git', ['commit', '-m', `ci: update Node.js to version ${newVersion}`], { cwd: tempDir })
         await execa('git', ['push', 'origin', newBranch], { cwd: tempDir })
 
         // Create pull request

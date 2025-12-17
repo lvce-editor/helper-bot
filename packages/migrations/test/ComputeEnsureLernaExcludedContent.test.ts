@@ -42,12 +42,8 @@ updateDependencies`
   expect(result.status).toBe('success')
   expect(result.changedFiles).toHaveLength(1)
   expect(result.changedFiles[0].path).toBe('scripts/update-dependencies.sh')
-  expect(result.changedFiles[0].content).toContain(
-    'OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`',
-  )
-  expect(result.pullRequestTitle).toBe(
-    'ci: ensure lerna is excluded from ncu commands',
-  )
+  expect(result.changedFiles[0].content).toContain('OUTPUT=`ncu -u -x probot -x jest -x @jest/globals -x lerna`')
+  expect(result.pullRequestTitle).toBe('ci: ensure lerna is excluded from ncu commands')
 })
 
 test('returns same content when lerna is already excluded', async () => {

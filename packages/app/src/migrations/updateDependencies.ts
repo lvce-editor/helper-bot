@@ -6,14 +6,7 @@ import { captureException } from '../errorHandling.js'
 import dependenciesConfig from '../dependencies.json' with { type: 'json' }
 import type { Migration, MigrationParams, MigrationResult } from './types.js'
 
-const shortCommitMessageRepos = [
-  'renderer-process',
-  'editor-worker',
-  'text-search-worker',
-  'file-search-worker',
-  'virtual-dom',
-  'iframe-worker',
-]
+const shortCommitMessageRepos = ['renderer-process', 'editor-worker', 'text-search-worker', 'file-search-worker', 'virtual-dom', 'iframe-worker']
 
 const shouldUseShortCommitMessage = (releasedRepo: string): boolean => {
   return shortCommitMessageRepos.includes(releasedRepo)
@@ -23,19 +16,13 @@ const getCommitMessage = (releasedRepo: string, tagName: string): string => {
   if (shouldUseShortCommitMessage(releasedRepo)) {
     return `feature: update ${releasedRepo} to version ${tagName}`
   }
-  if (
-    releasedRepo.startsWith('language-basics') ||
-    releasedRepo.startsWith('language-features')
-  ) {
+  if (releasedRepo.startsWith('language-basics') || releasedRepo.startsWith('language-features')) {
     return `feature: update ${releasedRepo} to version ${tagName}`
   }
   return `feature: update ${releasedRepo} extension to version ${tagName}`
 }
 
-const enableAutoSquash = async (
-  octokit: MigrationParams['octokit'],
-  pullRequestData: any,
-): Promise<void> => {
+const enableAutoSquash = async (octokit: MigrationParams['octokit'], pullRequestData: any): Promise<void> => {
   await octokit.graphql(
     `mutation MyMutation {
   enablePullRequestAutoMerge(input: { pullRequestId: "${pullRequestData.data.node_id}", mergeMethod: SQUASH }) {
@@ -57,40 +44,19 @@ const getNewPackageFiles = async (
   newPackageLockJsonString: string
 }> => {
   const name = oldPackageJson.name
-  const tmpFolder = join(
-    tmpdir(),
-    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`,
-  )
-  const tmpCacheFolder = join(
-    tmpdir(),
-    `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`,
-  )
+  const tmpFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`)
+  const tmpCacheFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`)
   const toRemove = [tmpFolder, tmpCacheFolder]
   try {
-    oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] =
-      `^${newVersion}`
-    const oldPackageJsonStringified =
-      JSON.stringify(oldPackageJson, null, 2) + '\n'
+    oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] = `^${newVersion}`
+    const oldPackageJsonStringified = JSON.stringify(oldPackageJson, null, 2) + '\n'
     await mkdir(tmpFolder, { recursive: true })
     await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
     const { execa } = await import('execa')
-    await execa(
-      `npm`,
-      [
-        'install',
-        '--ignore-scripts',
-        '--prefer-online',
-        '--cache',
-        tmpCacheFolder,
-      ],
-      {
-        cwd: tmpFolder,
-      },
-    )
-    const newPackageLockJsonString = await readFile(
-      join(tmpFolder, 'package-lock.json'),
-      'utf8',
-    )
+    await execa(`npm`, ['install', '--ignore-scripts', '--prefer-online', '--cache', tmpCacheFolder], {
+      cwd: tmpFolder,
+    })
+    const newPackageLockJsonString = await readFile(join(tmpFolder, 'package-lock.json'), 'utf8')
     return {
       newPackageJsonString: oldPackageJsonStringified,
       newPackageLockJsonString,
@@ -118,13 +84,7 @@ const quickJoin = (parentFolder: string, childPath: string): string => {
   return parentFolder + '/' + childPath
 }
 
-const getPackageRefs = async (
-  octokit: MigrationParams['octokit'],
-  owner: string,
-  repo: string,
-  packageJsonPath: string,
-  packageLockJsonPath: string,
-) => {
+const getPackageRefs = async (octokit: MigrationParams['octokit'], owner: string, repo: string, packageJsonPath: string, packageLockJsonPath: string) => {
   const [packageJsonRef, packageLockJsonRef] = await Promise.all([
     octokit.rest.repos.getContent({
       owner,
@@ -143,11 +103,7 @@ const getPackageRefs = async (
   }
 }
 
-const updateDependenciesForRepo = async (
-  params: MigrationParams,
-  config: any,
-  tagName: string,
-): Promise<MigrationResult> => {
+const updateDependenciesForRepo = async (params: MigrationParams, config: any, tagName: string): Promise<MigrationResult> => {
   const { octokit, owner, baseBranch = 'main' } = params
   const releasedRepo = config.fromRepo
   const packageJsonPath = quickJoin(config.toFolder, 'package.json')
@@ -157,18 +113,9 @@ const updateDependenciesForRepo = async (
   const newBranch = `update-version/${releasedRepo}-${tagName}`
   const repoToUpdate = config.toRepo
 
-  const { packageJsonRef, packageLockJsonRef } = await getPackageRefs(
-    octokit,
-    owner,
-    repoToUpdate,
-    packageJsonPath,
-    packageLockJsonPath,
-  )
+  const { packageJsonRef, packageLockJsonRef } = await getPackageRefs(octokit, owner, repoToUpdate, packageJsonPath, packageLockJsonPath)
 
-  if (
-    !('content' in packageJsonRef.data) ||
-    !('content' in packageLockJsonRef.data)
-  ) {
+  if (!('content' in packageJsonRef.data) || !('content' in packageLockJsonRef.data)) {
     return {
       success: true,
       message: 'No content in files',
@@ -182,22 +129,13 @@ const updateDependenciesForRepo = async (
   const dependencyName = `@lvce-editor/${dependencyNameShort}`
   let dependencyKey = ''
   let oldDependency = ''
-  if (
-    filesJsonValue.dependencies &&
-    filesJsonValue.dependencies[dependencyName]
-  ) {
+  if (filesJsonValue.dependencies && filesJsonValue.dependencies[dependencyName]) {
     dependencyKey = 'dependencies'
     oldDependency = filesJsonValue.dependencies[dependencyName]
-  } else if (
-    filesJsonValue.devDependencies &&
-    filesJsonValue.devDependencies[dependencyName]
-  ) {
+  } else if (filesJsonValue.devDependencies && filesJsonValue.devDependencies[dependencyName]) {
     dependencyKey = 'devDependencies'
     oldDependency = filesJsonValue.devDependencies[dependencyName]
-  } else if (
-    filesJsonValue.optionalDependencies &&
-    filesJsonValue.optionalDependencies[dependencyName]
-  ) {
+  } else if (filesJsonValue.optionalDependencies && filesJsonValue.optionalDependencies[dependencyName]) {
     dependencyKey = 'optionalDependencies'
     oldDependency = filesJsonValue.optionalDependencies[dependencyName]
   } else {
@@ -214,13 +152,7 @@ const updateDependenciesForRepo = async (
       message: 'Same version, no update needed',
     }
   }
-  const { newPackageJsonString, newPackageLockJsonString } =
-    await getNewPackageFiles(
-      filesJsonValue,
-      config.fromRepo,
-      dependencyKey,
-      version,
-    )
+  const { newPackageJsonString, newPackageLockJsonString } = await getNewPackageFiles(filesJsonValue, config.fromRepo, dependencyKey, version)
 
   const commitableFiles = [
     {
@@ -287,9 +219,7 @@ export const updateDependenciesMigration: Migration = {
 
       // Find dependencies that match this repository
       const dependencies = dependenciesConfig.dependencies
-      const matchingDependencies = dependencies.filter(
-        (dep) => dep.fromRepo === repo,
-      )
+      const matchingDependencies = dependencies.filter((dep) => dep.fromRepo === repo)
 
       if (matchingDependencies.length === 0) {
         return {
@@ -302,11 +232,7 @@ export const updateDependenciesMigration: Migration = {
       const results: MigrationResult[] = []
       for (const dependency of matchingDependencies) {
         try {
-          const result = await updateDependenciesForRepo(
-            { ...params, repo: dependency.toRepo },
-            dependency,
-            tagName,
-          )
+          const result = await updateDependenciesForRepo({ ...params, repo: dependency.toRepo }, dependency, tagName)
           results.push(result)
         } catch (error) {
           captureException(error as Error)
@@ -323,8 +249,7 @@ export const updateDependenciesMigration: Migration = {
       return {
         success: failed.length === 0,
         message: `Updated ${successful.length} dependencies, ${failed.length} failed`,
-        error:
-          failed.length > 0 ? failed.map((r) => r.error).join('; ') : undefined,
+        error: failed.length > 0 ? failed.map((r) => r.error).join('; ') : undefined,
       }
     } catch (error) {
       return {

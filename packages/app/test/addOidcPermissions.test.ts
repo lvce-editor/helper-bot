@@ -102,9 +102,7 @@ jobs:
       },
       pulls: {
         // @ts-ignore
-        create: jest
-          .fn()
-          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
+        create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
@@ -160,9 +158,7 @@ jobs:
     base: 'main',
   })
 
-  expect(octokit.graphql).toHaveBeenCalledWith(
-    expect.stringContaining('enablePullRequestAutoMerge'),
-  )
+  expect(octokit.graphql).toHaveBeenCalledWith(expect.stringContaining('enablePullRequestAutoMerge'))
 })
 
 test('adds permissions at the end when no jobs section exists', async () => {
@@ -193,9 +189,7 @@ on:
       },
       pulls: {
         // @ts-ignore
-        create: jest
-          .fn()
-          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
+        create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {

@@ -33,19 +33,10 @@ const verifySecret = (req: Request, res: Response, secret: string) => {
 
 const cloneRepo = async (owner: string, repo: string, tmpFolder: string) => {
   await mkdir(tmpFolder, { recursive: true })
-  await execa('git', [
-    'clone',
-    `https://github.com/${owner}/${repo}.git`,
-    tmpFolder,
-  ])
+  await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tmpFolder])
 }
 
-const createPullRequest = async (
-  octokit: Context<'release'>['octokit'],
-  owner: string,
-  repo: string,
-  branchName: string,
-) => {
+const createPullRequest = async (octokit: Context<'release'>['octokit'], owner: string, repo: string, branchName: string) => {
   const pullRequestData = await octokit.rest.pulls.create({
     owner,
     repo,
@@ -63,11 +54,7 @@ const createPullRequest = async (
   )
 }
 
-const updateDependencies = async (
-  tmpFolder: string,
-  maxAttempts: number = 3,
-  retryDelay: number = 60000,
-) => {
+const updateDependencies = async (tmpFolder: string, maxAttempts: number = 3, retryDelay: number = 60000) => {
   const scriptPath = join(tmpFolder, 'scripts', 'update-dependencies.sh')
 
   // Check if the script exists and ensure lerna is excluded
@@ -82,26 +69,17 @@ const updateDependencies = async (
       })
       return // Success, exit the retry loop
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
       // Always reset the folder to a clean state before retrying
       try {
         await execa('git', ['reset', '--hard'], { cwd: tmpFolder })
       } catch (resetError) {
-        console.warn(
-          'Failed to reset folder with git reset --hard:',
-          resetError,
-        )
+        console.warn('Failed to reset folder with git reset --hard:', resetError)
       }
       // Check if this is an ETARGET error
-      if (
-        errorMessage.includes('ETARGET') ||
-        errorMessage.includes('No matching version found')
-      ) {
+      if (errorMessage.includes('ETARGET') || errorMessage.includes('No matching version found')) {
         if (attempt < maxAttempts) {
-          console.log(
-            `Attempt ${attempt} failed with ETARGET error, retrying in ${retryDelay / 1000} seconds...`,
-          )
+          console.log(`Attempt ${attempt} failed with ETARGET error, retrying in ${retryDelay / 1000} seconds...`)
           await setTimeout(retryDelay) // Wait retryDelay ms
           continue
         } else {
@@ -121,13 +99,9 @@ const findExistingUpdateDependenciesPR = async (
   owner: string,
   repo: string,
 ): Promise<{ pr: any; branchName: string } | null> => {
-  const BOT_ID = process.env.BOT_USER_ID
-    ? Number(process.env.BOT_USER_ID)
-    : undefined
+  const BOT_ID = process.env.BOT_USER_ID ? Number(process.env.BOT_USER_ID) : undefined
   if (!BOT_ID) {
-    console.warn(
-      'BOT_USER_ID environment variable is not set. PR author check will be less secure.',
-    )
+    console.warn('BOT_USER_ID environment variable is not set. PR author check will be less secure.')
   }
   try {
     const { data: pullRequests } = await octokit.rest.pulls.list({
@@ -138,12 +112,7 @@ const findExistingUpdateDependenciesPR = async (
     })
 
     // Find PRs with "update dependencies" title from the bot user
-    const updateDepsPR = pullRequests.find(
-      (pr) =>
-        pr.title === 'update dependencies' &&
-        (BOT_ID ? pr.user?.id === BOT_ID : true) &&
-        pr.user?.type === 'Bot',
-    )
+    const updateDepsPR = pullRequests.find((pr) => pr.title === 'update dependencies' && (BOT_ID ? pr.user?.id === BOT_ID : true) && pr.user?.type === 'Bot')
 
     if (updateDepsPR) {
       return {
@@ -184,33 +153,20 @@ const handleQueueItem = async (item: QueueItem) => {
     }
 
     // Check for existing update-dependencies PR
-    const existingPR = await findExistingUpdateDependenciesPR(
-      item.octokit,
-      owner,
-      repo,
-    )
+    const existingPR = await findExistingUpdateDependenciesPR(item.octokit, owner, repo)
 
     const uuid = randomUUID()
     const tmpFolder = join(tmpdir(), `${TEMP_CLONE_PREFIX}${repo}-${uuid}`)
-    const branchName = existingPR
-      ? existingPR.branchName
-      : `update-dependencies-${Date.now()}`
+    const branchName = existingPR ? existingPR.branchName : `update-dependencies-${Date.now()}`
 
     try {
       await cloneRepo(owner, repo, tmpFolder)
       await updateNodeVersion({ root: tmpFolder })
       await updateDependencies(tmpFolder)
-      const hasChanges = await commitAndPush(
-        tmpFolder,
-        branchName,
-        item.octokit,
-        owner,
-        repo,
-        {
-          createNewBranch: !existingPR,
-          baseBranch: existingPR ? branchName : 'main',
-        },
-      )
+      const hasChanges = await commitAndPush(tmpFolder, branchName, item.octokit, owner, repo, {
+        createNewBranch: !existingPR,
+        baseBranch: existingPR ? branchName : 'main',
+      })
       if (!hasChanges) {
         item.res.status(200).send('No changes to commit')
         return
@@ -243,15 +199,7 @@ const { addToQueue } = createQueue<QueueItem>(handleQueueItem)
  * @param {{ app: import('probot').Probot, secret: string, installationId:number }} params
  */
 export const handleDependencies =
-  ({
-    app,
-    secret,
-    installationId,
-  }: {
-    app: Probot
-    secret: string
-    installationId: number
-  }) =>
+  ({ app, secret, installationId }: { app: Probot; secret: string; installationId: number }) =>
   async (req: Request, res: Response) => {
     if (!verifySecret(req, res, secret)) {
       return

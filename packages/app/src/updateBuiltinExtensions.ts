@@ -1,10 +1,6 @@
 import { Context } from 'probot'
 
-const getNewValue = (
-  value: readonly any[],
-  repoName: string,
-  version: string,
-) => {
+const getNewValue = (value: readonly any[], repoName: string, version: string) => {
   return value.map((item) => {
     if (item.name === `builtin.${repoName}`) {
       return {
@@ -16,14 +12,7 @@ const getNewValue = (
   })
 }
 
-const shortCommitMessageRepos = [
-  'renderer-process',
-  'editor-worker',
-  'text-search-worker',
-  'file-search-worker',
-  'virtual-dom',
-  'iframe-worker',
-]
+const shortCommitMessageRepos = ['renderer-process', 'editor-worker', 'text-search-worker', 'file-search-worker', 'virtual-dom', 'iframe-worker']
 
 const shouldUseShortCommitMessage = (releasedRepo: string): boolean => {
   return shortCommitMessageRepos.includes(releasedRepo)
@@ -33,19 +22,13 @@ const getCommitMessage = (releasedRepo: string, tagName: string): string => {
   if (shouldUseShortCommitMessage(releasedRepo)) {
     return `feature: update ${releasedRepo} to version ${tagName}`
   }
-  if (
-    releasedRepo.startsWith('language-basics') ||
-    releasedRepo.startsWith('language-features')
-  ) {
+  if (releasedRepo.startsWith('language-basics') || releasedRepo.startsWith('language-features')) {
     return `feature: update ${releasedRepo} to version ${tagName}`
   }
   return `feature: update ${releasedRepo} extension to version ${tagName}`
 }
 
-const enableAutoSquash = async (
-  octokit: Context<'release'>['octokit'],
-  pullRequestData: any,
-) => {
+const enableAutoSquash = async (octokit: Context<'release'>['octokit'], pullRequestData: any) => {
   await octokit.graphql(
     `mutation MyMutation {
   enablePullRequestAutoMerge(input: { pullRequestId: "${pullRequestData.data.node_id}", mergeMethod: SQUASH }) {
@@ -67,8 +50,7 @@ export const updateBuiltinExtensions = async (context: Context<'release'>) => {
   if (releasedRepo === 'renderer-process') {
     return
   }
-  const filesPath =
-    'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
+  const filesPath = 'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
   const version = tagName.replace('v', '')
   console.log(`release was released ${payload.repository.name}@${version}`)
 

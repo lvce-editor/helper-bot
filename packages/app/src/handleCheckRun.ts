@@ -1,10 +1,7 @@
 import { Context } from 'probot'
 import { autoFixCi } from './autoFixCi.js'
 
-export const handleCheckRun = async (
-  context: Context<'check_suite'>,
-  authorizedCommitter: string,
-) => {
+export const handleCheckRun = async (context: Context<'check_suite'>, authorizedCommitter: string) => {
   const { check_suite, repository, sender } = context.payload
   const { owner, name } = repository
 

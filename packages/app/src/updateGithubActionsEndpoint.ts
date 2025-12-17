@@ -3,11 +3,7 @@ import type { Probot } from 'probot'
 import { VError } from '@lvce-editor/verror'
 import { updateGithubActions } from './updateGithubActions.js'
 
-const verifySecret = (
-  req: Request,
-  res: Response,
-  secret: string | undefined,
-): boolean => {
+const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
   const providedSecret = req.query.secret
   if (!secret || providedSecret !== secret) {
     res.status(401).send('Unauthorized')
@@ -52,24 +48,15 @@ export const handleUpdateGithubActions =
       } catch (error) {
         // @ts-ignore
         if (error && error.status === 404) {
-          throw new VError(
-            error as Error,
-            `app not installed on ${owner}/${repo} (missing installation)`,
-          )
+          throw new VError(error as Error, `app not installed on ${owner}/${repo} (missing installation)`)
         }
-        throw new VError(
-          error as Error,
-          `failed to get installation for ${owner}/${repo}`,
-        )
+        throw new VError(error as Error, `failed to get installation for ${owner}/${repo}`)
       }
       let octokit
       try {
         octokit = await app.auth(installation.id)
       } catch (error) {
-        throw new VError(
-          error as Error,
-          `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}`,
-        )
+        throw new VError(error as Error, `failed to authenticate installation ${String(installation.id)} for ${owner}/${repo}`)
       }
       let result
       try {
@@ -84,10 +71,7 @@ export const handleUpdateGithubActions =
           },
         })
       } catch (error) {
-        throw new VError(
-          error as Error,
-          `failed to update workflows in ${owner}/${repo}`,
-        )
+        throw new VError(error as Error, `failed to update workflows in ${owner}/${repo}`)
       }
       if (!result || result.changedFiles === 0) {
         res.status(200).send('No workflow updates needed')

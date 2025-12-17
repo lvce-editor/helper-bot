@@ -48,8 +48,7 @@ const addOidcPermissionsToWorkflow = (content: string): string => {
 
 export const addOidcPermissionsMigration: Migration = {
   name: 'addOidcPermissions',
-  description:
-    'Add OpenID Connect permissions to release.yml workflow files for secure npm publishing',
+  description: 'Add OpenID Connect permissions to release.yml workflow files for secure npm publishing',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
       const { octokit, owner, repo, baseBranch = 'main' } = params
@@ -83,10 +82,7 @@ export const addOidcPermissionsMigration: Migration = {
       }
 
       // Decode the content
-      const originalContent = Buffer.from(
-        releaseWorkflow.content,
-        'base64',
-      ).toString()
+      const originalContent = Buffer.from(releaseWorkflow.content, 'base64').toString()
 
       // Add OIDC permissions
       const updatedContent = addOidcPermissionsToWorkflow(originalContent)
@@ -118,8 +114,7 @@ export const addOidcPermissionsMigration: Migration = {
       })
 
       // Update the file
-      const updatedContentBase64 =
-        Buffer.from(updatedContent).toString('base64')
+      const updatedContentBase64 = Buffer.from(updatedContent).toString('base64')
 
       await octokit.repos.createOrUpdateFileContents({
         owner,

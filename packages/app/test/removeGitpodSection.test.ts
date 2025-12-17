@@ -17,9 +17,7 @@ jest.unstable_mockModule('node:fs/promises', () => mockFs)
 jest.unstable_mockModule('execa', () => ({ execa: mockExeca }))
 jest.unstable_mockModule('node:os', () => mockOs)
 
-const { removeGitpodSectionMigration } = await import(
-  '../src/migrations/removeGitpodSection.js'
-)
+const { removeGitpodSectionMigration } = await import('../src/migrations/removeGitpodSection.js')
 
 beforeEach(() => {
   jest.clearAllMocks()
@@ -107,10 +105,7 @@ Here's how to use the project.`
   expect(result.changedFiles).toBe(1)
   expect(result.newBranch).toMatch(/^remove-gitpod-section-\d+$/)
   expect(result.message).toBe('Gitpod sections removed from README files')
-  expect(mockFs.writeFile).toHaveBeenCalledWith(
-    expect.stringContaining('README.md'),
-    expect.not.stringContaining('## Gitpod'),
-  )
+  expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining('README.md'), expect.not.stringContaining('## Gitpod'))
 })
 
 test('removeGitpodSectionMigration should handle README without Gitpod section', async () => {

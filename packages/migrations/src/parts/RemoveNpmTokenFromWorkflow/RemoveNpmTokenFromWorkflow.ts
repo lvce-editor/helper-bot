@@ -3,27 +3,19 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
-const removeNpmTokenFromWorkflowContent = (
-  content: Readonly<string>,
-): string => {
+const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string => {
   // Pattern to match the env section with NODE_AUTH_TOKEN
   // This matches the exact pattern: env: followed by NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-  const npmTokenPattern =
-    /^\s*env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*$/gm
+  const npmTokenPattern = /^\s*env:\s*\n\s*NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*$/gm
 
   return content.replaceAll(npmTokenPattern, '')
 }
 
 export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
 
-export const removeNpmTokenFromWorkflow = async (
-  options: Readonly<RemoveNpmTokenFromWorkflowOptions>,
-): Promise<MigrationResult> => {
+export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmTokenFromWorkflowOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = join(
-      options.clonedRepoPath,
-      '.github/workflows/release.yml',
-    )
+    const workflowPath = join(options.clonedRepoPath, '.github/workflows/release.yml')
 
     let originalContent: string
     try {

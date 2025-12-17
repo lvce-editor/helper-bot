@@ -109,9 +109,7 @@ jobs:
       },
       pulls: {
         // @ts-ignore
-        create: jest
-          .fn()
-          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
+        create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
@@ -167,9 +165,7 @@ jobs:
     base: 'main',
   })
 
-  expect(octokit.graphql).toHaveBeenCalledWith(
-    expect.stringContaining('enablePullRequestAutoMerge'),
-  )
+  expect(octokit.graphql).toHaveBeenCalledWith(expect.stringContaining('enablePullRequestAutoMerge'))
 })
 
 test('removes NODE_AUTH_TOKEN with different indentation', async () => {
@@ -216,9 +212,7 @@ jobs:
       },
       pulls: {
         // @ts-ignore
-        create: jest
-          .fn()
-          .mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
+        create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
     },
     repos: {
@@ -243,9 +237,7 @@ jobs:
   const updateCall = octokit.repos.createOrUpdateFileContents.mock.calls[0]
   const updatedContent = Buffer.from(updateCall[0].content, 'base64').toString()
 
-  expect(updatedContent).not.toContain(
-    'NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}',
-  )
+  expect(updatedContent).not.toContain('NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}')
   expect(updatedContent).not.toContain('env:')
 })
 
