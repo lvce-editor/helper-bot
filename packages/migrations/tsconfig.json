@@ -6,7 +6,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "types": ["node"],
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "allowSyntheticDefaultImports": true,
