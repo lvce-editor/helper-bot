@@ -22,8 +22,12 @@ test('returns empty result when release.yml does not exist', async (): Promise<v
   const result = await createPrereleaseBeforeRelease(options)
 
   expect(result).toEqual({
+    branchName: '',
     changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
     status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -64,8 +68,12 @@ jobs:
   const result = await createPrereleaseBeforeRelease(options)
 
   expect(result).toEqual({
+    branchName: '',
     changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
     status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -113,13 +121,17 @@ jobs:
   const result = await createPrereleaseBeforeRelease(options)
 
   expect(result).toEqual({
+    branchName: 'feature/create-prerelease-before-release',
     changedFiles: [
       {
         content: expect.any(String),
         path: '.github/workflows/release.yml',
       },
     ],
+    commitMessage: 'feature: create prerelease before final release',
+    pullRequestTitle: 'feature: create prerelease before final release',
     status: 'success',
+    statusCode: 200,
   })
 
   const updatedContent = result.changedFiles[0].content
@@ -163,13 +175,17 @@ jobs:
   const result = await createPrereleaseBeforeRelease(options)
 
   expect(result).toEqual({
+    branchName: 'feature/create-prerelease-before-release',
     changedFiles: [
       {
         content: expect.any(String),
         path: expect.any(String),
       },
     ],
+    commitMessage: 'feature: create prerelease before final release',
+    pullRequestTitle: 'feature: create prerelease before final release',
     status: 'success',
+    statusCode: 200,
   })
 
   const updatedContent = result.changedFiles[0].content
@@ -200,8 +216,12 @@ jobs:
   const result = await createPrereleaseBeforeRelease(options)
 
   expect(result).toEqual({
+    branchName: 'feature/create-prerelease-before-release',
     changedFiles: expect.any(Array),
+    commitMessage: 'feature: create prerelease before final release',
+    pullRequestTitle: 'feature: create prerelease before final release',
     status: 'success',
+    statusCode: 200,
   })
 
   const updatedContent = result.changedFiles[0].content
