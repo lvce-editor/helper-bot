@@ -1,10 +1,11 @@
 import type { Octokit } from '@octokit/rest'
+import type { RulesetData } from '../ConvertClassicToRuleset/ConvertClassicToRuleset.ts'
 
 export const createRuleset = async (
   repositoryOwner: string,
   repositoryName: string,
   octokit: Octokit,
-  rulesetData: any,
+  rulesetData: RulesetData,
 ): Promise<{ error?: string; rulesetId?: number; success: boolean }> => {
   try {
     const response = await octokit.request('POST /repos/{owner}/{repo}/rulesets', {
