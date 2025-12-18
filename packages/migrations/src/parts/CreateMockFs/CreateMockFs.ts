@@ -56,7 +56,12 @@ class MockFs {
 
   async exists(path: string | Buffer | URL): Promise<boolean> {
     const pathStr = validateUri(path, 'exists', true)
-    return this.files[pathStr] !== undefined
+    if (this.files[pathStr] !== undefined) {
+      return true
+    }
+    // Check if it's a directory by seeing if any files exist under this path
+    const dirPath = pathStr.endsWith('/') ? pathStr : pathStr + '/'
+    return Object.keys(this.files).some((key) => key.startsWith(dirPath))
   }
 
   async readdir(path: string | Buffer | URL, options?: { withFileTypes?: boolean }): Promise<any> {
