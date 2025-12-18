@@ -1,22 +1,27 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
+import config from './config.json' with { type: 'json' }
 
 const WORKFLOWS_DIR = '.github/workflows'
 const TARGET_FILES = ['pr.yml', 'ci.yml', 'release.yml']
 
-const updateRunnerVersionsInYaml = (yamlContent: string): string => {
+interface CiVersionsConfig {
+  latestVersions: {
+    ubuntu: string
+    macos: string
+    windows: string
+  }
+}
+
+const updateRunnerVersionsInYaml = (yamlContent: string, versions: CiVersionsConfig['latestVersions']): string => {
   let updated = yamlContent
-  // Update Ubuntu versions (e.g., ubuntu-22.04 -> ubuntu-24.04)
-  updated = updated.replaceAll(/ubuntu-22\.04/g, 'ubuntu-24.04')
-  updated = updated.replaceAll(/ubuntu-20\.04/g, 'ubuntu-24.04')
-  // Update macOS versions (e.g., macos-14 -> macos-15)
-  updated = updated.replaceAll(/macos-14/g, 'macos-15')
-  updated = updated.replaceAll(/macos-13/g, 'macos-15')
-  updated = updated.replaceAll(/macos-12/g, 'macos-15')
-  // Update Windows versions (e.g., windows-2022 -> windows-2025)
-  updated = updated.replaceAll(/windows-2022/g, 'windows-2025')
-  updated = updated.replaceAll(/windows-2019/g, 'windows-2025')
+  // Update Ubuntu versions to latest (e.g., ubuntu-22.04 -> ubuntu-24.04)
+  updated = updated.replaceAll(/ubuntu-\d+\.\d+/g, `ubuntu-${versions.ubuntu}`)
+  // Update macOS versions to latest (e.g., macos-14 -> macos-15)
+  updated = updated.replaceAll(/macos-\d+/g, `macos-${versions.macos}`)
+  // Update Windows versions to latest (e.g., windows-2022 -> windows-2025)
+  updated = updated.replaceAll(/windows-\d{4}/g, `windows-${versions.windows}`)
   return updated
 }
 
@@ -58,30 +63,21 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
       const filePath = new URL(fileName, workflowsPath).toString()
       const relativePath = normalizePath(`${WORKFLOWS_DIR}/${fileName}`)
 
-      console.log('DEBUG trying to read file:', filePath)
-
       try {
         const content = await options.fs.readFile(filePath, 'utf8')
-        console.log('DEBUG read file content:', content.substring(0, 100))
-        const updated = updateRunnerVersionsInYaml(content)
-        console.log('DEBUG updated content:', updated.substring(0, 100))
-        console.log('DEBUG content === updated:', content === updated)
+        const ciConfig = config as CiVersionsConfig
+        const updated = updateRunnerVersionsInYaml(content, ciConfig.latestVersions)
 
         if (updated !== content) {
           // Ensure trailing newline like repo style
           const finalContent = updated.endsWith('\n') ? updated : updated + '\n'
-          console.log('DEBUG adding to changedFiles')
           changedFiles.push({
             content: finalContent,
             path: relativePath,
           })
-        } else {
-          console.log('DEBUG content unchanged')
         }
       } catch (error: any) {
-        console.log('DEBUG error reading file:', error.message, 'code:', error.code)
         if (error && error.code === 'ENOENT') {
-          console.log('DEBUG file not found, continuing')
           continue
         }
         throw error
@@ -113,4 +109,3 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
     }
   }
 }
-
