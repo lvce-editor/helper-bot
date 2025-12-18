@@ -104,9 +104,9 @@ class MockFs {
 
       const isDirectory = relativePath.includes('/')
       const entry = {
-        name: firstSegment,
-        isFile: () => !isDirectory,
         isDirectory: () => isDirectory,
+        isFile: () => !isDirectory,
+        name: firstSegment,
       }
       entries.push(entry)
     }

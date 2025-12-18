@@ -35,7 +35,7 @@ test('creates package.json when it does not exist', async () => {
     commitMessage: 'chore: initialize package.json',
     pullRequestTitle: 'chore: initialize package.json',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 

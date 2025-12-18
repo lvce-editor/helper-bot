@@ -33,7 +33,7 @@ export default [...config.default, ...actions.default]
     commitMessage: 'feature: add eslint.config.js',
     pullRequestTitle: 'feature: add eslint.config.js',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -64,4 +64,3 @@ test('skips if eslint.config.js already exists', async () => {
     statusCode: 200,
   })
 })
-

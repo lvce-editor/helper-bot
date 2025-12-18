@@ -27,7 +27,7 @@ export const addGitattributes = async (options: Readonly<AddGitattributesOptions
       commitMessage: 'feature: add .gitattributes file',
       pullRequestTitle: 'feature: add .gitattributes file',
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

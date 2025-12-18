@@ -63,7 +63,7 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -122,7 +122,7 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -183,7 +183,7 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -378,7 +378,7 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -439,7 +439,7 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -486,7 +486,7 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -615,7 +615,7 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -658,7 +658,7 @@ steps:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -745,6 +745,6 @@ jobs:
     commitMessage: 'ci: add lint step to workflows',
     pullRequestTitle: 'ci: add lint step to workflows',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })

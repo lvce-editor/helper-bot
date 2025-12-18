@@ -45,7 +45,7 @@ export const addLintScript = async (options: Readonly<AddLintScriptOptions>): Pr
       commitMessage: 'feature: add lint script',
       pullRequestTitle: 'feature: add lint script',
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

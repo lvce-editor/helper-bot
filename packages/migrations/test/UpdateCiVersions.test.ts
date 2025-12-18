@@ -1,9 +1,9 @@
 import { test, expect } from '@jest/globals'
-import { updateCiVersions } from '../src/parts/UpdateCiVersions/UpdateCiVersions.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 import config from '../src/parts/UpdateCiVersions/config.json' with { type: 'json' }
+import { updateCiVersions } from '../src/parts/UpdateCiVersions/UpdateCiVersions.ts'
+import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('updates Ubuntu, macOS, and Windows runner versions in ci.yml', async () => {
   const oldCiYml = `name: CI
@@ -86,7 +86,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -176,7 +176,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -352,7 +352,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -407,7 +407,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   // Verify the config values are being used

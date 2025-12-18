@@ -181,7 +181,7 @@ export const createPrereleaseBeforeRelease = async (options: Readonly<CreatePrer
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

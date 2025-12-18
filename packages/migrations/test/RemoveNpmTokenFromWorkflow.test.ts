@@ -74,7 +74,7 @@ jobs:
     commitMessage: 'ci: remove NODE_AUTH_TOKEN from release workflow',
     pullRequestTitle: 'ci: remove NODE_AUTH_TOKEN from release workflow',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 

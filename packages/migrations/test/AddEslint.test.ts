@@ -44,7 +44,7 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
         const updatedPackageJson = {
           ...oldPackageJson,
           devDependencies: {
-            ...(oldPackageJson.devDependencies || {}),
+            ...oldPackageJson.devDependencies,
             '@lvce-editor/eslint-config': '^4.0.0',
             eslint: '^9.39.2',
           },
@@ -82,7 +82,7 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
     commitMessage: 'chore: add eslint and @lvce-editor/eslint-config',
     pullRequestTitle: 'chore: add eslint and @lvce-editor/eslint-config',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
@@ -217,7 +217,7 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
         const updatedPackageJson = {
           ...oldPackageJson,
           devDependencies: {
-            ...(oldPackageJson.devDependencies || {}),
+            ...oldPackageJson.devDependencies,
             '@lvce-editor/eslint-config': '^4.0.0',
             eslint: '^9.39.2',
           },
@@ -255,7 +255,7 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
     commitMessage: 'chore: add eslint and @lvce-editor/eslint-config',
     pullRequestTitle: 'chore: add eslint and @lvce-editor/eslint-config',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)

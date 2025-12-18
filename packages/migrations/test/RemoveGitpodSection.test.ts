@@ -62,7 +62,7 @@ Here's how to use the project.`,
     commitMessage: 'feature: remove Gitpod section from README',
     pullRequestTitle: 'feature: remove Gitpod section from README',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -154,7 +154,7 @@ Follow these steps.`,
     commitMessage: 'feature: remove Gitpod section from README',
     pullRequestTitle: 'feature: remove Gitpod section from README',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 

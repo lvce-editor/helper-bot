@@ -64,7 +64,7 @@ updateDependencies`,
     commitMessage: 'ci: ensure lerna is excluded from ncu commands',
     pullRequestTitle: 'ci: ensure lerna is excluded from ncu commands',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 

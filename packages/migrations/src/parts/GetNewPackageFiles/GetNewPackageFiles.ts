@@ -96,7 +96,7 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

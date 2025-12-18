@@ -34,7 +34,7 @@ export const addEslintConfig = async (options: Readonly<AddEslintConfigOptions>)
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {
@@ -51,4 +51,3 @@ export const addEslintConfig = async (options: Readonly<AddEslintConfigOptions>)
     }
   }
 }
-

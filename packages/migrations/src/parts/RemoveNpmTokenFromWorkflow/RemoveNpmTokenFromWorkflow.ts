@@ -45,7 +45,7 @@ export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmToke
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {
