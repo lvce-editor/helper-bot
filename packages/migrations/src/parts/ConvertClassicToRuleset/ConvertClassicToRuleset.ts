@@ -79,14 +79,5 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     target: 'branch',
   }
 
-  // Add bypass actors if enforcement is disabled for admins
-  if (classicProtection.enforce_admins?.enabled === false) {
-    ruleset.bypass_actors.push({
-      actor_id: 5, // Repository admins
-      actor_type: 'RepositoryRole',
-      bypass_mode: 'always',
-    })
-  }
-
   return ruleset
 }
