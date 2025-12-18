@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 
 export type AddLintScriptOptions = BaseMigrationOptions
 
@@ -31,7 +32,7 @@ export const addLintScript = async (options: Readonly<AddLintScriptOptions>): Pr
     packageJson.scripts.lint = 'eslint . && prettier --check .'
 
     // Stringify with proper formatting
-    const newPackageJsonContent = JSON.stringify(packageJson, null, 2) + '\n'
+    const newPackageJsonContent = stringifyJson(packageJson)
 
     return {
       branchName: 'feature/add-lint-script',

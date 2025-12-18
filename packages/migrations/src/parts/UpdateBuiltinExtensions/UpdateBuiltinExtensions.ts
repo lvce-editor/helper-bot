@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 
 const getNewValue = (value: readonly any[], repoName: string, version: string): any[] => {
@@ -46,7 +47,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
 
     const filesJsonValue = JSON.parse(currentContent)
     const filesJsonValueNew = getNewValue(filesJsonValue, releasedRepo, version)
-    const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
+    const filesJsonStringNew = stringifyJson(filesJsonValueNew)
 
     if (currentContent === filesJsonStringNew) {
       return emptyMigrationResult

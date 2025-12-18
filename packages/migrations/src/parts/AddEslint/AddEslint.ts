@@ -5,6 +5,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
 
 const addEslintCore = async (
@@ -22,7 +23,7 @@ const addEslintCore = async (
   const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
   const toRemove = [tmpFolderUri, tmpCacheFolderUri]
   try {
-    const oldPackageJsonStringified = JSON.stringify(oldPackageJson, null, 2) + '\n'
+    const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
     await fs.writeFile(new URL('package.json', tmpFolderUri).toString(), oldPackageJsonStringified)
     await exec(
