@@ -15,7 +15,8 @@ export const getHttpStatusCode = (migrationResult: MigrationResultWithoutStatusC
       errorResult.errorCode === 'DEPENDENCY_NOT_FOUND' || errorResult.errorCode === 'FORBIDDEN' || errorResult.errorCode === 'VALIDATION_ERROR' ? 400 : 424
     return statusCode
   }
-  return 200
+  const successResult: MigrationSuccessResultWithoutStatusCode = migrationResult
+  return successResult.changedFiles && successResult.changedFiles.length > 0 ? 201 : 200
 }
 
 export const createMigrationResult = (result: MigrationResultWithoutStatusCode): MigrationResult => {
