@@ -34,7 +34,7 @@ export const removeGitpodyml = async (options: Readonly<RemoveGitpodymlOptions>)
     }
 
     const pullRequestTitle =
-      ymlExists && dockerfileExists ? 'ci: remove .gitpod.yml and .gitpod.Dockerfile' : ymlExists ? 'ci: remove .gitpod.yml' : 'ci: remove .gitpod.Dockerfile'
+      ymlExists && dockerfileExists ? 'ci: remove .gitpod.yml and .gitpod.Dockerfile' : (ymlExists ? 'ci: remove .gitpod.yml' : 'ci: remove .gitpod.Dockerfile')
 
     return {
       branchName: 'feature/remove-gitpod-yml',
