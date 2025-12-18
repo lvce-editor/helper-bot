@@ -42,7 +42,7 @@ export const removeGitpodyml = async (options: Readonly<RemoveGitpodymlOptions>)
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

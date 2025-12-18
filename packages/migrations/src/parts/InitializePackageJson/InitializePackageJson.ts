@@ -38,7 +38,7 @@ export const initializePackageJson = async (options: Readonly<InitializePackageJ
       commitMessage: 'chore: initialize package.json',
       pullRequestTitle: 'chore: initialize package.json',
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

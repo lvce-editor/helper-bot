@@ -79,7 +79,7 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

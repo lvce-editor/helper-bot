@@ -147,7 +147,7 @@ export const modernDirname = async (options: Readonly<ModernDirnameOptions>): Pr
       commitMessage: 'chore: modernize __dirname to use import.meta.dirname',
       pullRequestTitle: 'chore: modernize __dirname to use import.meta.dirname',
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

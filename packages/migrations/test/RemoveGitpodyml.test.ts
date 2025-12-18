@@ -45,7 +45,7 @@ vscode:
     commitMessage: 'ci: remove .gitpod.yml',
     pullRequestTitle: 'ci: remove .gitpod.yml',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   const fileExists = await mockFs.exists(gitpodYmlPath)
@@ -98,7 +98,7 @@ RUN npm install -g pnpm
     commitMessage: 'ci: remove .gitpod.yml and .gitpod.Dockerfile',
     pullRequestTitle: 'ci: remove .gitpod.yml and .gitpod.Dockerfile',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -137,7 +137,7 @@ RUN npm install -g pnpm
     commitMessage: 'ci: remove .gitpod.Dockerfile',
     pullRequestTitle: 'ci: remove .gitpod.Dockerfile',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 

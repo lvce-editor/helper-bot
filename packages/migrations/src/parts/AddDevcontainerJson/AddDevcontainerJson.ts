@@ -39,7 +39,7 @@ export const addDevcontainerJson = async (options: Readonly<AddDevcontainerJsonO
       commitMessage: 'chore: add devcontainer.json with Node.js 24',
       pullRequestTitle: 'chore: add devcontainer.json with Node.js 24',
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

@@ -64,7 +64,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
       commitMessage: `feature: update ${releasedRepo} to version ${options.tagName}`,
       pullRequestTitle: `feature: update ${releasedRepo} to version ${options.tagName}`,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

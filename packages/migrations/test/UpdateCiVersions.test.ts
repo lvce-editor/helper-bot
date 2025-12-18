@@ -86,7 +86,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -176,7 +176,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -352,7 +352,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -407,7 +407,7 @@ jobs:
     commitMessage: 'ci: update CI runner versions',
     pullRequestTitle: 'ci: update CI runner versions',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   // Verify the config values are being used

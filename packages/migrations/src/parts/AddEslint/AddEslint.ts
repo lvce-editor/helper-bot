@@ -91,7 +91,7 @@ export const addEslint = async (options: Readonly<AddEslintOptions>): Promise<Mi
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error) {
     const errorResult = {

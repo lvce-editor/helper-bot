@@ -95,7 +95,7 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
       commitMessage: 'ci: update CI runner versions',
       pullRequestTitle: 'ci: update CI runner versions',
       status: 'success',
-      statusCode: 200,
+      statusCode: 201,
     }
   } catch (error: any) {
     const errorResult = {

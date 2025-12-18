@@ -97,7 +97,7 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
       commitMessage: 'ci: update CI OS versions',
       pullRequestTitle: 'ci: update CI OS versions',
       status: 'success',
-      statusCode: 200,
+      statusCode: changedFiles.length > 0 ? 201 : 200,
     }
   } catch (error: any) {
     const errorResult = {
