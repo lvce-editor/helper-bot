@@ -36,6 +36,7 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
       parameters: {
         required_status_checks: statusChecks.contexts.map((context) => ({
           context,
+          integration_id: 15_368, // GitHub Actions integration ID
         })),
         strict_required_status_checks_policy: statusChecks.strict,
       },
