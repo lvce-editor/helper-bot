@@ -48,6 +48,10 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     type: 'non_fast_forward',
   })
 
+  rules.push({
+    type: 'required_linear_history',
+  })
+
   // Deletion protection
   if (!classicProtection.allow_deletions?.enabled) {
     rules.push({
