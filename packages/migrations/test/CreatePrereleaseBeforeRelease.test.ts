@@ -131,7 +131,7 @@ jobs:
     commitMessage: 'feature: create prerelease before final release',
     pullRequestTitle: 'feature: create prerelease before final release',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   const updatedContent = result.changedFiles[0].content
@@ -185,7 +185,7 @@ jobs:
     commitMessage: 'feature: create prerelease before final release',
     pullRequestTitle: 'feature: create prerelease before final release',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   const updatedContent = result.changedFiles[0].content
@@ -221,7 +221,7 @@ jobs:
     commitMessage: 'feature: create prerelease before final release',
     pullRequestTitle: 'feature: create prerelease before final release',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   const updatedContent = result.changedFiles[0].content

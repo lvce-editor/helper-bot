@@ -77,7 +77,7 @@ test('updates dependency successfully', async () => {
     commitMessage: expect.any(String),
     pullRequestTitle: expect.any(String),
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -464,7 +464,7 @@ test('uses asName when provided', async () => {
     commitMessage: expect.any(String),
     pullRequestTitle: expect.any(String),
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 
@@ -541,6 +541,6 @@ test('handles devDependencies', async () => {
     commitMessage: expect.any(String),
     pullRequestTitle: expect.any(String),
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
