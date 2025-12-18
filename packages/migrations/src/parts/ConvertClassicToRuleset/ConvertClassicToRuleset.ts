@@ -2,11 +2,11 @@ import type { components } from '@octokit/openapi-types'
 import type { ClassicBranchProtection } from '../GetClassicBranchProtection/GetClassicBranchProtection.ts'
 
 export interface RulesetData {
-  enforcement: components['schemas']['repository-rule-enforcement']
   bypass_actors?: components['schemas']['repository-ruleset-bypass-actor'][]
   conditions?: components['schemas']['repository-ruleset-conditions']
-  rules?: components['schemas']['repository-rule'][]
+  enforcement: components['schemas']['repository-rule-enforcement']
   name: string
+  rules?: components['schemas']['repository-rule'][]
   target: 'branch' | 'tag' | 'push'
 }
 
