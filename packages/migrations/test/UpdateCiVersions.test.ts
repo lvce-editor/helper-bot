@@ -3,6 +3,7 @@ import { updateCiVersions } from '../src/parts/UpdateCiVersions/UpdateCiVersions
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import config from '../src/parts/UpdateCiVersions/config.json' with { type: 'json' }
 
 test('updates Ubuntu, macOS, and Windows runner versions in ci.yml', async () => {
   const oldCiYml = `name: CI
@@ -353,4 +354,65 @@ jobs:
     status: 'success',
     statusCode: 200,
   })
+})
+
+test('uses versions from config.json', async () => {
+  const oldCiYml = `name: CI
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+`
+
+  const expectedCiYml = `name: CI
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-${config.latestVersions.ubuntu}
+`
+
+  const clonedRepoUri = pathToUri('/test/repo')
+  const workflowsUri = new URL('.github/workflows/', clonedRepoUri + '/').toString()
+  const mockFs = createMockFs({
+    files: {
+      [new URL('ci.yml', workflowsUri).toString()]: oldCiYml,
+    },
+  })
+
+  const mockExec = createMockExec(async () => {
+    throw new Error('Should not be called')
+  })
+
+  const result = await updateCiVersions({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    branchName: 'feature/update-ci-versions',
+    changedFiles: [
+      {
+        content: expectedCiYml,
+        path: '.github/workflows/ci.yml',
+      },
+    ],
+    commitMessage: 'ci: update CI runner versions',
+    pullRequestTitle: 'ci: update CI runner versions',
+    status: 'success',
+    statusCode: 200,
+  })
+
+  // Verify the config values are being used
+  expect(config.latestVersions.ubuntu).toBeDefined()
+  expect(config.latestVersions.macos).toBeDefined()
+  expect(config.latestVersions.windows).toBeDefined()
+  expect(result.changedFiles[0].content).toContain(`ubuntu-${config.latestVersions.ubuntu}`)
 })

@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 
 export type AddDevcontainerJsonOptions = BaseMigrationOptions
 
@@ -16,21 +17,16 @@ export const addDevcontainerJson = async (options: Readonly<AddDevcontainerJsonO
     }
 
     // Create a devcontainer.json with Node.js 24 configuration
-    const devcontainerContent =
-      JSON.stringify(
-        {
-          customizations: {
-            vscode: {
-              extensions: [],
-            },
-          },
-          features: {},
-          image: 'mcr.microsoft.com/devcontainers/javascript-node:1-24',
-          name: 'Node.js 24',
+    const devcontainerContent = stringifyJson({
+      customizations: {
+        vscode: {
+          extensions: [],
         },
-        null,
-        2,
-      ) + '\n'
+      },
+      features: {},
+      image: 'mcr.microsoft.com/devcontainers/javascript-node:1-24',
+      name: 'Node.js 24',
+    })
 
     return {
       branchName: 'feature/add-devcontainer-json',
