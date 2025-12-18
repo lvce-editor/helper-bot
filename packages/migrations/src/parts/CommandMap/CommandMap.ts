@@ -11,6 +11,7 @@ import { handleHelloWorld } from '../HandleHelloWorld/HandleHelloWorld.ts'
 import { handleMigrationsList } from '../HandleMigrationsList/HandleMigrationsList.ts'
 import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseReleased.ts'
 import { initializePackageJson } from '../InitializePackageJson/InitializePackageJson.ts'
+import { lintAndFix } from '../LintAndFix/LintAndFix.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 import { modernDirname } from '../ModernDirname/ModernDirname.ts'
 import { modernizeBranchProtection } from '../ModernizeBranchProtection/ModernizeBranchProtection.ts'
@@ -40,6 +41,7 @@ export const commandMap = {
   '/migrations2/handle-release-released': wrapCommand(handleReleaseReleased),
   '/migrations2/initialize-package-json': wrapCommand(initializePackageJson),
   '/migrations2/js/modern-dirname': wrapCommand(modernDirname),
+  '/migrations2/lint-and-fix': wrapCommand(lintAndFix),
   '/migrations2/list': wrapResponseCommand(handleMigrationsList),
   '/migrations2/modernize-branch-protection': wrapCommand(modernizeBranchProtection),
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
