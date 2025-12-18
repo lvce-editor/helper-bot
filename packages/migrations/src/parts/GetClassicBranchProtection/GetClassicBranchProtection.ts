@@ -1,4 +1,4 @@
-import type { Octokit } from 'octokit'
+import type { Octokit } from '@octokit/rest'
 import { VError } from '@lvce-editor/verror'
 
 export interface ClassicBranchProtection {
@@ -49,7 +49,7 @@ export const getClassicBranchProtection = async (
       repo: repositoryName,
     })
 
-    return response.data as ClassicBranchProtection
+    return response.data
   } catch (error: any) {
     if (error && (error.status === 404 || error.status === 403)) {
       return null

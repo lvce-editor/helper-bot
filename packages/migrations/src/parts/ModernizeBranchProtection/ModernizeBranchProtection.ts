@@ -1,5 +1,5 @@
-import type { Octokit } from 'octokit'
-import { Octokit as OctokitConstructor } from 'octokit'
+import type { Octokit } from '@octokit/rest'
+import { Octokit as OctokitConstructor } from '@octokit/rest'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { convertClassicToRuleset } from '../ConvertClassicToRuleset/ConvertClassicToRuleset.ts'
 import { createRuleset } from '../CreateRuleset/CreateRuleset.ts'

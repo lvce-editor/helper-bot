@@ -1,4 +1,4 @@
-import type { Octokit } from 'octokit'
+import type { Octokit } from '@octokit/rest'
 import { VError } from '@lvce-editor/verror'
 
 export interface Ruleset {

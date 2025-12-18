@@ -1,4 +1,4 @@
-import type { Octokit } from 'octokit'
+import type { Octokit } from '@octokit/rest'
 
 export const deleteClassicBranchProtection = async (
   repositoryOwner: string,

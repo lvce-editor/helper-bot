@@ -32,8 +32,8 @@
   "dependencies": {
     "@lvce-editor/rpc": "^4.20.0",
     "@lvce-editor/verror": "^1.7.0",
+    "@octokit/rest": "^22.0.1",
     "@sentry/node": "^10.27.0",
-    "execa": "^9.6.0",
-    "octokit": "^5.0.5"
+    "execa": "^9.6.0"
   }
 }
