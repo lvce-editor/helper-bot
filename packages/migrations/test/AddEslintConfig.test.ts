@@ -64,4 +64,3 @@ test('skips if eslint.config.js already exists', async () => {
     statusCode: 200,
   })
 })
-
