@@ -59,16 +59,6 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     })
   }
 
-  // Update protection (force pushes)
-  if (!classicProtection.allow_force_pushes?.enabled) {
-    rules.push({
-      parameters: {
-        update_allows_fetch_and_merge: false,
-      },
-      type: 'update',
-    })
-  }
-
   const ruleset: RulesetData = {
     bypass_actors: [],
     conditions: {
@@ -81,15 +71,6 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     name: `Protect ${branch}`,
     rules,
     target: 'branch',
-  }
-
-  // Add bypass actors if enforcement is disabled for admins
-  if (classicProtection.enforce_admins?.enabled === false) {
-    ruleset.bypass_actors.push({
-      actor_id: 5, // Repository admins
-      actor_type: 'RepositoryRole',
-      bypass_mode: 'always',
-    })
   }
 
   return ruleset
