@@ -7,7 +7,7 @@ export interface RulesetData {
   conditions?: components['schemas']['repository-ruleset-conditions']
   rules?: components['schemas']['repository-rule'][]
   name: string
-  target: string
+  target: 'branch' | 'tag' | 'push'
 }
 
 export const convertClassicToRuleset = (classicProtection: ClassicBranchProtection, branch: string): RulesetData => {
@@ -77,6 +77,15 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     name: `Protect ${branch}`,
     rules,
     target: 'branch',
+  }
+
+  // Add bypass actors if enforcement is disabled for admins
+  if (classicProtection.enforce_admins?.enabled === false) {
+    ruleset.bypass_actors.push({
+      actor_id: 5, // Repository admins
+      actor_type: 'RepositoryRole',
+      bypass_mode: 'always',
+    })
   }
 
   return ruleset
