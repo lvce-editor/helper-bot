@@ -3,7 +3,7 @@
     "lib": ["esnext"],
     "allowImportingTsExtensions": true,
     "checkJs": true,
-    "module": "ESNext",
+    "module": "nodenext",
     "target": "ESNext",
     "types": ["node"],
     "moduleResolution": "nodenext",
