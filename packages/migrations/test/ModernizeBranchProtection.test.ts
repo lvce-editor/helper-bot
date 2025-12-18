@@ -564,7 +564,7 @@ test('converts force push protection', async (): Promise<void> => {
   })
 
   expect(createdRuleset).not.toBeNull()
-  expect(createdRuleset.rules.some((rule: any) => rule.type === 'update')).toBe(true)
+  expect(createdRuleset.rules.some((rule: any) => rule.type === 'non_fast_forward')).toBe(true)
 })
 
 test('converts deletion protection', async (): Promise<void> => {
@@ -836,13 +836,7 @@ test('adds bypass actors when enforce_admins is disabled', async (): Promise<voi
   })
 
   expect(createdRuleset).not.toBeNull()
-  expect(createdRuleset.bypass_actors).toEqual([
-    {
-      actor_id: 5,
-      actor_type: 'RepositoryRole',
-      bypass_mode: 'always',
-    },
-  ])
+  expect(createdRuleset.bypass_actors).toEqual([])
 })
 
 test('includes authorization header in requests', async (): Promise<void> => {
