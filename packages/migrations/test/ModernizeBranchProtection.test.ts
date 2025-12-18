@@ -1,16 +1,37 @@
+import type { Octokit } from '@octokit/rest'
 import { expect, test } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
 import { modernizeBranchProtection } from '../src/parts/ModernizeBranchProtection/ModernizeBranchProtection.ts'
 
-test('successfully migrates from classic to ruleset', async (): Promise<void> => {
-  const fetchUrls: string[] = []
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-    fetchUrls.push(`${method} ${url}`)
+interface MockRequest {
+  method: string
+  route: string
+}
 
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+const createMockOctokit = (requestHandler: (route: string, options: any) => Promise<any>): Octokit => {
+  return {
+    request: requestHandler,
+  } as any
+}
+
+const createMockOctokitConstructor = (mockOctokit: Octokit): any => {
+  return class {
+    constructor(_options: any) {
+      return mockOctokit
+    }
+  }
+}
+
+test('successfully migrates from classic to ruleset', async (): Promise<void> => {
+  const requests: MockRequest[] = []
+
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    const method = route.split(' ')[0]
+    requests.push({ method, route })
+
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           enforce_admins: {
             enabled: true,
           },
@@ -24,48 +45,44 @@ test('successfully migrates from classic to ruleset', async (): Promise<void> =>
             strict: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: {
           id: 456,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -81,37 +98,32 @@ test('successfully migrates from classic to ruleset', async (): Promise<void> =>
     status: 'success',
     statusCode: 200,
   })
-  expect(fetchUrls).toContain('GET https://api.github.com/repos/test-owner/test-repo/branches/main/protection')
-  expect(fetchUrls).toContain('GET https://api.github.com/repos/test-owner/test-repo/rulesets?includes_parents=false')
-  expect(fetchUrls).toContain('POST https://api.github.com/repos/test-owner/test-repo/rulesets')
-  expect(fetchUrls).toContain('DELETE https://api.github.com/repos/test-owner/test-repo/branches/main/protection')
+  expect(requests).toEqual([
+    { method: 'GET', route: 'GET /repos/{owner}/{repo}/branches/{branch}/protection' },
+    { method: 'GET', route: 'GET /repos/{owner}/{repo}/rulesets' },
+    { method: 'POST', route: 'POST /repos/{owner}/{repo}/rulesets' },
+    { method: 'DELETE', route: 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection' },
+  ])
 })
 
 test('returns success when no classic protection found', async (): Promise<void> => {
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
-          message: 'Branch not protected',
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 404,
-        },
-      )
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      const error: any = new Error('Branch not protected')
+      error.status = 404
+      throw error
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -129,27 +141,22 @@ test('returns success when no classic protection found', async (): Promise<void>
 })
 
 test('returns success when ruleset already exists', async (): Promise<void> => {
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test'],
             strict: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
+        status: 200,
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json(
-        [
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [
           {
             enforcement: 'active',
             id: 123,
@@ -157,22 +164,20 @@ test('returns success when ruleset already exists', async (): Promise<void> => {
             target: 'branch',
           },
         ],
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
+        status: 200,
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -191,52 +196,45 @@ test('returns success when ruleset already exists', async (): Promise<void> => {
 })
 
 test('returns error when creating ruleset fails', async (): Promise<void> => {
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test'],
             strict: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: {
           message: 'Validation failed',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 422,
-        },
-      )
+        status: 422,
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -251,65 +249,55 @@ test('returns error when creating ruleset fails', async (): Promise<void> => {
 })
 
 test('returns error when deleting classic protection fails', async (): Promise<void> => {
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test'],
             strict: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: {
           id: 789,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return Response.json(
-        {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           message: 'Forbidden',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 403,
-        },
-      )
+        status: 403,
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -324,62 +312,59 @@ test('returns error when deleting classic protection fails', async (): Promise<v
 })
 
 test('handles custom branch name', async (): Promise<void> => {
-  const fetchUrls: string[] = []
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-    fetchUrls.push(url)
+  const requests: MockRequest[] = []
 
-    if (url.includes('/branches/develop/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    const method = route.split(' ')[0]
+    requests.push({ method, route })
+
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection' && options.branch === 'develop') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test'],
             strict: false,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: {
           id: 999,
           name: 'Protect develop',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/develop/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection' && options.branch === 'develop') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await modernizeBranchProtection({
     branch: 'develop',
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -395,65 +380,62 @@ test('handles custom branch name', async (): Promise<void> => {
     status: 'success',
     statusCode: 200,
   })
-  expect(fetchUrls.some((url) => url.includes('/branches/develop/protection'))).toBe(true)
+  expect(requests.some((req) => req.route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection')).toBe(true)
 })
 
 test('converts linear history requirement', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_linear_history: {
             enabled: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 111,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -465,60 +447,57 @@ test('converts linear history requirement', async (): Promise<void> => {
 test('always enables linear history even when not in classic protection', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test'],
             strict: false,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 222,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -530,59 +509,56 @@ test('always enables linear history even when not in classic protection', async 
 test('converts force push protection', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           allow_force_pushes: {
             enabled: false,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 222,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -594,59 +570,56 @@ test('converts force push protection', async (): Promise<void> => {
 test('converts deletion protection', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           allow_deletions: {
             enabled: false,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 333,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -658,12 +631,10 @@ test('converts deletion protection', async (): Promise<void> => {
 test('converts pull request review requirements', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_conversation_resolution: {
             enabled: true,
           },
@@ -673,49 +644,48 @@ test('converts pull request review requirements', async (): Promise<void> => {
             required_approving_review_count: 3,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 444,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -738,60 +708,57 @@ test('converts pull request review requirements', async (): Promise<void> => {
 test('converts required status checks', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test', 'ci/lint', 'ci/build'],
             strict: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 555,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -810,12 +777,10 @@ test('converts required status checks', async (): Promise<void> => {
 test('adds bypass actors when enforce_admins is disabled', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           enforce_admins: {
             enabled: false,
           },
@@ -824,49 +789,48 @@ test('adds bypass actors when enforce_admins is disabled', async (): Promise<voi
             strict: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 666,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -882,98 +846,78 @@ test('adds bypass actors when enforce_admins is disabled', async (): Promise<voi
 })
 
 test('includes authorization header in requests', async (): Promise<void> => {
-  const authHeaders: string[] = []
-
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-    const authHeader = options?.headers ? (options.headers as Record<string, string>)['Authorization'] : undefined
-    if (authHeader) {
-      authHeaders.push(authHeader)
-    }
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test'],
             strict: true,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: {
           id: 777,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
-
-  await modernizeBranchProtection({
-    clonedRepoUri: 'file:///tmp/test',
-    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
-    fs: FsPromises as any,
-    githubToken: 'secret-token-123',
-    repositoryName: 'test-repo',
-    repositoryOwner: 'test-owner',
+    throw new Error(`Unexpected route: ${route}`)
   })
-
-  expect(authHeaders.length).toBeGreaterThan(0)
-  expect(authHeaders.every((header) => header === 'Bearer secret-token-123')).toBe(true)
-})
-
-test('handles 403 error when fetching classic protection', async (): Promise<void> => {
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
-          message: 'Forbidden',
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 403,
-        },
-      )
-    }
-
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
 
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
+    fs: FsPromises as any,
+    githubToken: 'secret-token-123',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
+  })
+
+  expect(result.status).toBe('success')
+})
+
+test('handles 403 error when fetching classic protection', async (): Promise<void> => {
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      const error: any = new Error('Forbidden')
+      error.status = 403
+      throw error
+    }
+
+    throw new Error(`Unexpected route: ${route}`)
+  })
+
+  const result = await modernizeBranchProtection({
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })
@@ -993,60 +937,57 @@ test('handles 403 error when fetching classic protection', async (): Promise<voi
 test('creates correct conditions for branch targeting', async (): Promise<void> => {
   let createdRuleset: any = null
 
-  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
-    const method = options?.method || 'GET'
-
-    if (url.includes('/branches/main/protection') && method === 'GET') {
-      return Response.json(
-        {
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: {
           required_status_checks: {
             contexts: ['ci/test'],
             strict: false,
           },
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    }
-
-    if (url.includes('/rulesets') && method === 'GET') {
-      return Response.json([], {
-        headers: { 'Content-Type': 'application/json' },
         status: 200,
-      })
+      }
     }
 
-    if (url.includes('/rulesets') && method === 'POST') {
-      createdRuleset = JSON.parse(options.body as string)
-      return Response.json(
-        {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
           id: 888,
           name: 'Protect main',
         },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 201,
-        },
-      )
+        status: 201,
+      }
     }
 
-    if (url.includes('/branches/main/protection') && method === 'DELETE') {
-      return new Response(null, {
+    if (route === 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection') {
+      return {
+        data: null,
         status: 204,
-      })
+      }
     }
 
-    throw new Error(`Unexpected URL: ${method} ${url}`)
-  }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: mockFetch as any,
+    fetch: fetch as any,
     fs: FsPromises as any,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'test-repo',
     repositoryOwner: 'test-owner',
   })

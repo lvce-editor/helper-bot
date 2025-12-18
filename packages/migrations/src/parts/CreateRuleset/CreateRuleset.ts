@@ -1,20 +1,20 @@
-import { githubFetch } from '../GithubFetch/GithubFetch.ts'
+import type { Octokit } from '@octokit/rest'
+import type { RulesetData } from '../ConvertClassicToRuleset/ConvertClassicToRuleset.ts'
 
 export const createRuleset = async (
   repositoryOwner: string,
   repositoryName: string,
-  githubToken: string,
-  fetchFn: typeof globalThis.fetch,
-  rulesetData: any,
+  octokit: Octokit,
+  rulesetData: RulesetData,
 ): Promise<{ error?: string; rulesetId?: number; success: boolean }> => {
   try {
-    const createUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/rulesets`
-    const response = await githubFetch(createUrl, githubToken, fetchFn, {
-      body: JSON.stringify(rulesetData),
+    const response = await octokit.request('POST /repos/{owner}/{repo}/rulesets', {
+      owner: repositoryOwner,
+      repo: repositoryName,
+      ...rulesetData,
       headers: {
-        'Content-Type': 'application/json',
+        'X-GitHub-Api-Version': '2022-11-28',
       },
-      method: 'POST',
     })
 
     if (response.status === 201) {
