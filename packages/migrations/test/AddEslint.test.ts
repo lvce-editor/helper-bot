@@ -5,7 +5,7 @@ import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () => {
-  const oldPackageJson = {
+  const oldPackageJson: any = {
     name: 'test-package',
     version: '1.0.0',
   }
@@ -41,6 +41,15 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
+        const updatedPackageJson = {
+          ...oldPackageJson,
+          devDependencies: {
+            ...(oldPackageJson.devDependencies || {}),
+            '@lvce-editor/eslint-config': '^4.0.0',
+            eslint: '^9.39.2',
+          },
+        }
+        await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
         await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
@@ -62,7 +71,7 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
     branchName: 'feature/add-eslint',
     changedFiles: [
       {
-        content: expect.stringContaining('"eslint": "latest"'),
+        content: expect.stringMatching(/"eslint": "\^\d+\.\d+\.\d+"/),
         path: 'package.json',
       },
       {
@@ -76,7 +85,7 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
     statusCode: 200,
   })
 
-  expect(result.changedFiles[0].content).toContain('"@lvce-editor/eslint-config": "latest"')
+  expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
   expect(mockExecFn).toHaveBeenCalledTimes(1)
   expect(mockExecFn).toHaveBeenCalledWith(
     'npm',
@@ -166,7 +175,7 @@ test('skips if eslint already exists in devDependencies', async () => {
 })
 
 test('adds eslint when devDependencies exists but eslint is not present', async () => {
-  const oldPackageJson = {
+  const oldPackageJson: any = {
     devDependencies: {
       typescript: '^5.0.0',
     },
@@ -205,6 +214,15 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
+        const updatedPackageJson = {
+          ...oldPackageJson,
+          devDependencies: {
+            ...(oldPackageJson.devDependencies || {}),
+            '@lvce-editor/eslint-config': '^4.0.0',
+            eslint: '^9.39.2',
+          },
+        }
+        await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
         await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
@@ -222,6 +240,7 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
     repositoryOwner: 'test',
   })
 
+<<<<<<< HEAD
   expect(result).toEqual({
     branchName: 'feature/add-eslint',
     changedFiles: [
@@ -241,6 +260,11 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
   })
 
   expect(result.changedFiles[0].content).toContain('"@lvce-editor/eslint-config": "latest"')
+=======
+  expect(result.status).toBe('success')
+  expect(result.changedFiles[0].content).toMatch(/"eslint": "\^\d+\.\d+\.\d+"/)
+  expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
+>>>>>>> origin/main
   expect(result.changedFiles[0].content).toContain('"typescript": "^5.0.0"')
   expect(mockExecFn).toHaveBeenCalledTimes(1)
 })
