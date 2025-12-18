@@ -767,7 +767,11 @@ test('converts required status checks', async (): Promise<void> => {
   const statusCheckRule = createdRuleset.rules.find((rule: any) => rule.type === 'required_status_checks')
   expect(statusCheckRule).toEqual({
     parameters: {
-      required_status_checks: [{ context: 'ci/test' }, { context: 'ci/lint' }, { context: 'ci/build' }],
+      required_status_checks: [
+        { context: 'ci/test', integration_id: 15_368 },
+        { context: 'ci/lint', integration_id: 15_368 },
+        { context: 'ci/build', integration_id: 15_368 },
+      ],
       strict_required_status_checks_policy: true,
     },
     type: 'required_status_checks',
