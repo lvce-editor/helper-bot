@@ -100,7 +100,7 @@ jobs:
     commitMessage: 'feature: update permissions for open id connect publishing',
     pullRequestTitle: 'feature: update permissions for open id connect publishing',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 })
 

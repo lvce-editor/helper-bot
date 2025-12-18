@@ -86,7 +86,7 @@ test('generates new package files with updated dependency', async () => {
     commitMessage: 'feature: update shared to version 2.0.0',
     pullRequestTitle: 'feature: update shared to version 2.0.0',
     status: 'success',
-    statusCode: 200,
+    statusCode: 201,
   })
 
   expect(mockExecFn).toHaveBeenCalledTimes(1)
