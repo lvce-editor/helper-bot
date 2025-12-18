@@ -245,8 +245,8 @@ test('returns error when creating ruleset fails', async (): Promise<void> => {
     changedFiles: [],
     errorCode: 'CREATE_RULESET_FAILED',
     errorMessage: expect.stringContaining('Failed to create ruleset'),
-    pullRequestTitle: '',
     status: 'error',
+    statusCode: 424,
   })
 })
 
@@ -318,8 +318,8 @@ test('returns error when deleting classic protection fails', async (): Promise<v
     changedFiles: [],
     errorCode: 'DELETE_CLASSIC_PROTECTION_FAILED',
     errorMessage: expect.stringContaining('Failed to delete classic branch protection'),
-    pullRequestTitle: '',
     status: 'error',
+    statusCode: 424,
   })
 })
 
@@ -430,6 +430,71 @@ test('converts linear history requirement', async (): Promise<void> => {
       return Response.json(
         {
           id: 111,
+          name: 'Protect main',
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          status: 201,
+        },
+      )
+    }
+
+    if (url.includes('/branches/main/protection') && method === 'DELETE') {
+      return new Response(null, {
+        status: 204,
+      })
+    }
+
+    throw new Error(`Unexpected URL: ${method} ${url}`)
+  }
+
+  await modernizeBranchProtection({
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: mockFetch as any,
+    fs: FsPromises as any,
+    githubToken: 'test-token',
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
+  })
+
+  expect(createdRuleset).not.toBeNull()
+  expect(createdRuleset.rules.some((rule: any) => rule.type === 'non_fast_forward')).toBe(true)
+})
+
+test('always enables linear history even when not in classic protection', async (): Promise<void> => {
+  let createdRuleset: any = null
+
+  const mockFetch = async (url: string, options?: RequestInit): Promise<Response> => {
+    const method = options?.method || 'GET'
+
+    if (url.includes('/branches/main/protection') && method === 'GET') {
+      return Response.json(
+        {
+          required_status_checks: {
+            contexts: ['ci/test'],
+            strict: false,
+          },
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      )
+    }
+
+    if (url.includes('/rulesets') && method === 'GET') {
+      return Response.json([], {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    if (url.includes('/rulesets') && method === 'POST') {
+      createdRuleset = JSON.parse(options.body as string)
+      return Response.json(
+        {
+          id: 222,
           name: 'Protect main',
         },
         {
@@ -659,6 +724,7 @@ test('converts pull request review requirements', async (): Promise<void> => {
   const pullRequestRule = createdRuleset.rules.find((rule: any) => rule.type === 'pull_request')
   expect(pullRequestRule).toEqual({
     parameters: {
+      allowed_merge_methods: ['squash'],
       dismiss_stale_reviews_on_push: true,
       require_code_owner_review: true,
       require_last_push_approval: false,
@@ -991,7 +1057,7 @@ test('creates correct conditions for branch targeting', async (): Promise<void> 
       conditions: {
         ref_name: {
           exclude: [],
-          include: ['refs/heads/main'],
+          include: ['~DEFAULT_BRANCH'],
         },
       },
       enforcement: 'active',
