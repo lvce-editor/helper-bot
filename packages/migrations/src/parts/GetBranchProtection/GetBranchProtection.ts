@@ -1,5 +1,6 @@
 import { VError } from '@lvce-editor/verror'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 export interface GetBranchProtectionOptions extends BaseMigrationOptions {
   readonly branch?: string
@@ -67,7 +68,7 @@ const getClassicBranchProtection = async (
   branch: string,
   githubToken: string,
   fetchFn: typeof globalThis.fetch,
-): Promise<any | null> => {
+): Promise<any> => {
   try {
     const protectionUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/branches/${branch}/protection`
     const protectionResponse = await githubFetch(protectionUrl, githubToken, fetchFn)
@@ -109,7 +110,6 @@ export const getBranchProtection = async (options: GetBranchProtectionOptions): 
     // Fall back to classic branch protection
     const classicProtection = await getClassicBranchProtection(repositoryOwner, repositoryName, branch, githubToken, fetchFn)
 
-    console.log({ rulesets, classicProtection })
     if (classicProtection) {
       return {
         changedFiles: [],
@@ -139,7 +139,7 @@ export const getBranchProtection = async (options: GetBranchProtectionOptions): 
 
     return {
       changedFiles: [],
-      errorMessage: `${error}`,
+      errorMessage: stringifyError(error),
       status: 'error',
       statusCode: 500,
     }

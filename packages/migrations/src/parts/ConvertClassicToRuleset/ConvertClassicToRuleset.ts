@@ -8,6 +8,7 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     const reviews = classicProtection.required_pull_request_reviews
     rules.push({
       parameters: {
+        allowed_merge_methods: ['squash'],
         dismiss_stale_reviews_on_push: reviews.dismiss_stale_reviews,
         require_code_owner_review: reviews.require_code_owner_reviews,
         require_last_push_approval: false,
@@ -32,12 +33,10 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     })
   }
 
-  // Non-fast-forward (linear history)
-  if (classicProtection.required_linear_history?.enabled) {
-    rules.push({
-      type: 'non_fast_forward',
-    })
-  }
+  // Non-fast-forward (linear history) - always enabled
+  rules.push({
+    type: 'non_fast_forward',
+  })
 
   // Deletion protection
   if (!classicProtection.allow_deletions?.enabled) {
@@ -61,7 +60,7 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     conditions: {
       ref_name: {
         exclude: [],
-        include: [`refs/heads/${branch}`],
+        include: ['~DEFAULT_BRANCH'],
       },
     },
     enforcement: 'active',
