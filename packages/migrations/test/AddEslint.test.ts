@@ -240,10 +240,6 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
     repositoryOwner: 'test',
   })
 
-<<<<<<< HEAD
-  expect(result.status).toBe('success')
-  expect(result.changedFiles[0].content).toMatch(/"eslint": "\^\d+\.\d+\.\d+"/)
-=======
   expect(result).toEqual({
     branchName: 'feature/add-eslint',
     changedFiles: [
@@ -262,7 +258,6 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
     statusCode: 200,
   })
 
->>>>>>> origin/main
   expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
   expect(result.changedFiles[0].content).toContain('"typescript": "^5.0.0"')
   expect(mockExecFn).toHaveBeenCalledTimes(1)
