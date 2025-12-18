@@ -48,7 +48,7 @@ RUN npm install`,
     commitMessage: 'ci: update Node.js to version v20.0.0',
     pullRequestTitle: 'ci: update Node.js to version v20.0.0',
     status: 'success',
-    statusCode: 201,
+    statusCode: 200,
   })
 })
 
