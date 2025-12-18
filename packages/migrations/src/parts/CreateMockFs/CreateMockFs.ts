@@ -58,6 +58,60 @@ class MockFs {
     const pathStr = validateUri(path, 'exists', true)
     return this.files[pathStr] !== undefined
   }
+
+  async readdir(path: string | Buffer | URL, options?: { withFileTypes?: boolean }): Promise<any> {
+    const pathStr = validateUri(path, 'readdir', true)
+    // Ensure path ends with /
+    const dirPath = pathStr.endsWith('/') ? pathStr : pathStr + '/'
+
+    // Check if directory exists
+    if (!this.files[dirPath] && this.files[dirPath] !== '[DIRECTORY]') {
+      // Check if any files exist under this directory
+      const hasFiles = Object.keys(this.files).some((key) => key.startsWith(dirPath))
+      if (!hasFiles) {
+        const error = new Error('ENOENT: no such file or directory')
+        // @ts-ignore
+        error.code = 'ENOENT'
+        throw error
+      }
+    }
+
+    // Get all entries in this directory (not recursive)
+    const entries: Array<{ name: string; isFile: () => boolean; isDirectory: () => boolean }> = []
+    const seen = new Set<string>()
+
+    for (const filePath of Object.keys(this.files)) {
+      if (!filePath.startsWith(dirPath)) {
+        continue
+      }
+
+      const relativePath = filePath.slice(dirPath.length)
+      if (!relativePath) {
+        continue
+      }
+
+      // Get the first segment (either a file or a directory)
+      const firstSegment = relativePath.split('/')[0]
+      if (seen.has(firstSegment)) {
+        continue
+      }
+      seen.add(firstSegment)
+
+      const isDirectory = relativePath.includes('/')
+      const entry = {
+        name: firstSegment,
+        isFile: () => !isDirectory,
+        isDirectory: () => isDirectory,
+      }
+      entries.push(entry)
+    }
+
+    if (options?.withFileTypes) {
+      return entries
+    }
+
+    return entries.map((entry) => entry.name)
+  }
 }
 
 export const createMockFs = (options: MockFsOptions = {}): typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> } => {
