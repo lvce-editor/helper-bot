@@ -92,8 +92,8 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
     return {
       branchName: 'feature/update-ci-versions',
       changedFiles,
-      commitMessage: 'ci: update CI runner versions',
-      pullRequestTitle: 'ci: update CI runner versions',
+      commitMessage: 'feature: update runner versions',
+      pullRequestTitle: 'feature: update runner versions',
       status: 'success',
       statusCode: 201,
     }

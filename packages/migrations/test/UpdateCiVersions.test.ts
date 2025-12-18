@@ -83,8 +83,8 @@ jobs:
         path: '.github/workflows/ci.yml',
       },
     ],
-    commitMessage: 'ci: update CI runner versions',
-    pullRequestTitle: 'ci: update CI runner versions',
+    commitMessage: 'feature: update runner versions',
+    pullRequestTitle: 'feature: update runner versions',
     status: 'success',
     statusCode: 201,
   })
@@ -173,8 +173,8 @@ jobs:
         path: '.github/workflows/release.yml',
       },
     ],
-    commitMessage: 'ci: update CI runner versions',
-    pullRequestTitle: 'ci: update CI runner versions',
+    commitMessage: 'feature: update runner versions',
+    pullRequestTitle: 'feature: update runner versions',
     status: 'success',
     statusCode: 201,
   })
@@ -349,8 +349,8 @@ jobs:
         path: '.github/workflows/ci.yml',
       },
     ],
-    commitMessage: 'ci: update CI runner versions',
-    pullRequestTitle: 'ci: update CI runner versions',
+    commitMessage: 'feature: update runner versions',
+    pullRequestTitle: 'feature: update runner versions',
     status: 'success',
     statusCode: 201,
   })
@@ -404,8 +404,8 @@ jobs:
         path: '.github/workflows/ci.yml',
       },
     ],
-    commitMessage: 'ci: update CI runner versions',
-    pullRequestTitle: 'ci: update CI runner versions',
+    commitMessage: 'feature: update runner versions',
+    pullRequestTitle: 'feature: update runner versions',
     status: 'success',
     statusCode: 201,
   })
