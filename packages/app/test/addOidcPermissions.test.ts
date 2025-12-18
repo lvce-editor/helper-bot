@@ -207,8 +207,12 @@ on:
     repo: 'repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.changedFiles).toBe(1)
+  expect(result).toEqual({
+    success: true,
+    changedFiles: 1,
+    newBranch: expect.stringMatching(/^add-oidc-permissions-/),
+    message: 'OIDC permissions added to release.yml successfully',
+  })
 
   // Verify the content was updated correctly
   const updateCall = octokit.repos.createOrUpdateFileContents.mock.calls[0]

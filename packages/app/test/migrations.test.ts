@@ -63,8 +63,10 @@ test('updateNodeVersionMigration should return success when no changes needed', 
     repo: 'test-repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.message).toContain('No changes needed')
+  expect(result).toEqual({
+    success: true,
+    message: expect.stringContaining('No changes needed'),
+  })
 })
 
 test('updateDependenciesMigration should return success when no dependencies found', async () => {
@@ -84,8 +86,10 @@ test('updateDependenciesMigration should return success when no dependencies fou
     repo: 'unknown-repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.message).toContain('No dependencies configured')
+  expect(result).toEqual({
+    success: true,
+    message: expect.stringContaining('No dependencies configured'),
+  })
 })
 
 test('ensureLernaExcludedMigration should return success when no script found', async () => {
@@ -103,8 +107,10 @@ test('ensureLernaExcludedMigration should return success when no script found', 
     repo: 'test-repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.message).toContain('No update-dependencies.sh script found')
+  expect(result).toEqual({
+    success: true,
+    message: expect.stringContaining('No update-dependencies.sh script found'),
+  })
 })
 
 test('updateGithubActionsMigration should return success when no workflows found', async () => {
@@ -122,6 +128,8 @@ test('updateGithubActionsMigration should return success when no workflows found
     repo: 'test-repo',
   })
 
-  expect(result.success).toBe(true)
-  expect(result.message).toContain('No workflows found')
+  expect(result).toEqual({
+    success: true,
+    message: expect.stringContaining('No workflows found'),
+  })
 })
