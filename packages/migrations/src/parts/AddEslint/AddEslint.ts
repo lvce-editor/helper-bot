@@ -22,11 +22,6 @@ const addEslintCore = async (
   const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
   const toRemove = [tmpFolderUri, tmpCacheFolderUri]
   try {
-    if (!oldPackageJson.devDependencies) {
-      oldPackageJson.devDependencies = {}
-    }
-    oldPackageJson.devDependencies['eslint'] = 'latest'
-    oldPackageJson.devDependencies['@lvce-editor/eslint-config'] = 'latest'
     const oldPackageJsonStringified = JSON.stringify(oldPackageJson, null, 2) + '\n'
     await fs.mkdir(tmpFolderUri, { recursive: true })
     await fs.writeFile(new URL('package.json', tmpFolderUri).toString(), oldPackageJsonStringified)
@@ -37,9 +32,10 @@ const addEslintCore = async (
         cwd: tmpFolderUri,
       },
     )
+    const newPackageJsonString = await fs.readFile(new URL('package.json', tmpFolderUri).toString(), 'utf8')
     const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).toString(), 'utf8')
     return {
-      newPackageJsonString: oldPackageJsonStringified,
+      newPackageJsonString,
       newPackageLockJsonString,
     }
   } catch (error) {
