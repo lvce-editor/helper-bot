@@ -21,8 +21,14 @@ test('returns empty result when release.yml does not exist', async (): Promise<v
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns empty result when draft is already present', async (): Promise<void> => {
@@ -61,8 +67,14 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toEqual([])
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('adds draft: true to create release step', async (): Promise<void> => {
@@ -108,9 +120,19 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles.length).toBe(1)
-  expect(result.changedFiles[0].path).toBe('.github/workflows/release.yml')
+  expect(result).toEqual({
+    branchName: 'feature/create-prerelease-before-release',
+    changedFiles: [
+      {
+        content: expect.any(String),
+        path: '.github/workflows/release.yml',
+      },
+    ],
+    commitMessage: 'feature: create prerelease before final release',
+    pullRequestTitle: 'feature: create prerelease before final release',
+    status: 'success',
+    statusCode: 200,
+  })
 
   const updatedContent = result.changedFiles[0].content
 
@@ -152,8 +174,19 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles.length).toBe(1)
+  expect(result).toEqual({
+    branchName: 'feature/create-prerelease-before-release',
+    changedFiles: [
+      {
+        content: expect.any(String),
+        path: expect.any(String),
+      },
+    ],
+    commitMessage: 'feature: create prerelease before final release',
+    pullRequestTitle: 'feature: create prerelease before final release',
+    status: 'success',
+    statusCode: 200,
+  })
 
   const updatedContent = result.changedFiles[0].content
 
@@ -182,7 +215,14 @@ jobs:
 
   const result = await createPrereleaseBeforeRelease(options)
 
-  expect(result.status).toBe('success')
+  expect(result).toEqual({
+    branchName: 'feature/create-prerelease-before-release',
+    changedFiles: expect.any(Array),
+    commitMessage: 'feature: create prerelease before final release',
+    pullRequestTitle: 'feature: create prerelease before final release',
+    status: 'success',
+    statusCode: 200,
+  })
 
   const updatedContent = result.changedFiles[0].content
   const lines = updatedContent.split('\n')

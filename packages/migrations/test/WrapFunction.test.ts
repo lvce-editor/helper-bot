@@ -12,9 +12,10 @@ test('wrapFunction handles successful function execution', async (): Promise<voi
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('success')
-  expect(result.data).toBe('test-owner/test-repo')
-  expect(result.error).toBeUndefined()
+  expect(result).toEqual({
+    data: 'test-owner/test-repo',
+    type: 'success',
+  })
 })
 
 test('wrapFunction handles function errors', async (): Promise<void> => {
@@ -28,9 +29,10 @@ test('wrapFunction handles function errors', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('error')
-  expect(result.error).toBe('Something went wrong')
-  expect(result.data).toBeUndefined()
+  expect(result).toEqual({
+    error: 'Something went wrong',
+    type: 'error',
+  })
 })
 
 test('wrapFunction passes through all options', async (): Promise<void> => {
@@ -51,12 +53,14 @@ test('wrapFunction passes through all options', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('success')
-  expect(result.data).toEqual({
-    branch: 'develop',
-    githubToken: 'secret-token',
-    repositoryName: 'test-repo',
-    repositoryOwner: 'test-owner',
+  expect(result).toEqual({
+    data: {
+      branch: 'develop',
+      githubToken: 'secret-token',
+      repositoryName: 'test-repo',
+      repositoryOwner: 'test-owner',
+    },
+    type: 'success',
   })
 })
 
@@ -71,6 +75,8 @@ test('wrapFunction handles non-Error exceptions', async (): Promise<void> => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.type).toBe('error')
-  expect(result.error).toBe('string error')
+  expect(result).toEqual({
+    error: 'string error',
+    type: 'error',
+  })
 })
