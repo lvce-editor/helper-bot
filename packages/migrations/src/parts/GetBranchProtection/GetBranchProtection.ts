@@ -110,6 +110,10 @@ export const getBranchProtection = async (options: GetBranchProtectionOptions): 
     // Fall back to classic branch protection
     const classicProtection = await getClassicBranchProtection(repositoryOwner, repositoryName, branch, githubToken, fetchFn)
 
+<<<<<<< HEAD
+=======
+    console.log({ rulesets, classicProtection })
+>>>>>>> origin/main
     if (classicProtection) {
       return {
         changedFiles: [],
