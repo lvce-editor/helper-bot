@@ -44,7 +44,7 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
         const updatedPackageJson = {
           ...oldPackageJson,
           devDependencies: {
-            ...(oldPackageJson.devDependencies || {}),
+            ...oldPackageJson.devDependencies,
             '@lvce-editor/eslint-config': '^4.0.0',
             eslint: '^9.39.2',
           },
@@ -217,7 +217,7 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
         const updatedPackageJson = {
           ...oldPackageJson,
           devDependencies: {
-            ...(oldPackageJson.devDependencies || {}),
+            ...oldPackageJson.devDependencies,
             '@lvce-editor/eslint-config': '^4.0.0',
             eslint: '^9.39.2',
           },
