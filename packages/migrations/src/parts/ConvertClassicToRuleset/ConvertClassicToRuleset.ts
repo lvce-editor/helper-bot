@@ -1,7 +1,17 @@
+import type { components } from '@octokit/openapi-types'
 import type { ClassicBranchProtection } from '../GetClassicBranchProtection/GetClassicBranchProtection.ts'
 
-export const convertClassicToRuleset = (classicProtection: ClassicBranchProtection, branch: string): any => {
-  const rules: any[] = []
+export interface RulesetData {
+  bypass_actors?: components['schemas']['repository-ruleset-bypass-actor'][]
+  conditions?: components['schemas']['repository-ruleset-conditions']
+  enforcement: components['schemas']['repository-rule-enforcement']
+  name: string
+  rules?: components['schemas']['repository-rule'][]
+  target: 'branch' | 'tag' | 'push'
+}
+
+export const convertClassicToRuleset = (classicProtection: ClassicBranchProtection, branch: string): RulesetData => {
+  const rules: components['schemas']['repository-rule'][] = []
 
   // Pull request required
   if (classicProtection.required_pull_request_reviews) {
@@ -55,7 +65,7 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     })
   }
 
-  const ruleset: any = {
+  const ruleset: RulesetData = {
     bypass_actors: [],
     conditions: {
       ref_name: {

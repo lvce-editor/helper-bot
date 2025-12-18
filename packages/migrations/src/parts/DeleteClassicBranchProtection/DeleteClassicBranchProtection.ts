@@ -1,16 +1,19 @@
-import { githubFetch } from '../GithubFetch/GithubFetch.ts'
+import type { Octokit } from '@octokit/rest'
 
 export const deleteClassicBranchProtection = async (
   repositoryOwner: string,
   repositoryName: string,
   branch: string,
-  githubToken: string,
-  fetchFn: typeof globalThis.fetch,
+  octokit: Octokit,
 ): Promise<{ error?: string; success: boolean }> => {
   try {
-    const deleteUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/branches/${branch}/protection`
-    const response = await githubFetch(deleteUrl, githubToken, fetchFn, {
-      method: 'DELETE',
+    const response = await octokit.request('DELETE /repos/{owner}/{repo}/branches/{branch}/protection', {
+      branch,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      owner: repositoryOwner,
+      repo: repositoryName,
     })
 
     if (response.status === 204) {
