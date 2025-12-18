@@ -1,5 +1,5 @@
+import type { Octokit } from 'octokit'
 import { VError } from '@lvce-editor/verror'
-import { githubFetch } from '../GithubFetch/GithubFetch.ts'
 
 export interface Ruleset {
   readonly enforcement: string
@@ -8,18 +8,19 @@ export interface Ruleset {
   readonly target: string
 }
 
-export const getBranchRulesets = async (
-  repositoryOwner: string,
-  repositoryName: string,
-  githubToken: string,
-  fetchFn: typeof globalThis.fetch,
-): Promise<Ruleset[]> => {
+export const getBranchRulesets = async (repositoryOwner: string, repositoryName: string, octokit: Octokit): Promise<Ruleset[]> => {
   try {
-    const rulesetsUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/rulesets?includes_parents=false`
-    const rulesetsResponse = await githubFetch(rulesetsUrl, githubToken, fetchFn)
+    const response = await octokit.request('GET /repos/{owner}/{repo}/rulesets', {
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      includes_parents: false,
+      owner: repositoryOwner,
+      repo: repositoryName,
+    })
 
-    if (rulesetsResponse.status === 200 && Array.isArray(rulesetsResponse.data)) {
-      return rulesetsResponse.data
+    if (Array.isArray(response.data)) {
+      return response.data as Ruleset[]
     }
     return []
   } catch (error: any) {

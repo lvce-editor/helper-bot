@@ -1,5 +1,5 @@
+import type { Octokit } from 'octokit'
 import { VError } from '@lvce-editor/verror'
-import { githubFetch } from '../GithubFetch/GithubFetch.ts'
 
 export interface ClassicBranchProtection {
   readonly allow_deletions?: {
@@ -37,22 +37,19 @@ export const getClassicBranchProtection = async (
   repositoryOwner: string,
   repositoryName: string,
   branch: string,
-  githubToken: string,
-  fetchFn: typeof globalThis.fetch,
+  octokit: Octokit,
 ): Promise<ClassicBranchProtection | null> => {
   try {
-    const protectionUrl = `https://api.github.com/repos/${repositoryOwner}/${repositoryName}/branches/${branch}/protection`
-    const protectionResponse = await githubFetch(protectionUrl, githubToken, fetchFn)
+    const response = await octokit.request('GET /repos/{owner}/{repo}/branches/{branch}/protection', {
+      branch,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      owner: repositoryOwner,
+      repo: repositoryName,
+    })
 
-    if (protectionResponse.status === 200) {
-      return protectionResponse.data
-    }
-
-    if (protectionResponse.status === 404 || protectionResponse.status === 403) {
-      return null
-    }
-
-    throw new Error(`GitHub API returned status ${protectionResponse.status}: ${JSON.stringify(protectionResponse.data)}`)
+    return response.data as ClassicBranchProtection
   } catch (error: any) {
     if (error && (error.status === 404 || error.status === 403)) {
       return null

@@ -1,3 +1,5 @@
+import type { Octokit } from 'octokit'
+import { Octokit as OctokitConstructor } from 'octokit'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { convertClassicToRuleset } from '../ConvertClassicToRuleset/ConvertClassicToRuleset.ts'
 import { createRuleset } from '../CreateRuleset/CreateRuleset.ts'
@@ -11,14 +13,19 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 export interface ModernizeBranchProtectionOptions extends BaseMigrationOptions {
   readonly branch?: string
   readonly githubToken: string
+  readonly OctokitConstructor?: typeof OctokitConstructor
 }
 
 export const modernizeBranchProtection = async (options: ModernizeBranchProtectionOptions): Promise<MigrationResult> => {
-  const { branch = 'main', fetch: fetchFn, githubToken, repositoryName, repositoryOwner } = options
+  const { branch = 'main', githubToken, OctokitConstructor: OctokitCtor = OctokitConstructor, repositoryName, repositoryOwner } = options
+
+  const octokit: Octokit = new OctokitCtor({
+    auth: githubToken,
+  })
 
   try {
     // Get classic branch protection
-    const classicProtection = await getClassicBranchProtection(repositoryOwner, repositoryName, branch, githubToken, fetchFn)
+    const classicProtection = await getClassicBranchProtection(repositoryOwner, repositoryName, branch, octokit)
 
     if (!classicProtection) {
       return {
@@ -34,7 +41,7 @@ export const modernizeBranchProtection = async (options: ModernizeBranchProtecti
     }
 
     // Get existing rulesets
-    const rulesets = await getBranchRulesets(repositoryOwner, repositoryName, githubToken, fetchFn)
+    const rulesets = await getBranchRulesets(repositoryOwner, repositoryName, octokit)
 
     // Check if there's already a ruleset for this branch
     const existingRuleset = rulesets.find((ruleset) => {
@@ -59,7 +66,7 @@ export const modernizeBranchProtection = async (options: ModernizeBranchProtecti
     const rulesetData = convertClassicToRuleset(classicProtection, branch)
 
     // Create the new ruleset
-    const createResult = await createRuleset(repositoryOwner, repositoryName, githubToken, fetchFn, rulesetData)
+    const createResult = await createRuleset(repositoryOwner, repositoryName, octokit, rulesetData)
 
     if (!createResult.success) {
       return createMigrationResult({
@@ -70,7 +77,7 @@ export const modernizeBranchProtection = async (options: ModernizeBranchProtecti
     }
 
     // Delete the classic branch protection
-    const deleteResult = await deleteClassicBranchProtection(repositoryOwner, repositoryName, branch, githubToken, fetchFn)
+    const deleteResult = await deleteClassicBranchProtection(repositoryOwner, repositoryName, branch, octokit)
 
     if (!deleteResult.success) {
       return createMigrationResult({
