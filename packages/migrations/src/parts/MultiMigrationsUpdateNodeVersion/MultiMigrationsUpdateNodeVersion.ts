@@ -1,7 +1,5 @@
+import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 export interface MultiMigrationsUpdateNodeVersionOptions extends BaseMigrationOptions {
   readonly baseBranch?: string
@@ -25,121 +23,8 @@ export interface MultiMigrationsUpdateNodeVersionData {
 }
 
 export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMigrationsUpdateNodeVersionOptions>): Promise<MigrationResult> => {
-  try {
-    const { fetch: fetchFn, repositoryNames } = options
-
-    if (!repositoryNames || repositoryNames.length === 0) {
-      return {
-        changedFiles: [],
-        errorCode: ERROR_CODES.VALIDATION_ERROR,
-        errorMessage: 'repositoryNames is required and must be a non-empty array',
-        status: 'error',
-        statusCode: 400,
-      }
-    }
-
-    // Validate repository names format
-    for (const repo of repositoryNames) {
-      if (typeof repo !== 'string' || !repo.includes('/')) {
-        return {
-          changedFiles: [],
-          errorCode: ERROR_CODES.VALIDATION_ERROR,
-          errorMessage: `Invalid repository name format: ${repo}. Expected format: owner/repo`,
-          status: 'error',
-          statusCode: 400,
-        }
-      }
-    }
-
-    // Get server URL from options or environment variable
-    const baseUrl = process.env.SERVER_URL || 'http://localhost:3000'
-    const endpointSecret = process.env.DEPENDENCIES_SECRET
-
-    if (!endpointSecret) {
-      return {
-        changedFiles: [],
-        errorCode: ERROR_CODES.VALIDATION_ERROR,
-        errorMessage: 'secret is required (either passed as parameter or set as DEPENDENCIES_SECRET environment variable)',
-        status: 'error',
-        statusCode: 400,
-      }
-    }
-
-    const results: RepositoryResult[] = []
-
-    // Process repositories one after another (sequentially)
-    for (const repository of repositoryNames) {
-      try {
-        const url = new URL('/my-app/migrations2/update-node-version', baseUrl)
-        const response = await fetchFn(url.toString(), {
-          body: JSON.stringify({
-            repository,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${endpointSecret}`,
-          },
-          method: 'POST',
-        })
-
-        const responseText = await response.text()
-        let responseData: any
-        try {
-          responseData = JSON.parse(responseText)
-        } catch {
-          responseData = responseText
-          console.log(responseText)
-        }
-
-        if (response.ok) {
-          results.push({
-            message: typeof responseData === 'string' ? responseData : responseData.message || 'Success',
-            repository,
-            success: true,
-          })
-        } else {
-          results.push({
-            error: typeof responseData === 'string' ? responseData : responseData.error || responseData.details || `HTTP ${response.status}`,
-            repository,
-            success: false,
-          })
-        }
-      } catch (error) {
-        results.push({
-          error: stringifyError(error),
-          repository,
-          success: false,
-        })
-      }
-    }
-
-    const successful = results.filter((r) => r.success).length
-    const failed = results.filter((r) => !r.success).length
-
-    const data: MultiMigrationsUpdateNodeVersionData = {
-      failed,
-      results,
-      successful,
-      total: repositoryNames.length,
-    }
-
-    return {
-      ...emptyMigrationResult,
-      data,
-      status: 'success',
-      statusCode: 200,
-    }
-  } catch (error) {
-    return {
-      changedFiles: [],
-      errorCode: ERROR_CODES.UPDATE_NODE_VERSION_FAILED,
-      errorMessage: stringifyError(error),
-      status: 'error',
-      statusCode: getHttpStatusCode({
-        errorCode: ERROR_CODES.UPDATE_NODE_VERSION_FAILED,
-        errorMessage: stringifyError(error),
-        status: 'error',
-      }),
-    }
-  }
+  return multiMigrations({
+    ...options,
+    migrationName: 'update-node-version',
+  })
 }
