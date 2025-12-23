@@ -70,7 +70,7 @@ export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMi
     // Process repositories one after another (sequentially)
     for (const repository of repositoryNames) {
       try {
-        const url = new URL('/my-app/migrations/update-node-version', baseUrl)
+        const url = new URL('/my-app/migrations2/update-node-version', baseUrl)
         url.searchParams.set('repository', repository)
         url.searchParams.set('secret', endpointSecret)
         if (baseBranch) {
@@ -90,6 +90,7 @@ export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMi
           responseData = JSON.parse(responseText)
         } catch {
           responseData = responseText
+          console.log(responseText)
         }
 
         if (response.ok) {
