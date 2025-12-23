@@ -5,10 +5,10 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 export interface MultiMigrationsUpdateNodeVersionOptions extends BaseMigrationOptions {
   readonly baseBranch?: string
+  readonly migrationName: string
   readonly repositoryNames: readonly string[]
   readonly secret?: string
   readonly serverUrl?: string
-  readonly migrationName: string
 }
 
 export interface RepositoryResult {
@@ -77,8 +77,8 @@ export const multiMigrations = async (options: Readonly<MultiMigrationsUpdateNod
             repository,
           }),
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${endpointSecret}`,
+            'Content-Type': 'application/json',
           },
           method: 'POST',
         })
@@ -89,7 +89,6 @@ export const multiMigrations = async (options: Readonly<MultiMigrationsUpdateNod
           responseData = JSON.parse(responseText)
         } catch {
           responseData = responseText
-          console.log(responseText)
         }
 
         if (response.ok) {
@@ -133,11 +132,11 @@ export const multiMigrations = async (options: Readonly<MultiMigrationsUpdateNod
   } catch (error) {
     return {
       changedFiles: [],
-      errorCode: ERROR_CODES.UPDATE_NODE_VERSION_FAILED,
+      errorCode: ERROR_CODES.MULTI_MIGRATION_FAILED,
       errorMessage: stringifyError(error),
       status: 'error',
       statusCode: getHttpStatusCode({
-        errorCode: ERROR_CODES.UPDATE_NODE_VERSION_FAILED,
+        errorCode: ERROR_CODES.MULTI_MIGRATION_FAILED,
         errorMessage: stringifyError(error),
         status: 'error',
       }),

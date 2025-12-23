@@ -15,7 +15,7 @@ import { lintAndFix } from '../LintAndFix/LintAndFix.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 import { modernDirname } from '../ModernDirname/ModernDirname.ts'
 import { modernizeBranchProtection } from '../ModernizeBranchProtection/ModernizeBranchProtection.ts'
-import { multiMigrationsUpdateNodeVersion } from '../MultiMigrationsUpdateNodeVersion/MultiMigrationsUpdateNodeVersion.ts'
+import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
 import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
@@ -54,5 +54,5 @@ export const commandMap = {
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
   '/migrations2/update-node-version': wrapCommand(updateNodeVersion),
   '/migrations2/update-specific-dependency': wrapCommand(updateSpecificDependency),
-  '/multi-migrations/update-node-version': wrapCommand(multiMigrationsUpdateNodeVersion),
+  '/multi-migrations/generic': wrapCommand(multiMigrations),
 }
