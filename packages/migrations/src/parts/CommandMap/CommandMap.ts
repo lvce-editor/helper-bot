@@ -13,9 +13,11 @@ import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseRel
 import { initializePackageJson } from '../InitializePackageJson/InitializePackageJson.ts'
 import { lintAndFix } from '../LintAndFix/LintAndFix.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
+import type { MultiMigrationsUpdateNodeVersionOptions } from '../MultiMigrations/MultiMigrations.ts'
+import type { FunctionOptions } from '../WrapCommand/WrapCommand.ts'
 import { modernDirname } from '../ModernDirname/ModernDirname.ts'
 import { modernizeBranchProtection } from '../ModernizeBranchProtection/ModernizeBranchProtection.ts'
-import { multiMigrationsUpdateNodeVersion } from '../MultiMigrationsUpdateNodeVersion/MultiMigrationsUpdateNodeVersion.ts'
+import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
 import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
@@ -25,7 +27,7 @@ import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateSpecificDependency } from '../UpdateSpecificDependency/UpdateSpecificDependency.ts'
-import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
+import { wrapCommand, wrapFunction, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
   '/hello-world': wrapResponseCommand(handleHelloWorld),
@@ -54,5 +56,19 @@ export const commandMap = {
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
   '/migrations2/update-node-version': wrapCommand(updateNodeVersion),
   '/migrations2/update-specific-dependency': wrapCommand(updateSpecificDependency),
-  '/multi-migrations/update-node-version': wrapCommand(multiMigrationsUpdateNodeVersion),
+  '/multi-migrations/generic': wrapFunction(
+    async (options: FunctionOptions & { migrationName: string; repositoryNames: readonly string[] }): Promise<any> => {
+      const multiMigrationOptions: MultiMigrationsUpdateNodeVersionOptions = {
+        clonedRepoUri: '', // Not used by multiMigrations
+        exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }), // Not used by multiMigrations
+        fetch: globalThis.fetch,
+        fs: {} as any, // Not used by multiMigrations
+        migrationName: options.migrationName,
+        repositoryName: options.repositoryName, // Required by BaseMigrationOptions but not used
+        repositoryNames: options.repositoryNames,
+        repositoryOwner: options.repositoryOwner, // Required by BaseMigrationOptions but not used
+      }
+      return await multiMigrations(multiMigrationOptions)
+    },
+  ),
 }
