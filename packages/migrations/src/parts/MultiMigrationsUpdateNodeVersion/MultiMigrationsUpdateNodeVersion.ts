@@ -26,7 +26,7 @@ export interface MultiMigrationsUpdateNodeVersionData {
 
 export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMigrationsUpdateNodeVersionOptions>): Promise<MigrationResult> => {
   try {
-    const { baseBranch, fetch: fetchFn, repositoryNames, secret, serverUrl } = options
+    const { baseBranch, fetch: fetchFn, repositoryNames } = options
 
     if (!repositoryNames || repositoryNames.length === 0) {
       return {
@@ -52,8 +52,8 @@ export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMi
     }
 
     // Get server URL from options or environment variable
-    const baseUrl = serverUrl || process.env.SERVER_URL || 'http://localhost:3000'
-    const endpointSecret = secret || process.env.DEPENDENCIES_SECRET
+    const baseUrl = process.env.SERVER_URL || 'http://localhost:3000'
+    const endpointSecret = process.env.DEPENDENCIES_SECRET
 
     if (!endpointSecret) {
       return {
