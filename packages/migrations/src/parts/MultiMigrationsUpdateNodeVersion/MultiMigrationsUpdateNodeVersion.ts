@@ -26,7 +26,7 @@ export interface MultiMigrationsUpdateNodeVersionData {
 
 export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMigrationsUpdateNodeVersionOptions>): Promise<MigrationResult> => {
   try {
-    const { baseBranch, fetch: fetchFn, repositoryNames } = options
+    const { fetch: fetchFn, repositoryNames } = options
 
     if (!repositoryNames || repositoryNames.length === 0) {
       return {
@@ -71,15 +71,13 @@ export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMi
     for (const repository of repositoryNames) {
       try {
         const url = new URL('/my-app/migrations2/update-node-version', baseUrl)
-        url.searchParams.set('repository', repository)
-        url.searchParams.set('secret', endpointSecret)
-        if (baseBranch) {
-          url.searchParams.set('baseBranch', baseBranch)
-        }
-
         const response = await fetchFn(url.toString(), {
+          body: JSON.stringify({
+            repository,
+          }),
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${endpointSecret}`,
           },
           method: 'POST',
         })
