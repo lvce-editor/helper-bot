@@ -71,6 +71,15 @@ export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMi
     for (const repository of repositoryNames) {
       try {
         const url = new URL('/my-app/migrations2/update-node-version', baseUrl)
+<<<<<<< HEAD
+=======
+        url.searchParams.set('repository', repository)
+        url.searchParams.set('secret', endpointSecret)
+        if (baseBranch) {
+          url.searchParams.set('baseBranch', baseBranch)
+        }
+
+>>>>>>> origin/main
         const response = await fetchFn(url.toString(), {
           body: JSON.stringify({
             repository,
@@ -88,6 +97,7 @@ export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMi
           responseData = JSON.parse(responseText)
         } catch {
           responseData = responseText
+          console.log(responseText)
         }
 
         if (response.ok) {
