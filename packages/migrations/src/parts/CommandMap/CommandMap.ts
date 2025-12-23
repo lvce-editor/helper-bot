@@ -13,8 +13,6 @@ import { handleReleaseReleased } from '../HandleReleaseReleased/HandleReleaseRel
 import { initializePackageJson } from '../InitializePackageJson/InitializePackageJson.ts'
 import { lintAndFix } from '../LintAndFix/LintAndFix.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
-import type { MultiMigrationsUpdateNodeVersionOptions } from '../MultiMigrations/MultiMigrations.ts'
-import type { FunctionOptions } from '../WrapCommand/WrapCommand.ts'
 import { modernDirname } from '../ModernDirname/ModernDirname.ts'
 import { modernizeBranchProtection } from '../ModernizeBranchProtection/ModernizeBranchProtection.ts'
 import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
@@ -27,7 +25,7 @@ import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updateSpecificDependency } from '../UpdateSpecificDependency/UpdateSpecificDependency.ts'
-import { wrapCommand, wrapFunction, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
+import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
   '/hello-world': wrapResponseCommand(handleHelloWorld),
