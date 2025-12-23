@@ -26,7 +26,7 @@ export interface MultiMigrationsUpdateNodeVersionData {
 
 export const multiMigrationsUpdateNodeVersion = async (options: Readonly<MultiMigrationsUpdateNodeVersionOptions>): Promise<MigrationResult> => {
   try {
-    const { baseBranch, fetch: fetchFn, repositoryNames } = options
+    const { fetch: fetchFn, repositoryNames } = options
 
     if (!repositoryNames || repositoryNames.length === 0) {
       return {
