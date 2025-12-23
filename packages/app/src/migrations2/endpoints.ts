@@ -291,7 +291,7 @@ export const registerMigrations2Endpoints = async (router: any, app: Probot, sec
     const commands: string[] = commandsResult
 
     // Filter commands that start with /migrations2
-    const migrations2Commands = commands.filter((cmd: string) => cmd.startsWith('/migrations2'))
+    const migrations2Commands = commands.filter((cmd: string) => cmd.startsWith('/migrations2') || cmd.startsWith('/multi-migrations'))
 
     // Register each migrations2 command as an endpoint
     for (const commandKey of migrations2Commands) {
