@@ -255,7 +255,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         // Enable auto merge squash
         await enableAutoSquash(octokit, pullRequestData)
 
-        res.status(200).json({
+        res.status(result.statusCode || 200).json({
           branchName,
           changedFiles: result.changedFiles.length,
           ...(result.data !== undefined ? { data: result.data } : {}),
