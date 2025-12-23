@@ -56,19 +56,5 @@ export const commandMap = {
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
   '/migrations2/update-node-version': wrapCommand(updateNodeVersion),
   '/migrations2/update-specific-dependency': wrapCommand(updateSpecificDependency),
-  '/multi-migrations/generic': wrapFunction(
-    async (options: FunctionOptions & { migrationName: string; repositoryNames: readonly string[] }): Promise<any> => {
-      const multiMigrationOptions: MultiMigrationsUpdateNodeVersionOptions = {
-        clonedRepoUri: '', // Not used by multiMigrations
-        exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }), // Not used by multiMigrations
-        fetch: globalThis.fetch,
-        fs: {} as any, // Not used by multiMigrations
-        migrationName: options.migrationName,
-        repositoryName: options.repositoryName, // Required by BaseMigrationOptions but not used
-        repositoryNames: options.repositoryNames,
-        repositoryOwner: options.repositoryOwner, // Required by BaseMigrationOptions but not used
-      }
-      return await multiMigrations(multiMigrationOptions)
-    },
-  ),
+  '/multi-migrations/generic': wrapCommand(multiMigrations),
 }
