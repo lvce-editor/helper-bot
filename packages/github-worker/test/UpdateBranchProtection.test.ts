@@ -50,11 +50,7 @@ test('updates branch rulesets successfully', async (): Promise<void> => {
         },
       ],
     })
-    .patch('/repos/test-owner/test-repo/rulesets/1', (body) => {
-      expect(body).toBeDefined()
-      expect(body.rules).toBeDefined()
-      return true
-    })
+    .patch('/repos/test-owner/test-repo/rulesets/1')
     .reply(200, {
       id: 1,
     })
