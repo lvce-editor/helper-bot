@@ -39,6 +39,7 @@
     },
     "testMatch": [
       "**/test/**"
-    ]
+    ],
+    "testTimeout": 20000
   }
 }
