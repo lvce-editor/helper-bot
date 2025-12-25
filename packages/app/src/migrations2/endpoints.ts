@@ -175,25 +175,54 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
         const branchName = result.branchName || `migration-${Date.now()}`
         const commitMessage = result.commitMessage || result.pullRequestTitle
 
-        // Get base branch reference
+        // Get base branch reference and latest commit
         const baseRef = await octokit.rest.git.getRef({
           owner,
           ref: `heads/${baseBranch}`,
           repo,
         })
 
-        // Create new branch
-        await octokit.rest.git.createRef({
+        const latestCommit = await octokit.rest.git.getCommit({
           owner,
-          ref: `refs/heads/${branchName}`,
           repo,
-          sha: baseRef.data.object.sha,
+          commit_sha: baseRef.data.object.sha,
         })
 
-        // Update each changed file
+        const startingCommitSha = latestCommit.data.sha
+
+        // Collect files that actually changed and build tree entries
+        const treeEntries: Array<{
+          path: string
+          mode: '100644'
+          type: 'blob'
+          content: string
+        }> = []
+        const filesToDelete: string[] = []
+
         for (const changedFile of result.changedFiles) {
-          // Try to get existing file to get its SHA
-          let fileSha: string | undefined
+          // Handle deleted files
+          if (changedFile.type === 'deleted') {
+            // Check if file exists
+            try {
+              await octokit.rest.repos.getContent({
+                owner,
+                path: changedFile.path,
+                ref: baseBranch,
+                repo,
+              })
+              filesToDelete.push(changedFile.path)
+            } catch (error) {
+              // File doesn't exist, nothing to delete
+              // @ts-ignore
+              if (error && error.status !== 404) {
+                throw error
+              }
+            }
+            continue
+          }
+
+          // For created/updated files, check if content actually changed
+          let existingContent: string | null = null
           try {
             const fileContent = await octokit.rest.repos.getContent({
               owner,
@@ -201,47 +230,112 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
               ref: baseBranch,
               repo,
             })
-            if ('sha' in fileContent.data) {
-              fileSha = fileContent.data.sha
+            if ('content' in fileContent.data && typeof fileContent.data.content === 'string') {
+              existingContent = Buffer.from(fileContent.data.content, 'base64').toString('utf8')
             }
           } catch (error) {
-            // File doesn't exist, that's okay - we'll create it without SHA
+            // File doesn't exist, that's okay - we'll create it
             // @ts-ignore
             if (error && error.status !== 404) {
               throw error
             }
           }
 
-          // Handle deleted files
-          if (changedFile.type === 'deleted') {
-            if (!fileSha) {
-              // File doesn't exist, nothing to delete
-              continue
-            }
-            await octokit.rest.repos.deleteFile({
-              branch: branchName,
-              message: commitMessage,
-              owner,
+          // Only add to tree if content actually changed
+          if (existingContent === null || existingContent !== changedFile.content) {
+            treeEntries.push({
+              content: changedFile.content,
+              mode: '100644',
               path: changedFile.path,
-              repo,
-              sha: fileSha,
-            })
-          } else {
-            // Encode content to base64
-            const encodedContent = Buffer.from(changedFile.content).toString('base64')
-
-            // Update or create the file
-            await octokit.repos.createOrUpdateFileContents({
-              branch: branchName,
-              content: encodedContent,
-              message: commitMessage,
-              owner,
-              path: changedFile.path,
-              repo,
-              ...(fileSha ? { sha: fileSha } : {}),
+              type: 'blob',
             })
           }
         }
+
+        // If there are no actual changes (all files unchanged), return early
+        if (treeEntries.length === 0 && filesToDelete.length === 0) {
+          res.status(200).json({
+            ...(result.data !== undefined ? { data: result.data } : {}),
+            changedFiles: 0,
+            message: 'Migration completed successfully with no changes',
+            status: 'success',
+          })
+          return
+        }
+
+        // Create new branch pointing to base commit
+        await octokit.rest.git.createRef({
+          owner,
+          ref: `refs/heads/${branchName}`,
+          repo,
+          sha: startingCommitSha,
+        })
+
+        // Create tree with all changes
+        // When using base_tree, files not specified remain unchanged
+        // To delete files, we need to get the full tree and exclude deleted files
+        let newTreeSha: string
+        if (filesToDelete.length > 0) {
+          // Get the current tree recursively to handle deletions
+          const currentTree = await octokit.rest.git.getTree({
+            owner,
+            repo,
+            // @ts-ignore - recursive parameter type issue in octokit types
+            recursive: 1,
+            tree_sha: latestCommit.data.tree.sha,
+          })
+
+          // Build a map of paths to update (from treeEntries)
+          const pathsToUpdate = new Set(treeEntries.map((entry) => entry.path))
+          const pathsToDelete = new Set(filesToDelete)
+
+          // Filter tree: exclude deleted files, and replace updated files
+          const existingTreeEntries = currentTree.data.tree
+            .filter((entry) => entry.type === 'blob' && !pathsToDelete.has(entry.path) && !pathsToUpdate.has(entry.path))
+            .map((entry) => ({
+              mode: entry.mode as '100644',
+              path: entry.path,
+              sha: entry.sha,
+              type: entry.type as 'blob',
+            }))
+
+          // Combine: existing files (minus deletions and updates) + new/updated files
+          const allTreeEntries = [...existingTreeEntries, ...treeEntries]
+
+          const newTree = await octokit.rest.git.createTree({
+            base_tree: latestCommit.data.tree.sha,
+            owner,
+            repo,
+            tree: allTreeEntries,
+          })
+          newTreeSha = newTree.data.sha
+        } else {
+          // No deletions, just create tree with new/updated files using base_tree
+          const newTree = await octokit.rest.git.createTree({
+            base_tree: latestCommit.data.tree.sha,
+            owner,
+            repo,
+            tree: treeEntries,
+          })
+          newTreeSha = newTree.data.sha
+        }
+
+        // Create a single commit with all changes
+        const commit = await octokit.rest.git.createCommit({
+          message: commitMessage,
+          owner,
+          parents: [startingCommitSha],
+          repo,
+          tree: newTreeSha,
+        })
+
+        // Update branch to point to new commit
+        await octokit.rest.git.updateRef({
+          owner,
+          ref: `heads/${branchName}`,
+          repo,
+          sha: commit.data.sha,
+        })
 
         // Create pull request
         const pullRequestData = await octokit.rest.pulls.create({
@@ -257,7 +351,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
 
         res.status(result.statusCode || 200).json({
           branchName,
-          changedFiles: result.changedFiles.length,
+          changedFiles: treeEntries.length + filesToDelete.length,
           ...(result.data !== undefined ? { data: result.data } : {}),
           message: 'Migration completed successfully',
           pullRequestNumber: pullRequestData.data.number,
