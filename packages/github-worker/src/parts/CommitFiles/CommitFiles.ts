@@ -1,5 +1,4 @@
 import type { Octokit } from '@octokit/rest'
-import { VError } from '@lvce-editor/verror'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
 
 export interface FileToCommit {
