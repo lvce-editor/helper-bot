@@ -13,7 +13,7 @@ afterEach(() => {
 
 test('applies migration result successfully with file changes', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads/main')
+    .get('/repos/test-owner/test-repo/git/ref/heads%2Fmain')
     .reply(200, {
       object: {
         sha: 'base-sha',
@@ -51,7 +51,7 @@ test('applies migration result successfully with file changes', async (): Promis
     .reply(201, {
       sha: 'new-commit-sha',
     })
-    .patch('/repos/test-owner/test-repo/git/refs/heads/migration-branch', {
+    .patch('/repos/test-owner/test-repo/git/refs/heads%2Fmigration-branch', {
       sha: 'new-commit-sha',
     })
     .reply(200, {
@@ -121,7 +121,7 @@ test('returns undefined when no changed files', async (): Promise<void> => {
 
 test('handles file creation', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads/main')
+    .get('/repos/test-owner/test-repo/git/ref/heads%2Fmain')
     .reply(200, {
       object: {
         sha: 'base-sha',
@@ -160,7 +160,7 @@ test('handles file creation', async (): Promise<void> => {
     .reply(201, {
       sha: 'new-commit-sha',
     })
-    .patch('/repos/test-owner/test-repo/git/refs/heads/migration-branch', {
+    .patch('/repos/test-owner/test-repo/git/refs/heads%2Fmigration-branch', {
       sha: 'new-commit-sha',
     })
     .reply(200, {
@@ -213,7 +213,7 @@ test('handles file creation', async (): Promise<void> => {
 
 test('handles file deletion', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads/main')
+    .get('/repos/test-owner/test-repo/git/ref/heads%2Fmain')
     .reply(200, {
       object: {
         sha: 'base-sha',
@@ -271,7 +271,7 @@ test('handles file deletion', async (): Promise<void> => {
     .reply(201, {
       sha: 'new-commit-sha',
     })
-    .patch('/repos/test-owner/test-repo/git/refs/heads/migration-branch', {
+    .patch('/repos/test-owner/test-repo/git/refs/heads%2Fmigration-branch', {
       sha: 'new-commit-sha',
     })
     .reply(200, {
@@ -324,7 +324,7 @@ test('handles file deletion', async (): Promise<void> => {
 
 test('skips unchanged files', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads/main')
+    .get('/repos/test-owner/test-repo/git/ref/heads%2Fmain')
     .reply(200, {
       object: {
         sha: 'base-sha',
@@ -367,7 +367,7 @@ test('skips unchanged files', async (): Promise<void> => {
 
 test('handles multiple files', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads/main')
+    .get('/repos/test-owner/test-repo/git/ref/heads%2Fmain')
     .reply(200, {
       object: {
         sha: 'base-sha',
@@ -412,7 +412,7 @@ test('handles multiple files', async (): Promise<void> => {
     .reply(201, {
       sha: 'new-commit-sha',
     })
-    .patch('/repos/test-owner/test-repo/git/refs/heads/migration-branch', {
+    .patch('/repos/test-owner/test-repo/git/refs/heads%2Fmigration-branch', {
       sha: 'new-commit-sha',
     })
     .reply(200, {
@@ -470,7 +470,7 @@ test('handles multiple files', async (): Promise<void> => {
 
 test('uses default branch name when not provided', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads/main')
+    .get('/repos/test-owner/test-repo/git/ref/heads%2Fmain')
     .reply(200, {
       object: {
         sha: 'base-sha',
@@ -516,16 +516,14 @@ test('uses default branch name when not provided', async (): Promise<void> => {
     .reply(201, {
       sha: 'new-commit-sha',
     })
-    .patch('/repos/test-owner/test-repo/git/refs/heads/migration-1234567890', {
+    .patch(/\/repos\/test-owner\/test-repo\/git\/refs\/heads%2Fmigration-\d+/, {
       sha: 'new-commit-sha',
     })
     .reply(200, {
       ref: 'refs/heads/migration-1234567890',
     })
-    .post('/repos/test-owner/test-repo/pulls', {
-      base: 'main',
-      head: 'migration-1234567890',
-      title: 'Test PR Title',
+    .post('/repos/test-owner/test-repo/pulls', (body: any) => {
+      return body.base === 'main' && body.head.match(/^migration-\d+$/) && body.title === 'Test PR Title'
     })
     .reply(201, {
       number: 111,
