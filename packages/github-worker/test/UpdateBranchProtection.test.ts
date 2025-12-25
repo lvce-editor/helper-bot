@@ -50,12 +50,13 @@ test('updates branch rulesets successfully', async (): Promise<void> => {
         },
       ],
     })
-    .patch('/repos/test-owner/test-repo/rulesets/1', (body) => {
-      expect(body).toBeDefined()
-      return true
-    })
+    .patch('/repos/test-owner/test-repo/rulesets/1')
     .reply(200, {
       id: 1,
+    })
+    .get('/repos/test-owner/test-repo/branches/main/protection')
+    .reply(404, {
+      message: 'Not Found',
     })
 
   const result = await updateBranchProtection({
@@ -242,6 +243,10 @@ test('handles organization rulesets', async (): Promise<void> => {
     .reply(200, {
       id: 2,
     })
+    .get('/repos/test-owner/test-repo/branches/main/protection')
+    .reply(404, {
+      message: 'Not Found',
+    })
 
   const result = await updateBranchProtection({
     branch: 'main',
@@ -292,6 +297,10 @@ test('updates required_status_checks.required_checks format', async (): Promise<
     .patch('/repos/test-owner/test-repo/rulesets/3')
     .reply(200, {
       id: 3,
+    })
+    .get('/repos/test-owner/test-repo/branches/main/protection')
+    .reply(404, {
+      message: 'Not Found',
     })
 
   const result = await updateBranchProtection({
@@ -398,12 +407,13 @@ test('updates macos versions', async (): Promise<void> => {
         },
       ],
     })
-    .patch('/repos/test-owner/test-repo/rulesets/4', (body) => {
-      expect(body).toBeDefined()
-      return true
-    })
+    .patch('/repos/test-owner/test-repo/rulesets/4')
     .reply(200, {
       id: 4,
+    })
+    .get('/repos/test-owner/test-repo/branches/main/protection')
+    .reply(404, {
+      message: 'Not Found',
     })
 
   const result = await updateBranchProtection({
