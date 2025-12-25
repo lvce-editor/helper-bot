@@ -291,7 +291,10 @@ test('handles version without v prefix', async (): Promise<void> => {
     repositoryOwner: 'owner',
   })
 
-  expect(result.data?.releaseTag).toBe('1.3.0')
+  expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.data?.releaseTag).toBe('1.3.0')
+  }
 })
 
 test('falls back to tags when no releases exist', async (): Promise<void> => {
@@ -356,9 +359,11 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
     repositoryOwner: 'owner',
   })
 
-  expect(result.data?.releaseTag).toBe('v3.2.0')
   expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
+  if (result.status === 'success') {
+    expect(result.data?.releaseTag).toBe('v3.2.0')
+    expect(result.statusCode).toBe(201)
+  }
 })
 
 test('handles custom base branch', async (): Promise<void> => {
@@ -409,8 +414,10 @@ test('handles custom base branch', async (): Promise<void> => {
     baseBranch: 'master',
   })
 
-  expect(result.data?.releaseTag).toBe('v1.1.0')
   expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.data?.releaseTag).toBe('v1.1.0')
+  }
 })
 
 test('handles error when getting branch ref fails', async (): Promise<void> => {
@@ -441,8 +448,10 @@ test('handles error when getting branch ref fails', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-  expect(result.errorMessage).toContain('Failed to get branch ref')
+  if (result.status === 'error') {
+    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+    expect(result.errorMessage).toContain('Failed to get branch ref')
+  }
 })
 
 test('handles error when creating release fails', async (): Promise<void> => {
@@ -490,8 +499,10 @@ test('handles error when creating release fails', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-  expect(result.errorMessage).toContain('Failed to create release')
+  if (result.status === 'error') {
+    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+    expect(result.errorMessage).toContain('Failed to create release')
+  }
 })
 
 test('handles invalid version format', async (): Promise<void> => {
@@ -534,8 +545,10 @@ test('handles invalid version format', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-  expect(result.errorMessage).toContain('Invalid version format')
+  if (result.status === 'error') {
+    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+    expect(result.errorMessage).toContain('Invalid version format')
+  }
 })
 
 test('handles version with only two parts', async (): Promise<void> => {
@@ -578,7 +591,9 @@ test('handles version with only two parts', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorMessage).toContain('Expected format: major.minor.patch')
+  if (result.status === 'error') {
+    expect(result.errorMessage).toContain('Expected format: major.minor.patch')
+  }
 })
 
 test('handles version with non-numeric parts', async (): Promise<void> => {
@@ -621,7 +636,9 @@ test('handles version with non-numeric parts', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorMessage).toContain('All parts must be numbers')
+  if (result.status === 'error') {
+    expect(result.errorMessage).toContain('All parts must be numbers')
+  }
 })
 
 test('handles compare commits returning non-200 status', async (): Promise<void> => {
@@ -670,7 +687,9 @@ test('handles compare commits returning non-200 status', async (): Promise<void>
 
   // Should assume there are commits when comparison fails
   expect(result.status).toBe('success')
-  expect(result.data?.releaseTag).toBe('v1.3.0')
+  if (result.status === 'success') {
+    expect(result.data?.releaseTag).toBe('v1.3.0')
+  }
 })
 
 test('handles compare commits with diverged status', async (): Promise<void> => {
@@ -721,8 +740,10 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
   })
 
   expect(result.status).toBe('success')
-  expect(result.data?.releaseTag).toBe('v1.3.0')
-  expect(result.data?.message).toContain('3 new commits')
+  if (result.status === 'success') {
+    expect(result.data?.releaseTag).toBe('v1.3.0')
+    expect(result.data?.message).toContain('3 new commits')
+  }
 })
 
 test('handles compare commits with ahead_by 0', async (): Promise<void> => {
@@ -765,7 +786,9 @@ test('handles compare commits with ahead_by 0', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  expect(result.data?.message).toContain('No new commits')
+  if (result.status === 'success') {
+    expect(result.data?.message).toContain('No new commits')
+  }
 })
 
 test('handles tags endpoint returning empty array', async (): Promise<void> => {
@@ -793,7 +816,9 @@ test('handles tags endpoint returning empty array', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  expect(result.data?.message).toContain('No releases or tags found')
+  if (result.status === 'success') {
+    expect(result.data?.message).toContain('No releases or tags found')
+  }
 })
 
 test('handles tag ref fetch failure', async (): Promise<void> => {
@@ -830,7 +855,9 @@ test('handles tag ref fetch failure', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  expect(result.data?.message).toContain('No releases or tags found')
+  if (result.status === 'success') {
+    expect(result.data?.message).toContain('No releases or tags found')
+  }
 })
 
 test('handles large version numbers', async (): Promise<void> => {
@@ -880,6 +907,8 @@ test('handles large version numbers', async (): Promise<void> => {
     repositoryOwner: 'owner',
   })
 
-  expect(result.data?.releaseTag).toBe('v99.89.0')
   expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.data?.releaseTag).toBe('v99.89.0')
+  }
 })

@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { githubFetch } from '../GithubFetch/GithubFetch.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
