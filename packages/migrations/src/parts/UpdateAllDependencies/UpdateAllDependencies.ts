@@ -1,55 +1,10 @@
-import type * as FsPromises from 'node:fs/promises'
-import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
+import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 
 export type UpdateAllDependenciesOptions = BaseMigrationOptions
-
-const getChangedFiles = async (fs: Readonly<typeof FsPromises>, exec: BaseMigrationOptions['exec'], clonedRepoUri: string): Promise<ChangedFile[]> => {
-  const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
-
-  // Use git to detect changed files
-  const gitResult = await exec('git', ['status', '--porcelain'], {
-    cwd: clonedRepoUri,
-  })
-
-  const changedFiles: ChangedFile[] = []
-  const outputLines = gitResult.stdout.split('\n').filter((line) => line.trim().length > 0)
-
-  for (const line of outputLines) {
-    // Git status --porcelain format: XY PATH
-    // X = index status, Y = working tree status
-    // Format is exactly 2 characters for status, then a space, then the path
-    // For untracked files, format is "?? PATH"
-    if (line.length < 4) {
-      continue
-    }
-
-    const status = line.slice(0, 2)
-    const filePath = line.slice(3).trim()
-
-    // Skip deleted files (D in either position means deleted)
-    if (status.includes('D')) {
-      continue
-    }
-
-    // Handle modified, added, untracked, or renamed files
-    const fileUri = new URL(filePath, baseUri).toString()
-    try {
-      const content = await fs.readFile(fileUri, 'utf8')
-      changedFiles.push({
-        content,
-        path: normalizePath(filePath),
-      })
-    } catch (error) {
-      throw new Error(`Failed to read ${fileUri}: ${stringifyError(error)}`)
-    }
-  }
-
-  return changedFiles
-}
 
 export const updateAllDependencies = async (options: Readonly<UpdateAllDependenciesOptions>): Promise<MigrationResult> => {
   try {
@@ -93,6 +48,14 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     // Check if update-dependencies.sh exists
     const updateDependenciesScriptPath = new URL('update-dependencies.sh', options.clonedRepoUri).toString()
     const updateDependenciesScriptExists = await options.fs.exists(updateDependenciesScriptPath)
+    if (!updateDependenciesScriptExists) {
+      return {
+        ...emptyMigrationResult,
+        data: {
+          message: 'no update dependencies script found',
+        },
+      }
+    }
 
     if (updateDependenciesScriptExists) {
       try {
@@ -109,7 +72,11 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     }
 
     // Check for changed files using git
-    const changedFiles = await getChangedFiles(options.fs, options.exec, options.clonedRepoUri)
+    const changedFiles = await getChangedFiles({
+      fs: options.fs,
+      exec: options.exec,
+      clonedRepoUri: options.clonedRepoUri,
+    })
 
     // If no changed files, return empty result
     if (changedFiles.length === 0) {

@@ -17,6 +17,7 @@ test('runs npm ci and detects changed files', async () => {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
       [new URL('package-lock.json', clonedRepoUri).toString()]: '{}',
       [new URL('src/index.ts', clonedRepoUri).toString()]: 'export const x = 1\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -27,6 +28,12 @@ test('runs npm ci and detects changed files', async () => {
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       // Simulate npm ci modifying package-lock.json
       await mockFs.writeFile(new URL('package-lock.json', clonedRepoUri).toString(), '{"lockfileVersion": 3}\n')
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -58,7 +65,7 @@ test('runs npm ci and detects changed files', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(2)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
 })
 
 test('returns empty result when no files changed', async () => {
@@ -71,6 +78,7 @@ test('returns empty result when no files changed', async () => {
   const mockFs = createMockFs({
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -79,6 +87,12 @@ test('returns empty result when no files changed', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -105,7 +119,7 @@ test('returns empty result when no files changed', async () => {
     status: 'success',
     statusCode: 200,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(2)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
 })
 
 test('handles missing package.json', async () => {
@@ -149,6 +163,7 @@ test('runs postinstall script when it exists', async () => {
   const mockFs = createMockFs({
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -162,6 +177,12 @@ test('runs postinstall script when it exists', async () => {
     if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
       // Simulate postinstall modifying a file
       await mockFs.writeFile(new URL('postinstall-output.txt', clonedRepoUri).toString(), 'postinstall ran\n')
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -193,7 +214,7 @@ test('runs postinstall script when it exists', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(3)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('runs update-dependencies.sh when it exists', async () => {
@@ -483,6 +504,7 @@ test('handles multiple changed files', async () => {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
       [new URL('file1.ts', clonedRepoUri).toString()]: 'export const a = 1\n',
       [new URL('file2.ts', clonedRepoUri).toString()]: 'export const b = 2\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -491,6 +513,12 @@ test('handles multiple changed files', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -526,6 +554,7 @@ test('skips deleted files', async () => {
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
       [new URL('file1.ts', clonedRepoUri).toString()]: 'export const a = 1\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -534,6 +563,12 @@ test('skips deleted files', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -569,6 +604,7 @@ test('handles added files', async () => {
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
       [new URL('new-file.ts', clonedRepoUri).toString()]: 'export const new = true\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -577,6 +613,12 @@ test('handles added files', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -613,6 +655,7 @@ test('handles untracked files', async () => {
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
       [new URL('untracked.ts', clonedRepoUri).toString()]: 'export const untracked = true\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -621,6 +664,12 @@ test('handles untracked files', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -656,6 +705,7 @@ test('handles package.json without scripts', async () => {
   const mockFs = createMockFs({
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -664,6 +714,12 @@ test('handles package.json without scripts', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -685,7 +741,7 @@ test('handles package.json without scripts', async () => {
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
   // Should not call npm run postinstall
-  expect(mockExecFn).toHaveBeenCalledTimes(2)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   const calls = mockExecFn.mock.calls
   expect(calls.some((call) => call[0] === 'npm' && call[1]?.[0] === 'run' && call[1]?.[1] === 'postinstall')).toBe(false)
 })
@@ -701,6 +757,7 @@ test('handles package.json with empty scripts object', async () => {
   const mockFs = createMockFs({
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -709,6 +766,12 @@ test('handles package.json with empty scripts object', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -730,7 +793,7 @@ test('handles package.json with empty scripts object', async () => {
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
   // Should not call npm run postinstall
-  expect(mockExecFn).toHaveBeenCalledTimes(2)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   const calls = mockExecFn.mock.calls
   expect(calls.some((call) => call[0] === 'npm' && call[1]?.[0] === 'run' && call[1]?.[1] === 'postinstall')).toBe(false)
 })
@@ -783,6 +846,7 @@ test('handles git status with empty lines', async () => {
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
       [new URL('file.ts', clonedRepoUri).toString()]: 'export const x = 1\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -791,6 +855,12 @@ test('handles git status with empty lines', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -825,6 +895,7 @@ test('handles git status with short lines', async () => {
   const mockFs = createMockFs({
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -833,6 +904,12 @@ test('handles git status with short lines', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -866,6 +943,7 @@ test('handles file read error', async () => {
   const mockFs = createMockFs({
     files: {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -874,6 +952,12 @@ test('handles file read error', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'bash' && args?.[0] === 'update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
