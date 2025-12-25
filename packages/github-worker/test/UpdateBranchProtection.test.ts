@@ -29,28 +29,32 @@ test('updates branch rulesets successfully', async (): Promise<void> => {
     .reply(200, {
       data: [
         {
-          id: 1,
-          name: 'Branch Protection',
-          target: 'branch',
-          enforcement: 'active',
+          bypass_actors: [],
           conditions: {
             ref_name: {
               include: ['~DEFAULT_BRANCH'],
             },
           },
-          bypass_actors: [],
+          enforcement: 'active',
+          id: 1,
+          name: 'Branch Protection',
           rules: [
             {
-              type: 'required_status_checks',
               parameters: {
                 checks: ['ci/test-ubuntu-22.04', 'ci/build-windows-2022'],
               },
+              type: 'required_status_checks',
             },
           ],
+          target: 'branch',
         },
       ],
     })
-    .patch('/repos/test-owner/test-repo/rulesets/1')
+    .patch('/repos/test-owner/test-repo/rulesets/1', (body) => {
+      expect(body).toBeDefined()
+      expect(body.rules).toBeDefined()
+      return true
+    })
     .reply(200, {
       id: 1,
     })
