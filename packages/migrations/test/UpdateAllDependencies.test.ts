@@ -3,6 +3,7 @@ import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { updateAllDependencies } from '../src/parts/UpdateAllDependencies/UpdateAllDependencies.ts'
 import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import type { MigrationErrorResult } from '../src/parts/Types/Types.ts'
 
 test('runs npm ci and detects changed files', async () => {
   const packageJson = {
@@ -359,9 +360,12 @@ test('handles npm ci failure', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(result.errorMessage).toContain('Failed to run npm ci --ignore-scripts')
-  expect(result.changedFiles).toEqual([])
+  if (result.status === 'error') {
+    const errorResult: MigrationErrorResult = result
+    expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
+    expect(errorResult.errorMessage).toContain('Failed to run npm ci --ignore-scripts')
+    expect(errorResult.changedFiles).toEqual([])
+  }
 })
 
 test('handles postinstall script failure', async () => {
@@ -407,9 +411,12 @@ test('handles postinstall script failure', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(result.errorMessage).toContain('Failed to run npm run postinstall')
-  expect(result.changedFiles).toEqual([])
+  if (result.status === 'error') {
+    const errorResult: MigrationErrorResult = result
+    expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
+    expect(errorResult.errorMessage).toContain('Failed to run npm run postinstall')
+    expect(errorResult.changedFiles).toEqual([])
+  }
 })
 
 test('handles update-dependencies.sh failure', async () => {
@@ -456,9 +463,12 @@ test('handles update-dependencies.sh failure', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(result.errorMessage).toContain('Failed to execute update-dependencies.sh')
-  expect(result.changedFiles).toEqual([])
+  if (result.status === 'error') {
+    const errorResult: MigrationErrorResult = result
+    expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
+    expect(errorResult.errorMessage).toContain('Failed to execute update-dependencies.sh')
+    expect(errorResult.changedFiles).toEqual([])
+  }
 })
 
 test('handles multiple changed files', async () => {
@@ -754,8 +764,11 @@ test('handles invalid package.json', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(result.errorMessage).toMatch(/Failed to read package\.json|Unexpected token/)
+  if (result.status === 'error') {
+    const errorResult: MigrationErrorResult = result
+    expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
+    expect(errorResult.errorMessage).toMatch(/Failed to read package\.json|Unexpected token/)
+  }
   expect(mockExecFn).toHaveBeenCalledTimes(1)
 })
 
@@ -881,6 +894,9 @@ test('handles file read error', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(result.errorMessage).toContain('Failed to read')
+  if (result.status === 'error') {
+    const errorResult: MigrationErrorResult = result
+    expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
+    expect(errorResult.errorMessage).toContain('Failed to read')
+  }
 })
