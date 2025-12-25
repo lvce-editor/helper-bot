@@ -33,6 +33,12 @@ export const cleanPackageJson = async (options: Readonly<CleanPackageJsonOptions
       hasChanges = true
     }
 
+    // Remove empty skip array if it exists
+    if (Array.isArray(packageJson.skip) && packageJson.skip.length === 0) {
+      delete packageJson.skip
+      hasChanges = true
+    }
+
     // Remove description field if it's an empty string
     if (packageJson.description === '') {
       delete packageJson.description
