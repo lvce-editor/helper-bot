@@ -59,6 +59,10 @@ test('updates branch rulesets successfully', async (): Promise<void> => {
     .reply(200, {
       id: 1,
     })
+    .get('/repos/test-owner/test-repo/branches/main/protection')
+    .reply(404, {
+      message: 'Not Found',
+    })
 
   const result = await updateBranchProtection({
     branch: 'main',
@@ -186,9 +190,12 @@ test('handles 404 when rulesets not available', async (): Promise<void> => {
         },
       },
     })
-    .patch('/repos/test-owner/test-repo/branches/main/protection/required_status_checks', {
-      contexts: ['ci/test-ubuntu-24.04'],
-      strict: false,
+    .patch('/repos/test-owner/test-repo/branches/main/protection/required_status_checks', (body: any) => {
+      return (
+        Array.isArray(body.contexts) &&
+        body.contexts.includes('ci/test-ubuntu-24.04') &&
+        body.strict === false
+      )
     })
     .reply(200, {
       data: {},
@@ -243,6 +250,10 @@ test('handles organization rulesets', async (): Promise<void> => {
     })
     .reply(200, {
       id: 2,
+    })
+    .get('/repos/test-owner/test-repo/branches/main/protection')
+    .reply(404, {
+      message: 'Not Found',
     })
 
   const result = await updateBranchProtection({
