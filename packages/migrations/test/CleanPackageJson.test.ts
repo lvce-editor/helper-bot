@@ -42,7 +42,7 @@ test('removes empty keywords array', async () => {
   const packageJson = {
     name: 'test-package',
     version: '1.0.0',
-    keywords: [],
+    keywords: [] as string[],
   }
   const mockFs = createMockFs({
     files: {
@@ -125,7 +125,7 @@ test('applies all three changes together', async () => {
   const packageJson = {
     name: 'test-package',
     version: '1.0.0',
-    keywords: [],
+    keywords: [] as string[],
     author: '',
   }
   const mockFs = createMockFs({
@@ -373,8 +373,10 @@ test('handles invalid JSON gracefully', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('CLEAN_PACKAGE_JSON_FAILED')
-  expect(result.errorMessage).toBeDefined()
+  if (result.status === 'error') {
+    expect(result.errorCode).toBe('CLEAN_PACKAGE_JSON_FAILED')
+    expect(result.errorMessage).toBeDefined()
+  }
 })
 
 test('only sets license when missing, not when null', async () => {
@@ -382,7 +384,7 @@ test('only sets license when missing, not when null', async () => {
   const packageJson = {
     name: 'test-package',
     version: '1.0.0',
-    license: null,
+    license: null as string | null,
   }
   const mockFs = createMockFs({
     files: {
@@ -418,7 +420,7 @@ test('handles complex package.json with all fields', async () => {
     dependencies: {
       lodash: '^4.17.21',
     },
-    keywords: [],
+    keywords: [] as string[],
   }
   const mockFs = createMockFs({
     files: {
@@ -470,7 +472,10 @@ test('returns correct branch name and commit message', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.branchName).toBe('feature/clean-package-json')
-  expect(result.commitMessage).toBe('chore: clean package.json')
-  expect(result.pullRequestTitle).toBe('chore: clean package.json')
+  expect(result.status).toBe('success')
+  if (result.status === 'success') {
+    expect(result.branchName).toBe('feature/clean-package-json')
+    expect(result.commitMessage).toBe('chore: clean package.json')
+    expect(result.pullRequestTitle).toBe('chore: clean package.json')
+  }
 })
