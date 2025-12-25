@@ -63,13 +63,13 @@ const updateBranchRulesetsRequiredChecks = async (
     throw new VError(error as Error, `failed to list rulesets for ${owner}/${repo}`)
   }
 
-  // Octokit wraps the response, so if the API returns { data: [...] }, 
+  // Octokit wraps the response, so if the API returns { data: [...] },
   // octokit.request() returns { data: { data: [...] }, status: 200, ... }
   // Check both structures
-  const rulesetsData = Array.isArray(rulesetsResponse.data?.data) 
-    ? rulesetsResponse.data.data 
-    : Array.isArray(rulesetsResponse.data) 
-      ? rulesetsResponse.data 
+  const rulesetsData = Array.isArray(rulesetsResponse.data?.data)
+    ? rulesetsResponse.data.data
+    : Array.isArray(rulesetsResponse.data)
+      ? rulesetsResponse.data
       : []
   const rulesets: any[] = rulesetsData
   let updatedRulesets = 0
