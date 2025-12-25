@@ -1,14 +1,18 @@
-import { afterEach, beforeEach, expect, test } from '@jest/globals'
+import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { updateBranchProtection } from '../src/parts/UpdateBranchProtection/UpdateBranchProtection.ts'
 
+let consoleErrorSpy: ReturnType<typeof jest.spyOn>
+
 beforeEach(() => {
   nock.disableNetConnect()
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
+  consoleErrorSpy.mockRestore()
 })
 
 test('returns undefined when no osVersions provided', async (): Promise<void> => {
@@ -283,10 +287,7 @@ test('updates required_status_checks.required_checks format', async (): Promise<
               type: 'required_status_checks',
               parameters: {
                 required_status_checks: {
-                  required_checks: [
-                    { context: 'ci/test-ubuntu-22.04' },
-                    { context: 'ci/build-windows-2022' },
-                  ],
+                  required_checks: [{ context: 'ci/test-ubuntu-22.04' }, { context: 'ci/build-windows-2022' }],
                 },
               },
             },

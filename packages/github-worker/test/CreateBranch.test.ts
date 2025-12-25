@@ -1,14 +1,18 @@
-import { afterEach, beforeEach, expect, test } from '@jest/globals'
+import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { createBranch } from '../src/parts/CreateBranch/CreateBranch.ts'
 
+let consoleErrorSpy: ReturnType<typeof jest.spyOn>
+
 beforeEach(() => {
   nock.disableNetConnect()
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
+  consoleErrorSpy.mockRestore()
 })
 
 test('creates branch successfully', async (): Promise<void> => {
@@ -65,11 +69,9 @@ test('uses default base branch when not provided', async (): Promise<void> => {
 })
 
 test('throws error when base branch not found', async (): Promise<void> => {
-  const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads%2Fnonexistent')
-    .reply(404, {
-      message: 'Not Found',
-    })
+  const scope = nock('https://api.github.com').get('/repos/test-owner/test-repo/git/ref/heads%2Fnonexistent').reply(404, {
+    message: 'Not Found',
+  })
 
   await expect(
     createBranch({
@@ -112,4 +114,3 @@ test('throws error when branch creation fails', async (): Promise<void> => {
 
   expect(scope.isDone()).toBe(true)
 })
-

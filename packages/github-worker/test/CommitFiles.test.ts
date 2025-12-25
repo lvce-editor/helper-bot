@@ -1,14 +1,18 @@
-import { afterEach, beforeEach, expect, test } from '@jest/globals'
+import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { commitFiles } from '../src/parts/CommitFiles/CommitFiles.ts'
 
+let consoleErrorSpy: ReturnType<typeof jest.spyOn>
+
 beforeEach(() => {
   nock.disableNetConnect()
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
+  consoleErrorSpy.mockRestore()
 })
 
 test('commits files successfully', async (): Promise<void> => {
@@ -27,12 +31,7 @@ test('commits files successfully', async (): Promise<void> => {
       },
     })
     .post('/repos/test-owner/test-repo/git/trees', (body: any) => {
-      return (
-        body.base_tree === 'base-tree-sha' &&
-        body.tree.length === 2 &&
-        body.tree[0].path === 'file1.txt' &&
-        body.tree[1].path === 'file2.txt'
-      )
+      return body.base_tree === 'base-tree-sha' && body.tree.length === 2 && body.tree[0].path === 'file1.txt' && body.tree[1].path === 'file2.txt'
     })
     .reply(201, {
       sha: 'new-tree-sha',
@@ -146,11 +145,9 @@ test('handles custom file mode and type', async (): Promise<void> => {
 })
 
 test('throws error when branch not found', async (): Promise<void> => {
-  const scope = nock('https://api.github.com')
-    .get('/repos/test-owner/test-repo/git/ref/heads%2Fnonexistent')
-    .reply(404, {
-      message: 'Not Found',
-    })
+  const scope = nock('https://api.github.com').get('/repos/test-owner/test-repo/git/ref/heads%2Fnonexistent').reply(404, {
+    message: 'Not Found',
+  })
 
   await expect(
     commitFiles({
@@ -170,4 +167,3 @@ test('throws error when branch not found', async (): Promise<void> => {
 
   expect(scope.isDone()).toBe(true)
 })
-

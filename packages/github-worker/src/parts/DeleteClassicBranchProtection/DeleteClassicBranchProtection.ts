@@ -13,9 +13,7 @@ export interface DeleteClassicBranchProtectionResult {
   readonly success: boolean
 }
 
-export const deleteClassicBranchProtection = async (
-  options: DeleteClassicBranchProtectionOptions,
-): Promise<DeleteClassicBranchProtectionResult> => {
+export const deleteClassicBranchProtection = async (options: DeleteClassicBranchProtectionOptions): Promise<DeleteClassicBranchProtectionResult> => {
   const { branch, githubToken, owner, repo } = options
 
   const octokit: Octokit = new OctokitConstructor({

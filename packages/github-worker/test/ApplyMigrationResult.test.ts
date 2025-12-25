@@ -1,14 +1,18 @@
-import { afterEach, beforeEach, expect, test } from '@jest/globals'
+import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { applyMigrationResult } from '../src/parts/ApplyMigrationResult/ApplyMigrationResult.ts'
 
+let consoleErrorSpy: ReturnType<typeof jest.spyOn>
+
 beforeEach(() => {
   nock.disableNetConnect()
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
+  consoleErrorSpy.mockRestore()
 })
 
 test('applies migration result successfully with file changes', async (): Promise<void> => {
@@ -559,4 +563,3 @@ test('uses default branch name when not provided', async (): Promise<void> => {
   expect(result?.changedFiles).toBe(1)
   expect(scope.isDone()).toBe(true)
 })
-
