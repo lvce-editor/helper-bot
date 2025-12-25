@@ -42,8 +42,9 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
     await exec('npx', ['eslint', '.', '--fix'], {
       cwd: clonedRepoUri,
     })
-  } catch {
+  } catch (error) {
     // eslint might exit with non-zero code if there are unfixable errors, that's ok
+    console.info(`[lint-and-fix] ESLint exited with an error: ${error}`)
   }
 
   // Use git to detect changed files
@@ -107,10 +108,6 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
 
     // Update eslint dependencies
     const eslintResult = await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
-
-    // Write updated package.json and package-lock.json to the repo
-    await options.fs.writeFile(packageJsonPath, eslintResult.newPackageJsonString)
-    await options.fs.writeFile(packageLockJsonPath, eslintResult.newPackageLockJsonString)
 
     console.info(`[lint-and-fix]: Running npm ci`)
     // Install dependencies
