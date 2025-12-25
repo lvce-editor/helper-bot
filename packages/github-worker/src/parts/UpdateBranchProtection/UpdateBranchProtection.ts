@@ -125,12 +125,14 @@ const updateBranchRulesetsRequiredChecks = async (
       // Handle new ruleset shape: parameters.required_status_checks.required_checks
       if (parameters.required_status_checks && Array.isArray(parameters.required_status_checks.required_checks)) {
         const requiredChecks = parameters.required_status_checks.required_checks
+        let requiredChecksChanged = false
         const newRequiredChecks = requiredChecks.map((check: any) => {
           if (typeof check === 'string') {
             const newContext = updateContextOsVersions(check, osVersions)
             if (newContext !== check) {
               rulesChanged = true
               ruleChanged = true
+              requiredChecksChanged = true
             }
             return newContext
           }
@@ -140,12 +142,13 @@ const updateBranchRulesetsRequiredChecks = async (
             if (newContext !== oldContext) {
               rulesChanged = true
               ruleChanged = true
+              requiredChecksChanged = true
             }
             return { ...check, context: newContext }
           }
           return check
         })
-        if (ruleChanged) {
+        if (requiredChecksChanged) {
           updatedParameters = {
             ...updatedParameters,
             required_status_checks: {
