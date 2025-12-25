@@ -148,7 +148,7 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     )
 
     return {
-      branchName: 'feature/lint-and-fix',
+      branchName: `feature/lint-and-fix-${Date.now()}`,
       changedFiles: allChangedFiles,
       commitMessage: pullRequestTitle,
       pullRequestTitle,

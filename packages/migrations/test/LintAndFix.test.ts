@@ -82,7 +82,7 @@ test('installs eslint and runs eslint --fix', async () => {
   })
 
   expect(result).toEqual({
-    branchName: 'feature/lint-and-fix',
+    branchName: expect.stringMatching(/^feature\/lint-and-fix-\d+$/),
     changedFiles: [
       {
         content: expect.stringMatching(/"eslint": "\^\d+\.\d+\.\d+"/),
@@ -211,7 +211,7 @@ test('handles case when no files need fixing', async () => {
   })
 
   expect(result).toEqual({
-    branchName: 'feature/lint-and-fix',
+    branchName: expect.stringMatching(/^feature\/lint-and-fix-\d+$/),
     changedFiles: [
       {
         content: expect.stringMatching(/"eslint": "\^\d+\.\d+\.\d+"/),
