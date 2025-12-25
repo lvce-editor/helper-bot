@@ -1,17 +1,14 @@
-import { githubFetch } from '../GithubFetch/GithubFetch.ts'
+import type { Octokit } from '@octokit/rest'
 
-export const getLatestCommitOnBranch = async (
-  fetchFn: typeof globalThis.fetch,
-  githubToken: string,
-  owner: string,
-  repo: string,
-  branch: string,
-): Promise<string> => {
-  const branchRefResponse = await githubFetch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`, githubToken, fetchFn)
-
-  if (branchRefResponse.status !== 200) {
-    throw new Error(`Failed to get branch ref: ${branchRefResponse.status}`)
-  }
+export const getLatestCommitOnBranch = async (octokit: Octokit, owner: string, repo: string, branch: string): Promise<string> => {
+  const branchRefResponse = await octokit.request('GET /repos/{owner}/{repo}/git/refs/heads/{ref}', {
+    headers: {
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    owner,
+    ref: branch,
+    repo,
+  })
 
   return branchRefResponse.data.object.sha
 }
