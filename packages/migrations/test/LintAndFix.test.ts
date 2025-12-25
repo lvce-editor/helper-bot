@@ -43,37 +43,32 @@ test('installs eslint and runs eslint --fix', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--save-dev') {
-      if (cwd) {
-        const updatedPackageJson = {
-          ...oldPackageJson,
-          devDependencies: {
-            ...oldPackageJson.devDependencies,
-            '@lvce-editor/eslint-config': '^4.0.0',
-            eslint: '^9.39.2',
-          },
-        }
-        await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--save-dev' && cwd === clonedRepoUri) {
+      const updatedPackageJson = {
+        ...oldPackageJson,
+        devDependencies: {
+          ...oldPackageJson.devDependencies,
+          '@lvce-editor/eslint-config': '^4.0.0',
+          eslint: '^9.39.2',
+        },
       }
+      await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
+      await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts') {
+    if (file === 'npm' && args?.[0] === 'ci' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'npm' && args?.[0] === 'ci') {
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'npx' && args?.[0] === 'eslint') {
+    if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
       // Simulate eslint --fix changing the file
       await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).toString(), fixedFileContent)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain') {
+    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
       // Return git status output showing modified file
       return { exitCode: 0, stderr: '', stdout: ' M src/test.ts\n' }
     }
-    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
+    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
   const mockExec = createMockExec(mockExecFn)
 
@@ -178,36 +173,31 @@ test('handles case when no files need fixing', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--save-dev') {
-      if (cwd) {
-        const updatedPackageJson = {
-          ...oldPackageJson,
-          devDependencies: {
-            ...oldPackageJson.devDependencies,
-            '@lvce-editor/eslint-config': '^4.0.0',
-            eslint: '^9.39.2',
-          },
-        }
-        await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--save-dev' && cwd === clonedRepoUri) {
+      const updatedPackageJson = {
+        ...oldPackageJson,
+        devDependencies: {
+          ...oldPackageJson.devDependencies,
+          '@lvce-editor/eslint-config': '^4.0.0',
+          eslint: '^9.39.2',
+        },
       }
+      await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
+      await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts') {
+    if (file === 'npm' && args?.[0] === 'ci' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'npm' && args?.[0] === 'ci') {
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'npx' && args?.[0] === 'eslint') {
+    if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
       // Eslint doesn't change the file
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain') {
+    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
       // No files changed
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
+    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
   const mockExec = createMockExec(mockExecFn)
 

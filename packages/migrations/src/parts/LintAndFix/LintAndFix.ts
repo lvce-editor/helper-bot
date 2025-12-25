@@ -1,53 +1,30 @@
 import type * as FsPromises from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
-import { pathToUri, uriToPath, normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath } from '../UriUtils/UriUtils.ts'
 
 const addEslintCore = async (
   fs: Readonly<typeof FsPromises>,
   exec: BaseMigrationOptions['exec'],
-  oldPackageJson: any,
+  clonedRepoUri: string,
 ): Promise<{
   newPackageJsonString: string
   newPackageLockJsonString: string
 }> => {
-  const { name } = oldPackageJson
-  const tmpFolder = join(tmpdir(), `lint-and-fix-${name}-tmp`)
-  const tmpCacheFolder = join(tmpdir(), `lint-and-fix-${name}-tmp-cache`)
-  const tmpFolderUri = pathToUri(tmpFolder)
-  const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
-  const toRemove = [tmpFolderUri, tmpCacheFolderUri]
   try {
-    const oldPackageJsonStringified = stringifyJson(oldPackageJson)
-    await fs.mkdir(tmpFolderUri, { recursive: true })
-    await fs.writeFile(new URL('package.json', tmpFolderUri).toString(), oldPackageJsonStringified)
-    await exec(
-      'npm',
-      ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)],
-      {
-        cwd: tmpFolderUri,
-      },
-    )
-    const newPackageJsonString = await fs.readFile(new URL('package.json', tmpFolderUri).toString(), 'utf8')
-    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).toString(), 'utf8')
+    await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], {
+      cwd: clonedRepoUri,
+    })
+    const newPackageJsonString = await fs.readFile(new URL('package.json', clonedRepoUri).toString(), 'utf8')
+    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', clonedRepoUri).toString(), 'utf8')
     return {
       newPackageJsonString,
       newPackageLockJsonString,
     }
   } catch (error) {
     throw new Error(`Failed to add eslint: ${stringifyError(error)}`)
-  } finally {
-    for (const folder of toRemove) {
-      await fs.rm(folder, {
-        force: true,
-        recursive: true,
-      })
-    }
   }
 }
 
@@ -120,16 +97,17 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
       return emptyMigrationResult
     }
 
-    // Read package.json
-    const packageJsonContent = await options.fs.readFile(packageJsonPath, 'utf8')
-    const oldPackageJson = JSON.parse(packageJsonContent)
+    // Read original package.json and package-lock.json content
+    const oldPackageJsonString = await options.fs.readFile(packageJsonPath, 'utf8')
+    const packageLockJsonPath = new URL('package-lock.json', options.clonedRepoUri).toString()
+    const packageLockExists = await options.fs.exists(packageLockJsonPath)
+    const oldPackageLockJsonString = packageLockExists ? await options.fs.readFile(packageLockJsonPath, 'utf8') : null
 
     // Update eslint dependencies
-    const eslintResult = await addEslintCore(options.fs, options.exec, oldPackageJson)
+    const eslintResult = await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
 
     // Write updated package.json and package-lock.json to the repo
     await options.fs.writeFile(packageJsonPath, eslintResult.newPackageJsonString)
-    const packageLockJsonPath = new URL('package-lock.json', options.clonedRepoUri).toString()
     await options.fs.writeFile(packageLockJsonPath, eslintResult.newPackageLockJsonString)
 
     console.info(`[lint-and-fix]: Running npm ci`)
@@ -143,21 +121,29 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
 
     const pullRequestTitle = 'chore: lint and fix code'
 
-    // Combine package.json, package-lock.json, and linted files
-    const allChangedFiles = [
-      {
+    // Only include package.json and package-lock.json if they actually changed
+    const allChangedFiles: Array<{ content: string; path: string }> = []
+
+    if (oldPackageJsonString !== eslintResult.newPackageJsonString) {
+      allChangedFiles.push({
         content: eslintResult.newPackageJsonString,
         path: 'package.json',
-      },
-      {
+      })
+    }
+
+    if (oldPackageLockJsonString !== eslintResult.newPackageLockJsonString) {
+      allChangedFiles.push({
         content: eslintResult.newPackageLockJsonString,
         path: 'package-lock.json',
-      },
+      })
+    }
+
+    allChangedFiles.push(
       ...lintChangedFiles.map((f) => ({
         content: f.content,
         path: normalizePath(f.path),
       })),
-    ]
+    )
 
     return {
       branchName: 'feature/lint-and-fix',
