@@ -9,7 +9,10 @@ const mockExec = createMockExec()
 const clonedRepoUri = pathToUri('/test/repo')
 const mockFs = createMockFs()
 
-const createMockOctokit = (createRefHandler?: (ref: string, sha: string) => Promise<any>): Octokit => {
+const createMockOctokit = (
+  requestHandler: (route: string, options: any) => Promise<any>,
+  createRefHandler?: (ref: string, sha: string) => Promise<any>,
+): Octokit => {
   return {
     git: {
       createRef: async (params: any) => {
@@ -24,6 +27,7 @@ const createMockOctokit = (createRefHandler?: (ref: string, sha: string) => Prom
         }
       },
     },
+    request: requestHandler,
   } as any
 }
 
@@ -35,51 +39,28 @@ const createMockOctokitConstructor = (mockOctokit: Octokit): any => {
   }
 }
 
-const createMockFetch = (responses: Array<{ urlPattern: string; status: number; data: any }>) => {
-  let callIndex = 0
-  return async (url: string, options?: RequestInit): Promise<Response> => {
-    if (callIndex >= responses.length) {
-      throw new Error(`Unexpected call ${callIndex + 1}: ${url}`)
-    }
-    const response = responses[callIndex]
-    callIndex++
-
-    // Verify URL matches pattern
-    if (!url.includes(response.urlPattern)) {
-      throw new Error(`URL mismatch at call ${callIndex}: expected pattern "${response.urlPattern}" but got "${url}"`)
-    }
-
-    return {
-      ok: response.status >= 200 && response.status < 300,
-      status: response.status,
-      statusText: response.status >= 200 && response.status < 300 ? 'OK' : 'Not Found',
-      json: async () => response.data,
-      text: async () => JSON.stringify(response.data),
-      headers: new Headers(),
-    } as Response
-  }
-}
-
 test('returns success when no releases or tags found', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 404,
-      data: { message: 'Not Found' },
-    },
-    {
-      urlPattern: 'tags',
-      status: 200,
-      data: [],
-    },
-  ])
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      const error: any = new Error('Not Found')
+      error.status = 404
+      throw error
+    }
+    if (route === 'GET /repos/{owner}/{repo}/tags') {
+      return {
+        data: [],
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -98,40 +79,42 @@ test('returns success when no releases or tags found', async (): Promise<void> =
 })
 
 test('returns success when no new commits since last release', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'tag-sha-123',
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      return {
+        data: {
+          tag_name: 'v1.2.3',
+          target_commitish: 'tag-sha-123',
         },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'identical',
-        ahead_by: 0,
-      },
-    },
-  ])
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+      return {
+        data: {
+          object: {
+            sha: 'tag-sha-123',
+          },
+        },
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+      return {
+        data: {
+          status: 'identical',
+          ahead_by: 0,
+        },
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -150,50 +133,52 @@ test('returns success when no new commits since last release', async (): Promise
 })
 
 test('creates new release when there are new commits', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 5,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
-      return {
-        data: {
-          ref: 'refs/tags/v1.3.0',
-          sha: 'main-sha-456',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v1.2.3',
+            target_commitish: 'tag-sha-123',
+          },
+        }
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 5,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
+        return {
+          data: {
+            ref: 'refs/tags/v1.3.0',
+            sha: 'main-sha-456',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -216,50 +201,52 @@ test('creates new release when there are new commits', async (): Promise<void> =
 })
 
 test('creates new release with single commit', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v2.5.10',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/v2.6.0' && sha === 'main-sha-456') {
-      return {
-        data: {
-          ref: 'refs/tags/v2.6.0',
-          sha: 'main-sha-456',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v2.5.10',
+            target_commitish: 'tag-sha-123',
+          },
+        }
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 1,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/v2.6.0' && sha === 'main-sha-456') {
+        return {
+          data: {
+            ref: 'refs/tags/v2.6.0',
+            sha: 'main-sha-456',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -282,50 +269,52 @@ test('creates new release with single commit', async (): Promise<void> => {
 })
 
 test('handles version without v prefix', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: '1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 3,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/1.3.0' && sha === 'main-sha-456') {
-      return {
-        data: {
-          ref: 'refs/tags/1.3.0',
-          sha: 'main-sha-456',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: '1.2.3',
+            target_commitish: 'tag-sha-123',
+          },
+        }
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 3,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/1.3.0' && sha === 'main-sha-456') {
+        return {
+          data: {
+            ref: 'refs/tags/1.3.0',
+            sha: 'main-sha-456',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -340,65 +329,67 @@ test('handles version without v prefix', async (): Promise<void> => {
 })
 
 test('falls back to tags when no releases exist', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 404,
-      data: { message: 'Not Found' },
-    },
-    {
-      urlPattern: 'tags',
-      status: 200,
-      data: [
-        {
-          name: 'v3.1.5',
-        },
-      ],
-    },
-    {
-      urlPattern: 'refs/tags/v3.1.5',
-      status: 200,
-      data: {
-        object: {
-          sha: 'tag-sha-789',
-        },
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-999',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 2,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/v3.2.0' && sha === 'main-sha-999') {
-      return {
-        data: {
-          ref: 'refs/tags/v3.2.0',
-          sha: 'main-sha-999',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        const error: any = new Error('Not Found')
+        error.status = 404
+        throw error
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/tags') {
+        return {
+          data: [
+            {
+              name: 'v3.1.5',
+            },
+          ],
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/tags/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'tag-sha-789',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-999',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 2,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/v3.2.0' && sha === 'main-sha-999') {
+        return {
+          data: {
+            ref: 'refs/tags/v3.2.0',
+            sha: 'main-sha-999',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -414,50 +405,52 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
 })
 
 test('handles custom base branch', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.0.0',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/master',
-      status: 200,
-      data: {
-        object: {
-          sha: 'master-sha-456',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/v1.1.0' && sha === 'master-sha-456') {
-      return {
-        data: {
-          ref: 'refs/tags/v1.1.0',
-          sha: 'master-sha-456',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v1.0.0',
+            target_commitish: 'tag-sha-123',
+          },
+        }
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'master-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 1,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/v1.1.0' && sha === 'master-sha-456') {
+        return {
+          data: {
+            ref: 'refs/tags/v1.1.0',
+            sha: 'master-sha-456',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -473,28 +466,28 @@ test('handles custom base branch', async (): Promise<void> => {
 })
 
 test('handles error when getting branch ref fails', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 500,
-      data: { message: 'Internal Server Error' },
-    },
-  ])
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      return {
+        data: {
+          tag_name: 'v1.2.3',
+          target_commitish: 'tag-sha-123',
+        },
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+      throw new Error('Failed to get branch ref')
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -507,42 +500,44 @@ test('handles error when getting branch ref fails', async (): Promise<void> => {
 })
 
 test('handles error when creating tag fails', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v1.2.3',
+            target_commitish: 'tag-sha-123',
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 1,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
     },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
+    async (_ref: string, _sha: string) => {
+      throw new Error('Reference already exists')
     },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (_ref: string, _sha: string) => {
-    throw new Error('Reference already exists')
-  })
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -558,42 +553,44 @@ test('handles error when creating tag fails', async (): Promise<void> => {
 })
 
 test('handles error when creating tag via API fails', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v1.2.3',
+            target_commitish: 'tag-sha-123',
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 1,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
     },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
+    async (_ref: string, _sha: string) => {
+      throw new Error('Permission denied')
     },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (_ref: string, _sha: string) => {
-    throw new Error('Permission denied')
-  })
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -609,40 +606,42 @@ test('handles error when creating tag via API fails', async (): Promise<void> =>
 })
 
 test('handles invalid version format', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'invalid-version',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      return {
+        data: {
+          tag_name: 'invalid-version',
+          target_commitish: 'tag-sha-123',
         },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+      return {
+        data: {
+          object: {
+            sha: 'main-sha-456',
+          },
+        },
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+      return {
+        data: {
+          status: 'ahead',
+          ahead_by: 1,
+        },
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -655,40 +654,42 @@ test('handles invalid version format', async (): Promise<void> => {
 })
 
 test('handles version with only two parts', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: '1.2',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      return {
+        data: {
+          tag_name: '1.2',
+          target_commitish: 'tag-sha-123',
         },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+      return {
+        data: {
+          object: {
+            sha: 'main-sha-456',
+          },
+        },
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+      return {
+        data: {
+          status: 'ahead',
+          ahead_by: 1,
+        },
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -700,40 +701,42 @@ test('handles version with only two parts', async (): Promise<void> => {
 })
 
 test('handles version with non-numeric parts', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.x',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      return {
+        data: {
+          tag_name: 'v1.2.x',
+          target_commitish: 'tag-sha-123',
         },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+      return {
+        data: {
+          object: {
+            sha: 'main-sha-456',
+          },
+        },
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+      return {
+        data: {
+          status: 'ahead',
+          ahead_by: 1,
+        },
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -745,47 +748,47 @@ test('handles version with non-numeric parts', async (): Promise<void> => {
 })
 
 test('handles compare commits returning non-200 status', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 500,
-      data: { message: 'Internal Server Error' },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
-      return {
-        data: {
-          ref: 'refs/tags/v1.3.0',
-          sha: 'main-sha-456',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v1.2.3',
+            target_commitish: 'tag-sha-123',
+          },
+        }
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        throw new Error('Internal Server Error')
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
+        return {
+          data: {
+            ref: 'refs/tags/v1.3.0',
+            sha: 'main-sha-456',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -801,50 +804,52 @@ test('handles compare commits returning non-200 status', async (): Promise<void>
 })
 
 test('handles compare commits with diverged status', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'diverged',
-        ahead_by: 3,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
-      return {
-        data: {
-          ref: 'refs/tags/v1.3.0',
-          sha: 'main-sha-456',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v1.2.3',
+            target_commitish: 'tag-sha-123',
+          },
+        }
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'diverged',
+            ahead_by: 3,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
+        return {
+          data: {
+            ref: 'refs/tags/v1.3.0',
+            sha: 'main-sha-456',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -860,40 +865,42 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
 })
 
 test('handles compare commits with ahead_by 0', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v1.2.3',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      return {
+        data: {
+          tag_name: 'v1.2.3',
+          target_commitish: 'tag-sha-123',
         },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'behind',
-        ahead_by: 0,
-      },
-    },
-  ])
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+      return {
+        data: {
+          object: {
+            sha: 'main-sha-456',
+          },
+        },
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+      return {
+        data: {
+          status: 'behind',
+          ahead_by: 0,
+        },
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -905,25 +912,27 @@ test('handles compare commits with ahead_by 0', async (): Promise<void> => {
 })
 
 test('handles tags endpoint returning empty array', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 404,
-      data: { message: 'Not Found' },
-    },
-    {
-      urlPattern: 'tags',
-      status: 200,
-      data: [],
-    },
-  ])
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      const error: any = new Error('Not Found')
+      error.status = 404
+      throw error
+    }
+    if (route === 'GET /repos/{owner}/{repo}/tags') {
+      return {
+        data: [],
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -935,34 +944,36 @@ test('handles tags endpoint returning empty array', async (): Promise<void> => {
 })
 
 test('handles tag ref fetch failure', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 404,
-      data: { message: 'Not Found' },
-    },
-    {
-      urlPattern: 'tags',
-      status: 200,
-      data: [
-        {
-          name: 'v1.0.0',
-        },
-      ],
-    },
-    {
-      urlPattern: 'refs/tags/v1.0.0',
-      status: 404,
-      data: { message: 'Not Found' },
-    },
-  ])
+  const mockOctokit = createMockOctokit(async (route: string) => {
+    if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+      const error: any = new Error('Not Found')
+      error.status = 404
+      throw error
+    }
+    if (route === 'GET /repos/{owner}/{repo}/tags') {
+      return {
+        data: [
+          {
+            name: 'v1.0.0',
+          },
+        ],
+      }
+    }
+    if (route === 'GET /repos/{owner}/{repo}/git/refs/tags/{ref}') {
+      const error: any = new Error('Not Found')
+      error.status = 404
+      throw error
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -974,50 +985,52 @@ test('handles tag ref fetch failure', async (): Promise<void> => {
 })
 
 test('handles large version numbers', async (): Promise<void> => {
-  const mockFetch = createMockFetch([
-    {
-      urlPattern: 'releases/latest',
-      status: 200,
-      data: {
-        tag_name: 'v99.88.77',
-        target_commitish: 'tag-sha-123',
-      },
-    },
-    {
-      urlPattern: 'refs/heads/main',
-      status: 200,
-      data: {
-        object: {
-          sha: 'main-sha-456',
-        },
-      },
-    },
-    {
-      urlPattern: 'compare',
-      status: 200,
-      data: {
-        status: 'ahead',
-        ahead_by: 1,
-      },
-    },
-  ])
-
-  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
-    if (ref === 'refs/tags/v99.89.0' && sha === 'main-sha-456') {
-      return {
-        data: {
-          ref: 'refs/tags/v99.89.0',
-          sha: 'main-sha-456',
-        },
+  const mockOctokit = createMockOctokit(
+    async (route: string) => {
+      if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
+        return {
+          data: {
+            tag_name: 'v99.88.77',
+            target_commitish: 'tag-sha-123',
+          },
+        }
       }
-    }
-    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
-  })
+      if (route === 'GET /repos/{owner}/{repo}/git/refs/heads/{ref}') {
+        return {
+          data: {
+            object: {
+              sha: 'main-sha-456',
+            },
+          },
+        }
+      }
+      if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
+        return {
+          data: {
+            status: 'ahead',
+            ahead_by: 1,
+          },
+        }
+      }
+      throw new Error(`Unexpected route: ${route}`)
+    },
+    async (ref: string, sha: string) => {
+      if (ref === 'refs/tags/v99.89.0' && sha === 'main-sha-456') {
+        return {
+          data: {
+            ref: 'refs/tags/v99.89.0',
+            sha: 'main-sha-456',
+          },
+        }
+      }
+      throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+    },
+  )
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),

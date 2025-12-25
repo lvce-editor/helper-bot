@@ -17,7 +17,7 @@ export interface CreateReleaseIfNeededOptions extends BaseMigrationOptions {
 
 export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNeededOptions>): Promise<MigrationResult> => {
   try {
-    const { fetch, githubToken, OctokitConstructor: OctokitCtor = OctokitConstructor, repositoryName: repo, repositoryOwner: owner } = options
+    const { githubToken, OctokitConstructor: OctokitCtor = OctokitConstructor, repositoryName: repo, repositoryOwner: owner } = options
     const baseBranch = options.baseBranch || 'main'
 
     const octokit: Octokit = new OctokitCtor({
@@ -25,7 +25,7 @@ export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNee
     })
 
     // Get the latest release or tag
-    const latestRelease = await getLatestRelease(fetch, githubToken, owner, repo)
+    const latestRelease = await getLatestRelease(octokit, owner, repo)
 
     if (!latestRelease) {
       return {
@@ -45,10 +45,10 @@ export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNee
     const latestTagCommitSha = latestRelease.target_commitish
 
     // Get the latest commit on main branch
-    const latestMainCommitSha = await getLatestCommitOnBranch(fetch, githubToken, owner, repo, baseBranch)
+    const latestMainCommitSha = await getLatestCommitOnBranch(octokit, owner, repo, baseBranch)
 
     // Compare commits between the tag and main branch
-    const { commitCount, hasCommits } = await compareCommits(fetch, githubToken, owner, repo, latestTagCommitSha, latestMainCommitSha)
+    const { commitCount, hasCommits } = await compareCommits(octokit, owner, repo, latestTagCommitSha, latestMainCommitSha)
 
     if (!hasCommits) {
       return {
