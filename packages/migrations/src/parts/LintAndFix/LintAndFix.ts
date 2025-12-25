@@ -82,6 +82,8 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
     }
   }
 
+  console.info(`[lint-and-fix]: ${changedFiles.length} files changed.`)
+
   return changedFiles
 }
 
