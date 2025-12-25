@@ -1,8 +1,8 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 
 export type UpdateAllDependenciesOptions = BaseMigrationOptions
 
@@ -45,8 +45,8 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
       }
     }
 
-    // Check if update-dependencies.sh exists
-    const updateDependenciesScriptPath = new URL('update-dependencies.sh', options.clonedRepoUri).toString()
+    // Check if scripts/update-dependencies.sh exists
+    const updateDependenciesScriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
     const updateDependenciesScriptExists = await options.fs.exists(updateDependenciesScriptPath)
     if (!updateDependenciesScriptExists) {
       return {
@@ -60,22 +60,22 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     if (updateDependenciesScriptExists) {
       try {
         // Make the script executable and run it
-        await options.exec('chmod', ['+x', 'update-dependencies.sh'], {
+        await options.exec('chmod', ['+x', 'scripts/update-dependencies.sh'], {
           cwd: options.clonedRepoUri,
         })
-        await options.exec('bash', ['update-dependencies.sh'], {
+        await options.exec('bash', ['scripts/update-dependencies.sh'], {
           cwd: options.clonedRepoUri,
         })
       } catch (error) {
-        throw new Error(`Failed to execute update-dependencies.sh: ${stringifyError(error)}`)
+        throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`)
       }
     }
 
     // Check for changed files using git
     const changedFiles = await getChangedFiles({
-      fs: options.fs,
-      exec: options.exec,
       clonedRepoUri: options.clonedRepoUri,
+      exec: options.exec,
+      fs: options.fs,
     })
 
     // If no changed files, return empty result
