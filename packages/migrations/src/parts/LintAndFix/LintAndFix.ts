@@ -1,9 +1,10 @@
 import type * as FsPromises from 'node:fs/promises'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 
 const addEslintCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -28,14 +29,7 @@ const addEslintCore = async (
   }
 }
 
-interface ChangedFile {
-  content: string
-  path: string
-}
-
 const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['exec'], clonedRepoUri: string): Promise<ChangedFile[]> => {
-  const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
-
   // Run eslint --fix
   try {
     console.info('[lint-and-fix]: Running eslint')
@@ -47,41 +41,13 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
     console.info(`[lint-and-fix] ESLint exited with an error: ${error}`)
   }
 
-  // Use git to detect changed files
-  const gitResult = await exec('git', ['status', '--porcelain'], {
-    cwd: clonedRepoUri,
+  // Use git to detect changed files (only modified files)
+  const changedFiles = await getChangedFiles({
+    fs,
+    exec,
+    clonedRepoUri,
+    filterStatus: (status: string) => status.includes('M'),
   })
-
-  const changedFiles: ChangedFile[] = []
-  const outputLines = gitResult.stdout.split('\n').filter((line) => line.trim().length > 0)
-
-  for (const line of outputLines) {
-    // Git status --porcelain format: XY PATH
-    // X = index status, Y = working tree status
-    // Format is exactly 2 characters for status, then a space, then the path
-    if (line.length < 4) {
-      continue
-    }
-
-    const status = line.slice(0, 2)
-    const filePath = line.slice(3).trim()
-
-    // Skip if not a modified file (either in index or working tree)
-    if (!status.includes('M')) {
-      continue
-    }
-
-    const fileUri = new URL(filePath, baseUri).toString()
-    try {
-      const content = await fs.readFile(fileUri, 'utf8')
-      changedFiles.push({
-        content,
-        path: normalizePath(filePath),
-      })
-    } catch (error) {
-      throw new Error(`Failed to read ${fileUri}: ${stringifyError(error)}`)
-    }
-  }
 
   console.info(`[lint-and-fix]: ${changedFiles.length} files changed.`)
 
