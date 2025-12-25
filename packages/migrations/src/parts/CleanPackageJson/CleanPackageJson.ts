@@ -33,6 +33,12 @@ export const cleanPackageJson = async (options: Readonly<CleanPackageJsonOptions
       hasChanges = true
     }
 
+    // Remove description field if it's an empty string
+    if (packageJson.description === '') {
+      delete packageJson.description
+      hasChanges = true
+    }
+
     // Set author to "Lvce Editor" if author field is empty
     if (!packageJson.author || packageJson.author === '') {
       packageJson.author = 'Lvce Editor'
