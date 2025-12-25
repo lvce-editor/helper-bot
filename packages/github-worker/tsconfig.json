@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "allowImportingTsExtensions": true,
+    "checkJs": true,
+    "module": "nodenext",
+    "target": "ESNext",
+    "types": ["node"],
+    "moduleResolution": "nodenext",
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "strict": true,
+    "strictNullChecks": false,
+    "noUnusedLocals": true,
+    "outDir": "dist",
+    "noEmit": false,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src", "test"]
+}

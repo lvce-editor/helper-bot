@@ -1,0 +1,36 @@
+{
+  "name": "@lvce-editor/helper-bot-github-worker",
+  "version": "0.0.0-dev",
+  "license": "MIT",
+  "author": "Lvce Editor",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
+    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch"
+  },
+  "jest": {
+    "injectGlobals": false,
+    "extensionsToTreatAsEsm": [".ts"],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "useESM": true
+        }
+      ]
+    },
+    "testMatch": ["**/test/**"]
+  },
+  "dependencies": {
+    "@lvce-editor/rpc": "^4.20.0",
+    "@lvce-editor/verror": "^1.7.0",
+    "@octokit/rest": "^22.0.1"
+  },
+  "devDependencies": {
+    "nock": "^14.0.10"
+  }
+}
