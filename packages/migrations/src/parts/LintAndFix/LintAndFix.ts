@@ -61,6 +61,7 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
 
   // Run eslint --fix
   try {
+    console.info('[lint-and-fix]: Running eslint')
     await exec('npx', ['eslint', '.', '--fix'], {
       cwd: clonedRepoUri,
     })
@@ -131,8 +132,9 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     const packageLockJsonPath = new URL('package-lock.json', options.clonedRepoUri).toString()
     await options.fs.writeFile(packageLockJsonPath, eslintResult.newPackageLockJsonString)
 
+    console.info(`[lint-and-fix]: Running npm ci`)
     // Install dependencies
-    await options.exec('npm', ['install', '--ignore-scripts'], {
+    await options.exec('npm', ['ci'], {
       cwd: options.clonedRepoUri,
     })
 
