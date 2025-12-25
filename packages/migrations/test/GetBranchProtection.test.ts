@@ -36,6 +36,7 @@ test('returns rulesets when available', async (): Promise<void> => {
   const result = await getBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: globalThis.fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -87,6 +88,7 @@ test('returns classic branch protection when rulesets not available', async (): 
   const result = await getBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: globalThis.fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -132,6 +134,7 @@ test('returns none when no branch protection is enabled', async (): Promise<void
   const result = await getBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: globalThis.fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -175,6 +178,7 @@ test('uses custom branch name', async (): Promise<void> => {
     branch: 'develop',
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: globalThis.fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -221,6 +225,7 @@ test('includes authorization header in requests', async (): Promise<void> => {
   await getBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: globalThis.fetch,
     fs: FsPromises as any,
     githubToken: 'secret-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),

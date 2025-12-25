@@ -57,6 +57,7 @@ test('returns success when no releases or tags found', async (): Promise<void> =
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -110,6 +111,7 @@ test('returns success when no new commits since last release', async (): Promise
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -176,6 +178,7 @@ test('creates new release when there are new commits', async (): Promise<void> =
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -243,6 +246,7 @@ test('creates new release with single commit', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -310,6 +314,7 @@ test('handles version without v prefix', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -384,6 +389,7 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -444,6 +450,7 @@ test('handles custom base branch', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -477,6 +484,7 @@ test('handles error when getting branch ref fails', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -529,6 +537,7 @@ test('handles error when creating tag fails', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -581,6 +590,7 @@ test('handles error when creating tag via API fails', async (): Promise<void> =>
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -628,6 +638,7 @@ test('handles invalid version format', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -675,6 +686,7 @@ test('handles version with only two parts', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -721,6 +733,7 @@ test('handles version with non-numeric parts', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -775,6 +788,7 @@ test('handles compare commits returning non-200 status', async (): Promise<void>
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -835,6 +849,7 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -882,6 +897,7 @@ test('handles compare commits with ahead_by 0', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -913,6 +929,7 @@ test('handles tags endpoint returning empty array', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -953,6 +970,7 @@ test('handles tag ref fetch failure', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -1012,6 +1030,7 @@ test('handles large version numbers', async (): Promise<void> => {
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
     exec: mockExec,
+    fetch: globalThis.fetch,
     fs: mockFs,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
