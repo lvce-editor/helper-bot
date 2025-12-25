@@ -61,12 +61,15 @@ test('installs eslint and runs eslint --fix', async () => {
     if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts') {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
+    if (file === 'npm' && args?.[0] === 'ci') {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
     if (file === 'npx' && args?.[0] === 'eslint') {
       // Simulate eslint --fix changing the file
       await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).toString(), fixedFileContent)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'git' && args?.[0] === 'status') {
+    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain') {
       // Return git status output showing modified file
       return { exitCode: 0, stderr: '', stdout: ' M src/test.ts\n' }
     }
@@ -193,11 +196,14 @@ test('handles case when no files need fixing', async () => {
     if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts') {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
+    if (file === 'npm' && args?.[0] === 'ci') {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
     if (file === 'npx' && args?.[0] === 'eslint') {
       // Eslint doesn't change the file
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'git' && args?.[0] === 'status') {
+    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain') {
       // No files changed
       return { exitCode: 0, stderr: '', stdout: '' }
     }
