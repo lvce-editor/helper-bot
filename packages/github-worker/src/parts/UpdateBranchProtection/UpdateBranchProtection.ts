@@ -81,18 +81,23 @@ const updateBranchRulesetsRequiredChecks = async (
       // candidate property names that may contain status check entries
       const candidatePropNames = ['checks', 'required_checks']
 
-      let updatedRule = rule
+      let updatedRule = { ...rule }
+      let ruleChanged = false
+      let updatedParameters = { ...parameters }
       for (const propName of candidatePropNames) {
         const checks = parameters[propName]
         if (!checks || !Array.isArray(checks)) {
           continue
         }
 
+        let checksChanged = false
         const newChecks = checks.map((check: any) => {
           if (typeof check === 'string') {
             const newContext = updateContextOsVersions(check, osVersions)
             if (newContext !== check) {
               rulesChanged = true
+              ruleChanged = true
+              checksChanged = true
             }
             return newContext
           }
@@ -101,19 +106,18 @@ const updateBranchRulesetsRequiredChecks = async (
             const newContext = updateContextOsVersions(oldContext, osVersions)
             if (newContext !== oldContext) {
               rulesChanged = true
+              ruleChanged = true
+              checksChanged = true
             }
             return { ...check, context: newContext }
           }
           return check
         })
 
-        if (newChecks !== checks) {
-          updatedRule = {
-            ...updatedRule,
-            parameters: {
-              ...updatedRule.parameters,
-              [propName]: newChecks,
-            },
+        if (checksChanged) {
+          updatedParameters = {
+            ...updatedParameters,
+            [propName]: newChecks,
           }
         }
       }
@@ -126,6 +130,7 @@ const updateBranchRulesetsRequiredChecks = async (
             const newContext = updateContextOsVersions(check, osVersions)
             if (newContext !== check) {
               rulesChanged = true
+              ruleChanged = true
             }
             return newContext
           }
@@ -134,22 +139,27 @@ const updateBranchRulesetsRequiredChecks = async (
             const newContext = updateContextOsVersions(oldContext, osVersions)
             if (newContext !== oldContext) {
               rulesChanged = true
+              ruleChanged = true
             }
             return { ...check, context: newContext }
           }
           return check
         })
-        if (newRequiredChecks !== requiredChecks) {
-          updatedRule = {
-            ...updatedRule,
-            parameters: {
-              ...updatedRule.parameters,
-              required_status_checks: {
-                ...updatedRule.parameters.required_status_checks,
-                required_checks: newRequiredChecks,
-              },
+        if (ruleChanged) {
+          updatedParameters = {
+            ...updatedParameters,
+            required_status_checks: {
+              ...updatedParameters.required_status_checks,
+              required_checks: newRequiredChecks,
             },
           }
+        }
+      }
+
+      if (ruleChanged) {
+        updatedRule = {
+          ...updatedRule,
+          parameters: updatedParameters,
         }
       }
 
