@@ -1,3 +1,4 @@
+import type { Octokit } from '@octokit/rest'
 import { expect, test } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
@@ -7,6 +8,32 @@ import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 const mockExec = createMockExec()
 const clonedRepoUri = pathToUri('/test/repo')
 const mockFs = createMockFs()
+
+const createMockOctokit = (createRefHandler?: (ref: string, sha: string) => Promise<any>): Octokit => {
+  return {
+    git: {
+      createRef: async (params: any) => {
+        if (createRefHandler) {
+          return await createRefHandler(params.ref, params.sha)
+        }
+        return {
+          data: {
+            ref: params.ref,
+            sha: params.sha,
+          },
+        }
+      },
+    },
+  } as any
+}
+
+const createMockOctokitConstructor = (mockOctokit: Octokit): any => {
+  return class {
+    constructor(_options: any) {
+      return mockOctokit
+    }
+  }
+}
 
 const createMockFetch = (responses: Array<{ urlPattern: string; status: number; data: any }>) => {
   let callIndex = 0
@@ -149,15 +176,19 @@ test('creates new release when there are new commits', async (): Promise<void> =
         ahead_by: 5,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: 'v1.3.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
+      return {
+        data: {
+          ref: 'refs/tags/v1.3.0',
+          sha: 'main-sha-456',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -165,6 +196,7 @@ test('creates new release when there are new commits', async (): Promise<void> =
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -174,7 +206,7 @@ test('creates new release when there are new commits', async (): Promise<void> =
     changedFiles: [],
     commitMessage: undefined,
     data: {
-      message: 'Created new release v1.3.0 with 5 new commits since v1.2.3',
+      message: 'Created new tag v1.3.0 with 5 new commits since v1.2.3. GitHub Actions CI will create the release.',
       releaseTag: 'v1.3.0',
     },
     pullRequestTitle: 'create-release-if-needed',
@@ -210,15 +242,19 @@ test('creates new release with single commit', async (): Promise<void> => {
         ahead_by: 1,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: 'v2.6.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/v2.6.0' && sha === 'main-sha-456') {
+      return {
+        data: {
+          ref: 'refs/tags/v2.6.0',
+          sha: 'main-sha-456',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -226,6 +262,7 @@ test('creates new release with single commit', async (): Promise<void> => {
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -235,7 +272,7 @@ test('creates new release with single commit', async (): Promise<void> => {
     changedFiles: [],
     commitMessage: undefined,
     data: {
-      message: 'Created new release v2.6.0 with 1 new commit since v2.5.10',
+      message: 'Created new tag v2.6.0 with 1 new commit since v2.5.10. GitHub Actions CI will create the release.',
       releaseTag: 'v2.6.0',
     },
     pullRequestTitle: 'create-release-if-needed',
@@ -271,15 +308,19 @@ test('handles version without v prefix', async (): Promise<void> => {
         ahead_by: 3,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: '1.3.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/1.3.0' && sha === 'main-sha-456') {
+      return {
+        data: {
+          ref: 'refs/tags/1.3.0',
+          sha: 'main-sha-456',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -287,6 +328,7 @@ test('handles version without v prefix', async (): Promise<void> => {
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -339,15 +381,19 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
         ahead_by: 2,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: 'v3.2.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/v3.2.0' && sha === 'main-sha-999') {
+      return {
+        data: {
+          ref: 'refs/tags/v3.2.0',
+          sha: 'main-sha-999',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -355,6 +401,7 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -393,15 +440,19 @@ test('handles custom base branch', async (): Promise<void> => {
         ahead_by: 1,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: 'v1.1.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/v1.1.0' && sha === 'master-sha-456') {
+      return {
+        data: {
+          ref: 'refs/tags/v1.1.0',
+          sha: 'master-sha-456',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -409,6 +460,7 @@ test('handles custom base branch', async (): Promise<void> => {
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
     baseBranch: 'master',
@@ -454,7 +506,7 @@ test('handles error when getting branch ref fails', async (): Promise<void> => {
   }
 })
 
-test('handles error when creating release fails', async (): Promise<void> => {
+test('handles error when creating tag fails', async (): Promise<void> => {
   const mockFetch = createMockFetch([
     {
       urlPattern: 'releases/latest',
@@ -481,12 +533,11 @@ test('handles error when creating release fails', async (): Promise<void> => {
         ahead_by: 1,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 403,
-      data: { message: 'Forbidden' },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (_ref: string, _sha: string) => {
+    throw new Error('Reference already exists')
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -494,6 +545,7 @@ test('handles error when creating release fails', async (): Promise<void> => {
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -501,7 +553,58 @@ test('handles error when creating release fails', async (): Promise<void> => {
   expect(result.status).toBe('error')
   if (result.status === 'error') {
     expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-    expect(result.errorMessage).toContain('Failed to create release')
+    expect(result.errorMessage).toContain('Reference already exists')
+  }
+})
+
+test('handles error when creating tag via API fails', async (): Promise<void> => {
+  const mockFetch = createMockFetch([
+    {
+      urlPattern: 'releases/latest',
+      status: 200,
+      data: {
+        tag_name: 'v1.2.3',
+        target_commitish: 'tag-sha-123',
+      },
+    },
+    {
+      urlPattern: 'refs/heads/main',
+      status: 200,
+      data: {
+        object: {
+          sha: 'main-sha-456',
+        },
+      },
+    },
+    {
+      urlPattern: 'compare',
+      status: 200,
+      data: {
+        status: 'ahead',
+        ahead_by: 1,
+      },
+    },
+  ])
+
+  const mockOctokit = createMockOctokit(async (_ref: string, _sha: string) => {
+    throw new Error('Permission denied')
+  })
+
+  const result = await createReleaseIfNeeded({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: mockFetch as any,
+    fs: mockFs,
+    githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
+    repositoryName: 'repo',
+    repositoryOwner: 'owner',
+  })
+
+  expect(result.status).toBe('error')
+  if (result.status === 'error') {
+    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+    expect(result.errorMessage).toContain('Permission denied')
   }
 })
 
@@ -665,15 +768,19 @@ test('handles compare commits returning non-200 status', async (): Promise<void>
       status: 500,
       data: { message: 'Internal Server Error' },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: 'v1.3.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
+      return {
+        data: {
+          ref: 'refs/tags/v1.3.0',
+          sha: 'main-sha-456',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -681,6 +788,7 @@ test('handles compare commits returning non-200 status', async (): Promise<void>
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -719,15 +827,19 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
         ahead_by: 3,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: 'v1.3.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/v1.3.0' && sha === 'main-sha-456') {
+      return {
+        data: {
+          ref: 'refs/tags/v1.3.0',
+          sha: 'main-sha-456',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -735,6 +847,7 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
@@ -887,15 +1000,19 @@ test('handles large version numbers', async (): Promise<void> => {
         ahead_by: 1,
       },
     },
-    {
-      urlPattern: 'releases',
-      status: 201,
-      data: {
-        id: 123,
-        tag_name: 'v99.89.0',
-      },
-    },
   ])
+
+  const mockOctokit = createMockOctokit(async (ref: string, sha: string) => {
+    if (ref === 'refs/tags/v99.89.0' && sha === 'main-sha-456') {
+      return {
+        data: {
+          ref: 'refs/tags/v99.89.0',
+          sha: 'main-sha-456',
+        },
+      }
+    }
+    throw new Error(`Unexpected createRef call: ref=${ref}, sha=${sha}`)
+  })
 
   const result = await createReleaseIfNeeded({
     clonedRepoUri,
@@ -903,6 +1020,7 @@ test('handles large version numbers', async (): Promise<void> => {
     fetch: mockFetch as any,
     fs: mockFs,
     githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
   })
