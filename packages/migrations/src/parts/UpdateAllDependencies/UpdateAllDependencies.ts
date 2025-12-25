@@ -93,6 +93,14 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     // Check if update-dependencies.sh exists
     const updateDependenciesScriptPath = new URL('update-dependencies.sh', options.clonedRepoUri).toString()
     const updateDependenciesScriptExists = await options.fs.exists(updateDependenciesScriptPath)
+    if (!updateDependenciesScriptExists) {
+      return {
+        ...emptyMigrationResult,
+        data: {
+          message: 'no update dependencies script found',
+        },
+      }
+    }
 
     if (updateDependenciesScriptExists) {
       try {
