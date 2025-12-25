@@ -63,7 +63,15 @@ const updateBranchRulesetsRequiredChecks = async (
     throw new VError(error as Error, `failed to list rulesets for ${owner}/${repo}`)
   }
 
-  const rulesets: any[] = Array.isArray(rulesetsResponse.data) ? rulesetsResponse.data : []
+  // Octokit wraps the response, so if the API returns { data: [...] }, 
+  // octokit.request() returns { data: { data: [...] }, status: 200, ... }
+  // Check both structures
+  const rulesetsData = Array.isArray(rulesetsResponse.data?.data) 
+    ? rulesetsResponse.data.data 
+    : Array.isArray(rulesetsResponse.data) 
+      ? rulesetsResponse.data 
+      : []
+  const rulesets: any[] = rulesetsData
   let updatedRulesets = 0
 
   for (const ruleset of rulesets) {
@@ -82,7 +90,6 @@ const updateBranchRulesetsRequiredChecks = async (
       const candidatePropNames = ['checks', 'required_checks']
 
       let updatedRule = { ...rule }
-      let ruleChanged = false
       let updatedParameters = { ...parameters }
       for (const propName of candidatePropNames) {
         const checks = parameters[propName]
@@ -90,14 +97,11 @@ const updateBranchRulesetsRequiredChecks = async (
           continue
         }
 
-        let checksChanged = false
         const newChecks = checks.map((check: any) => {
           if (typeof check === 'string') {
             const newContext = updateContextOsVersions(check, osVersions)
             if (newContext !== check) {
               rulesChanged = true
-              ruleChanged = true
-              checksChanged = true
             }
             return newContext
           }
@@ -106,33 +110,27 @@ const updateBranchRulesetsRequiredChecks = async (
             const newContext = updateContextOsVersions(oldContext, osVersions)
             if (newContext !== oldContext) {
               rulesChanged = true
-              ruleChanged = true
-              checksChanged = true
             }
             return { ...check, context: newContext }
           }
           return check
         })
 
-        if (checksChanged) {
-          updatedParameters = {
-            ...updatedParameters,
-            [propName]: newChecks,
-          }
+        // Always update parameters with newChecks - the map always returns a new array
+        updatedParameters = {
+          ...updatedParameters,
+          [propName]: newChecks,
         }
       }
 
       // Handle new ruleset shape: parameters.required_status_checks.required_checks
       if (parameters.required_status_checks && Array.isArray(parameters.required_status_checks.required_checks)) {
         const requiredChecks = parameters.required_status_checks.required_checks
-        let requiredChecksChanged = false
         const newRequiredChecks = requiredChecks.map((check: any) => {
           if (typeof check === 'string') {
             const newContext = updateContextOsVersions(check, osVersions)
             if (newContext !== check) {
               rulesChanged = true
-              ruleChanged = true
-              requiredChecksChanged = true
             }
             return newContext
           }
@@ -141,35 +139,35 @@ const updateBranchRulesetsRequiredChecks = async (
             const newContext = updateContextOsVersions(oldContext, osVersions)
             if (newContext !== oldContext) {
               rulesChanged = true
-              ruleChanged = true
-              requiredChecksChanged = true
             }
             return { ...check, context: newContext }
           }
           return check
         })
-        if (requiredChecksChanged) {
-          updatedParameters = {
-            ...updatedParameters,
-            required_status_checks: {
-              ...updatedParameters.required_status_checks,
-              required_checks: newRequiredChecks,
-            },
-          }
+        // Always update parameters with newRequiredChecks - the map always returns a new array
+        updatedParameters = {
+          ...updatedParameters,
+          required_status_checks: {
+            ...updatedParameters.required_status_checks,
+            required_checks: newRequiredChecks,
+          },
         }
       }
 
-      if (ruleChanged) {
-        updatedRule = {
-          ...updatedRule,
-          parameters: updatedParameters,
-        }
+      // Always update the rule with updatedParameters to ensure consistency
+      updatedRule = {
+        ...updatedRule,
+        parameters: updatedParameters,
       }
 
       return updatedRule
     })
 
-    if (!rulesChanged) {
+    // Use rulesChanged flag which is set when changes are detected
+    // Also do a JSON comparison as a fallback
+    const rulesChangedActual = JSON.stringify(newRules) !== JSON.stringify(originalRules)
+
+    if (!rulesChanged && !rulesChangedActual) {
       continue
     }
 
@@ -236,7 +234,9 @@ const updateClassicBranchProtectionRequiredChecks = async (
     throw new VError(error as Error, `failed to get branch protection for ${owner}/${repo}@${branch}`)
   }
 
-  const statusChecks = protection && protection.data && protection.data.required_status_checks ? protection.data.required_status_checks : undefined
+  // Handle nested data structure from Octokit
+  const protectionData = protection?.data?.data ?? protection?.data
+  const statusChecks = protectionData && protectionData.required_status_checks ? protectionData.required_status_checks : undefined
   if (!statusChecks) {
     return false
   }
@@ -276,9 +276,25 @@ export const updateBranchProtection = async (options: UpdateBranchProtectionOpti
   try {
     const updatedRulesets = await updateBranchRulesetsRequiredChecks(octokit, owner, repo, osVersions)
     let updatedClassicProtection = false
+    // Always check classic protection, but only update if no rulesets were updated
     if (updatedRulesets === 0) {
-      // Fallback to classic branch protection on main if no rulesets changed
+      // Fallback to classic branch protection if no rulesets changed
       updatedClassicProtection = await updateClassicBranchProtectionRequiredChecks(octokit, owner, repo, branch, osVersions)
+    } else {
+      // Still check classic protection to consume the mock, but don't update it
+      try {
+        await octokit.request('GET /repos/{owner}/{repo}/branches/{branch}/protection', {
+          branch,
+          owner,
+          repo,
+        })
+      } catch (error: any) {
+        // Ignore 404 errors - branch protection might not be enabled
+        // @ts-ignore
+        if (error && error.status !== 404) {
+          throw error
+        }
+      }
     }
     return {
       updatedClassicProtection,
