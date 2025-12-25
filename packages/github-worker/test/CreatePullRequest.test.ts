@@ -78,7 +78,7 @@ test('throws error when PR creation fails', async (): Promise<void> => {
   expect(scope.isDone()).toBe(true)
 })
 
-test('handles graphql error gracefully', async (): Promise<void> => {
+test('throws error when graphql fails', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
     .post('/repos/test-owner/test-repo/pulls', {
       base: 'main',
@@ -89,7 +89,9 @@ test('handles graphql error gracefully', async (): Promise<void> => {
       number: 456,
       node_id: 'PR_node_id_456',
     })
-    .post('/graphql')
+    .post('/graphql', (body: any) => {
+      return typeof body.query === 'string' && body.query.includes('enablePullRequestAutoMerge')
+    })
     .reply(200, {
       errors: [
         {
@@ -98,18 +100,16 @@ test('handles graphql error gracefully', async (): Promise<void> => {
       ],
     })
 
-  const result = await createPullRequest({
-    baseBranch: 'main',
-    githubToken: 'test-token',
-    headBranch: 'feature-branch',
-    owner: 'test-owner',
-    repo: 'test-repo',
-    title: 'Test PR',
-  })
+  await expect(
+    createPullRequest({
+      baseBranch: 'main',
+      githubToken: 'test-token',
+      headBranch: 'feature-branch',
+      owner: 'test-owner',
+      repo: 'test-repo',
+      title: 'Test PR',
+    }),
+  ).rejects.toThrow()
 
-  expect(result).toEqual({
-    pullRequestNumber: 456,
-  })
   expect(scope.isDone()).toBe(true)
 })
-
