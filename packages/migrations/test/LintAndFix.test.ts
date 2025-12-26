@@ -104,7 +104,7 @@ test('installs eslint and runs eslint --fix', async () => {
   })
 
   expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('handles missing package.json', async () => {
@@ -229,7 +229,7 @@ test('handles case when no files need fixing', async () => {
   })
 
   expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('skips eslint installation when eslint is already in devDependencies', async () => {
@@ -319,8 +319,8 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
     statusCode: 201,
   })
 
-  // Should only call npm ci, npx eslint, and git status (3 calls, not 4)
-  expect(mockExecFn).toHaveBeenCalledTimes(3)
+  // Should only call npm ci, npx eslint, and git status (4 calls)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
   expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
 })
@@ -393,8 +393,8 @@ test('skips eslint installation when eslint is already in devDependencies and pa
     statusCode: 201,
   })
 
-  // Should only call npm ci, npx eslint, and git status (3 calls, not 4)
-  expect(mockExecFn).toHaveBeenCalledTimes(3)
+  // Should only call npm ci, npx eslint, and git status (4 calls)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
   expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
 })
@@ -479,8 +479,8 @@ test('skips eslint installation when eslint is already in devDependencies but no
     statusCode: 201,
   })
 
-  // Should only call npm ci, npx eslint, and git status (3 calls, not 4)
-  expect(mockExecFn).toHaveBeenCalledTimes(3)
+  // Should only call npm ci, npx eslint, and git status (4 calls)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
   expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
 })
