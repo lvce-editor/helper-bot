@@ -65,7 +65,7 @@ test('runs npm ci and detects changed files', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('returns empty result when no files changed', async () => {
@@ -119,7 +119,7 @@ test('returns empty result when no files changed', async () => {
     status: 'success',
     statusCode: 200,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('handles missing package.json', async () => {
@@ -214,7 +214,7 @@ test('runs postinstall script when it exists', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(5)
+  expect(mockExecFn).toHaveBeenCalledTimes(6)
 })
 
 test('runs update-dependencies.sh when it exists', async () => {
@@ -275,7 +275,7 @@ test('runs update-dependencies.sh when it exists', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('runs both postinstall and update-dependencies.sh', async () => {
@@ -341,7 +341,7 @@ test('runs both postinstall and update-dependencies.sh', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(5)
+  expect(mockExecFn).toHaveBeenCalledTimes(6)
 })
 
 test('handles npm ci failure', async () => {
@@ -735,7 +735,7 @@ test('handles package.json without scripts', async () => {
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
   // Should not call npm run postinstall
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
   const { calls } = mockExecFn.mock
   expect(calls.some((call) => call[0] === 'npm' && call[1]?.[0] === 'run' && call[1]?.[1] === 'postinstall')).toBe(false)
 })
@@ -787,7 +787,7 @@ test('handles package.json with empty scripts object', async () => {
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
   // Should not call npm run postinstall
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
   const { calls } = mockExecFn.mock
   expect(calls.some((call) => call[0] === 'npm' && call[1]?.[0] === 'run' && call[1]?.[1] === 'postinstall')).toBe(false)
 })
@@ -824,7 +824,7 @@ test('handles invalid package.json', async () => {
   const errorResult: MigrationErrorResult = result as MigrationErrorResult
   expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
   expect(errorResult.errorMessage).toMatch(/Failed to read package\.json|Unexpected token/)
-  expect(mockExecFn).toHaveBeenCalledTimes(1)
+  expect(mockExecFn).toHaveBeenCalledTimes(2)
 })
 
 test('handles git status with empty lines', async () => {
