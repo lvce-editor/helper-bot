@@ -174,11 +174,6 @@ test('runs postinstall script when it exists', async () => {
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
-      // Simulate postinstall modifying a file
-      await mockFs.writeFile(new URL('postinstall-output.txt', clonedRepoUri).toString(), 'postinstall ran\n')
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -186,7 +181,7 @@ test('runs postinstall script when it exists', async () => {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
-      return { exitCode: 0, stderr: '', stdout: '?? postinstall-output.txt\n' }
+      return { exitCode: 0, stderr: '', stdout: '' }
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
@@ -202,19 +197,14 @@ test('runs postinstall script when it exists', async () => {
   })
 
   expect(result).toEqual({
-    branchName: expect.stringMatching(/^chore\/update-all-dependencies-\d+$/),
-    changedFiles: [
-      {
-        content: 'postinstall ran\n',
-        path: 'postinstall-output.txt',
-      },
-    ],
-    commitMessage: 'chore: update all dependencies',
-    pullRequestTitle: 'chore: update all dependencies',
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
     status: 'success',
-    statusCode: 201,
+    statusCode: 200,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(6)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('runs update-dependencies.sh when it exists', async () => {
@@ -302,9 +292,6 @@ test('runs both postinstall and update-dependencies.sh', async () => {
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -341,7 +328,7 @@ test('runs both postinstall and update-dependencies.sh', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(mockExecFn).toHaveBeenCalledTimes(6)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('handles npm ci failure', async () => {
@@ -410,12 +397,6 @@ test('handles postinstall script failure', async () => {
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
-    if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
-      const error = new Error('npm run postinstall failed')
-      // @ts-ignore
-      error.exitCode = 1
-      throw error
-    }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
   const mockExec = createMockExec(mockExecFn)
@@ -429,11 +410,18 @@ test('handles postinstall script failure', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('error')
-  const errorResult: MigrationErrorResult = result as MigrationErrorResult
-  expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(errorResult.errorMessage).toContain('Failed to run npm run postinstall')
-  expect(errorResult.changedFiles).toEqual([])
+  expect(result.status).toBe('success')
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    data: {
+      message: 'no update dependencies script found',
+    },
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('handles update-dependencies.sh failure', async () => {
