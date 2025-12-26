@@ -10,7 +10,7 @@ const wrapExeca = (): ExecFunction => {
     const cwd = options?.cwd ? uriToPath(options.cwd) : undefined
     const result = await execa(file, args, { cwd })
     return {
-      exitCode: result.exitCode ?? 0,
+      exitCode: result.exitCode ?? 129,
       stderr: result.stderr,
       stdout: result.stdout,
     }
