@@ -10,7 +10,7 @@ export interface CloneRepositoryTmpResult {
 }
 
 export const cloneRepositoryTmp = async (owner: string, repo: string): Promise<CloneRepositoryTmpResult> => {
-  const tempDir = await mkdtemp(join(tmpdir(), `migration-${owner}-${repo}-`))
+  const tempDir = await mkdtemp(join(tmpdir(), `migration-${owner}-${repo}-${Date.now()}`))
 
   await execa('git', ['clone', `https://github.com/${owner}/${repo}.git`, tempDir])
 
