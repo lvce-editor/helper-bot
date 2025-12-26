@@ -1,10 +1,10 @@
 import type * as FsPromises from 'node:fs/promises'
-import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
-import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 
 const addEslintCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -77,9 +77,19 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
 
     console.info(`[lint-and-fix]: Running npm ci`)
     // Install dependencies
-    await options.exec('npm', ['ci'], {
+    const { exitCode, stderr } = await options.exec('npm', ['ci'], {
       cwd: options.clonedRepoUri,
     })
+    if (exitCode !== 0) {
+      console.info(`[lint-and-fix]: npm ci error: ${stderr}`)
+      return {
+        changedFiles: [],
+        errorCode: 'E_NPM_INSTALL_FAILED',
+        errorMessage: `npm ci exited with code ${exitCode}`,
+        status: 'error',
+        statusCode: 500,
+      }
+    }
 
     // Run eslint --fix and get changed files
     const lintChangedFiles = await runEslintFix(options.fs, options.exec, options.clonedRepoUri)
