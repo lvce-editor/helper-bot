@@ -322,7 +322,11 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
   // Should only call npm ci, npx eslint, and git status (4 calls)
   expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
+  expect(mockExecFn).not.toHaveBeenCalledWith(
+    'npm',
+    ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'],
+    expect.anything(),
+  )
 })
 
 test('skips eslint installation when eslint is already in devDependencies and package-lock.json does not exist', async () => {
@@ -396,7 +400,11 @@ test('skips eslint installation when eslint is already in devDependencies and pa
   // Should only call npm ci, npx eslint, and git status (4 calls)
   expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
+  expect(mockExecFn).not.toHaveBeenCalledWith(
+    'npm',
+    ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'],
+    expect.anything(),
+  )
 })
 
 test('skips eslint installation when eslint is already in devDependencies but no files need fixing', async () => {
@@ -482,5 +490,9 @@ test('skips eslint installation when eslint is already in devDependencies but no
   // Should only call npm ci, npx eslint, and git status (4 calls)
   expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
+  expect(mockExecFn).not.toHaveBeenCalledWith(
+    'npm',
+    ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'],
+    expect.anything(),
+  )
 })
