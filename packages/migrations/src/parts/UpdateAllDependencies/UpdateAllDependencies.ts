@@ -37,19 +37,6 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
       throw new Error(`Failed to read package.json: ${stringifyError(error)}`)
     }
 
-    // If postinstall script exists, run it
-    if (packageJson.scripts && packageJson.scripts.postinstall) {
-      try {
-        console.info(`[update-all-dependencies] Running npm run postinstall`)
-
-        await options.exec('npm', ['run', 'postinstall'], {
-          cwd: options.clonedRepoUri,
-        })
-      } catch (error) {
-        throw new Error(`Failed to run npm run postinstall: ${stringifyError(error)}`)
-      }
-    }
-
     // Check if scripts/update-dependencies.sh exists
     const updateDependenciesScriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
     const updateDependenciesScriptExists = await options.fs.exists(updateDependenciesScriptPath)
@@ -72,6 +59,11 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
         })
         await options.exec('bash', ['scripts/update-dependencies.sh'], {
           cwd: options.clonedRepoUri,
+          // @ts-ignore
+          env: {
+            NODE_ENV: '',
+            NODE_OPTIONS: '--max_old_space_size=150',
+          },
         })
       } catch (error) {
         throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`)
