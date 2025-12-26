@@ -93,6 +93,10 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     // Install dependencies
     const { exitCode, stderr } = await options.exec('npm', ['ci'], {
       cwd: options.clonedRepoUri,
+      // @ts-ignore
+      env: {
+        NODE_OPTIONS: '--max_old_space_size=150',
+      },
     })
     console.info(`[lint-and-fix]: npm ci exit code: ${exitCode}`)
     if (exitCode !== 0) {
@@ -121,10 +125,7 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
       })
     }
 
-    if (
-      oldPackageLockJsonString !== eslintResult.newPackageLockJsonString &&
-      eslintResult.newPackageLockJsonString !== ''
-    ) {
+    if (oldPackageLockJsonString !== eslintResult.newPackageLockJsonString && eslintResult.newPackageLockJsonString !== '') {
       allChangedFiles.push({
         content: eslintResult.newPackageLockJsonString,
         path: 'package-lock.json',

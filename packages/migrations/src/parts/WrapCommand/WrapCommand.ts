@@ -6,9 +6,14 @@ import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
 
 const wrapExeca = (): ExecFunction => {
-  return async (file: string, args?: readonly string[], options?: { cwd?: string }) => {
+  return async (file: string, args?: readonly string[], options?: { cwd?: string; env?: any }) => {
     const cwd = options?.cwd ? uriToPath(options.cwd) : undefined
-    const result = await execa(file, args, { cwd })
+    const extraEnv = options?.env || {}
+    const env = {
+      ...process.env,
+      ...extraEnv,
+    }
+    const result = await execa(file, args, { cwd, env })
     return {
       exitCode: result.exitCode ?? 129,
       stderr: result.stderr,
