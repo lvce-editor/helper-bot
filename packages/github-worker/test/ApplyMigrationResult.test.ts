@@ -67,8 +67,8 @@ test('applies migration result successfully with file changes', async (): Promis
       title: 'Test PR Title',
     })
     .reply(201, {
-      number: 123,
       node_id: 'PR_node_id_123',
+      number: 123,
     })
     .post('/graphql', (body: any) => {
       return body.query.includes('enablePullRequestAutoMerge') && body.variables === undefined
@@ -158,8 +158,8 @@ test('handles file creation', async (): Promise<void> => {
     })
     .post('/repos/test-owner/test-repo/git/commits', {
       message: 'Test commit',
-      tree: 'new-tree-sha',
       parents: ['base-sha'],
+      tree: 'new-tree-sha',
     })
     .reply(201, {
       sha: 'new-commit-sha',
@@ -176,8 +176,8 @@ test('handles file creation', async (): Promise<void> => {
       title: 'Test PR',
     })
     .reply(201, {
-      number: 456,
       node_id: 'PR_node_id_456',
+      number: 456,
     })
     .post('/graphql')
     .reply(200, {
@@ -248,16 +248,16 @@ test('handles file deletion', async (): Promise<void> => {
     .reply(200, {
       tree: [
         {
+          mode: '100644',
           path: 'file-to-delete.txt',
           sha: 'file-sha',
           type: 'blob',
-          mode: '100644',
         },
         {
+          mode: '100644',
           path: 'other-file.txt',
           sha: 'other-sha',
           type: 'blob',
-          mode: '100644',
         },
       ],
     })
@@ -269,8 +269,8 @@ test('handles file deletion', async (): Promise<void> => {
     })
     .post('/repos/test-owner/test-repo/git/commits', {
       message: 'Delete file',
-      tree: 'new-tree-sha',
       parents: ['base-sha'],
+      tree: 'new-tree-sha',
     })
     .reply(201, {
       sha: 'new-commit-sha',
@@ -287,8 +287,8 @@ test('handles file deletion', async (): Promise<void> => {
       title: 'Delete file',
     })
     .reply(201, {
-      number: 789,
       node_id: 'PR_node_id_789',
+      number: 789,
     })
     .post('/graphql')
     .reply(200, {
@@ -410,8 +410,8 @@ test('handles multiple files', async (): Promise<void> => {
     })
     .post('/repos/test-owner/test-repo/git/commits', {
       message: 'Multiple files',
-      tree: 'new-tree-sha',
       parents: ['base-sha'],
+      tree: 'new-tree-sha',
     })
     .reply(201, {
       sha: 'new-commit-sha',
@@ -428,8 +428,8 @@ test('handles multiple files', async (): Promise<void> => {
       title: 'Multiple files',
     })
     .reply(201, {
-      number: 999,
       node_id: 'PR_node_id_999',
+      number: 999,
     })
     .post('/graphql')
     .reply(200, {
@@ -514,8 +514,8 @@ test('uses default branch name when not provided', async (): Promise<void> => {
     })
     .post('/repos/test-owner/test-repo/git/commits', {
       message: 'Test PR Title',
-      tree: 'new-tree-sha',
       parents: ['base-sha'],
+      tree: 'new-tree-sha',
     })
     .reply(201, {
       sha: 'new-commit-sha',
@@ -530,8 +530,8 @@ test('uses default branch name when not provided', async (): Promise<void> => {
       return body.base === 'main' && body.head.match(/^migration-\d+$/) && body.title === 'Test PR Title'
     })
     .reply(201, {
-      number: 111,
       node_id: 'PR_node_id_111',
+      number: 111,
     })
     .post('/graphql')
     .reply(200, {

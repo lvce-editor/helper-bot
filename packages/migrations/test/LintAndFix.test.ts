@@ -104,7 +104,7 @@ test('installs eslint and runs eslint --fix', async () => {
   })
 
   expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('handles missing package.json', async () => {
@@ -229,17 +229,17 @@ test('handles case when no files need fixing', async () => {
   })
 
   expect(result.changedFiles[0].content).toMatch(/"@lvce-editor\/eslint-config": "\^\d+\.\d+\.\d+"/)
-  expect(mockExecFn).toHaveBeenCalledTimes(4)
+  expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
 test('skips eslint installation when eslint is already in devDependencies', async () => {
   const oldPackageJson: any = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.39.2',
+    },
     name: 'test-package',
     version: '1.0.0',
-    devDependencies: {
-      eslint: '^9.39.2',
-      '@lvce-editor/eslint-config': '^4.3.0',
-    },
   }
 
   const mockPackageLockJson = JSON.stringify(
@@ -266,8 +266,8 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('package-lock.json', clonedRepoUri).toString()]: mockPackageLockJson,
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('src/test.ts', clonedRepoUri).toString()]: originalFileContent,
     },
   })
@@ -319,20 +319,24 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
     statusCode: 201,
   })
 
-  // Should only call npm ci, npx eslint, and git status (3 calls, not 4)
-  expect(mockExecFn).toHaveBeenCalledTimes(3)
+  // Should only call npm ci, npx eslint, and git status (4 calls)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
+  expect(mockExecFn).not.toHaveBeenCalledWith(
+    'npm',
+    ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'],
+    expect.anything(),
+  )
 })
 
 test('skips eslint installation when eslint is already in devDependencies and package-lock.json does not exist', async () => {
   const oldPackageJson: any = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.39.2',
+    },
     name: 'test-package',
     version: '1.0.0',
-    devDependencies: {
-      eslint: '^9.39.2',
-      '@lvce-editor/eslint-config': '^4.3.0',
-    },
   }
 
   const originalFileContent = `const x = "test"\n`
@@ -393,20 +397,24 @@ test('skips eslint installation when eslint is already in devDependencies and pa
     statusCode: 201,
   })
 
-  // Should only call npm ci, npx eslint, and git status (3 calls, not 4)
-  expect(mockExecFn).toHaveBeenCalledTimes(3)
+  // Should only call npm ci, npx eslint, and git status (4 calls)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
+  expect(mockExecFn).not.toHaveBeenCalledWith(
+    'npm',
+    ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'],
+    expect.anything(),
+  )
 })
 
 test('skips eslint installation when eslint is already in devDependencies but no files need fixing', async () => {
   const oldPackageJson: any = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.39.2',
+    },
     name: 'test-package',
     version: '1.0.0',
-    devDependencies: {
-      eslint: '^9.39.2',
-      '@lvce-editor/eslint-config': '^4.3.0',
-    },
   }
 
   const mockPackageLockJson = JSON.stringify(
@@ -432,8 +440,8 @@ test('skips eslint installation when eslint is already in devDependencies but no
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('package-lock.json', clonedRepoUri).toString()]: mockPackageLockJson,
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('src/test.ts', clonedRepoUri).toString()]: fileContent,
     },
   })
@@ -479,8 +487,12 @@ test('skips eslint installation when eslint is already in devDependencies but no
     statusCode: 201,
   })
 
-  // Should only call npm ci, npx eslint, and git status (3 calls, not 4)
-  expect(mockExecFn).toHaveBeenCalledTimes(3)
+  // Should only call npm ci, npx eslint, and git status (4 calls)
+  expect(mockExecFn).toHaveBeenCalledTimes(4)
   // Verify npm install was NOT called
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], expect.anything())
+  expect(mockExecFn).not.toHaveBeenCalledWith(
+    'npm',
+    ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'],
+    expect.anything(),
+  )
 })

@@ -100,8 +100,8 @@ test('returns success when no new commits since last release', async (): Promise
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'identical',
           ahead_by: 0,
+          status: 'identical',
         },
       }
     }
@@ -155,8 +155,8 @@ test('creates new release when there are new commits', async (): Promise<void> =
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 5,
+            status: 'ahead',
           },
         }
       }
@@ -223,8 +223,8 @@ test('creates new release with single commit', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -291,8 +291,8 @@ test('handles version without v prefix', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 3,
+            status: 'ahead',
           },
         }
       }
@@ -323,9 +323,8 @@ test('handles version without v prefix', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.releaseTag).toBe('1.3.0')
-  }
+  const successResult = result as { status: 'success'; data?: { releaseTag: string } }
+  expect(successResult.data?.releaseTag).toBe('1.3.0')
 })
 
 test('falls back to tags when no releases exist', async (): Promise<void> => {
@@ -366,8 +365,8 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 2,
+            status: 'ahead',
           },
         }
       }
@@ -398,10 +397,9 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.releaseTag).toBe('v3.2.0')
-    expect(result.statusCode).toBe(201)
-  }
+  const successResult = result as { status: 'success'; data?: { releaseTag: string }; statusCode: number }
+  expect(successResult.data?.releaseTag).toBe('v3.2.0')
+  expect(successResult.statusCode).toBe(201)
 })
 
 test('handles custom base branch', async (): Promise<void> => {
@@ -427,8 +425,8 @@ test('handles custom base branch', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -448,6 +446,7 @@ test('handles custom base branch', async (): Promise<void> => {
   )
 
   const result = await createReleaseIfNeeded({
+    baseBranch: 'master',
     clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
@@ -456,13 +455,11 @@ test('handles custom base branch', async (): Promise<void> => {
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
-    baseBranch: 'master',
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.releaseTag).toBe('v1.1.0')
-  }
+  const successResult = result as { status: 'success'; data?: { releaseTag: string } }
+  expect(successResult.data?.releaseTag).toBe('v1.1.0')
 })
 
 test('handles error when getting branch ref fails', async (): Promise<void> => {
@@ -493,10 +490,9 @@ test('handles error when getting branch ref fails', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-    expect(result.errorMessage).toContain('Failed to get branch ref')
-  }
+  const errorResult = result as { status: 'error'; errorCode: string; errorMessage: string }
+  expect(errorResult.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+  expect(errorResult.errorMessage).toContain('Failed to get branch ref')
 })
 
 test('handles error when creating tag fails', async (): Promise<void> => {
@@ -522,8 +518,8 @@ test('handles error when creating tag fails', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -546,10 +542,9 @@ test('handles error when creating tag fails', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-    expect(result.errorMessage).toContain('Reference already exists')
-  }
+  const errorResult = result as { status: 'error'; errorCode: string; errorMessage: string }
+  expect(errorResult.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+  expect(errorResult.errorMessage).toContain('Reference already exists')
 })
 
 test('handles error when creating tag via API fails', async (): Promise<void> => {
@@ -575,8 +570,8 @@ test('handles error when creating tag via API fails', async (): Promise<void> =>
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -599,10 +594,9 @@ test('handles error when creating tag via API fails', async (): Promise<void> =>
   })
 
   expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-    expect(result.errorMessage).toContain('Permission denied')
-  }
+  const errorResult = result as { status: 'error'; errorCode: string; errorMessage: string }
+  expect(errorResult.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+  expect(errorResult.errorMessage).toContain('Permission denied')
 })
 
 test('handles invalid version format', async (): Promise<void> => {
@@ -627,8 +621,8 @@ test('handles invalid version format', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'ahead',
           ahead_by: 1,
+          status: 'ahead',
         },
       }
     }
@@ -647,10 +641,9 @@ test('handles invalid version format', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
-    expect(result.errorMessage).toContain('Invalid version format')
-  }
+  const errorResult = result as { status: 'error'; errorCode: string; errorMessage: string }
+  expect(errorResult.errorCode).toBe('CREATE_RELEASE_IF_NEEDED_FAILED')
+  expect(errorResult.errorMessage).toContain('Invalid version format')
 })
 
 test('handles version with only two parts', async (): Promise<void> => {
@@ -675,8 +668,8 @@ test('handles version with only two parts', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'ahead',
           ahead_by: 1,
+          status: 'ahead',
         },
       }
     }
@@ -695,9 +688,8 @@ test('handles version with only two parts', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorMessage).toContain('Expected format: major.minor.patch')
-  }
+  const errorResult = result as { status: 'error'; errorMessage: string }
+  expect(errorResult.errorMessage).toContain('Expected format: major.minor.patch')
 })
 
 test('handles version with non-numeric parts', async (): Promise<void> => {
@@ -722,8 +714,8 @@ test('handles version with non-numeric parts', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'ahead',
           ahead_by: 1,
+          status: 'ahead',
         },
       }
     }
@@ -742,9 +734,8 @@ test('handles version with non-numeric parts', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorMessage).toContain('All parts must be numbers')
-  }
+  const errorResult = result as { status: 'error'; errorMessage: string }
+  expect(errorResult.errorMessage).toContain('All parts must be numbers')
 })
 
 test('handles compare commits returning non-200 status', async (): Promise<void> => {
@@ -798,9 +789,8 @@ test('handles compare commits returning non-200 status', async (): Promise<void>
 
   // Should assume there are commits when comparison fails
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.releaseTag).toBe('v1.3.0')
-  }
+  const successResult = result as { status: 'success'; data?: { releaseTag: string } }
+  expect(successResult.data?.releaseTag).toBe('v1.3.0')
 })
 
 test('handles compare commits with diverged status', async (): Promise<void> => {
@@ -826,8 +816,8 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'diverged',
             ahead_by: 3,
+            status: 'diverged',
           },
         }
       }
@@ -858,10 +848,9 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.releaseTag).toBe('v1.3.0')
-    expect(result.data?.message).toContain('3 new commits')
-  }
+  const successResult = result as { status: 'success'; data?: { releaseTag: string; message: string } }
+  expect(successResult.data?.releaseTag).toBe('v1.3.0')
+  expect(successResult.data?.message).toContain('3 new commits')
 })
 
 test('handles compare commits with ahead_by 0', async (): Promise<void> => {
@@ -886,8 +875,8 @@ test('handles compare commits with ahead_by 0', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'behind',
           ahead_by: 0,
+          status: 'behind',
         },
       }
     }
@@ -906,9 +895,8 @@ test('handles compare commits with ahead_by 0', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.message).toContain('No new commits')
-  }
+  const successResult = result as { status: 'success'; data?: { message: string } }
+  expect(successResult.data?.message).toContain('No new commits')
 })
 
 test('handles tags endpoint returning empty array', async (): Promise<void> => {
@@ -938,9 +926,8 @@ test('handles tags endpoint returning empty array', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.message).toContain('No releases or tags found')
-  }
+  const successResult = result as { status: 'success'; data?: { message: string } }
+  expect(successResult.data?.message).toContain('No releases or tags found')
 })
 
 test('handles tag ref fetch failure', async (): Promise<void> => {
@@ -979,9 +966,8 @@ test('handles tag ref fetch failure', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.message).toContain('No releases or tags found')
-  }
+  const successResult = result as { status: 'success'; data?: { message: string } }
+  expect(successResult.data?.message).toContain('No releases or tags found')
 })
 
 test('handles large version numbers', async (): Promise<void> => {
@@ -1007,8 +993,8 @@ test('handles large version numbers', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -1039,7 +1025,6 @@ test('handles large version numbers', async (): Promise<void> => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.data?.releaseTag).toBe('v99.89.0')
-  }
+  const successResult = result as { status: 'success'; data?: { releaseTag: string } }
+  expect(successResult.data?.releaseTag).toBe('v99.89.0')
 })

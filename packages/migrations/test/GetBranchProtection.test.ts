@@ -207,7 +207,7 @@ test('includes authorization header in requests', async (): Promise<void> => {
   const requestCalls: Array<{ route: string; options: any }> = []
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
-    requestCalls.push({ route, options })
+    requestCalls.push({ options, route })
 
     if (route === 'GET /repos/{owner}/{repo}/rulesets') {
       return {

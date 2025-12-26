@@ -109,8 +109,8 @@ test('handles custom file mode and type', async (): Promise<void> => {
     })
     .post('/repos/test-owner/test-repo/git/commits', {
       message: 'Test commit',
-      tree: 'new-tree-sha',
       parents: ['base-sha'],
+      tree: 'new-tree-sha',
     })
     .reply(201, {
       sha: 'new-commit-sha',

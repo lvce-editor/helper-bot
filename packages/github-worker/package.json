@@ -34,6 +34,5 @@
     "@lvce-editor/rpc": "^4.20.0",
     "@lvce-editor/verror": "^1.7.0",
     "@octokit/rest": "^22.0.1"
-  },
-  "devDependencies": {}
+  }
 }
