@@ -2,6 +2,7 @@ import type * as FsPromises from 'node:fs/promises'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { npmCi } from '../NpmCi/NpmCi.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
@@ -91,13 +92,7 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
 
     console.info(`[lint-and-fix]: Running npm ci`)
     // Install dependencies
-    const { exitCode, stderr } = await options.exec('npm', ['ci'], {
-      cwd: options.clonedRepoUri,
-      // @ts-ignore
-      env: {
-        NODE_OPTIONS: '--max_old_space_size=150',
-      },
-    })
+    const { exitCode, stderr } = await npmCi(options.clonedRepoUri, options.exec)
     console.info(`[lint-and-fix]: npm ci exit code: ${exitCode}`)
     if (exitCode !== 0) {
       console.info(`[lint-and-fix]: npm ci error: ${stderr}`)

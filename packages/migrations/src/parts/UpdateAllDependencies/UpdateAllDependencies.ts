@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { npmCi } from '../NpmCi/NpmCi.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 export type UpdateAllDependenciesOptions = BaseMigrationOptions
@@ -19,9 +20,10 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     // Run npm ci --ignore-scripts
     try {
       console.info(`[update-all-dependencies] Running npm ci`)
-      await options.exec('npm', ['ci', '--ignore-scripts'], {
-        cwd: options.clonedRepoUri,
-      })
+      const { exitCode, stderr } = await npmCi(options.clonedRepoUri, options.exec)
+      if (exitCode !== 0) {
+        throw new Error(`npm ci --ignore-scripts exited with code ${exitCode}: ${stderr}`)
+      }
     } catch (error) {
       throw new Error(`Failed to run npm ci --ignore-scripts: ${stringifyError(error)}`)
     }
