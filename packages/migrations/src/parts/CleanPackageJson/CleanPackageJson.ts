@@ -50,6 +50,11 @@ export const cleanPackageJson = async (options: Readonly<CleanPackageJsonOptions
       delete packageJson['test-tokenize'].skip
       hasChanges = true
     }
+    // Remove empty test-tokenize.skip array if it exists
+    if (packageJson['test-tokenize'] && typeof packageJson['test-tokenize'] === 'object' && !Object.keys(packageJson['test-tokenize'].length === 0)) {
+      delete packageJson['test-tokenize']
+      hasChanges = true
+    }
 
     // Remove description field if it's an empty string
     if (packageJson.description === '') {
