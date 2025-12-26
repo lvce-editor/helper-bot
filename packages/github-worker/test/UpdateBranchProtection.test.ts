@@ -134,20 +134,20 @@ test('skips update when no changes needed', async (): Promise<void> => {
     .reply(200, {
       data: [
         {
+          bypass_actors: [],
+          conditions: {},
+          enforcement: 'active',
           id: 1,
           name: 'Branch Protection',
-          target: 'branch',
-          enforcement: 'active',
-          conditions: {},
-          bypass_actors: [],
           rules: [
             {
-              type: 'required_status_checks',
               parameters: {
                 checks: ['ci/test-ubuntu-24.04'],
               },
+              type: 'required_status_checks',
             },
           ],
+          target: 'branch',
         },
       ],
     })
@@ -223,23 +223,23 @@ test('handles organization rulesets', async (): Promise<void> => {
     .reply(200, {
       data: [
         {
+          bypass_actors: [],
+          conditions: {},
+          enforcement: 'active',
           id: 2,
           name: 'Org Branch Protection',
-          target: 'branch',
-          enforcement: 'active',
-          conditions: {},
-          bypass_actors: [],
-          source: {
-            type: 'Organization',
-          },
           rules: [
             {
-              type: 'required_status_checks',
               parameters: {
                 checks: ['ci/test-ubuntu-22.04'],
               },
+              type: 'required_status_checks',
             },
           ],
+          source: {
+            type: 'Organization',
+          },
+          target: 'branch',
         },
       ],
     })
@@ -276,22 +276,22 @@ test('updates required_status_checks.required_checks format', async (): Promise<
     .reply(200, {
       data: [
         {
+          bypass_actors: [],
+          conditions: {},
+          enforcement: 'active',
           id: 3,
           name: 'Branch Protection',
-          target: 'branch',
-          enforcement: 'active',
-          conditions: {},
-          bypass_actors: [],
           rules: [
             {
-              type: 'required_status_checks',
               parameters: {
                 required_status_checks: {
                   required_checks: [{ context: 'ci/test-ubuntu-22.04' }, { context: 'ci/build-windows-2022' }],
                 },
               },
+              type: 'required_status_checks',
             },
           ],
+          target: 'branch',
         },
       ],
     })
@@ -391,20 +391,20 @@ test('updates macos versions', async (): Promise<void> => {
     .reply(200, {
       data: [
         {
+          bypass_actors: [],
+          conditions: {},
+          enforcement: 'active',
           id: 4,
           name: 'Branch Protection',
-          target: 'branch',
-          enforcement: 'active',
-          conditions: {},
-          bypass_actors: [],
           rules: [
             {
-              type: 'required_status_checks',
               parameters: {
                 checks: ['ci/test-macos-14'],
               },
+              type: 'required_status_checks',
             },
           ],
+          target: 'branch',
         },
       ],
     })

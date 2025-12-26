@@ -23,8 +23,8 @@ test('creates pull request successfully', async (): Promise<void> => {
       title: 'Test PR',
     })
     .reply(201, {
-      number: 123,
       node_id: 'PR_node_id_123',
+      number: 123,
     })
     .post('/graphql', (body: any) => {
       return typeof body.query === 'string' && body.query.includes('enablePullRequestAutoMerge')
@@ -60,12 +60,12 @@ test('throws error when PR creation fails', async (): Promise<void> => {
       title: 'Test PR',
     })
     .reply(422, {
-      message: 'Validation Failed',
       errors: [
         {
           message: 'No commits between main and feature-branch',
         },
       ],
+      message: 'Validation Failed',
     })
 
   await expect(
@@ -90,8 +90,8 @@ test('throws error when graphql fails', async (): Promise<void> => {
       title: 'Test PR',
     })
     .reply(201, {
-      number: 456,
       node_id: 'PR_node_id_456',
+      number: 456,
     })
     .post('/graphql', (body: any) => {
       return typeof body.query === 'string' && body.query.includes('enablePullRequestAutoMerge')

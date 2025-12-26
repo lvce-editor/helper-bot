@@ -490,10 +490,9 @@ test('handles invalid JSON gracefully', async () => {
   })
 
   expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('CLEAN_PACKAGE_JSON_FAILED')
-    expect(result.errorMessage).toBeDefined()
-  }
+  const errorResult = result as { status: 'error'; errorCode: string; errorMessage: string }
+  expect(errorResult.errorCode).toBe('CLEAN_PACKAGE_JSON_FAILED')
+  expect(errorResult.errorMessage).toBeDefined()
 })
 
 test('only sets license when missing, not when null', async () => {
@@ -590,11 +589,10 @@ test('returns correct branch name and commit message', async () => {
   })
 
   expect(result.status).toBe('success')
-  if (result.status === 'success') {
-    expect(result.branchName).toBe('feature/clean-package-json')
-    expect(result.commitMessage).toBe('chore: clean package.json')
-    expect(result.pullRequestTitle).toBe('chore: clean package.json')
-  }
+  const successResult = result as { status: 'success'; branchName: string; commitMessage: string; pullRequestTitle: string }
+  expect(successResult.branchName).toBe('feature/clean-package-json')
+  expect(successResult.commitMessage).toBe('chore: clean package.json')
+  expect(successResult.pullRequestTitle).toBe('chore: clean package.json')
 })
 
 test('removes empty test-tokenize.skip array', async () => {
