@@ -72,8 +72,22 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     const packageLockExists = await options.fs.exists(packageLockJsonPath)
     const oldPackageLockJsonString = packageLockExists ? await options.fs.readFile(packageLockJsonPath, 'utf8') : null
 
-    // Update eslint dependencies
-    const eslintResult = await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
+    // Check if eslint is already in devDependencies
+    const packageJson = JSON.parse(oldPackageJsonString) as { devDependencies?: Record<string, string> }
+    const hasEslint = packageJson.devDependencies?.eslint !== undefined
+
+    // Update eslint dependencies only if eslint is not already installed
+    let eslintResult: { newPackageJsonString: string; newPackageLockJsonString: string }
+    if (hasEslint) {
+      console.info('[lint-and-fix]: eslint already in devDependencies, skipping installation')
+      eslintResult = {
+        newPackageJsonString: oldPackageJsonString,
+        newPackageLockJsonString: oldPackageLockJsonString ?? '',
+      }
+    } else {
+      console.info('[lint-and-fix]: eslint not found in devDependencies, installing eslint and @lvce-editor/eslint-config')
+      eslintResult = await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
+    }
 
     console.info(`[lint-and-fix]: Running npm ci`)
     // Install dependencies
@@ -107,7 +121,10 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
       })
     }
 
-    if (oldPackageLockJsonString !== eslintResult.newPackageLockJsonString) {
+    if (
+      oldPackageLockJsonString !== eslintResult.newPackageLockJsonString &&
+      eslintResult.newPackageLockJsonString !== ''
+    ) {
       allChangedFiles.push({
         content: eslintResult.newPackageLockJsonString,
         path: 'package-lock.json',
