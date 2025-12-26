@@ -80,6 +80,7 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     const { exitCode, stderr } = await options.exec('npm', ['ci'], {
       cwd: options.clonedRepoUri,
     })
+    console.info(`[lint-and-fix]: npm ci exit code: ${exitCode}`)
     if (exitCode !== 0) {
       console.info(`[lint-and-fix]: npm ci error: ${stderr}`)
       return {
