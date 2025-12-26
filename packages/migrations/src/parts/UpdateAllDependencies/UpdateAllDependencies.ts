@@ -18,6 +18,7 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
 
     // Run npm ci --ignore-scripts
     try {
+      console.info(`[update-all-dependencies] Running npm ci`)
       await options.exec('npm', ['ci', '--ignore-scripts'], {
         cwd: options.clonedRepoUri,
       })
@@ -37,6 +38,8 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     // If postinstall script exists, run it
     if (packageJson.scripts && packageJson.scripts.postinstall) {
       try {
+        console.info(`[update-all-dependencies] Running npm run postinstall`)
+
         await options.exec('npm', ['run', 'postinstall'], {
           cwd: options.clonedRepoUri,
         })
@@ -49,6 +52,8 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     const updateDependenciesScriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
     const updateDependenciesScriptExists = await options.fs.exists(updateDependenciesScriptPath)
     if (!updateDependenciesScriptExists) {
+      console.info(`[update-all-dependencies] No update dependencies script found`)
+
       return {
         ...emptyMigrationResult,
         data: {
