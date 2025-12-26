@@ -35,7 +35,5 @@
     "@lvce-editor/verror": "^1.7.0",
     "@octokit/rest": "^22.0.1"
   },
-  "devDependencies": {
-    "nock": "^14.0.10"
-  }
+  "devDependencies": {}
 }
