@@ -234,12 +234,12 @@ test('handles case when no files need fixing', async () => {
 
 test('skips eslint installation when eslint is already in devDependencies', async () => {
   const oldPackageJson: any = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.39.2',
+    },
     name: 'test-package',
     version: '1.0.0',
-    devDependencies: {
-      eslint: '^9.39.2',
-      '@lvce-editor/eslint-config': '^4.3.0',
-    },
   }
 
   const mockPackageLockJson = JSON.stringify(
@@ -266,8 +266,8 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('package-lock.json', clonedRepoUri).toString()]: mockPackageLockJson,
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('src/test.ts', clonedRepoUri).toString()]: originalFileContent,
     },
   })
@@ -327,12 +327,12 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
 
 test('skips eslint installation when eslint is already in devDependencies and package-lock.json does not exist', async () => {
   const oldPackageJson: any = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.39.2',
+    },
     name: 'test-package',
     version: '1.0.0',
-    devDependencies: {
-      eslint: '^9.39.2',
-      '@lvce-editor/eslint-config': '^4.3.0',
-    },
   }
 
   const originalFileContent = `const x = "test"\n`
@@ -401,12 +401,12 @@ test('skips eslint installation when eslint is already in devDependencies and pa
 
 test('skips eslint installation when eslint is already in devDependencies but no files need fixing', async () => {
   const oldPackageJson: any = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.39.2',
+    },
     name: 'test-package',
     version: '1.0.0',
-    devDependencies: {
-      eslint: '^9.39.2',
-      '@lvce-editor/eslint-config': '^4.3.0',
-    },
   }
 
   const mockPackageLockJson = JSON.stringify(
@@ -432,8 +432,8 @@ test('skips eslint installation when eslint is already in devDependencies but no
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('package-lock.json', clonedRepoUri).toString()]: mockPackageLockJson,
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('src/test.ts', clonedRepoUri).toString()]: fileContent,
     },
   })

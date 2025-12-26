@@ -40,9 +40,9 @@ test('sets license to MIT when not set', async () => {
 test('removes empty keywords array', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    keywords: [] as string[],
     name: 'test-package',
     version: '1.0.0',
-    keywords: [] as string[],
   }
   const mockFs = createMockFs({
     files: {
@@ -68,9 +68,9 @@ test('removes empty keywords array', async () => {
 test('sets author to Lvce Editor when empty string', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    author: '',
     name: 'test-package',
     version: '1.0.0',
-    author: '',
   }
   const mockFs = createMockFs({
     files: {
@@ -123,10 +123,10 @@ test('sets author to Lvce Editor when missing', async () => {
 test('applies all three changes together', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    author: '',
+    keywords: [] as string[],
     name: 'test-package',
     version: '1.0.0',
-    keywords: [] as string[],
-    author: '',
   }
   const mockFs = createMockFs({
     files: {
@@ -154,10 +154,10 @@ test('applies all three changes together', async () => {
 test('returns empty result when no changes needed', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    author: 'Lvce Editor',
+    license: 'MIT',
     name: 'test-package',
     version: '1.0.0',
-    license: 'MIT',
-    author: 'Lvce Editor',
   }
   const mockFs = createMockFs({
     files: {
@@ -210,9 +210,9 @@ test('handles missing package.json', async () => {
 test('preserves existing license when already set', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    license: 'Apache-2.0',
     name: 'test-package',
     version: '1.0.0',
-    license: 'Apache-2.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -239,9 +239,9 @@ test('preserves existing license when already set', async () => {
 test('preserves existing author when already set', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    author: 'John Doe',
     name: 'test-package',
     version: '1.0.0',
-    author: 'John Doe',
   }
   const mockFs = createMockFs({
     files: {
@@ -268,9 +268,9 @@ test('preserves existing author when already set', async () => {
 test('preserves keywords array with items', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    keywords: ['test', 'example'],
     name: 'test-package',
     version: '1.0.0',
-    keywords: ['test', 'example'],
   }
   const mockFs = createMockFs({
     files: {
@@ -296,9 +296,9 @@ test('preserves keywords array with items', async () => {
 test('preserves keywords when not an array', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    keywords: 'test',
     name: 'test-package',
     version: '1.0.0',
-    keywords: 'test',
   }
   const mockFs = createMockFs({
     files: {
@@ -325,8 +325,8 @@ test('removes empty skip array', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
     name: 'test-package',
-    version: '1.0.0',
     skip: [] as string[],
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -353,8 +353,8 @@ test('preserves skip array with items', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
     name: 'test-package',
-    version: '1.0.0',
     skip: ['test', 'example'],
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -381,8 +381,8 @@ test('preserves skip when not an array', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
     name: 'test-package',
-    version: '1.0.0',
     skip: 'test',
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -408,11 +408,11 @@ test('preserves skip when not an array', async () => {
 test('removes empty skip array along with other changes', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
-    name: 'test-package',
-    version: '1.0.0',
-    skip: [] as string[],
-    keywords: [] as string[],
     author: '',
+    keywords: [] as string[],
+    name: 'test-package',
+    skip: [] as string[],
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -441,12 +441,12 @@ test('removes empty skip array along with other changes', async () => {
 test('preserves author when it is an object', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    author: {
+      email: 'john@example.com',
+      name: 'John Doe',
+    },
     name: 'test-package',
     version: '1.0.0',
-    author: {
-      name: 'John Doe',
-      email: 'john@example.com',
-    },
   }
   const mockFs = createMockFs({
     files: {
@@ -467,8 +467,8 @@ test('preserves author when it is an object', async () => {
   expect(result.statusCode).toBe(201)
   const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
   expect(updatedPackageJson.author).toEqual({
-    name: 'John Doe',
     email: 'john@example.com',
+    name: 'John Doe',
   })
 })
 
@@ -499,9 +499,9 @@ test('handles invalid JSON gracefully', async () => {
 test('only sets license when missing, not when null', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    license: null as string | null,
     name: 'test-package',
     version: '1.0.0',
-    license: null as string | null,
   }
   const mockFs = createMockFs({
     files: {
@@ -527,17 +527,17 @@ test('only sets license when missing, not when null', async () => {
 test('handles complex package.json with all fields', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
-    name: 'test-package',
-    version: '1.0.0',
-    description: 'A test package',
-    main: 'index.js',
-    scripts: {
-      test: 'jest',
-    },
     dependencies: {
       lodash: '^4.17.21',
     },
+    description: 'A test package',
     keywords: [] as string[],
+    main: 'index.js',
+    name: 'test-package',
+    scripts: {
+      test: 'jest',
+    },
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -601,10 +601,10 @@ test('removes empty test-tokenize.skip array', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
     name: 'test-package',
-    version: '1.0.0',
     'test-tokenize': {
       skip: [] as string[],
     },
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -632,10 +632,10 @@ test('preserves test-tokenize.skip array with items', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
     name: 'test-package',
-    version: '1.0.0',
     'test-tokenize': {
       skip: ['test', 'example'],
     },
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -662,10 +662,10 @@ test('preserves test-tokenize.skip when not an array', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
     name: 'test-package',
-    version: '1.0.0',
     'test-tokenize': {
       skip: 'test',
     },
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -692,10 +692,10 @@ test('preserves test-tokenize when skip does not exist', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
     name: 'test-package',
-    version: '1.0.0',
     'test-tokenize': {
       other: 'value',
     },
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -721,13 +721,13 @@ test('preserves test-tokenize when skip does not exist', async () => {
 test('removes empty test-tokenize.skip array along with other changes', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const packageJson = {
+    author: '',
+    keywords: [] as string[],
     name: 'test-package',
-    version: '1.0.0',
     'test-tokenize': {
       skip: [] as string[],
     },
-    keywords: [] as string[],
-    author: '',
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {

@@ -100,8 +100,8 @@ test('returns success when no new commits since last release', async (): Promise
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'identical',
           ahead_by: 0,
+          status: 'identical',
         },
       }
     }
@@ -155,8 +155,8 @@ test('creates new release when there are new commits', async (): Promise<void> =
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 5,
+            status: 'ahead',
           },
         }
       }
@@ -223,8 +223,8 @@ test('creates new release with single commit', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -291,8 +291,8 @@ test('handles version without v prefix', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 3,
+            status: 'ahead',
           },
         }
       }
@@ -366,8 +366,8 @@ test('falls back to tags when no releases exist', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 2,
+            status: 'ahead',
           },
         }
       }
@@ -427,8 +427,8 @@ test('handles custom base branch', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -448,6 +448,7 @@ test('handles custom base branch', async (): Promise<void> => {
   )
 
   const result = await createReleaseIfNeeded({
+    baseBranch: 'master',
     clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
@@ -456,7 +457,6 @@ test('handles custom base branch', async (): Promise<void> => {
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
     repositoryName: 'repo',
     repositoryOwner: 'owner',
-    baseBranch: 'master',
   })
 
   expect(result.status).toBe('success')
@@ -522,8 +522,8 @@ test('handles error when creating tag fails', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -575,8 +575,8 @@ test('handles error when creating tag via API fails', async (): Promise<void> =>
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
@@ -627,8 +627,8 @@ test('handles invalid version format', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'ahead',
           ahead_by: 1,
+          status: 'ahead',
         },
       }
     }
@@ -675,8 +675,8 @@ test('handles version with only two parts', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'ahead',
           ahead_by: 1,
+          status: 'ahead',
         },
       }
     }
@@ -722,8 +722,8 @@ test('handles version with non-numeric parts', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'ahead',
           ahead_by: 1,
+          status: 'ahead',
         },
       }
     }
@@ -826,8 +826,8 @@ test('handles compare commits with diverged status', async (): Promise<void> => 
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'diverged',
             ahead_by: 3,
+            status: 'diverged',
           },
         }
       }
@@ -886,8 +886,8 @@ test('handles compare commits with ahead_by 0', async (): Promise<void> => {
     if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
       return {
         data: {
-          status: 'behind',
           ahead_by: 0,
+          status: 'behind',
         },
       }
     }
@@ -1007,8 +1007,8 @@ test('handles large version numbers', async (): Promise<void> => {
       if (route === 'GET /repos/{owner}/{repo}/compare/{base}...{head}') {
         return {
           data: {
-            status: 'ahead',
             ahead_by: 1,
+            status: 'ahead',
           },
         }
       }
