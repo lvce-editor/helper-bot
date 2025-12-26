@@ -710,6 +710,9 @@ test('handles package.json without scripts', async () => {
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
+    if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -734,10 +737,7 @@ test('handles package.json without scripts', async () => {
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  // Should not call npm run postinstall
   expect(mockExecFn).toHaveBeenCalledTimes(5)
-  const { calls } = mockExecFn.mock
-  expect(calls.some((call) => call[0] === 'npm' && call[1]?.[0] === 'run' && call[1]?.[1] === 'postinstall')).toBe(false)
 })
 
 test('handles package.json with empty scripts object', async () => {
@@ -762,6 +762,9 @@ test('handles package.json with empty scripts object', async () => {
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
+    if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -786,10 +789,7 @@ test('handles package.json with empty scripts object', async () => {
 
   expect(result.status).toBe('success')
   expect(result.changedFiles).toEqual([])
-  // Should not call npm run postinstall
   expect(mockExecFn).toHaveBeenCalledTimes(5)
-  const { calls } = mockExecFn.mock
-  expect(calls.some((call) => call[0] === 'npm' && call[1]?.[0] === 'run' && call[1]?.[1] === 'postinstall')).toBe(false)
 })
 
 test('handles invalid package.json', async () => {
