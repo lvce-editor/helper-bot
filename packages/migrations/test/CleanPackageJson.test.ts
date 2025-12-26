@@ -596,3 +596,160 @@ test('returns correct branch name and commit message', async () => {
     expect(result.pullRequestTitle).toBe('chore: clean package.json')
   }
 })
+
+test('removes empty test-tokenize.skip array', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
+  const packageJson = {
+    name: 'test-package',
+    version: '1.0.0',
+    'test-tokenize': {
+      skip: [] as string[],
+    },
+  }
+  const mockFs = createMockFs({
+    files: {
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+    },
+  })
+
+  const result = await cleanPackageJson({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'test-package',
+    repositoryOwner: 'test',
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.statusCode).toBe(201)
+  const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
+  expect(updatedPackageJson['test-tokenize']).toBeDefined()
+  expect(updatedPackageJson['test-tokenize'].skip).toBeUndefined()
+})
+
+test('preserves test-tokenize.skip array with items', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
+  const packageJson = {
+    name: 'test-package',
+    version: '1.0.0',
+    'test-tokenize': {
+      skip: ['test', 'example'],
+    },
+  }
+  const mockFs = createMockFs({
+    files: {
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+    },
+  })
+
+  const result = await cleanPackageJson({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'test-package',
+    repositoryOwner: 'test',
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.statusCode).toBe(201)
+  const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
+  expect(updatedPackageJson['test-tokenize'].skip).toEqual(['test', 'example'])
+})
+
+test('preserves test-tokenize.skip when not an array', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
+  const packageJson = {
+    name: 'test-package',
+    version: '1.0.0',
+    'test-tokenize': {
+      skip: 'test',
+    },
+  }
+  const mockFs = createMockFs({
+    files: {
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+    },
+  })
+
+  const result = await cleanPackageJson({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'test-package',
+    repositoryOwner: 'test',
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.statusCode).toBe(201)
+  const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
+  expect(updatedPackageJson['test-tokenize'].skip).toBe('test')
+})
+
+test('preserves test-tokenize when skip does not exist', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
+  const packageJson = {
+    name: 'test-package',
+    version: '1.0.0',
+    'test-tokenize': {
+      other: 'value',
+    },
+  }
+  const mockFs = createMockFs({
+    files: {
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+    },
+  })
+
+  const result = await cleanPackageJson({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'test-package',
+    repositoryOwner: 'test',
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.statusCode).toBe(201)
+  const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
+  expect(updatedPackageJson['test-tokenize']).toEqual({ other: 'value' })
+})
+
+test('removes empty test-tokenize.skip array along with other changes', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
+  const packageJson = {
+    name: 'test-package',
+    version: '1.0.0',
+    'test-tokenize': {
+      skip: [] as string[],
+    },
+    keywords: [] as string[],
+    author: '',
+  }
+  const mockFs = createMockFs({
+    files: {
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+    },
+  })
+
+  const result = await cleanPackageJson({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'test-package',
+    repositoryOwner: 'test',
+  })
+
+  expect(result.status).toBe('success')
+  expect(result.statusCode).toBe(201)
+  const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
+  expect(updatedPackageJson.license).toBe('MIT')
+  expect(updatedPackageJson.author).toBe('Lvce Editor')
+  expect(updatedPackageJson.keywords).toBeUndefined()
+  expect(updatedPackageJson['test-tokenize']).toBeDefined()
+  expect(updatedPackageJson['test-tokenize'].skip).toBeUndefined()
+})
