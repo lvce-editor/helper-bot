@@ -37,7 +37,7 @@ export const handleReleaseReleased = async (options: Readonly<HandleReleaseRelea
       const targetFilePath = 'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
 
       // Clone the target repo for builtin extensions update
-      const clonedTargetRepo = await cloneRepositoryTmp(targetOwner, targetRepo)
+      const clonedTargetRepo = await cloneRepositoryTmp(options.exec, targetOwner, targetRepo)
 
       try {
         const builtinExtensionsResult = await updateBuiltinExtensions({
