@@ -1,7 +1,8 @@
 import type { Octokit } from '@octokit/rest'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
+import type { components } from '@octokit/openapi-types'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { convertClassicToRuleset } from '../ConvertClassicToRuleset/ConvertClassicToRuleset.ts'
+import { convertClassicToRuleset, type RulesetData } from '../ConvertClassicToRuleset/ConvertClassicToRuleset.ts'
 import { createRuleset } from '../CreateRuleset/CreateRuleset.ts'
 import { deleteClassicBranchProtection } from '../DeleteClassicBranchProtection/DeleteClassicBranchProtection.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
@@ -16,6 +17,36 @@ export interface ModernizeBranchProtectionOptions extends BaseMigrationOptions {
   readonly OctokitConstructor?: typeof OctokitConstructor
 }
 
+const createDefaultBranchRuleset = (branch: string): RulesetData => {
+  const rules: components['schemas']['repository-rule'][] = [
+    // Non-fast-forward (linear history) - always enabled
+    {
+      type: 'non_fast_forward',
+    },
+    {
+      type: 'required_linear_history',
+    },
+    // Deletion protection - always enabled for default ruleset
+    {
+      type: 'deletion',
+    },
+  ]
+
+  return {
+    bypass_actors: [],
+    conditions: {
+      ref_name: {
+        exclude: [],
+        include: ['~DEFAULT_BRANCH'],
+      },
+    },
+    enforcement: 'active',
+    name: `Protect ${branch}`,
+    rules,
+    target: 'branch',
+  }
+}
+
 export const modernizeBranchProtection = async (options: ModernizeBranchProtectionOptions): Promise<MigrationResult> => {
   const { branch = 'main', githubToken, OctokitConstructor: OctokitCtor = OctokitConstructor, repositoryName, repositoryOwner } = options
 
@@ -24,23 +55,7 @@ export const modernizeBranchProtection = async (options: ModernizeBranchProtecti
   })
 
   try {
-    // Get classic branch protection
-    const classicProtection = await getClassicBranchProtection(repositoryOwner, repositoryName, branch, octokit)
-
-    if (!classicProtection) {
-      return {
-        changedFiles: [],
-        data: {
-          message: 'No classic branch protection found',
-          migrated: false,
-        },
-        pullRequestTitle: '',
-        status: 'success',
-        statusCode: 200,
-      }
-    }
-
-    // Get existing rulesets
+    // Get existing rulesets first
     const rulesets = await getBranchRulesets(repositoryOwner, repositoryName, octokit)
 
     // Check if there's already a ruleset for this branch
@@ -62,8 +77,20 @@ export const modernizeBranchProtection = async (options: ModernizeBranchProtecti
       }
     }
 
-    // Convert classic to ruleset format
-    const rulesetData = convertClassicToRuleset(classicProtection, branch)
+    // Get classic branch protection
+    const classicProtection = await getClassicBranchProtection(repositoryOwner, repositoryName, branch, octokit)
+
+    let rulesetData: RulesetData
+    let shouldDeleteClassic = false
+
+    if (classicProtection) {
+      // Convert classic to ruleset format
+      rulesetData = convertClassicToRuleset(classicProtection, branch)
+      shouldDeleteClassic = true
+    } else {
+      // No classic protection found, create default branch ruleset
+      rulesetData = createDefaultBranchRuleset(branch)
+    }
 
     // Create the new ruleset
     const createResult = await createRuleset(repositoryOwner, repositoryName, octokit, rulesetData)
@@ -76,21 +103,35 @@ export const modernizeBranchProtection = async (options: ModernizeBranchProtecti
       })
     }
 
-    // Delete the classic branch protection
-    const deleteResult = await deleteClassicBranchProtection(repositoryOwner, repositoryName, branch, octokit)
+    // Delete the classic branch protection if it existed
+    if (shouldDeleteClassic) {
+      const deleteResult = await deleteClassicBranchProtection(repositoryOwner, repositoryName, branch, octokit)
 
-    if (!deleteResult.success) {
-      return createMigrationResult({
-        errorCode: ERROR_CODES.DELETE_CLASSIC_PROTECTION_FAILED,
-        errorMessage: deleteResult.error || 'Failed to delete classic branch protection',
-        status: 'error',
-      })
+      if (!deleteResult.success) {
+        return createMigrationResult({
+          errorCode: ERROR_CODES.DELETE_CLASSIC_PROTECTION_FAILED,
+          errorMessage: deleteResult.error || 'Failed to delete classic branch protection',
+          status: 'error',
+        })
+      }
+
+      return {
+        changedFiles: [],
+        data: {
+          message: 'Successfully migrated branch protection from classic to rulesets',
+          migrated: true,
+          rulesetId: createResult.rulesetId,
+        },
+        pullRequestTitle: '',
+        status: 'success',
+        statusCode: 200,
+      }
     }
 
     return {
       changedFiles: [],
       data: {
-        message: 'Successfully migrated branch protection from classic to rulesets',
+        message: 'Successfully created default branch ruleset',
         migrated: true,
         rulesetId: createResult.rulesetId,
       },
