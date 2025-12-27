@@ -1,11 +1,5 @@
 import { execa } from 'execa'
-
-export interface ExecOptions {
-  readonly command: string
-  readonly args?: readonly string[]
-  readonly cwd?: string
-  readonly env?: Record<string, string>
-}
+import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export interface ExecResult {
   readonly stdout: string
@@ -13,12 +7,14 @@ export interface ExecResult {
   readonly exitCode: number
 }
 
-export const exec = async (options: ExecOptions): Promise<ExecResult> => {
-  const { command, args = [], cwd, env } = options
-  const result = await execa(command, args, {
-    cwd,
-    env,
-  })
+export const exec = async (file: string, args: readonly string[], options: { cwd?: string; env?: any }): Promise<ExecResult> => {
+  const cwd = options?.cwd ? uriToPath(options.cwd) : undefined
+  const extraEnv = options?.env || {}
+  const env = {
+    ...process.env,
+    ...extraEnv,
+  }
+  const result = await execa(file, args, { cwd, env })
   return {
     stdout: result.stdout,
     stderr: result.stderr,
