@@ -793,7 +793,12 @@ test('handles invalid package.json', async () => {
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
-      return { exitCode: 0, stderr: '', stdout: '' }
+      return { exitCode: 1, stderr: 'Unexpected token { in JSON at position 13', stdout: '' }
+    }
+    if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
+      // This call is made after npm ci, but we should not reach here if npm ci fails
+      // However, npmCi catches errors from postinstall, so we can return success or throw
+      throw new Error('postinstall script not found')
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
@@ -811,7 +816,7 @@ test('handles invalid package.json', async () => {
   expect(result.status).toBe('error')
   const errorResult: MigrationErrorResult = result as MigrationErrorResult
   expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(errorResult.errorMessage).toMatch(/Failed to read package\.json|Unexpected token/)
+  expect(errorResult.errorMessage).toMatch(/Failed to run npm ci|Unexpected token/)
   expect(mockExecFn).toHaveBeenCalledTimes(2)
 })
 
