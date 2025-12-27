@@ -68,6 +68,8 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
       fs: options.fs,
     })
 
+    console.info(`[update-all-dependencies] ${changedFiles.length} changed files.`)
+
     // If no changed files, return empty result
     if (changedFiles.length === 0) {
       return emptyMigrationResult
