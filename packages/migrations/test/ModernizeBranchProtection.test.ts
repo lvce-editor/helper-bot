@@ -99,19 +99,41 @@ test('successfully migrates from classic to ruleset', async (): Promise<void> =>
     statusCode: 200,
   })
   expect(requests).toEqual([
-    { method: 'GET', route: 'GET /repos/{owner}/{repo}/branches/{branch}/protection' },
     { method: 'GET', route: 'GET /repos/{owner}/{repo}/rulesets' },
+    { method: 'GET', route: 'GET /repos/{owner}/{repo}/branches/{branch}/protection' },
     { method: 'POST', route: 'POST /repos/{owner}/{repo}/rulesets' },
     { method: 'DELETE', route: 'DELETE /repos/{owner}/{repo}/branches/{branch}/protection' },
   ])
 })
 
-test('returns success when no classic protection found', async (): Promise<void> => {
-  const mockOctokit = createMockOctokit(async (route: string) => {
+test('creates default ruleset when no classic protection found', async (): Promise<void> => {
+  const requests: MockRequest[] = []
+
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    const method = route.split(' ')[0]
+    requests.push({ method, route })
+
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
     if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
       const error: any = new Error('Branch not protected')
       error.status = 404
       throw error
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: {
+          id: 1000,
+          name: 'Protect main',
+        },
+        status: 201,
+      }
     }
 
     throw new Error(`Unexpected route: ${route}`)
@@ -131,13 +153,19 @@ test('returns success when no classic protection found', async (): Promise<void>
   expect(result).toEqual({
     changedFiles: [],
     data: {
-      message: 'No classic branch protection found',
-      migrated: false,
+      message: 'Successfully created default branch ruleset',
+      migrated: true,
+      rulesetId: 1000,
     },
     pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
   })
+  expect(requests).toEqual([
+    { method: 'GET', route: 'GET /repos/{owner}/{repo}/rulesets' },
+    { method: 'GET', route: 'GET /repos/{owner}/{repo}/branches/{branch}/protection' },
+    { method: 'POST', route: 'POST /repos/{owner}/{repo}/rulesets' },
+  ])
 })
 
 test('returns success when ruleset already exists', async (): Promise<void> => {
@@ -898,12 +926,34 @@ test('includes authorization header in requests', async (): Promise<void> => {
   expect(result.status).toBe('success')
 })
 
-test('handles 403 error when fetching classic protection', async (): Promise<void> => {
-  const mockOctokit = createMockOctokit(async (route: string) => {
+test('creates default ruleset when 403 error occurs fetching classic protection', async (): Promise<void> => {
+  const requests: MockRequest[] = []
+
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    const method = route.split(' ')[0]
+    requests.push({ method, route })
+
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
     if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
       const error: any = new Error('Forbidden')
       error.status = 403
       throw error
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: {
+          id: 3000,
+          name: 'Protect main',
+        },
+        status: 201,
+      }
     }
 
     throw new Error(`Unexpected route: ${route}`)
@@ -923,13 +973,84 @@ test('handles 403 error when fetching classic protection', async (): Promise<voi
   expect(result).toEqual({
     changedFiles: [],
     data: {
-      message: expect.any(String),
-      migrated: false,
+      message: 'Successfully created default branch ruleset',
+      migrated: true,
+      rulesetId: 3000,
     },
     pullRequestTitle: '',
     status: 'success',
     statusCode: 200,
   })
+  expect(requests).toEqual([
+    { method: 'GET', route: 'GET /repos/{owner}/{repo}/rulesets' },
+    { method: 'GET', route: 'GET /repos/{owner}/{repo}/branches/{branch}/protection' },
+    { method: 'POST', route: 'POST /repos/{owner}/{repo}/rulesets' },
+  ])
+})
+
+test('creates default ruleset with correct structure when no classic protection exists', async (): Promise<void> => {
+  let createdRuleset: any = null
+
+  const mockOctokit = createMockOctokit(async (route: string, options: any) => {
+    if (route === 'GET /repos/{owner}/{repo}/rulesets') {
+      return {
+        data: [],
+        status: 200,
+      }
+    }
+
+    if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
+      const error: any = new Error('Branch not protected')
+      error.status = 404
+      throw error
+    }
+
+    if (route === 'POST /repos/{owner}/{repo}/rulesets') {
+      createdRuleset = { ...options }
+      delete createdRuleset.owner
+      delete createdRuleset.repo
+      delete createdRuleset.headers
+      return {
+        data: {
+          id: 2000,
+          name: 'Protect main',
+        },
+        status: 201,
+      }
+    }
+
+    throw new Error(`Unexpected route: ${route}`)
+  })
+
+  await modernizeBranchProtection({
+    clonedRepoUri: 'file:///tmp/test',
+    exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
+    fetch: fetch as any,
+    fs: FsPromises as any,
+    githubToken: 'test-token',
+    OctokitConstructor: createMockOctokitConstructor(mockOctokit),
+    repositoryName: 'test-repo',
+    repositoryOwner: 'test-owner',
+  })
+
+  expect(createdRuleset).not.toBeNull()
+  expect(createdRuleset).toEqual(
+    expect.objectContaining({
+      conditions: {
+        ref_name: {
+          exclude: [],
+          include: ['~DEFAULT_BRANCH'],
+        },
+      },
+      enforcement: 'active',
+      name: 'Protect main',
+      target: 'branch',
+    }),
+  )
+  // Verify default rules are included
+  expect(createdRuleset.rules).toEqual(expect.arrayContaining([{ type: 'non_fast_forward' }, { type: 'required_linear_history' }, { type: 'deletion' }]))
+  expect(createdRuleset.rules.length).toBe(3)
+  expect(createdRuleset.bypass_actors).toEqual([])
 })
 
 test('creates correct conditions for branch targeting', async (): Promise<void> => {
