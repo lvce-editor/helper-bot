@@ -42,17 +42,7 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
     console.info(`[lint-and-fix] ESLint exited with an error: ${error}`)
   }
 
-  // Use git to detect changed files (only modified files)
-  const changedFiles = await getChangedFiles({
-    fs,
-    exec,
-    clonedRepoUri,
-    filterStatus: (status: string) => status.includes('M'),
-  })
-
-  console.info(`[lint-and-fix]: ${changedFiles.length} files changed.`)
-
-  return changedFiles
+  return []
 }
 
 export type LintAndFixOptions = BaseMigrationOptions
@@ -65,29 +55,6 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     const exists = await options.fs.exists(packageJsonPath)
     if (!exists) {
       return emptyMigrationResult
-    }
-
-    // Read original package.json and package-lock.json content
-    const oldPackageJsonString = await options.fs.readFile(packageJsonPath, 'utf8')
-    const packageLockJsonPath = new URL('package-lock.json', options.clonedRepoUri).toString()
-    const packageLockExists = await options.fs.exists(packageLockJsonPath)
-    const oldPackageLockJsonString = packageLockExists ? await options.fs.readFile(packageLockJsonPath, 'utf8') : null
-
-    // Check if eslint is already in devDependencies
-    const packageJson = JSON.parse(oldPackageJsonString) as { devDependencies?: Record<string, string> }
-    const hasEslint = packageJson.devDependencies?.eslint !== undefined
-
-    // Update eslint dependencies only if eslint is not already installed
-    let eslintResult: { newPackageJsonString: string; newPackageLockJsonString: string }
-    if (hasEslint) {
-      console.info('[lint-and-fix]: eslint already in devDependencies, skipping installation')
-      eslintResult = {
-        newPackageJsonString: oldPackageJsonString,
-        newPackageLockJsonString: oldPackageLockJsonString ?? '',
-      }
-    } else {
-      console.info('[lint-and-fix]: eslint not found in devDependencies, installing eslint and @lvce-editor/eslint-config')
-      eslintResult = await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
     }
 
     console.info(`[lint-and-fix]: Running npm ci`)
@@ -105,30 +72,29 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
       }
     }
 
+    // Update eslint dependencies only if eslint is not already installed
+    await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
+
     // Run eslint --fix and get changed files
-    const lintChangedFiles = await runEslintFix(options.fs, options.exec, options.clonedRepoUri)
+    await runEslintFix(options.fs, options.exec, options.clonedRepoUri)
 
     const pullRequestTitle = 'chore: lint and fix code'
+
+    // Use git to detect changed files (only modified files)
+    const changedFiles = await getChangedFiles({
+      fs: options.fs,
+      exec: options.exec,
+      clonedRepoUri: options.clonedRepoUri,
+      filterStatus: (status: string) => status.includes('M'),
+    })
+
+    console.info(`[lint-and-fix]: ${changedFiles.length} files changed.`)
 
     // Only include package.json and package-lock.json if they actually changed
     const allChangedFiles: Array<{ content: string; path: string }> = []
 
-    if (oldPackageJsonString !== eslintResult.newPackageJsonString) {
-      allChangedFiles.push({
-        content: eslintResult.newPackageJsonString,
-        path: 'package.json',
-      })
-    }
-
-    if (oldPackageLockJsonString !== eslintResult.newPackageLockJsonString && eslintResult.newPackageLockJsonString !== '') {
-      allChangedFiles.push({
-        content: eslintResult.newPackageLockJsonString,
-        path: 'package-lock.json',
-      })
-    }
-
     allChangedFiles.push(
-      ...lintChangedFiles.map((f) => ({
+      ...changedFiles.map((f) => ({
         content: f.content,
         path: normalizePath(f.path),
       })),
