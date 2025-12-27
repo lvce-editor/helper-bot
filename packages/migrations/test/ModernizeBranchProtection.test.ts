@@ -2,6 +2,7 @@ import type { Octokit } from '@octokit/rest'
 import { expect, test } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
 import { modernizeBranchProtection } from '../src/parts/ModernizeBranchProtection/ModernizeBranchProtection.ts'
+import { GITHUB_ACTIONS_INTEGRATION_ID } from '../src/parts/Constants/Constants.ts'
 
 interface MockRequest {
   method: string
@@ -796,9 +797,9 @@ test('converts required status checks', async (): Promise<void> => {
   expect(statusCheckRule).toEqual({
     parameters: {
       required_status_checks: [
-        { context: 'ci/test', integration_id: 15_368 },
-        { context: 'ci/lint', integration_id: 15_368 },
-        { context: 'ci/build', integration_id: 15_368 },
+        { context: 'ci/test', integration_id: GITHUB_ACTIONS_INTEGRATION_ID },
+        { context: 'ci/lint', integration_id: GITHUB_ACTIONS_INTEGRATION_ID },
+        { context: 'ci/build', integration_id: GITHUB_ACTIONS_INTEGRATION_ID },
       ],
       strict_required_status_checks_policy: true,
     },

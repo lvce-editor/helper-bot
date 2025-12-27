@@ -10,6 +10,7 @@ import { getBranchRulesets } from '../GetBranchRulesets/GetBranchRulesets.ts'
 import { getClassicBranchProtection } from '../GetClassicBranchProtection/GetClassicBranchProtection.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { GITHUB_ACTIONS_INTEGRATION_ID } from '../Constants/Constants.ts'
 
 export interface ModernizeBranchProtectionOptions extends BaseMigrationOptions {
   readonly branch?: string
@@ -19,6 +20,31 @@ export interface ModernizeBranchProtectionOptions extends BaseMigrationOptions {
 
 const createDefaultBranchRuleset = (branch: string): RulesetData => {
   const rules: components['schemas']['repository-rule'][] = [
+    // Pull request required
+    {
+      parameters: {
+        allowed_merge_methods: ['squash'],
+        dismiss_stale_reviews_on_push: false,
+        require_code_owner_review: false,
+        require_last_push_approval: false,
+        required_approving_review_count: 0,
+        required_review_thread_resolution: false,
+      },
+      type: 'pull_request',
+    },
+    // Required status checks - PR status from GitHub Actions
+    {
+      parameters: {
+        required_status_checks: [
+          {
+            context: 'PR',
+            integration_id: GITHUB_ACTIONS_INTEGRATION_ID,
+          },
+        ],
+        strict_required_status_checks_policy: false,
+      },
+      type: 'required_status_checks',
+    },
     // Non-fast-forward (linear history) - always enabled
     {
       type: 'non_fast_forward',
