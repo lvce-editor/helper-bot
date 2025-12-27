@@ -57,29 +57,6 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
       return emptyMigrationResult
     }
 
-    // Read original package.json and package-lock.json content
-    const oldPackageJsonString = await options.fs.readFile(packageJsonPath, 'utf8')
-    const packageLockJsonPath = new URL('package-lock.json', options.clonedRepoUri).toString()
-    const packageLockExists = await options.fs.exists(packageLockJsonPath)
-    const oldPackageLockJsonString = packageLockExists ? await options.fs.readFile(packageLockJsonPath, 'utf8') : null
-
-    // Check if eslint is already in devDependencies
-    const packageJson = JSON.parse(oldPackageJsonString) as { devDependencies?: Record<string, string> }
-    const hasEslint = packageJson.devDependencies?.eslint !== undefined
-
-    // Update eslint dependencies only if eslint is not already installed
-    let eslintResult: { newPackageJsonString: string; newPackageLockJsonString: string }
-    if (hasEslint) {
-      console.info('[lint-and-fix]: eslint already in devDependencies, skipping installation')
-      eslintResult = {
-        newPackageJsonString: oldPackageJsonString,
-        newPackageLockJsonString: oldPackageLockJsonString ?? '',
-      }
-    } else {
-      console.info('[lint-and-fix]: eslint not found in devDependencies, installing eslint and @lvce-editor/eslint-config')
-      eslintResult = await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
-    }
-
     console.info(`[lint-and-fix]: Running npm ci`)
     // Install dependencies
     const { exitCode, stderr } = await npmCi(options.clonedRepoUri, options.exec)
@@ -94,6 +71,9 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
         statusCode: 500,
       }
     }
+
+    // Update eslint dependencies only if eslint is not already installed
+    await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
 
     // Run eslint --fix and get changed files
     await runEslintFix(options.fs, options.exec, options.clonedRepoUri)
