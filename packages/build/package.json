@@ -7,5 +7,7 @@
   "author": "",
   "license": "MIT",
   "description": "",
-  "devDependencies": {}
+  "devDependencies": {
+    "execa": "^9.6.1"
+  }
 }
