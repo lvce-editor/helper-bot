@@ -16,7 +16,7 @@ const addEslintCore = async (
   newPackageLockJsonString: string
 }> => {
   try {
-    await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], {
+    await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config'], {
       cwd: clonedRepoUri,
     })
     const newPackageJsonString = await fs.readFile(new URL('package.json', clonedRepoUri).toString(), 'utf8')
