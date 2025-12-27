@@ -13,6 +13,9 @@
     },
     {
       "path": "./packages/github-worker"
+    },
+    {
+      "path": "./packages/exec-worker"
     }
   ]
 }
