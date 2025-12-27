@@ -28,7 +28,7 @@ const launchExecWorker = async () => {
 const wrapExeca = (): ExecFunction => {
   return async (file: string, args?: readonly string[], options?: { cwd?: string; env?: any }) => {
     await using rpc = await launchExecWorker()
-    const result = await rpc.invoke(file, args, options)
+    const result = await rpc.invoke('Exec.exec', file, args, options)
     return result
   }
 }
