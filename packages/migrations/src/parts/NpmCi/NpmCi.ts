@@ -10,6 +10,7 @@ export const npmCi = async (uri: string, exec: ExecFunction): Promise<{ exitCode
     },
   })
   try {
+    console.info(`[npm] Running postinstall`)
     await exec('npm', ['run', 'postinstall'], {
       cwd: uri,
       // @ts-ignore
