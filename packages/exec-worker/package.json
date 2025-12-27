@@ -31,6 +31,7 @@
     "silent": true
   },
   "dependencies": {
+    "@lvce-editor/assert": "^1.5.1",
     "@lvce-editor/rpc": "^4.20.0",
     "execa": "^9.0.0"
   }
