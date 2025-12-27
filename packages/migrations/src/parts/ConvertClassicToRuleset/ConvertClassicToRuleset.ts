@@ -1,5 +1,6 @@
 import type { components } from '@octokit/openapi-types'
 import type { ClassicBranchProtection } from '../GetClassicBranchProtection/GetClassicBranchProtection.ts'
+import { GITHUB_ACTIONS_INTEGRATION_ID } from '../Constants/Constants.ts'
 
 export interface RulesetData {
   bypass_actors?: components['schemas']['repository-ruleset-bypass-actor'][]
@@ -36,7 +37,7 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
       parameters: {
         required_status_checks: statusChecks.contexts.map((context) => ({
           context,
-          integration_id: 15_368, // GitHub Actions integration ID
+          integration_id: GITHUB_ACTIONS_INTEGRATION_ID,
         })),
         strict_required_status_checks_policy: statusChecks.strict,
       },
