@@ -6,7 +6,7 @@
   "author": "Lvce Editor",
   "type": "module",
   "scripts": {
-    "build": "tsc -b",
+    "build": "node packages/build/src/build.ts",
     "dev": "cd packages/app && npm run dev",
     "format": "prettier --write .",
     "postinstall": "lerna bootstrap --ci",
