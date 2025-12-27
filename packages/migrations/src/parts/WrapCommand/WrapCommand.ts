@@ -1,24 +1,35 @@
-import { execa } from 'execa'
+import { NodeWorkerRpcParent } from '@lvce-editor/rpc'
 import { constants } from 'node:fs'
 import * as FsPromises from 'node:fs/promises'
-import type { BaseMigrationOptions, ExecFunction, MigrationResult } from '../Types/Types.ts'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
+import { execWorkerUrl, execWorkerUrlDev } from '../ExecWorkerUrl/ExecWorkerUrl.ts'
+import type { BaseMigrationOptions, ExecFunction, MigrationResult } from '../Types/Types.ts'
 import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
+
+const workerUrl = process.env.NODE_ENV === 'production' ? execWorkerUrl : execWorkerUrlDev
+
+const launchExecWorker = async () => {
+  const rpc = await NodeWorkerRpcParent.create({
+    path: workerUrl,
+    commandMap: {},
+    stdio: 'inherit',
+  })
+
+  return {
+    invoke(method: string, ...params: readonly any[]) {
+      return rpc.invoke(method, ...params)
+    },
+    async [Symbol.asyncDispose]() {
+      await rpc.dispose()
+    },
+  }
+}
 
 const wrapExeca = (): ExecFunction => {
   return async (file: string, args?: readonly string[], options?: { cwd?: string; env?: any }) => {
-    const cwd = options?.cwd ? uriToPath(options.cwd) : undefined
-    const extraEnv = options?.env || {}
-    const env = {
-      ...process.env,
-      ...extraEnv,
-    }
-    const result = await execa(file, args, { cwd, env })
-    return {
-      exitCode: result.exitCode ?? 129,
-      stderr: result.stderr,
-      stdout: result.stdout,
-    }
+    await using rpc = await launchExecWorker()
+    const result = await rpc.invoke('Exec.exec', file, args, options)
+    return result
   }
 }
 
