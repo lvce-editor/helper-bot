@@ -9,9 +9,7 @@ import { normalizePath } from '../UriUtils/UriUtils.ts'
 
 const addEslintCore = async (fs: Readonly<typeof FsPromises>, exec: BaseMigrationOptions['exec'], clonedRepoUri: string): Promise<void> => {
   try {
-    const { exitCode } = await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], {
-      cwd: clonedRepoUri,
-    })
+    const { exitCode } = await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config'], {})
     console.info(`[lint-and-fix] npm install eslint exited with code ${exitCode}`)
   } catch (error) {
     throw new Error(`Failed to add eslint: ${stringifyError(error)}`)
