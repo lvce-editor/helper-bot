@@ -7,24 +7,12 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 
-const addEslintCore = async (
-  fs: Readonly<typeof FsPromises>,
-  exec: BaseMigrationOptions['exec'],
-  clonedRepoUri: string,
-): Promise<{
-  newPackageJsonString: string
-  newPackageLockJsonString: string
-}> => {
+const addEslintCore = async (fs: Readonly<typeof FsPromises>, exec: BaseMigrationOptions['exec'], clonedRepoUri: string): Promise<void> => {
   try {
-    await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], {
+    const { exitCode } = await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online'], {
       cwd: clonedRepoUri,
     })
-    const newPackageJsonString = await fs.readFile(new URL('package.json', clonedRepoUri).toString(), 'utf8')
-    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', clonedRepoUri).toString(), 'utf8')
-    return {
-      newPackageJsonString,
-      newPackageLockJsonString,
-    }
+    console.info(`[lint-and-fix] npm install eslint exited with code ${exitCode}`)
   } catch (error) {
     throw new Error(`Failed to add eslint: ${stringifyError(error)}`)
   }
