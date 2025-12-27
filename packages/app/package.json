@@ -18,6 +18,7 @@
     "@lvce-editor/verror": "^1.7.0",
     "@sentry/node": "^10.32.1",
     "body-parser": "^2.2.1",
+    "cookie-parser": "^1.4.7",
     "execa": "^9.6.1",
     "probot": "^13.4.5"
   },
@@ -41,5 +42,8 @@
       "**/test/**"
     ],
     "testTimeout": 20000
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10"
   }
 }
