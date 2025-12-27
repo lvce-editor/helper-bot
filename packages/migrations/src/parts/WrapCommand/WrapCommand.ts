@@ -76,12 +76,13 @@ const wrapFs = (): typeof FsPromises => {
 
 export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T) => Promise<MigrationResult>) => {
   return async (options: Omit<T, 'fs' | 'clonedRepoUri' | 'fetch' | 'exec'>): Promise<MigrationResult> => {
-    const clonedRepo = await cloneRepositoryTmp(options.repositoryOwner, options.repositoryName)
+    const exec = wrapExeca()
+    const clonedRepo = await cloneRepositoryTmp(exec, options.repositoryOwner, options.repositoryName)
     try {
       return await command({
         ...options,
         clonedRepoUri: clonedRepo.uri,
-        exec: wrapExeca(),
+        exec,
         fetch: globalThis.fetch,
         fs: wrapFs(),
       } as unknown as T)
