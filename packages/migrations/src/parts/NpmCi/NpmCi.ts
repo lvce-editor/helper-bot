@@ -5,7 +5,7 @@ export const npmCi = async (uri: string, exec: ExecFunction): Promise<{ exitCode
     cwd: uri,
     // @ts-ignore
     env: {
-      NODE_OPTIONS: '--max_old_space_size=150',
+      NODE_OPTIONS: '--max_old_space_size=300',
       NODE_ENV: '',
     },
   })
@@ -15,7 +15,7 @@ export const npmCi = async (uri: string, exec: ExecFunction): Promise<{ exitCode
       cwd: uri,
       // @ts-ignore
       env: {
-        NODE_OPTIONS: '--max_old_space_size=150',
+        NODE_OPTIONS: '--max_old_space_size=300',
         NODE_ENV: '',
       },
     })
