@@ -2,6 +2,7 @@ import type * as FsPromises from 'node:fs/promises'
 import type { BaseMigrationOptions, ChangedFile } from '../Types/Types.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { parseGitStatus } from './ParseGitStatus.ts'
 
 export interface GetChangedFilesOptions {
   readonly fs: Readonly<typeof FsPromises>
@@ -20,19 +21,10 @@ export const getChangedFiles = async (options: Readonly<GetChangedFilesOptions>)
   })
 
   const changedFiles: ChangedFile[] = []
-  const outputLines = gitResult.stdout.split('\n').filter((line) => line.trim().length > 0)
+  const parsedEntries = parseGitStatus(gitResult.stdout)
 
-  for (const line of outputLines) {
-    // Git status --porcelain format: XY PATH
-    // X = index status, Y = working tree status
-    // Format is exactly 2 characters for status, then a space, then the path
-    // For untracked files, format is "?? PATH"
-    if (line.length < 4) {
-      continue
-    }
-
-    const status = line.slice(0, 2)
-    const filePath = line.slice(3).trim()
+  for (const entry of parsedEntries) {
+    const { status, filePath } = entry
 
     // Apply custom filter if provided, otherwise use default behavior
     if (filterStatus) {
