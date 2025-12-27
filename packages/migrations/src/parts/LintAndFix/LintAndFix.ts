@@ -42,17 +42,7 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
     console.info(`[lint-and-fix] ESLint exited with an error: ${error}`)
   }
 
-  // Use git to detect changed files (only modified files)
-  const changedFiles = await getChangedFiles({
-    fs,
-    exec,
-    clonedRepoUri,
-    filterStatus: (status: string) => status.includes('M'),
-  })
-
-  console.info(`[lint-and-fix]: ${changedFiles.length} files changed.`)
-
-  return changedFiles
+  return []
 }
 
 export type LintAndFixOptions = BaseMigrationOptions
@@ -106,29 +96,25 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     }
 
     // Run eslint --fix and get changed files
-    const lintChangedFiles = await runEslintFix(options.fs, options.exec, options.clonedRepoUri)
+    await runEslintFix(options.fs, options.exec, options.clonedRepoUri)
 
     const pullRequestTitle = 'chore: lint and fix code'
+
+    // Use git to detect changed files (only modified files)
+    const changedFiles = await getChangedFiles({
+      fs: options.fs,
+      exec: options.exec,
+      clonedRepoUri: options.clonedRepoUri,
+      filterStatus: (status: string) => status.includes('M'),
+    })
+
+    console.info(`[lint-and-fix]: ${changedFiles.length} files changed.`)
 
     // Only include package.json and package-lock.json if they actually changed
     const allChangedFiles: Array<{ content: string; path: string }> = []
 
-    if (oldPackageJsonString !== eslintResult.newPackageJsonString) {
-      allChangedFiles.push({
-        content: eslintResult.newPackageJsonString,
-        path: 'package.json',
-      })
-    }
-
-    if (oldPackageLockJsonString !== eslintResult.newPackageLockJsonString && eslintResult.newPackageLockJsonString !== '') {
-      allChangedFiles.push({
-        content: eslintResult.newPackageLockJsonString,
-        path: 'package-lock.json',
-      })
-    }
-
     allChangedFiles.push(
-      ...lintChangedFiles.map((f) => ({
+      ...changedFiles.map((f) => ({
         content: f.content,
         path: normalizePath(f.path),
       })),
