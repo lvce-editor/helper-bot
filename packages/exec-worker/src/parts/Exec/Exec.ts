@@ -8,7 +8,7 @@ export interface ExecResult {
   readonly exitCode: number
 }
 
-export const exec = async (file: string, args: readonly string[], options: { cwd?: string; env?: any }): Promise<ExecResult> => {
+export const exec = async (file: string, args: readonly string[], options: { cwd?: string; env?: any } = {}): Promise<ExecResult> => {
   Assert.string(file)
   Assert.array(args)
   Assert.object(options)
