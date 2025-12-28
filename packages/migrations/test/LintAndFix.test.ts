@@ -211,7 +211,7 @@ test('handles case when no files need fixing', async () => {
   expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
-test('skips eslint installation when eslint is already in devDependencies', async () => {
+test('skips eslint installation when @lvce-editor/eslint-config is already at latest version', async () => {
   const oldPackageJson: any = {
     devDependencies: {
       '@lvce-editor/eslint-config': '^4.3.0',
@@ -251,24 +251,26 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
     },
   })
 
+  // Mock fetch to return latest version as 4.3.0 (same as installed)
+  const mockFetch = jest.fn(async (url: string) => {
+    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
+      return {
+        ok: true,
+        json: async () => ({ version: '4.3.0' }),
+      } as Response
+    }
+    throw new Error(`Unexpected fetch URL: ${url}`)
+  })
+
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--save-dev' && cwd === clonedRepoUri) {
-      throw new Error('npm install should not be called when eslint is already in devDependencies')
+      throw new Error('npm install should not be called when @lvce-editor/eslint-config is already at latest version')
     }
     if (file === 'npm' && args?.[0] === 'ci' && cwd === clonedRepoUri) {
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
-      // Simulate eslint --fix changing the file
-      await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).toString(), fixedFileContent)
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
-      // Return git status output showing modified file
-      return { exitCode: 0, stderr: '', stdout: ' M src/test.ts\n' }
+      throw new Error('npm ci should not be called when skipping migration')
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
@@ -277,7 +279,7 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: globalThis.fetch,
+    fetch: mockFetch as any,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
@@ -292,10 +294,11 @@ test('skips eslint installation when eslint is already in devDependencies', asyn
     statusCode: 200,
   })
   // Should not call npm install when versions are already up to date
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config'], expect.any(Object))
+  expect(mockExecFn).not.toHaveBeenCalled()
+  expect(mockFetch).toHaveBeenCalledWith('https://registry.npmjs.org/@lvce-editor/eslint-config/latest')
 })
 
-test('skips eslint installation when eslint is already in devDependencies and package-lock.json does not exist', async () => {
+test('skips eslint installation when @lvce-editor/eslint-config is already at latest version and package-lock.json does not exist', async () => {
   const oldPackageJson: any = {
     devDependencies: {
       '@lvce-editor/eslint-config': '^4.3.0',
@@ -316,24 +319,26 @@ test('skips eslint installation when eslint is already in devDependencies and pa
     },
   })
 
+  // Mock fetch to return latest version as 4.3.0 (same as installed)
+  const mockFetch = jest.fn(async (url: string) => {
+    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
+      return {
+        ok: true,
+        json: async () => ({ version: '4.3.0' }),
+      } as Response
+    }
+    throw new Error(`Unexpected fetch URL: ${url}`)
+  })
+
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--save-dev' && cwd === clonedRepoUri) {
-      throw new Error('npm install should not be called when eslint is already in devDependencies')
+      throw new Error('npm install should not be called when @lvce-editor/eslint-config is already at latest version')
     }
     if (file === 'npm' && args?.[0] === 'ci' && cwd === clonedRepoUri) {
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
-      // Simulate eslint --fix changing the file
-      await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).toString(), fixedFileContent)
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
-      // Return git status output showing modified file
-      return { exitCode: 0, stderr: '', stdout: ' M src/test.ts\n' }
+      throw new Error('npm ci should not be called when skipping migration')
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
@@ -342,7 +347,7 @@ test('skips eslint installation when eslint is already in devDependencies and pa
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: globalThis.fetch,
+    fetch: mockFetch as any,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
@@ -357,10 +362,11 @@ test('skips eslint installation when eslint is already in devDependencies and pa
     statusCode: 200,
   })
   // Should not call npm install when versions are already up to date
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config'], expect.any(Object))
+  expect(mockExecFn).not.toHaveBeenCalled()
+  expect(mockFetch).toHaveBeenCalledWith('https://registry.npmjs.org/@lvce-editor/eslint-config/latest')
 })
 
-test('skips eslint installation when eslint is already in devDependencies but no files need fixing', async () => {
+test('skips eslint installation when @lvce-editor/eslint-config is already at latest version but no files need fixing', async () => {
   const oldPackageJson: any = {
     devDependencies: {
       '@lvce-editor/eslint-config': '^4.3.0',
@@ -399,23 +405,26 @@ test('skips eslint installation when eslint is already in devDependencies but no
     },
   })
 
+  // Mock fetch to return latest version as 4.3.0 (same as installed)
+  const mockFetch = jest.fn(async (url: string) => {
+    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
+      return {
+        ok: true,
+        json: async () => ({ version: '4.3.0' }),
+      } as Response
+    }
+    throw new Error(`Unexpected fetch URL: ${url}`)
+  })
+
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
     if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--save-dev' && cwd === clonedRepoUri) {
-      throw new Error('npm install should not be called when eslint is already in devDependencies')
+      throw new Error('npm install should not be called when @lvce-editor/eslint-config is already at latest version')
     }
     if (file === 'npm' && args?.[0] === 'ci' && cwd === clonedRepoUri) {
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
-      // Eslint doesn't change the file
-      return { exitCode: 0, stderr: '', stdout: '' }
-    }
-    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
-      // No files changed
-      return { exitCode: 0, stderr: '', stdout: '' }
+      throw new Error('npm ci should not be called when skipping migration')
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
   })
@@ -424,7 +433,7 @@ test('skips eslint installation when eslint is already in devDependencies but no
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: globalThis.fetch,
+    fetch: mockFetch as any,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
@@ -439,5 +448,6 @@ test('skips eslint installation when eslint is already in devDependencies but no
     statusCode: 200,
   })
   // Should not call npm install when versions are already up to date
-  expect(mockExecFn).not.toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config'], expect.any(Object))
+  expect(mockExecFn).not.toHaveBeenCalled()
+  expect(mockFetch).toHaveBeenCalledWith('https://registry.npmjs.org/@lvce-editor/eslint-config/latest')
 })
