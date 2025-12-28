@@ -40,11 +40,14 @@ const addEslintCore = async (fs: Readonly<typeof FsPromises>, exec: BaseMigratio
 const upgradeEslintConfig = async (exec: BaseMigrationOptions['exec'], clonedRepoUri: string, latestVersion: string, installEslint: boolean): Promise<void> => {
   try {
     const packages = installEslint ? ['eslint', `@lvce-editor/eslint-config@${latestVersion}`] : [`@lvce-editor/eslint-config@${latestVersion}`]
-    const { exitCode } = await exec('npm', ['install', '--save-dev', ...packages], {
+    const { exitCode, stderr } = await exec('npm', ['install', '--save-dev', ...packages], {
       cwd: clonedRepoUri,
     })
     // eslint-disable-next-line no-console
     console.info(`[lint-and-fix] npm install ${packages.join(' ')} exited with code ${exitCode}`)
+    if (exitCode !== 0) {
+      throw new Error(`npm install --save-dev ${packages.join(' ')} exited with code ${exitCode}: ${stderr}`)
+    }
   } catch (error) {
     throw new Error(`Failed to upgrade @lvce-editor/eslint-config: ${stringifyError(error)}`)
   }
