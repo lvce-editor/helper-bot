@@ -37,7 +37,7 @@ const createDefaultBranchRuleset = (branch: string): RulesetData => {
       parameters: {
         required_status_checks: [
           {
-            context: 'PR',
+            context: 'pr',
             integration_id: GITHUB_ACTIONS_INTEGRATION_ID,
           },
         ],
