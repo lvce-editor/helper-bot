@@ -3,22 +3,10 @@ import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Type
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { getLatestNpmVersion } from '../GetLatestNpmVersion/GetLatestNpmVersion.ts'
 import { npmCi } from '../NpmCi/NpmCi.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
-
-interface NpmPackageInfo {
-  version: string
-}
-
-const getLatestNpmVersion = async (packageName: string, fetchFn: typeof globalThis.fetch): Promise<string> => {
-  const response = await fetchFn(`https://registry.npmjs.org/${packageName}/latest`)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch latest version for ${packageName}: ${response.statusText}`)
-  }
-  const packageInfo = (await response.json()) as NpmPackageInfo
-  return packageInfo.version
-}
 
 const normalizeVersion = (version: string): string => {
   // Remove range prefixes like ^, ~, >=, etc.
@@ -49,16 +37,9 @@ const addEslintCore = async (fs: Readonly<typeof FsPromises>, exec: BaseMigratio
   }
 }
 
-const upgradeEslintConfig = async (
-  exec: BaseMigrationOptions['exec'],
-  clonedRepoUri: string,
-  latestVersion: string,
-  installEslint: boolean,
-): Promise<void> => {
+const upgradeEslintConfig = async (exec: BaseMigrationOptions['exec'], clonedRepoUri: string, latestVersion: string, installEslint: boolean): Promise<void> => {
   try {
-    const packages = installEslint
-      ? ['eslint', `@lvce-editor/eslint-config@${latestVersion}`]
-      : [`@lvce-editor/eslint-config@${latestVersion}`]
+    const packages = installEslint ? ['eslint', `@lvce-editor/eslint-config@${latestVersion}`] : [`@lvce-editor/eslint-config@${latestVersion}`]
     const { exitCode } = await exec('npm', ['install', '--save-dev', ...packages], {
       cwd: clonedRepoUri,
     })
