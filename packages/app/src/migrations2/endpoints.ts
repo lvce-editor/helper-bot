@@ -3,6 +3,11 @@ import type { Context, Probot } from 'probot'
 import { captureException } from '../errorHandling.ts'
 import * as MigrationsWorker from '../migrationsWorker.ts'
 import { VError } from '@lvce-editor/verror'
+import { handleLogin } from '../auth/LoginEndpoint.ts'
+import { handleLogout } from '../auth/LogoutEndpoint.ts'
+import { requireAuth } from '../auth/AuthMiddleware.ts'
+import { getLoginPageHtml } from '../auth/LoginPage.ts'
+import { getProtectedPageHtml } from '../auth/ProtectedPage.ts'
 
 export interface ChangedFile {
   readonly content: string
@@ -378,7 +383,23 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
   }
 }
 
+export const registerAuthEndpoints = (router: any, secret: string | undefined): void => {
+  // Auth routes
+  router.get('/login', (req: Request, res: Response) => {
+    res.send(getLoginPageHtml())
+  })
+  router.post('/login', handleLogin(secret))
+  router.get('/logout', handleLogout())
+  router.get('/protected', requireAuth(secret), (req: Request, res: Response) => {
+    res.send(getProtectedPageHtml())
+  })
+  console.log('Registered auth endpoints: /login, /logout, /protected')
+}
+
 export const registerMigrations2Endpoints = async (router: any, app: Probot, secret: string | undefined) => {
+  // Register auth endpoints
+  registerAuthEndpoints(router, secret)
+
   // Migrations2 endpoints - dynamically registered
   try {
     const commandsResult = await MigrationsWorker.invoke('/meta/list-commands-2')
