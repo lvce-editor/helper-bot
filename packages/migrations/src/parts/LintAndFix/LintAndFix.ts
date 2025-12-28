@@ -57,6 +57,10 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
     console.info('[lint-and-fix]: Running eslint')
     await exec('npx', ['eslint', '.', '--fix'], {
       cwd: clonedRepoUri,
+      // @ts-ignore
+      env: {
+        NODE_ENV: '',
+      },
     })
   } catch (error) {
     // eslint might exit with non-zero code if there are unfixable errors, that's ok
