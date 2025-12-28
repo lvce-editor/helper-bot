@@ -240,7 +240,6 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   )
 
   const originalFileContent = `const x = "test"\n`
-  const fixedFileContent = `const x = 'test'\n`
 
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
@@ -309,7 +308,6 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   }
 
   const originalFileContent = `const x = "test"\n`
-  const fixedFileContent = `const x = 'test'\n`
 
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
