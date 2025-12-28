@@ -49,13 +49,21 @@ const addEslintCore = async (fs: Readonly<typeof FsPromises>, exec: BaseMigratio
   }
 }
 
-const upgradeEslintConfig = async (exec: BaseMigrationOptions['exec'], clonedRepoUri: string, latestVersion: string): Promise<void> => {
+const upgradeEslintConfig = async (
+  exec: BaseMigrationOptions['exec'],
+  clonedRepoUri: string,
+  latestVersion: string,
+  installEslint: boolean,
+): Promise<void> => {
   try {
-    const { exitCode } = await exec('npm', ['install', '--save-dev', `@lvce-editor/eslint-config@${latestVersion}`], {
+    const packages = installEslint
+      ? ['eslint', `@lvce-editor/eslint-config@${latestVersion}`]
+      : [`@lvce-editor/eslint-config@${latestVersion}`]
+    const { exitCode } = await exec('npm', ['install', '--save-dev', ...packages], {
       cwd: clonedRepoUri,
     })
     // eslint-disable-next-line no-console
-    console.info(`[lint-and-fix] npm install @lvce-editor/eslint-config@${latestVersion} exited with code ${exitCode}`)
+    console.info(`[lint-and-fix] npm install ${packages.join(' ')} exited with code ${exitCode}`)
   } catch (error) {
     throw new Error(`Failed to upgrade @lvce-editor/eslint-config: ${stringifyError(error)}`)
   }
@@ -161,32 +169,17 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
         // Upgrade existing @lvce-editor/eslint-config to latest version
         // eslint-disable-next-line no-console
         console.info(`[lint-and-fix]: Upgrading @lvce-editor/eslint-config to latest version: ${latestEslintConfigVersion}`)
-        await upgradeEslintConfig(options.exec, options.clonedRepoUri, latestEslintConfigVersion)
+        await upgradeEslintConfig(options.exec, options.clonedRepoUri, latestEslintConfigVersion, !eslintVersion)
       } else if (!eslintConfigVersion) {
         // Install @lvce-editor/eslint-config at latest version
         // eslint-disable-next-line no-console
         console.info(`[lint-and-fix]: Installing @lvce-editor/eslint-config at latest version: ${latestEslintConfigVersion}`)
-        await upgradeEslintConfig(options.exec, options.clonedRepoUri, latestEslintConfigVersion)
+        await upgradeEslintConfig(options.exec, options.clonedRepoUri, latestEslintConfigVersion, !eslintVersion)
       }
     } else {
       // If we couldn't fetch the latest version, install both packages (will use latest available)
       if (!eslintVersion || !eslintConfigVersion) {
         await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
-      }
-    }
-
-    // Ensure eslint is installed if it's missing
-    // Note: eslint should already be installed via addEslintCore or upgradeEslintConfig above
-    // This check is only needed if we couldn't fetch the latest version and eslint wasn't installed
-    if (!eslintVersion && !latestEslintConfigVersion) {
-      try {
-        const { exitCode } = await options.exec('npm', ['install', '--save-dev', 'eslint'], {
-          cwd: options.clonedRepoUri,
-        })
-        // eslint-disable-next-line no-console
-        console.info(`[lint-and-fix] npm install eslint exited with code ${exitCode}`)
-      } catch (error) {
-        throw new Error(`Failed to add eslint: ${stringifyError(error)}`)
       }
     }
 
