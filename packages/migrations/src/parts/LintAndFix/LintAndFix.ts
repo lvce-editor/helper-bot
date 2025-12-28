@@ -29,20 +29,11 @@ const isVersionUpToDate = (installedVersion: string, latestVersion: string): boo
   const normalizedInstalled = normalizeVersion(installedVersion)
   const normalizedLatest = normalizeVersion(latestVersion)
 
-  // If exact version match
-  if (normalizedInstalled === normalizedLatest) {
-    return true
-  }
-
-  // If installed version is a caret range (^), check if latest is within the same major version
-  if (installedVersion.startsWith('^')) {
-    const installedMajor = normalizedInstalled.split('.')[0]
-    const latestMajor = normalizedLatest.split('.')[0]
-    // If major versions match, the caret range will include the latest version
-    return installedMajor === latestMajor
-  }
-
-  // For other cases, do exact comparison
+  // Check if normalized versions match exactly
+  // This handles:
+  // - Exact versions: "4.3.0" === "4.3.0" -> true
+  // - Caret ranges where base matches latest: "^4.3.0" (normalized to "4.3.0") === "4.3.0" -> true
+  // - Caret ranges where base doesn't match: "^4.0.0" (normalized to "4.0.0") === "4.3.0" -> false (needs upgrade)
   return normalizedInstalled === normalizedLatest
 }
 
@@ -185,7 +176,9 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     }
 
     // Ensure eslint is installed if it's missing
-    if (!eslintVersion) {
+    // Note: eslint should already be installed via addEslintCore or upgradeEslintConfig above
+    // This check is only needed if we couldn't fetch the latest version and eslint wasn't installed
+    if (!eslintVersion && !latestEslintConfigVersion) {
       try {
         const { exitCode } = await options.exec('npm', ['install', '--save-dev', 'eslint'], {
           cwd: options.clonedRepoUri,
