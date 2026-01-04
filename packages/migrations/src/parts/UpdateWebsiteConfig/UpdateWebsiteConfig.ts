@@ -23,6 +23,16 @@ export interface UpdateWebsiteConfigOptions extends BaseMigrationOptions {
   readonly OctokitConstructor?: typeof OctokitConstructor
 }
 
+const getCommitMessage = (needsVersionUpdate: boolean, needsYearUpdate: boolean, latestVersion: string, currentYear: number): string => {
+  if (needsVersionUpdate && needsYearUpdate) {
+    return `feature: update lvce-editor version to ${latestVersion} and year to ${currentYear}`
+  }
+  if (needsVersionUpdate) {
+    return `feature: update lvce-editor version to ${latestVersion}`
+  }
+  return `feature: update year to ${currentYear}`
+}
+
 export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigOptions>): Promise<MigrationResult> => {
   try {
     // Verify repository name
@@ -74,7 +84,9 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
       }
     }
 
-    const latestVersion = latestRelease.tag_name
+    const latestVersionTag = latestRelease.tag_name
+    // Strip 'v' prefix if present to store plain version in config.json
+    const latestVersion = latestVersionTag.startsWith('v') ? latestVersionTag.slice(1) : latestVersionTag
     const currentYear = new Date().getFullYear()
 
     // Check if updates are needed
@@ -96,6 +108,8 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
     const updatedContent = JSON.stringify(updatedConfig, null, 2) + '\n'
     const relativePath = normalizePath(CONFIG_PATH)
 
+    const commitMessage = getCommitMessage(needsVersionUpdate, needsYearUpdate, latestVersion, currentYear)
+
     return {
       branchName: 'feature/update-website-config',
       changedFiles: [
@@ -104,8 +118,8 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
           path: relativePath,
         },
       ],
-      commitMessage: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
-      pullRequestTitle: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
+      commitMessage,
+      pullRequestTitle: commitMessage,
       status: 'success',
       statusCode: 201,
     }
@@ -124,4 +138,3 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
     }
   }
 }
-

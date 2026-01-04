@@ -76,8 +76,8 @@ test('updates both version and currentYear when both are outdated', async () => 
         path: 'packages/website/config.json',
       },
     ],
-    commitMessage: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
-    pullRequestTitle: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
+    commitMessage: `feature: update lvce-editor version to ${latestVersion} and year to ${currentYear}`,
+    pullRequestTitle: `feature: update lvce-editor version to ${latestVersion} and year to ${currentYear}`,
     status: 'success',
     statusCode: 201,
   })
@@ -136,8 +136,8 @@ test('updates only version when year is already current', async () => {
         path: 'packages/website/config.json',
       },
     ],
-    commitMessage: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
-    pullRequestTitle: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
+    commitMessage: `feature: update lvce-editor version to ${latestVersion}`,
+    pullRequestTitle: `feature: update lvce-editor version to ${latestVersion}`,
     status: 'success',
     statusCode: 201,
   })
@@ -196,8 +196,8 @@ test('updates only currentYear when version is already latest', async () => {
         path: 'packages/website/config.json',
       },
     ],
-    commitMessage: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
-    pullRequestTitle: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
+    commitMessage: `feature: update year to ${currentYear}`,
+    pullRequestTitle: `feature: update year to ${currentYear}`,
     status: 'success',
     statusCode: 201,
   })
@@ -362,7 +362,8 @@ test('handles tag fallback when no releases found', async () => {
     version: '0.70.0',
   }
 
-  const latestVersion = 'v1.0.0'
+  const latestVersionTag = 'v1.0.0'
+  const latestVersion = '1.0.0' // Version without 'v' prefix for config.json
   const mockOctokit = createMockOctokit(async (route: string) => {
     if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
       const error: any = new Error('Not Found')
@@ -373,7 +374,7 @@ test('handles tag fallback when no releases found', async () => {
       return {
         data: [
           {
-            name: latestVersion,
+            name: latestVersionTag,
           },
         ],
       }
@@ -422,8 +423,8 @@ test('handles tag fallback when no releases found', async () => {
         path: 'packages/website/config.json',
       },
     ],
-    commitMessage: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
-    pullRequestTitle: `chore: update website config (version: ${latestVersion}, year: ${currentYear})`,
+    commitMessage: `feature: update lvce-editor version to ${latestVersion} and year to ${currentYear}`,
+    pullRequestTitle: `feature: update lvce-editor version to ${latestVersion} and year to ${currentYear}`,
     status: 'success',
     statusCode: 201,
   })
@@ -553,12 +554,13 @@ test('handles version tags with v prefix', async () => {
     version: '0.70.0',
   }
 
-  const latestVersion = 'v0.80.0'
+  const latestVersionTag = 'v0.80.0'
+  const latestVersion = '0.80.0' // Version without 'v' prefix for config.json
   const mockOctokit = createMockOctokit(async (route: string) => {
     if (route === 'GET /repos/{owner}/{repo}/releases/latest') {
       return {
         data: {
-          tag_name: latestVersion,
+          tag_name: latestVersionTag,
           target_commitish: 'sha123',
         },
       }
@@ -682,4 +684,3 @@ test('handles config file without trailing newline', async () => {
   expect(parsedConfig.version).toBe(latestVersion)
   expect(parsedConfig.currentYear).toBe(currentYear)
 })
-
