@@ -499,10 +499,10 @@ test('preserves other config fields when updating', async () => {
   const currentYear = new Date().getFullYear()
   const oldConfig = {
     currentYear: currentYear - 1,
-    releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
-    version: '0.70.0',
     // Add extra field to ensure it's preserved
     extraField: 'should be preserved',
+    releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
+    version: '0.70.0',
   }
 
   const latestVersion = '0.80.0'
