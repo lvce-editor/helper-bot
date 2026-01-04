@@ -254,8 +254,8 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const mockFetch = jest.fn(async (url: string) => {
     if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
       return {
-        ok: true,
         json: async () => ({ version: '4.3.0' }),
+        ok: true,
       } as Response
     }
     throw new Error(`Unexpected fetch URL: ${url}`)
@@ -321,8 +321,8 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const mockFetch = jest.fn(async (url: string) => {
     if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
       return {
-        ok: true,
         json: async () => ({ version: '4.3.0' }),
+        ok: true,
       } as Response
     }
     throw new Error(`Unexpected fetch URL: ${url}`)
@@ -407,8 +407,8 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const mockFetch = jest.fn(async (url: string) => {
     if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
       return {
-        ok: true,
         json: async () => ({ version: '4.3.0' }),
+        ok: true,
       } as Response
     }
     throw new Error(`Unexpected fetch URL: ${url}`)
@@ -494,8 +494,8 @@ test('upgrades @lvce-editor/eslint-config to latest version when outdated', asyn
   const mockFetch = jest.fn(async (url: string) => {
     if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
       return {
-        ok: true,
         json: async () => ({ version: '4.3.0' }),
+        ok: true,
       } as Response
     }
     throw new Error(`Unexpected fetch URL: ${url}`)
@@ -600,8 +600,8 @@ test('installs @lvce-editor/eslint-config at latest version when not installed',
   const mockFetch = jest.fn(async (url: string) => {
     if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
       return {
-        ok: true,
         json: async () => ({ version: '4.3.0' }),
+        ok: true,
       } as Response
     }
     throw new Error(`Unexpected fetch URL: ${url}`)

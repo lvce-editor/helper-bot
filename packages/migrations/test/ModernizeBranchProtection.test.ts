@@ -1,8 +1,8 @@
 import type { Octokit } from '@octokit/rest'
 import { expect, test } from '@jest/globals'
 import * as FsPromises from 'node:fs/promises'
-import { modernizeBranchProtection } from '../src/parts/ModernizeBranchProtection/ModernizeBranchProtection.ts'
 import { GITHUB_ACTIONS_INTEGRATION_ID } from '../src/parts/Constants/Constants.ts'
+import { modernizeBranchProtection } from '../src/parts/ModernizeBranchProtection/ModernizeBranchProtection.ts'
 
 interface MockRequest {
   method: string

@@ -7,8 +7,8 @@ test('parses modified file', () => {
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/file.ts',
+      status: ' M',
     },
   ])
 })
@@ -19,8 +19,8 @@ test('parses staged modified file', () => {
 
   expect(result).toEqual([
     {
-      status: 'M ',
       filePath: 'src/file.ts',
+      status: 'M ',
     },
   ])
 })
@@ -31,8 +31,8 @@ test('parses added file', () => {
 
   expect(result).toEqual([
     {
-      status: 'A ',
       filePath: 'src/new-file.ts',
+      status: 'A ',
     },
   ])
 })
@@ -43,8 +43,8 @@ test('parses untracked file', () => {
 
   expect(result).toEqual([
     {
-      status: '??',
       filePath: 'src/untracked.ts',
+      status: '??',
     },
   ])
 })
@@ -55,8 +55,8 @@ test('parses deleted file', () => {
 
   expect(result).toEqual([
     {
-      status: ' D',
       filePath: 'src/deleted.ts',
+      status: ' D',
     },
   ])
 })
@@ -67,8 +67,8 @@ test('parses staged deleted file', () => {
 
   expect(result).toEqual([
     {
-      status: 'D ',
       filePath: 'src/deleted.ts',
+      status: 'D ',
     },
   ])
 })
@@ -79,8 +79,8 @@ test('parses renamed file', () => {
 
   expect(result).toEqual([
     {
-      status: 'R ',
       filePath: 'src/old.ts -> src/new.ts',
+      status: 'R ',
     },
   ])
 })
@@ -93,16 +93,16 @@ A  src/file2.ts
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/file1.ts',
+      status: ' M',
     },
     {
-      status: 'A ',
       filePath: 'src/file2.ts',
+      status: 'A ',
     },
     {
-      status: '??',
       filePath: 'src/file3.ts',
+      status: '??',
     },
   ])
 })
@@ -113,8 +113,8 @@ test('parses file with spaces in path', () => {
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/file with spaces.ts',
+      status: ' M',
     },
   ])
 })
@@ -125,8 +125,8 @@ test('parses file in root directory', () => {
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'README.md',
+      status: ' M',
     },
   ])
 })
@@ -151,8 +151,8 @@ test('handles output with whitespace-only lines', () => {
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/file.ts',
+      status: ' M',
     },
   ])
 })
@@ -165,8 +165,8 @@ AB
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/file.ts',
+      status: ' M',
     },
   ])
 })
@@ -181,24 +181,24 @@ R  src/old.ts -> src/new.ts`
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/modified.ts',
+      status: ' M',
     },
     {
-      status: 'A ',
       filePath: 'src/added.ts',
+      status: 'A ',
     },
     {
-      status: 'D ',
       filePath: 'src/deleted.ts',
+      status: 'D ',
     },
     {
-      status: '??',
       filePath: 'src/untracked.ts',
+      status: '??',
     },
     {
-      status: 'R ',
       filePath: 'src/old.ts -> src/new.ts',
+      status: 'R ',
     },
   ])
 })
@@ -209,8 +209,8 @@ test('handles file path with leading spaces after status', () => {
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/file.ts',
+      status: ' M',
     },
   ])
 })
@@ -221,8 +221,8 @@ test('handles file path with trailing spaces', () => {
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/file.ts',
+      status: ' M',
     },
   ])
 })
@@ -233,8 +233,8 @@ test('handles both modified in index and working tree', () => {
 
   expect(result).toEqual([
     {
-      status: 'MM',
       filePath: 'src/file.ts',
+      status: 'MM',
     },
   ])
 })
@@ -245,8 +245,8 @@ test('handles copied file', () => {
 
   expect(result).toEqual([
     {
-      status: 'C ',
       filePath: 'src/original.ts -> src/copy.ts',
+      status: 'C ',
     },
   ])
 })
@@ -257,8 +257,8 @@ test('handles file with unicode characters in path', () => {
 
   expect(result).toEqual([
     {
-      status: ' M',
       filePath: 'src/文件.ts',
+      status: ' M',
     },
   ])
 })

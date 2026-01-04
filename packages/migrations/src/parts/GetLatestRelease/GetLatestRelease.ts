@@ -46,7 +46,7 @@ export const getLatestRelease = async (octokit: Octokit, owner: string, repo: st
           tag_name: latestTag.name,
           target_commitish: tagRefResponse.data.object.sha,
         }
-      } catch (tagError) {
+      } catch {
         return null
       }
     }

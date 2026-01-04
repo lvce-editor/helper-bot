@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { ExecFunction } from '../Types/Types.ts'
+import type { ExecFunction } from '../Types/Types.ts'
 
 export interface CloneRepositoryTmpResult {
   readonly [Symbol.asyncDispose]: () => Promise<void>

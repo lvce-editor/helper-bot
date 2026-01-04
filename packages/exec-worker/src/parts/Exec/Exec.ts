@@ -1,11 +1,11 @@
+import * as Assert from '@lvce-editor/assert'
 import { execa } from 'execa'
 import { uriToPath } from '../UriUtils/UriUtils.ts'
-import * as Assert from '@lvce-editor/assert'
 
 export interface ExecResult {
-  readonly stdout: string
-  readonly stderr: string
   readonly exitCode: number
+  readonly stderr: string
+  readonly stdout: string
 }
 
 export const exec = async (file: string, args: readonly string[], options: { cwd?: string; env?: any } = {}): Promise<ExecResult> => {
@@ -20,8 +20,8 @@ export const exec = async (file: string, args: readonly string[], options: { cwd
   }
   const result = await execa(file, args, { cwd, env })
   return {
-    stdout: result.stdout,
-    stderr: result.stderr,
     exitCode: result.exitCode ?? 129,
+    stderr: result.stderr,
+    stdout: result.stdout,
   }
 }
