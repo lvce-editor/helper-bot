@@ -1,5 +1,6 @@
 import type { Octokit } from '@octokit/rest'
 import { expect, test } from '@jest/globals'
+import type { MigrationErrorResult, MigrationSuccessResult } from '../src/parts/Types/Types.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { updateWebsiteConfig } from '../src/parts/UpdateWebsiteConfig/UpdateWebsiteConfig.ts'
@@ -461,8 +462,8 @@ test('handles GitHub API errors gracefully', async () => {
 
   // getLatestRelease catches errors and returns null, so we get "No releases or tags found"
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('VALIDATION_ERROR')
-  expect(result.errorMessage).toContain('No releases or tags found')
+  expect((result as MigrationErrorResult).errorCode).toBe('VALIDATION_ERROR')
+  expect((result as MigrationErrorResult).errorMessage).toContain('No releases or tags found')
   expect(result.statusCode).toBe(400)
 })
 
@@ -490,8 +491,8 @@ test('handles invalid JSON in config file', async () => {
   })
 
   expect(result.status).toBe('error')
-  expect(result.errorCode).toBe('VALIDATION_ERROR')
-  expect(result.errorMessage).toBeDefined()
+  expect((result as MigrationErrorResult).errorCode).toBe('VALIDATION_ERROR')
+  expect((result as MigrationErrorResult).errorMessage).toBeDefined()
 })
 
 test('preserves other config fields when updating', async () => {
