@@ -1,6 +1,6 @@
 export interface ParsedGitStatusEntry {
-  readonly status: string
   readonly filePath: string
+  readonly status: string
 }
 
 /**
@@ -31,8 +31,8 @@ export const parseGitStatus = (gitStatusOutput: string): ParsedGitStatusEntry[] 
     const filePath = line.slice(3).trim()
 
     entries.push({
-      status,
       filePath,
+      status,
     })
   }
 

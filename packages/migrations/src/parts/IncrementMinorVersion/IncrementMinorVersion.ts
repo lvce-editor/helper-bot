@@ -9,12 +9,12 @@ export const incrementMinorVersion = (tagName: string): string => {
     throw new Error(`Invalid version format: ${tagName}. Expected format: major.minor.patch`)
   }
 
-  const major = parseInt(parts[0], 10)
-  const minor = parseInt(parts[1], 10)
-  const patch = parseInt(parts[2], 10)
+  const major = Number.parseInt(parts[0], 10)
+  const minor = Number.parseInt(parts[1], 10)
+  const patch = Number.parseInt(parts[2], 10)
 
   if (isNaN(major) || isNaN(minor) || isNaN(patch)) {
-    throw new Error(`Invalid version format: ${tagName}. All parts must be numbers`)
+    throw new TypeError(`Invalid version format: ${tagName}. All parts must be numbers`)
   }
 
   // Increment minor version and reset patch to 0

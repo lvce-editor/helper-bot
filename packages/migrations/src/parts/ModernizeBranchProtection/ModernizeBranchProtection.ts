@@ -1,7 +1,8 @@
+import type { components } from '@octokit/openapi-types'
 import type { Octokit } from '@octokit/rest'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
-import type { components } from '@octokit/openapi-types'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { GITHUB_ACTIONS_INTEGRATION_ID } from '../Constants/Constants.ts'
 import { convertClassicToRuleset, type RulesetData } from '../ConvertClassicToRuleset/ConvertClassicToRuleset.ts'
 import { createRuleset } from '../CreateRuleset/CreateRuleset.ts'
 import { deleteClassicBranchProtection } from '../DeleteClassicBranchProtection/DeleteClassicBranchProtection.ts'
@@ -10,7 +11,6 @@ import { getBranchRulesets } from '../GetBranchRulesets/GetBranchRulesets.ts'
 import { getClassicBranchProtection } from '../GetClassicBranchProtection/GetClassicBranchProtection.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { GITHUB_ACTIONS_INTEGRATION_ID } from '../Constants/Constants.ts'
 
 export interface ModernizeBranchProtectionOptions extends BaseMigrationOptions {
   readonly branch?: string

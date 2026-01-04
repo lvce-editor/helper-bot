@@ -1,17 +1,17 @@
 import { NodeWorkerRpcParent } from '@lvce-editor/rpc'
 import { constants } from 'node:fs'
 import * as FsPromises from 'node:fs/promises'
+import type { BaseMigrationOptions, ExecFunction, MigrationResult } from '../Types/Types.ts'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { execWorkerUrl, execWorkerUrlDev } from '../ExecWorkerUrl/ExecWorkerUrl.ts'
-import type { BaseMigrationOptions, ExecFunction, MigrationResult } from '../Types/Types.ts'
 import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
 
 const workerUrl = process.env.NODE_ENV === 'production' ? execWorkerUrl : execWorkerUrlDev
 
 const launchExecWorker = async () => {
   const rpc = await NodeWorkerRpcParent.create({
-    path: workerUrl,
     commandMap: {},
+    path: workerUrl,
     stdio: 'inherit',
   })
 

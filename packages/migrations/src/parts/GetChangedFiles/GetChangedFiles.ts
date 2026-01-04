@@ -1,18 +1,18 @@
 import type * as FsPromises from 'node:fs/promises'
 import type { BaseMigrationOptions, ChangedFile } from '../Types/Types.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { normalizePath } from '../UriUtils/UriUtils.ts'
 import { parseGitStatus } from './ParseGitStatus.ts'
 
 export interface GetChangedFilesOptions {
-  readonly fs: Readonly<typeof FsPromises>
-  readonly exec: BaseMigrationOptions['exec']
   readonly clonedRepoUri: string
+  readonly exec: BaseMigrationOptions['exec']
   readonly filterStatus?: (status: string) => boolean
+  readonly fs: Readonly<typeof FsPromises>
 }
 
 export const getChangedFiles = async (options: Readonly<GetChangedFilesOptions>): Promise<ChangedFile[]> => {
-  const { fs, exec, clonedRepoUri, filterStatus } = options
+  const { clonedRepoUri, exec, filterStatus, fs } = options
   const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
 
   // Use git to detect changed files
@@ -24,7 +24,7 @@ export const getChangedFiles = async (options: Readonly<GetChangedFilesOptions>)
   const parsedEntries = parseGitStatus(gitResult.stdout)
 
   for (const entry of parsedEntries) {
-    const { status, filePath } = entry
+    const { filePath, status } = entry
 
     // Apply custom filter if provided, otherwise use default behavior
     if (filterStatus) {
