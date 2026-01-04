@@ -588,7 +588,7 @@ test('handles version tags with v prefix', async () => {
   const parsedConfig = JSON.parse(updatedContent)
 
   expect(parsedConfig.version).toBe(latestVersion)
-  expect(result.commitMessage).toContain(latestVersion)
+  expect((result as MigrationSuccessResult).commitMessage).toContain(latestVersion)
 })
 
 test('handles version tags without v prefix', async () => {
@@ -634,7 +634,7 @@ test('handles version tags without v prefix', async () => {
   const parsedConfig = JSON.parse(updatedContent)
 
   expect(parsedConfig.version).toBe(latestVersion)
-  expect(result.commitMessage).toContain(latestVersion)
+  expect((result as MigrationSuccessResult).commitMessage).toContain(latestVersion)
 })
 
 test('handles config file without trailing newline', async () => {
