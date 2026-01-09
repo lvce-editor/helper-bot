@@ -68,9 +68,9 @@ const updateBranchRulesetsRequiredChecks = async (
   // Check both structures
   const rulesetsData = Array.isArray(rulesetsResponse.data?.data)
     ? rulesetsResponse.data.data
-    : (Array.isArray(rulesetsResponse.data)
+    : Array.isArray(rulesetsResponse.data)
       ? rulesetsResponse.data
-      : [])
+      : []
   const rulesets: any[] = rulesetsData
   let updatedRulesets = 0
 
