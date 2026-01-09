@@ -273,52 +273,30 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
 
         // Create tree with all changes
         // When using base_tree, files not specified remain unchanged
-        // To delete files, we need to get the full tree and exclude deleted files
-        let newTreeSha: string
-        if (filesToDelete.length > 0) {
-          // Get the current tree recursively to handle deletions
-          const currentTree = await octokit.rest.git.getTree({
-            owner,
-            repo,
-            // @ts-ignore - recursive parameter type issue in octokit types
-            recursive: 1,
-            tree_sha: latestCommit.data.tree.sha,
-          })
+        // To delete files, include them in the tree with sha: null
+        const deletionEntries = filesToDelete.map((path) => ({
+          mode: '100644' as const,
+          path,
+          sha: null as unknown as string,
+          type: 'blob' as const,
+        }))
 
-          // Build a map of paths to update (from treeEntries)
-          const pathsToUpdate = new Set(treeEntries.map((entry) => entry.path))
-          const pathsToDelete = new Set(filesToDelete)
+        // Combine: deletion entries + new/updated files
+        const allTreeEntries = [...deletionEntries, ...treeEntries] as Array<{
+          content?: string
+          mode: '100644'
+          path: string
+          sha: string | null
+          type: 'blob'
+        }>
 
-          // Filter tree: exclude deleted files, and replace updated files
-          const existingTreeEntries = currentTree.data.tree
-            .filter((entry) => entry.type === 'blob' && !pathsToDelete.has(entry.path) && !pathsToUpdate.has(entry.path))
-            .map((entry) => ({
-              mode: entry.mode as '100644',
-              path: entry.path,
-              sha: entry.sha,
-              type: entry.type as 'blob',
-            }))
-
-          // Combine: existing files (minus deletions and updates) + new/updated files
-          const allTreeEntries = [...existingTreeEntries, ...treeEntries]
-
-          const newTree = await octokit.rest.git.createTree({
-            base_tree: latestCommit.data.tree.sha,
-            owner,
-            repo,
-            tree: allTreeEntries,
-          })
-          newTreeSha = newTree.data.sha
-        } else {
-          // No deletions, just create tree with new/updated files using base_tree
-          const newTree = await octokit.rest.git.createTree({
-            base_tree: latestCommit.data.tree.sha,
-            owner,
-            repo,
-            tree: treeEntries,
-          })
-          newTreeSha = newTree.data.sha
-        }
+        const newTree = await octokit.rest.git.createTree({
+          base_tree: latestCommit.data.tree.sha,
+          owner,
+          repo,
+          tree: allTreeEntries,
+        })
+        const newTreeSha = newTree.data.sha
 
         // Create a single commit with all changes
         const commit = await octokit.rest.git.createCommit({
