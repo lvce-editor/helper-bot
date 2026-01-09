@@ -28,14 +28,20 @@ test('adds repository link to root extension.json when missing', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  if (result.status === 'success') {
-    expect(result.branchName).toBe('feature/add-repository-link')
-  }
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('extension.json')
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
   expect(updatedContent.name).toBe('my-extension')
   expect(updatedContent.version).toBe('1.0.0')
@@ -63,14 +69,20 @@ test('adds repository link to monorepo extension.json when missing', async () =>
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  if (result.status === 'success') {
-    expect(result.branchName).toBe('feature/add-repository-link')
-  }
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('packages/extension/extension.json')
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'packages/extension/extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
   expect(updatedContent.name).toBe('my-extension')
 })
@@ -101,19 +113,29 @@ test('adds repository link to both root and monorepo extension.json when both ex
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  expect(result.changedFiles).toHaveLength(2)
-
   const rootFile = result.changedFiles.find((f) => f.path === 'extension.json')
-  expect(rootFile).toBeDefined()
-  const rootContent = JSON.parse(rootFile.content)
+  const monorepoFile = result.changedFiles.find((f) => f.path === 'packages/extension/extension.json')
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'packages/extension/extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
+  const rootContent = JSON.parse(rootFile!.content)
+  const monorepoContent = JSON.parse(monorepoFile!.content)
   expect(rootContent.repository).toBe('https://github.com/test/my-repo')
   expect(rootContent.name).toBe('root-extension')
-
-  const monorepoFile = result.changedFiles.find((f) => f.path === 'packages/extension/extension.json')
-  expect(monorepoFile).toBeDefined()
-  const monorepoContent = JSON.parse(monorepoFile.content)
   expect(monorepoContent.repository).toBe('https://github.com/test/my-repo')
   expect(monorepoContent.name).toBe('monorepo-extension')
 })
@@ -140,9 +162,14 @@ test('skips root extension.json when repository already exists', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.changedFiles).toHaveLength(0)
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('skips monorepo extension.json when repository already exists', async () => {
@@ -167,9 +194,14 @@ test('skips monorepo extension.json when repository already exists', async () =>
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.changedFiles).toHaveLength(0)
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('adds repository to root when monorepo already has it', async () => {
@@ -199,11 +231,20 @@ test('adds repository to root when monorepo already has it', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('extension.json')
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
 })
 
@@ -234,11 +275,20 @@ test('adds repository to monorepo when root already has it', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('packages/extension/extension.json')
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'packages/extension/extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
 })
 
@@ -255,9 +305,14 @@ test('returns empty result when neither extension.json exists', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.changedFiles).toHaveLength(0)
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('returns empty result when both files exist and already have repository', async () => {
@@ -286,9 +341,14 @@ test('returns empty result when both files exist and already have repository', a
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(200)
-  expect(result.changedFiles).toHaveLength(0)
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('preserves all existing properties when adding repository', async () => {
@@ -326,9 +386,20 @@ test('preserves all existing properties when adding repository', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
   expect(updatedContent.name).toBe('my-extension')
   expect(updatedContent.version).toBe('1.0.0')
@@ -366,9 +437,20 @@ test('handles extension.json with empty object', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
 })
 
@@ -393,9 +475,20 @@ test('handles extension.json with null repository property', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
 })
 
@@ -420,9 +513,20 @@ test('handles extension.json with empty string repository property', async () =>
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test/my-repo')
 })
 
@@ -443,12 +547,14 @@ test('handles invalid JSON gracefully', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('error')
+  expect(result).toEqual({
+    changedFiles: [],
+    errorCode: 'ADD_REPOSITORY_LINK_FAILED',
+    errorMessage: expect.any(String),
+    status: 'error',
+    statusCode: expect.any(Number),
+  })
   expect(result.statusCode).toBeGreaterThanOrEqual(400)
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('ADD_REPOSITORY_LINK_FAILED')
-    expect(result.errorMessage).toBeDefined()
-  }
 })
 
 test('handles repository owner and name with special characters', async () => {
@@ -471,9 +577,20 @@ test('handles repository owner and name with special characters', async () => {
     repositoryOwner: 'test-org',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
   const updatedContent = JSON.parse(result.changedFiles[0].content)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test-org/my-repo-123"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
   expect(updatedContent.repository).toBe('https://github.com/test-org/my-repo-123')
 })
 
@@ -497,9 +614,19 @@ test('handles clonedRepoUri without trailing slash', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  expect(result.changedFiles).toHaveLength(1)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
 })
 
 test('handles clonedRepoUri with trailing slash', async () => {
@@ -522,7 +649,17 @@ test('handles clonedRepoUri with trailing slash', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  expect(result.changedFiles).toHaveLength(1)
+  expect(result).toEqual({
+    branchName: 'feature/add-repository-link',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"repository": "https://github.com/test/my-repo"'),
+        path: 'extension.json',
+      },
+    ],
+    commitMessage: 'feature: add repository link to extension.json',
+    pullRequestTitle: 'feature: add repository link to extension.json',
+    status: 'success',
+    statusCode: 201,
+  })
 })
