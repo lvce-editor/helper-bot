@@ -9,9 +9,9 @@ const mockExec = createMockExec()
 test('adds repository link to root extension.json when missing', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
+    displayName: 'My Extension',
     name: 'my-extension',
     version: '1.0.0',
-    displayName: 'My Extension',
   }
   const mockFs = createMockFs({
     files: {
@@ -72,7 +72,7 @@ test('adds repository link to monorepo extension.json when missing', async () =>
 })
 
 test('adds repository link to both root and monorepo extension.json when both exist and missing repository', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
   const rootExtensionJson = {
     name: 'root-extension',
     version: '1.0.0',
@@ -103,13 +103,13 @@ test('adds repository link to both root and monorepo extension.json when both ex
 
   const rootFile = result.changedFiles.find((f) => f.path === 'extension.json')
   expect(rootFile).toBeDefined()
-  const rootContent = JSON.parse(rootFile!.content)
+  const rootContent = JSON.parse(rootFile.content)
   expect(rootContent.repository).toBe('https://github.com/test/my-repo')
   expect(rootContent.name).toBe('root-extension')
 
   const monorepoFile = result.changedFiles.find((f) => f.path === 'packages/extension/extension.json')
   expect(monorepoFile).toBeDefined()
-  const monorepoContent = JSON.parse(monorepoFile!.content)
+  const monorepoContent = JSON.parse(monorepoFile.content)
   expect(monorepoContent.repository).toBe('https://github.com/test/my-repo')
   expect(monorepoContent.name).toBe('monorepo-extension')
 })
@@ -118,8 +118,8 @@ test('skips root extension.json when repository already exists', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
     name: 'my-extension',
-    version: '1.0.0',
     repository: 'https://github.com/other/repo',
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -145,8 +145,8 @@ test('skips monorepo extension.json when repository already exists', async () =>
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
     name: 'my-extension',
-    version: '1.0.0',
     repository: 'https://github.com/other/repo',
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -176,8 +176,8 @@ test('adds repository to root when monorepo already has it', async () => {
   }
   const monorepoExtensionJson = {
     name: 'monorepo-extension',
-    version: '2.0.0',
     repository: 'https://github.com/other/repo',
+    version: '2.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -207,8 +207,8 @@ test('adds repository to monorepo when root already has it', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const rootExtensionJson = {
     name: 'root-extension',
-    version: '1.0.0',
     repository: 'https://github.com/other/repo',
+    version: '1.0.0',
   }
   const monorepoExtensionJson = {
     name: 'monorepo-extension',
@@ -290,14 +290,8 @@ test('returns empty result when both files exist and already have repository', a
 test('preserves all existing properties when adding repository', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
-    name: 'my-extension',
-    version: '1.0.0',
-    displayName: 'My Extension',
-    description: 'A test extension',
-    publisher: 'test-publisher',
-    categories: ['other'],
     activationEvents: ['onStartupFinished'],
-    main: './out/extension.js',
+    categories: ['other'],
     contributes: {
       commands: [
         {
@@ -306,6 +300,12 @@ test('preserves all existing properties when adding repository', async () => {
         },
       ],
     },
+    description: 'A test extension',
+    displayName: 'My Extension',
+    main: './out/extension.js',
+    name: 'my-extension',
+    publisher: 'test-publisher',
+    version: '1.0.0',
   }
   const mockFs = createMockFs({
     files: {
@@ -345,8 +345,8 @@ test('preserves all existing properties when adding repository', async () => {
 })
 
 test('handles extension.json with empty object', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
-  const extensionJson = {}
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
+  const extensionJson: Record<string, unknown> = {}
   const mockFs = createMockFs({
     files: {
       [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',

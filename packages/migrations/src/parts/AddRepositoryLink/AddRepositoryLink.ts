@@ -20,8 +20,8 @@ const processExtensionJson = async (
   const content = await options.fs.readFile(extensionJsonPath, 'utf8')
   const extensionJson = JSON.parse(content)
 
-  // Check if repository property already exists
-  if (extensionJson.repository) {
+  // Check if repository property already exists and is a non-empty string
+  if (extensionJson.repository && typeof extensionJson.repository === 'string' && extensionJson.repository.trim() !== '') {
     return null
   }
 
