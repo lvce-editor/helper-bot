@@ -30,7 +30,9 @@ test('adds repository link to root extension.json when missing', async () => {
 
   expect(result.status).toBe('success')
   expect(result.statusCode).toBe(201)
-  expect(result.branchName).toBe('feature/add-repository-link')
+  if (result.status === 'success') {
+    expect(result.branchName).toBe('feature/add-repository-link')
+  }
   expect(result.changedFiles).toHaveLength(1)
   expect(result.changedFiles[0].path).toBe('extension.json')
   const updatedContent = JSON.parse(result.changedFiles[0].content)
@@ -63,7 +65,9 @@ test('adds repository link to monorepo extension.json when missing', async () =>
 
   expect(result.status).toBe('success')
   expect(result.statusCode).toBe(201)
-  expect(result.branchName).toBe('feature/add-repository-link')
+  if (result.status === 'success') {
+    expect(result.branchName).toBe('feature/add-repository-link')
+  }
   expect(result.changedFiles).toHaveLength(1)
   expect(result.changedFiles[0].path).toBe('packages/extension/extension.json')
   const updatedContent = JSON.parse(result.changedFiles[0].content)
@@ -370,7 +374,7 @@ test('handles extension.json with empty object', async () => {
 
 test('handles extension.json with null repository property', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
-  const extensionJson = {
+  const extensionJson: { name: string; repository: null } = {
     name: 'my-extension',
     repository: null,
   }
@@ -441,8 +445,10 @@ test('handles invalid JSON gracefully', async () => {
 
   expect(result.status).toBe('error')
   expect(result.statusCode).toBeGreaterThanOrEqual(400)
-  expect(result.errorCode).toBe('ADD_REPOSITORY_LINK_FAILED')
-  expect(result.errorMessage).toBeDefined()
+  if (result.status === 'error') {
+    expect(result.errorCode).toBe('ADD_REPOSITORY_LINK_FAILED')
+    expect(result.errorMessage).toBeDefined()
+  }
 })
 
 test('handles repository owner and name with special characters', async () => {
