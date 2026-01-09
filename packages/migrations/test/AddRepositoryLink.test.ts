@@ -345,7 +345,7 @@ test('preserves all existing properties when adding repository', async () => {
 })
 
 test('handles extension.json with empty object', async () => {
-  const clonedRepoUri = pathToUri('/test/repo') + '/'
+  const clonedRepoUri = pathToUri('/test/repo')
   const extensionJson = {}
   const mockFs = createMockFs({
     files: {
@@ -369,7 +369,7 @@ test('handles extension.json with empty object', async () => {
 })
 
 test('handles extension.json with null repository property', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
     name: 'my-extension',
     repository: null,
@@ -396,7 +396,7 @@ test('handles extension.json with null repository property', async () => {
 })
 
 test('handles extension.json with empty string repository property', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
     name: 'my-extension',
     repository: '',
@@ -423,7 +423,7 @@ test('handles extension.json with empty string repository property', async () =>
 })
 
 test('handles invalid JSON gracefully', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
       [new URL('extension.json', clonedRepoUri).toString()]: 'invalid json{',
@@ -446,7 +446,7 @@ test('handles invalid JSON gracefully', async () => {
 })
 
 test('handles repository owner and name with special characters', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
     name: 'my-extension',
   }
@@ -483,7 +483,7 @@ test('handles clonedRepoUri without trailing slash', async () => {
   })
 
   const result = await addRepositoryLink({
-    clonedRepoUri: clonedRepoUri.replace(/\/$/, ''),
+    clonedRepoUri: clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
@@ -497,18 +497,18 @@ test('handles clonedRepoUri without trailing slash', async () => {
 })
 
 test('handles clonedRepoUri with trailing slash', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
   const extensionJson = {
     name: 'my-extension',
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri + '/').toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
   const result = await addRepositoryLink({
-    clonedRepoUri: clonedRepoUri + '/',
+    clonedRepoUri: clonedRepoUri,
     exec: mockExec,
     fetch: globalThis.fetch,
     fs: mockFs,
