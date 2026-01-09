@@ -74,7 +74,9 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
   return []
 }
 
-export type LintAndFixOptions = BaseMigrationOptions
+export type LintAndFixOptions = BaseMigrationOptions & {
+  readonly force?: boolean
+}
 
 export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<MigrationResult> => {
   try {
@@ -118,10 +120,17 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
         )
 
         // If @lvce-editor/eslint-config is already at the latest version, skip the migration
-        if (eslintConfigUpToDate) {
+        // unless force option is set
+        if (eslintConfigUpToDate && !options.force) {
           // eslint-disable-next-line no-console
           console.info(`[lint-and-fix]: Already using latest version of @lvce-editor/eslint-config (${eslintConfigVersion}). Skipping migration.`)
           return emptyMigrationResult
+        }
+        if (eslintConfigUpToDate && options.force) {
+          // eslint-disable-next-line no-console
+          console.info(
+            `[lint-and-fix]: Already using latest version of @lvce-editor/eslint-config (${eslintConfigVersion}), but force option is set. Continuing with eslint fix.`,
+          )
         }
       } else {
         // eslint-disable-next-line no-console
