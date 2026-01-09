@@ -48,7 +48,7 @@ jobs:
       - run: npm test
 
   test-macos:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v3
       - run: npm test
@@ -315,7 +315,7 @@ jobs:
   test-ubuntu:
     runs-on: ubuntu-24.04
   test-macos:
-    runs-on: macos-15
+    runs-on: macos-26
   test-windows:
     runs-on: windows-2025
 `
