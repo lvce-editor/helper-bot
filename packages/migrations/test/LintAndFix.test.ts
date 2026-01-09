@@ -450,6 +450,109 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   expect(mockFetch).toHaveBeenCalledWith('https://registry.npmjs.org/@lvce-editor/eslint-config/latest')
 })
 
+test('runs eslint fix when force option is set even if eslint config is already at latest version', async () => {
+  const oldPackageJson: any = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.39.2',
+    },
+    name: 'test-package',
+    version: '1.0.0',
+  }
+
+  const mockPackageLockJson = JSON.stringify(
+    {
+      dependencies: {
+        '@lvce-editor/eslint-config': {
+          version: '4.3.0',
+        },
+        eslint: {
+          version: '9.39.2',
+        },
+      },
+      lockfileVersion: 3,
+      name: 'test-package',
+      version: '1.0.0',
+    },
+    null,
+    2,
+  )
+
+  const originalFileContent = `const x = "test"\n`
+  const fixedFileContent = `const x = 'test'\n`
+
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
+  const mockFs = createMockFs({
+    files: {
+      [new URL('package-lock.json', clonedRepoUri).toString()]: mockPackageLockJson,
+      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('src/test.ts', clonedRepoUri).toString()]: originalFileContent,
+    },
+  })
+
+  // Mock fetch to return latest version as 4.3.0 (same as installed)
+  const mockFetch = jest.fn(async (url: string) => {
+    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
+      return {
+        json: async () => ({ version: '4.3.0' }),
+        ok: true,
+      } as Response
+    }
+    throw new Error(`Unexpected fetch URL: ${url}`)
+  })
+
+  const mockExecFn = jest.fn<
+    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
+  >(async (file, args, options) => {
+    const cwd = options?.cwd
+    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
+      // Simulate eslint --fix changing the file
+      await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).toString(), fixedFileContent)
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
+      // Return git status output showing modified file
+      return { exitCode: 0, stderr: '', stdout: ' M src/test.ts\n' }
+    }
+    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
+  })
+  const mockExec = createMockExec(mockExecFn)
+
+  const result = await lintAndFix({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: mockFetch as any,
+    force: true,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    branchName: expect.stringMatching(/^feature\/lint-and-fix-\d+$/),
+    changedFiles: [
+      {
+        content: fixedFileContent,
+        path: 'src/test.ts',
+      },
+    ],
+    commitMessage: 'chore: lint and fix code',
+    pullRequestTitle: 'chore: lint and fix code',
+    status: 'success',
+    statusCode: 201,
+  })
+  // Should run npm ci and eslint fix even though config is already at latest version
+  expect(mockExecFn).toHaveBeenCalledWith('npm', ['ci', '--ignore-scripts'], expect.objectContaining({ cwd: clonedRepoUri }))
+  expect(mockExecFn).toHaveBeenCalledWith('npx', ['eslint', '.', '--fix'], expect.objectContaining({ cwd: clonedRepoUri }))
+  expect(mockFetch).toHaveBeenCalledWith('https://registry.npmjs.org/@lvce-editor/eslint-config/latest')
+})
+
 test('upgrades @lvce-editor/eslint-config to latest version when outdated', async () => {
   const oldPackageJson: any = {
     devDependencies: {
