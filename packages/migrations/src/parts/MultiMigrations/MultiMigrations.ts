@@ -6,6 +6,7 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 export interface MultiMigrationsUpdateNodeVersionOptions extends BaseMigrationOptions {
   readonly baseBranch?: string
   readonly migrationName: string
+  readonly migrationOptions?: Record<string, any>
   readonly repositoryNames: readonly string[]
   readonly secret?: string
   readonly serverUrl?: string
@@ -27,7 +28,7 @@ export interface MultiMigrationsUpdateNodeVersionData {
 
 export const multiMigrations = async (options: Readonly<MultiMigrationsUpdateNodeVersionOptions>): Promise<MigrationResult> => {
   try {
-    const { fetch: fetchFn, repositoryNames } = options
+    const { fetch: fetchFn, migrationOptions, repositoryNames } = options
 
     if (!repositoryNames || repositoryNames.length === 0) {
       return {
@@ -75,6 +76,7 @@ export const multiMigrations = async (options: Readonly<MultiMigrationsUpdateNod
         const response = await fetchFn(url.toString(), {
           body: JSON.stringify({
             repository,
+            ...migrationOptions,
           }),
           headers: {
             Authorization: `Bearer ${endpointSecret}`,
