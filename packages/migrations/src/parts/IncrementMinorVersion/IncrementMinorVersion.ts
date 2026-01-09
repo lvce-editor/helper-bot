@@ -13,7 +13,7 @@ export const incrementMinorVersion = (tagName: string): string => {
   const minor = Number.parseInt(parts[1], 10)
   const patch = Number.parseInt(parts[2], 10)
 
-  if (isNaN(major) || isNaN(minor) || isNaN(patch)) {
+  if (Number.isNaN(major) || Number.isNaN(minor) || Number.isNaN(patch)) {
     throw new TypeError(`Invalid version format: ${tagName}. All parts must be numbers`)
   }
 
