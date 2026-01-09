@@ -13,9 +13,10 @@ await exportStatic()
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
+  const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', clonedRepoUri).toString()]: content,
+      [new URL('scripts/build-static.js', baseUri).toString()]: content,
     },
   })
 
@@ -55,9 +56,10 @@ await exportStatic()
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
+  const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', clonedRepoUri).toString()]: content,
+      [new URL('scripts/build-static.js', baseUri).toString()]: content,
     },
   })
 
@@ -97,9 +99,10 @@ await exportStatic({root: join(import.meta.dirname, '..')})
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
+  const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', clonedRepoUri).toString()]: content,
+      [new URL('scripts/build-static.js', baseUri).toString()]: content,
     },
   })
 
@@ -129,9 +132,10 @@ await something()
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
+  const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', clonedRepoUri).toString()]: content,
+      [new URL('scripts/build-static.js', baseUri).toString()]: content,
     },
   })
 
