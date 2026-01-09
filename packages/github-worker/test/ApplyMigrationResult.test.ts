@@ -243,26 +243,15 @@ test('handles file deletion', async (): Promise<void> => {
     .reply(201, {
       ref: 'refs/heads/migration-branch',
     })
-    .get('/repos/test-owner/test-repo/git/trees/base-tree-sha')
-    .query({ recursive: 1 })
-    .reply(200, {
-      tree: [
-        {
-          mode: '100644',
-          path: 'file-to-delete.txt',
-          sha: 'file-sha',
-          type: 'blob',
-        },
-        {
-          mode: '100644',
-          path: 'other-file.txt',
-          sha: 'other-sha',
-          type: 'blob',
-        },
-      ],
-    })
     .post('/repos/test-owner/test-repo/git/trees', (body: any) => {
-      return body.base_tree === 'base-tree-sha' && body.tree.length === 1 && body.tree[0].path === 'other-file.txt'
+      return (
+        body.base_tree === 'base-tree-sha' &&
+        body.tree.length === 1 &&
+        body.tree[0].path === 'file-to-delete.txt' &&
+        body.tree[0].sha === null &&
+        body.tree[0].mode === '100644' &&
+        body.tree[0].type === 'blob'
+      )
     })
     .reply(201, {
       sha: 'new-tree-sha',
