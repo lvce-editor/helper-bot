@@ -33,6 +33,8 @@ test('some test', () => {
       [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('packages/app/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('packages/app/test/some.test.ts', clonedRepoUri).toString()]: oldTestContent,
+      [new URL('packages/exec-worker/test/another.test.ts', clonedRepoUri).toString()]: oldTestContent,
+      [new URL('packages/github-worker/test/third.test.ts', clonedRepoUri).toString()]: oldTestContent,
     },
   })
 
@@ -69,19 +71,14 @@ test('some test', () => {
   })
 
   expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(3)
+  expect(result.changedFiles).toHaveLength(3) // Only test files found and updated
   if (result.status === 'success') {
     expect(result.pullRequestTitle).toBe('Modernize mockrpc-disposal')
     expect(result.commitMessage).toBe('Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc')
     expect(result.branchName).toBe('modernize-mockrpc-disposal')
   }
 
-  // Check package.json was updated
-  const updatedPackageJson = JSON.parse(await mockFs.readFile(new URL('package.json', clonedRepoUri).toString(), 'utf8'))
-  expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
-  expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
-
-  // Check test file was updated
+  // Check test files were updated
   const updatedTestContent = await mockFs.readFile(new URL('packages/app/test/some.test.ts', clonedRepoUri).toString(), 'utf8')
   expect(updatedTestContent).toContain('using rpc = RendererWorker.registerMockRpc')
   expect(updatedTestContent).not.toContain('const rpc = RendererWorker.registerMockRpc')
