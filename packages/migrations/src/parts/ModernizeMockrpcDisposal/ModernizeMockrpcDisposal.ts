@@ -3,11 +3,107 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNpmVersion } from '../GetLatestNpmVersion/GetLatestNpmVersion.ts'
-import { listFiles } from '../ListFiles/ListFiles.ts'
+import * as FsPromises from 'node:fs/promises'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 import { replaceMockRpcPattern } from './ReplaceMockRpcPattern.ts'
 import { updatePackageJsonDependencies } from './UpdatePackageJsonDependencies.ts'
+
+const listFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<string[]> => {
+  const files: string[] = []
+  
+  try {
+    const rootEntries = await fs.readdir(new URL('.', clonedRepoUri).toString(), { recursive: true })
+    const filtered = rootEntries.filter((file) => !file.includes('node_modules') && !file.includes('.git'))
+    
+    for (const entry of filtered) {
+      try {
+        const entryUri = new URL(entry, clonedRepoUri).toString()
+        const stat = await fs.stat(entryUri)
+        
+        if (stat.isDirectory()) {
+          const subEntries = await fs.readdir(entryUri)
+          for (const subEntry of subEntries) {
+            files.push(normalizePath(`${entry}/${subEntry}`))
+          }
+        } else {
+          files.push(normalizePath(entry))
+        }
+      } catch {
+        // Skip entries that can't be accessed
+        continue
+      }
+    }
+  } catch {
+    // If directory listing fails, return empty array
+    return []
+  }
+  
+  return files
+}
+
+const upgradePackageJsonFiles = async (clonedRepoUri: string, fs: typeof FsPromises, latestRpcVersion: string, latestRpcRegistryVersion: string): Promise<Array<{ path: string; content: string }>> => {
+  const changedFiles: Array<{ path: string; content: string }> = []
+  const allFiles = await listFiles(clonedRepoUri, fs)
+  const packageJsonFiles = allFiles.filter(file => file.endsWith('package.json'))
+
+  for (const packageJsonPath of packageJsonFiles) {
+    const fullPath = normalizePath(packageJsonPath)
+    try {
+      const packageJsonUri = new URL(fullPath, clonedRepoUri).toString()
+      const content = await fs.readFile(packageJsonUri, 'utf8')
+      const packageJson = JSON.parse(content)
+
+      const updated = updatePackageJsonDependencies({
+        latestRpcRegistryVersion,
+        latestRpcVersion,
+        packageJson,
+      })
+
+      if (updated) {
+        const newContent = JSON.stringify(packageJson, null, 2) + '\n'
+        await fs.writeFile(packageJsonUri, newContent)
+        changedFiles.push({
+          content: newContent,
+          path: fullPath,
+        })
+      }
+    } catch {
+      // Skip files that don't exist or can't be parsed
+      continue
+    }
+  }
+
+  return changedFiles
+}
+
+const upgradeTestFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<Array<{ path: string; content: string }>> => {
+  const changedFiles: Array<{ path: string; content: string }> = []
+  const allFiles = await listFiles(clonedRepoUri, fs)
+  const testFiles = allFiles.filter(file => file.endsWith('.test.ts') || file.endsWith('.test.js'))
+
+  for (const testFilePath of testFiles) {
+    try {
+      const testFileUri = new URL(testFilePath, clonedRepoUri).toString()
+      const content = await fs.readFile(testFileUri, 'utf8')
+
+      const newContent = replaceMockRpcPattern(content)
+
+      if (newContent !== content) {
+        await fs.writeFile(testFileUri, newContent)
+        changedFiles.push({
+          content: newContent,
+          path: testFilePath,
+        })
+      }
+    } catch {
+      // Skip files that can't be read or written
+      continue
+    }
+  }
+
+  return changedFiles
+}
 
 const findPackageJsonFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<string[]> => {
   const packageJsonFiles: string[] = []
@@ -81,67 +177,19 @@ export interface ModernizeMockrpcDisposalOptions extends BaseMigrationOptions {}
 
 export const modernizeMockrpcDisposal = async (options: Readonly<ModernizeMockrpcDisposalOptions>): Promise<MigrationResult> => {
   try {
-    const changedFiles: Array<{ path: string; content: string }> = []
-
     // Fetch latest versions from npm registry
     const [latestRpcVersion, latestRpcRegistryVersion] = await Promise.all([
       getLatestNpmVersion('@lvce-editor/rpc', options.fetch),
       getLatestNpmVersion('@lvce-editor/rpc-registry', options.fetch),
     ])
 
-    const files = await listFiles(options.clonedRepoUri, options.fs)
-    // 1. Update @lvce-editor/rpc and @lvce-editor/rpc-registry dependencies
-    const packageJsonFiles = await findPackageJsonFiles(options.clonedRepoUri, options.fs)
+    // 1. Upgrade package.json files
+    const packageJsonChanges = await upgradePackageJsonFiles(options.clonedRepoUri, options.fs, latestRpcVersion, latestRpcRegistryVersion)
 
-    for (const packageJsonPath of packageJsonFiles) {
-      const fullPath = normalizePath(packageJsonPath)
-      try {
-        const packageJsonUri = new URL(fullPath, options.clonedRepoUri).toString()
-        const content = await options.fs.readFile(packageJsonUri, 'utf8')
-        const packageJson = JSON.parse(content)
+    // 2. Upgrade test files
+    const testFileChanges = await upgradeTestFiles(options.clonedRepoUri, options.fs)
 
-        const updated = updatePackageJsonDependencies({
-          latestRpcRegistryVersion,
-          latestRpcVersion,
-          packageJson,
-        })
-
-        if (updated) {
-          const newContent = JSON.stringify(packageJson, null, 2) + '\n'
-          await options.fs.writeFile(packageJsonUri, newContent)
-          changedFiles.push({
-            content: newContent,
-            path: fullPath,
-          })
-        }
-      } catch {
-        // Skip files that don't exist or can't be parsed
-        continue
-      }
-    }
-
-    // 2. Replace mockRpc patterns in test files
-    const testFiles = await findTestFiles(options.clonedRepoUri, options.fs)
-
-    for (const testFilePath of testFiles) {
-      try {
-        const testFileUri = new URL(testFilePath, options.clonedRepoUri).toString()
-        const content = await options.fs.readFile(testFileUri, 'utf8')
-
-        const newContent = replaceMockRpcPattern(content)
-
-        if (newContent !== content) {
-          await options.fs.writeFile(testFileUri, newContent)
-          changedFiles.push({
-            content: newContent,
-            path: testFilePath,
-          })
-        }
-      } catch {
-        // Skip files that can't be read or written
-        continue
-      }
-    }
+    const changedFiles = [...packageJsonChanges, ...testFileChanges]
 
     if (changedFiles.length === 0) {
       return {
