@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { updatePackageJsonDependencies } from '../src/parts/ModernizeMockrpcDisposal/UpdatePackageJsonDependencies.ts'
+import { updatePackageJsonDependencies } from '../src/parts/UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
 
 test('updates dependencies when both rpc and rpc-registry are present in dependencies', () => {
   const packageJson = {

@@ -1,5 +1,5 @@
 import { test, expect } from '@jest/globals'
-import { replaceMockRpcPattern } from '../src/parts/ModernizeMockrpcDisposal/ReplaceMockRpcPattern.ts'
+import { replaceMockRpcPattern } from '../src/parts/ReplaceMockRpcPattern/ReplaceMockRpcPattern.ts'
 
 test('replaces const rpc = RendererWorker.registerMockRpc with using rpc = RendererWorker.registerMockRpc', () => {
   const content = `
@@ -10,7 +10,7 @@ test('some test', () => {
     method: 'test',
     handler: () => 'result'
   })
-  
+
   // test logic here
 })
 `
@@ -23,7 +23,7 @@ test('some test', () => {
     method: 'test',
     handler: () => 'result'
   })
-  
+
   // test logic here
 })
 `

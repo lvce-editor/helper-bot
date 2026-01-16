@@ -1,13 +1,13 @@
 import type * as FsPromises from 'node:fs/promises'
+import type * as FsPromises from 'node:fs/promises'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNpmVersion } from '../GetLatestNpmVersion/GetLatestNpmVersion.ts'
-import * as FsPromises from 'node:fs/promises'
+import { replaceMockRpcPattern } from '../ReplaceMockRpcPattern/ReplaceMockRpcPattern.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { updatePackageJsonDependencies } from '../UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
-import { replaceMockRpcPattern } from './ReplaceMockRpcPattern.ts'
-import { updatePackageJsonDependencies } from './UpdatePackageJsonDependencies.ts'
 import { upgradeTestFiles } from './UpgradeTestFiles/UpgradeTestFiles.ts'
 
 const listFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<string[]> => {
@@ -166,8 +166,6 @@ const findPackageJsonFiles = async (clonedRepoUri: string, fs: typeof FsPromises
 
   return packageJsonFiles
 }
-
-
 
 export interface ModernizeMockrpcDisposalOptions extends BaseMigrationOptions {}
 
