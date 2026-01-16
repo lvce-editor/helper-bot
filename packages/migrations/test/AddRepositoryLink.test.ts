@@ -132,8 +132,8 @@ test('adds repository link to both root and monorepo extension.json when both ex
     status: 'success',
     statusCode: 201,
   })
-  const rootContent = JSON.parse(rootFile!.content)
-  const monorepoContent = JSON.parse(monorepoFile!.content)
+  const rootContent = JSON.parse(rootFile.content)
+  const monorepoContent = JSON.parse(monorepoFile.content)
   expect(rootContent.repository).toBe('https://github.com/test/my-repo')
   expect(rootContent.name).toBe('root-extension')
   expect(monorepoContent.repository).toBe('https://github.com/test/my-repo')
