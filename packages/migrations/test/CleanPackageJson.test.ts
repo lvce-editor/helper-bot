@@ -28,14 +28,14 @@ test('sets license to MIT when not set', async () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 201,
     changedFiles: [
       {
-        path: 'package.json',
         content: expect.stringContaining('"license": "MIT"'),
+        path: 'package.json',
       },
     ],
+    status: 'success',
+    statusCode: 201,
   })
   const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
   expect(updatedPackageJson.license).toBe('MIT')
@@ -66,14 +66,14 @@ test('removes empty keywords array', async () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 201,
     changedFiles: [
       {
-        path: 'package.json',
         content: expect.not.stringContaining('"keywords"'),
+        path: 'package.json',
       },
     ],
+    status: 'success',
+    statusCode: 201,
   })
   const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
   expect(updatedPackageJson.keywords).toBeUndefined()
@@ -102,14 +102,14 @@ test('sets author to Lvce Editor when empty string', async () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 201,
     changedFiles: [
       {
-        path: 'package.json',
         content: expect.stringContaining('"author": "Lvce Editor"'),
+        path: 'package.json',
       },
     ],
+    status: 'success',
+    statusCode: 201,
   })
   const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
   expect(updatedPackageJson.author).toBe('Lvce Editor')
