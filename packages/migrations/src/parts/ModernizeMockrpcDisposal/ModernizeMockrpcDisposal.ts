@@ -6,9 +6,7 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { upgradePackageJsonFiles } from '../UpgradePackageJsonFiles/UpgradePackageJsonFiles.ts'
 import { upgradeTestFiles } from '../UpgradeTestFiles/UpgradeTestFiles.ts'
 
-export interface ModernizeMockrpcDisposalOptions extends BaseMigrationOptions {}
-
-export const modernizeMockrpcDisposal = async (options: Readonly<ModernizeMockrpcDisposalOptions>): Promise<MigrationResult> => {
+export const modernizeMockrpcDisposal = async (options: Readonly<BaseMigrationOptions>): Promise<MigrationResult> => {
   try {
     // Fetch latest versions from npm registry
     const [latestRpcVersion, latestRpcRegistryVersion] = await Promise.all([
