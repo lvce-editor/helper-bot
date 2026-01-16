@@ -3,7 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNpmVersion } from '../GetLatestNpmVersion/GetLatestNpmVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { upgradePackageJsonFiles } from './UpgradePackageJsonFiles.ts'
+import { upgradePackageJsonFiles } from '../UpgradePackageJsonFiles/UpgradePackageJsonFiles.ts'
 import { upgradeTestFiles } from './UpgradeTestFiles.ts'
 
 export interface ModernizeMockrpcDisposalOptions extends BaseMigrationOptions {}

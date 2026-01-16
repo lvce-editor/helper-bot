@@ -1,56 +1,41 @@
 import type * as FsPromises from 'node:fs/promises'
-import { replaceMockRpcPattern } from '../ReplaceMockRpcPattern.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { findTestFiles } from '../FindTestFiles/FindTestFiles.ts'
+import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
 
-const findTestFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<string[]> => {
-  const testFiles: string[] = []
-  const testDirectories = ['packages/app/test', 'packages/exec-worker/test', 'packages/github-worker/test', 'packages/migrations/test']
-
-  for (const testDir of testDirectories) {
-    try {
-      const testDirUri = new URL(normalizePath(testDir), clonedRepoUri).toString()
-      const entries = await fs.readdir(testDirUri)
-
-      for (const entry of entries) {
-        if (entry.endsWith('.test.ts') || entry.endsWith('.test.js')) {
-          testFiles.push(normalizePath(`${testDir}/${entry}`))
-        }
-      }
-    } catch {
-      // Skip directories that don't exist
-      continue
-    }
-  }
-
-  return testFiles
-}
-
-export const upgradeTestFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<Array<{ path: string; content: string }>> => {
+export const upgradeTestFiles = async (clonedRepoUri: string, fs: Readonly<typeof FsPromises>): Promise<Array<{ path: string; content: string }>> => {
   const changedFiles: Array<{ path: string; content: string }> = []
 
-  const entries = await findTestFiles(clonedRepoUri, fs)
-  for (const entry of entries) {
-    if (entry.endsWith('.test.ts') || entry.endsWith('.test.js')) {
-      const testFilePath = normalizePath(entry)
-      const testFileUri = new URL(testFilePath, clonedRepoUri).toString()
+  try {
+    // Convert URI to path for directory traversal
+    const repoPath = uriToPath(clonedRepoUri)
+    const testFiles = await findTestFiles(clonedRepoUri, fs)
 
+    for (const testFilePath of testFiles) {
       try {
-        const content = await fs.readFile(testFileUri, 'utf8')
+        // Read test file content
+        const content = await fs.readFile(pathToUri(testFilePath), 'utf8')
 
-        const newContent = replaceMockRpcPattern(content)
+        // Replace 'const mockRpc =' with 'using mockRpc =' for proper disposal
+        const updatedContent = content.replaceAll(/\bconst\s+mockRpc\s*=/g, 'using mockRpc =')
 
-        if (newContent !== content) {
-          await fs.writeFile(testFileUri, newContent)
+        // Only add to changed files if content was actually modified
+        if (updatedContent !== content) {
+          // Convert back to relative path from repo root
+          const relativePath = testFilePath.replace(repoPath + '/', '')
+          const normalizedPath = relativePath.replaceAll('\\', '/')
+
           changedFiles.push({
-            content: newContent,
-            path: testFilePath,
+            content: updatedContent,
+            path: normalizedPath,
           })
         }
       } catch {
-        // Skip files that can't be read or written
+        // Skip files that can't be read
         continue
       }
     }
+  } catch {
+    // If we can't traverse the directory, return empty array
   }
 
   return changedFiles
