@@ -1,5 +1,6 @@
 import type * as FsPromises from 'node:fs/promises'
 import { findTestFiles } from '../FindTestFiles/FindTestFiles.ts'
+import { replaceMockRpcPattern } from '../ReplaceMockRpcPattern/ReplaceMockRpcPattern.ts'
 import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
 
 export const upgradeTestFiles = async (clonedRepoUri: string, fs: Readonly<typeof FsPromises>): Promise<Array<{ path: string; content: string }>> => {
@@ -16,7 +17,7 @@ export const upgradeTestFiles = async (clonedRepoUri: string, fs: Readonly<typeo
         const content = await fs.readFile(pathToUri(testFilePath), 'utf8')
 
         // Replace 'const mockRpc =' with 'using mockRpc =' for proper disposal
-        const updatedContent = content.replaceAll(/\bconst\s+mockRpc\s*=/g, 'using mockRpc =')
+        const updatedContent = replaceMockRpcPattern(content)
 
         // Only add to changed files if content was actually modified
         if (updatedContent !== content) {
