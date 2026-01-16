@@ -1,5 +1,4 @@
 import type * as FsPromises from 'node:fs/promises'
-import type { BaseMigrationOptions } from '../Types/Types.ts'
 import { replaceMockRpcPattern } from '../ReplaceMockRpcPattern.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 
@@ -32,7 +31,7 @@ export const upgradeTestFiles = async (clonedRepoUri: string, fs: typeof FsPromi
   const entries = await findTestFiles(clonedRepoUri, fs)
   for (const entry of entries) {
     if (entry.endsWith('.test.ts') || entry.endsWith('.test.js')) {
-      const testFilePath = normalizePath(`${testDir}/${entry}`)
+      const testFilePath = normalizePath(entry)
       const testFileUri = new URL(testFilePath, clonedRepoUri).toString()
 
       try {
