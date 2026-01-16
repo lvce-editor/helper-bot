@@ -71,12 +71,17 @@ test('some test', () => {
   })
 
   expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(3) // Only test files found and updated
+  expect(result.changedFiles).toHaveLength(5) // 2 package.json files + 3 test files
   if (result.status === 'success') {
     expect(result.pullRequestTitle).toBe('Modernize mockrpc-disposal')
     expect(result.commitMessage).toBe('Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc')
     expect(result.branchName).toBe('modernize-mockrpc-disposal')
   }
+
+  // Check package.json files were updated
+  const updatedPackageJson = JSON.parse(await mockFs.readFile(new URL('package.json', clonedRepoUri).toString(), 'utf8'))
+  expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
+  expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
 
   // Check test files were updated
   const updatedTestContent = await mockFs.readFile(new URL('packages/app/test/some.test.ts', clonedRepoUri).toString(), 'utf8')

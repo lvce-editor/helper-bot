@@ -8,19 +8,20 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { normalizePath } from '../UriUtils/UriUtils.ts'
 import { replaceMockRpcPattern } from './ReplaceMockRpcPattern.ts'
 import { updatePackageJsonDependencies } from './UpdatePackageJsonDependencies.ts'
+import { upgradeTestFiles } from './UpgradeTestFiles/UpgradeTestFiles.ts'
 
 const listFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<string[]> => {
   const files: string[] = []
-  
+
   try {
     const rootEntries = await fs.readdir(new URL('.', clonedRepoUri).toString(), { recursive: true })
     const filtered = rootEntries.filter((file) => !file.includes('node_modules') && !file.includes('.git'))
-    
+
     for (const entry of filtered) {
       try {
         const entryUri = new URL(entry, clonedRepoUri).toString()
         const stat = await fs.stat(entryUri)
-        
+
         if (stat.isDirectory()) {
           const subEntries = await fs.readdir(entryUri)
           for (const subEntry of subEntries) {
@@ -38,31 +39,38 @@ const listFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<
     // If directory listing fails, return empty array
     return []
   }
-  
+
   return files
 }
 
-const upgradePackageJsonFiles = async (clonedRepoUri: string, fs: typeof FsPromises, latestRpcVersion: string, latestRpcRegistryVersion: string): Promise<Array<{ path: string; content: string }>> => {
+const upgradePackageJsonFiles = async (options: Readonly<ModernizeMockrpcDisposalOptions>): Promise<Array<{ path: string; content: string }>> => {
   const changedFiles: Array<{ path: string; content: string }> = []
-  const allFiles = await listFiles(clonedRepoUri, fs)
-  const packageJsonFiles = allFiles.filter(file => file.endsWith('package.json'))
+
+  // 1. Upgrade package.json files
+  const packageJsonFiles = [
+    'package.json',
+    'packages/app/package.json',
+    'packages/exec-worker/package.json',
+    'packages/github-worker/package.json',
+    'packages/migrations/package.json',
+  ]
 
   for (const packageJsonPath of packageJsonFiles) {
     const fullPath = normalizePath(packageJsonPath)
     try {
-      const packageJsonUri = new URL(fullPath, clonedRepoUri).toString()
-      const content = await fs.readFile(packageJsonUri, 'utf8')
+      const packageJsonUri = new URL(fullPath, options.clonedRepoUri).toString()
+      const content = await options.fs.readFile(packageJsonUri, 'utf8')
       const packageJson = JSON.parse(content)
 
       const updated = updatePackageJsonDependencies({
-        latestRpcRegistryVersion,
-        latestRpcVersion,
+        latestRpcRegistryVersion: options.latestRpcRegistryVersion,
+        latestRpcVersion: options.latestRpcVersion,
         packageJson,
       })
 
       if (updated) {
         const newContent = JSON.stringify(packageJson, null, 2) + '\n'
-        await fs.writeFile(packageJsonUri, newContent)
+        await options.fs.writeFile(packageJsonUri, newContent)
         changedFiles.push({
           content: newContent,
           path: fullPath,
@@ -74,30 +82,39 @@ const upgradePackageJsonFiles = async (clonedRepoUri: string, fs: typeof FsPromi
     }
   }
 
-  return changedFiles
-}
+  // 2. Replace mockRpc patterns in test files
+  const testDirectories = ['packages/app/test', 'packages/exec-worker/test', 'packages/github-worker/test', 'packages/migrations/test']
 
-const upgradeTestFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<Array<{ path: string; content: string }>> => {
-  const changedFiles: Array<{ path: string; content: string }> = []
-  const allFiles = await listFiles(clonedRepoUri, fs)
-  const testFiles = allFiles.filter(file => file.endsWith('.test.ts') || file.endsWith('.test.js'))
-
-  for (const testFilePath of testFiles) {
+  for (const testDir of testDirectories) {
     try {
-      const testFileUri = new URL(testFilePath, clonedRepoUri).toString()
-      const content = await fs.readFile(testFileUri, 'utf8')
+      const testDirUri = new URL(normalizePath(testDir), options.clonedRepoUri).toString()
+      const entries = await options.fs.readdir(testDirUri)
 
-      const newContent = replaceMockRpcPattern(content)
+      for (const entry of entries) {
+        if (entry.endsWith('.test.ts') || entry.endsWith('.test.js')) {
+          const testFilePath = normalizePath(`${testDir}/${entry}`)
+          const testFileUri = new URL(testFilePath, options.clonedRepoUri).toString()
 
-      if (newContent !== content) {
-        await fs.writeFile(testFileUri, newContent)
-        changedFiles.push({
-          content: newContent,
-          path: testFilePath,
-        })
+          try {
+            const content = await options.fs.readFile(testFileUri, 'utf8')
+
+            const newContent = replaceMockRpcPattern(content)
+
+            if (newContent !== content) {
+              await options.fs.writeFile(testFileUri, newContent)
+              changedFiles.push({
+                content: newContent,
+                path: testFilePath,
+              })
+            }
+          } catch {
+            // Skip files that can't be read or written
+            continue
+          }
+        }
       }
     } catch {
-      // Skip files that can't be read or written
+      // Skip directories that don't exist
       continue
     }
   }
@@ -150,28 +167,7 @@ const findPackageJsonFiles = async (clonedRepoUri: string, fs: typeof FsPromises
   return packageJsonFiles
 }
 
-const findTestFiles = async (clonedRepoUri: string, fs: typeof FsPromises): Promise<string[]> => {
-  const testFiles: string[] = []
-  const testDirectories = ['packages/app/test', 'packages/exec-worker/test', 'packages/github-worker/test', 'packages/migrations/test']
 
-  for (const testDir of testDirectories) {
-    try {
-      const testDirUri = new URL(normalizePath(testDir), clonedRepoUri).toString()
-      const entries = await fs.readdir(testDirUri)
-
-      for (const entry of entries) {
-        if (entry.endsWith('.test.ts') || entry.endsWith('.test.js')) {
-          testFiles.push(normalizePath(`${testDir}/${entry}`))
-        }
-      }
-    } catch {
-      // Skip directories that don't exist
-      continue
-    }
-  }
-
-  return testFiles
-}
 
 export interface ModernizeMockrpcDisposalOptions extends BaseMigrationOptions {}
 
