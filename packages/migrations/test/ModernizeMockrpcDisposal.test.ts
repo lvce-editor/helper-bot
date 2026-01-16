@@ -79,14 +79,17 @@ test('some test', () => {
   }
 
   // Check package.json files were updated
-  const updatedPackageJson = JSON.parse(await mockFs.readFile(new URL('package.json', clonedRepoUri).toString(), 'utf8'))
+  const rootPackageJsonChange = result.changedFiles.find(f => f.path === 'package.json')
+  expect(rootPackageJsonChange).toBeDefined()
+  const updatedPackageJson = JSON.parse(rootPackageJsonChange!.content)
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
 
   // Check test files were updated
-  const updatedTestContent = await mockFs.readFile(new URL('packages/app/test/some.test.ts', clonedRepoUri).toString(), 'utf8')
-  expect(updatedTestContent).toContain('using rpc = RendererWorker.registerMockRpc')
-  expect(updatedTestContent).not.toContain('const rpc = RendererWorker.registerMockRpc')
+  const testFileChange = result.changedFiles.find(f => f.path === 'packages/app/test/some.test.ts')
+  expect(testFileChange).toBeDefined()
+  expect(testFileChange!.content).toContain('using rpc = RendererWorker.registerMockRpc')
+  expect(testFileChange!.content).not.toContain('const rpc = RendererWorker.registerMockRpc')
 })
 
 test('handles missing files gracefully', async () => {
