@@ -64,7 +64,7 @@ class MockFs {
     return Object.keys(this.files).some((key) => key.startsWith(dirPath))
   }
 
-  async readdir(path: string | Buffer | URL, options?: { withFileTypes?: boolean }): Promise<any> {
+  async readdir(path: string | Buffer | URL, options?: { withFileTypes?: boolean; recursive?: boolean }): Promise<any> {
     const pathStr = validateUri(path, 'readdir', true)
     // Ensure path ends with /
     const dirPath = pathStr.endsWith('/') ? pathStr : pathStr + '/'
@@ -79,6 +79,35 @@ class MockFs {
         error.code = 'ENOENT'
         throw error
       }
+    }
+
+    // If recursive is true, return all file paths recursively
+    if (options?.recursive) {
+      const recursivePaths: string[] = []
+      const seen = new Set<string>()
+
+      for (const filePath of Object.keys(this.files)) {
+        if (filePath === dirPath || this.files[filePath] === '[DIRECTORY]') {
+          continue
+        }
+
+        if (!filePath.startsWith(dirPath)) {
+          continue
+        }
+
+        const relativePath = filePath.slice(dirPath.length)
+        if (!relativePath) {
+          continue
+        }
+
+        // For recursive, we want the full relative path
+        if (!seen.has(relativePath)) {
+          seen.add(relativePath)
+          recursivePaths.push(relativePath)
+        }
+      }
+
+      return recursivePaths
     }
 
     // Get all entries in this directory (not recursive)

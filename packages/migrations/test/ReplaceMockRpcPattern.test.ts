@@ -32,6 +32,141 @@ test('some test', () => {
   expect(result).toBe(expected)
 })
 
+test('replaces const rpc = EditorWorker.registerMockRpc with using rpc = EditorWorker.registerMockRpc', () => {
+  const content = `
+import { EditorWorker } from '../src/EditorWorker'
+
+test('some test', () => {
+  const rpc = EditorWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const expected = `
+import { EditorWorker } from '../src/EditorWorker'
+
+test('some test', () => {
+  using rpc = EditorWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const result = replaceMockRpcPattern(content)
+  expect(result).toBe(expected)
+})
+
+test('replaces const rpc = TextSearchWorker.registerMockRpc with using rpc = TextSearchWorker.registerMockRpc', () => {
+  const content = `
+import { TextSearchWorker } from '../src/TextSearchWorker'
+
+test('some test', () => {
+  const rpc = TextSearchWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const expected = `
+import { TextSearchWorker } from '../src/TextSearchWorker'
+
+test('some test', () => {
+  using rpc = TextSearchWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const result = replaceMockRpcPattern(content)
+  expect(result).toBe(expected)
+})
+
+test('replaces const rpc = FileSearchWorker.registerMockRpc with using rpc = FileSearchWorker.registerMockRpc', () => {
+  const content = `
+import { FileSearchWorker } from '../src/FileSearchWorker'
+
+test('some test', () => {
+  const rpc = FileSearchWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const expected = `
+import { FileSearchWorker } from '../src/FileSearchWorker'
+
+test('some test', () => {
+  using rpc = FileSearchWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const result = replaceMockRpcPattern(content)
+  expect(result).toBe(expected)
+})
+
+test('replaces const rpc = IframeWorker.registerMockRpc with using rpc = IframeWorker.registerMockRpc', () => {
+  const content = `
+import { IframeWorker } from '../src/IframeWorker'
+
+test('some test', () => {
+  const rpc = IframeWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const expected = `
+import { IframeWorker } from '../src/IframeWorker'
+
+test('some test', () => {
+  using rpc = IframeWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const result = replaceMockRpcPattern(content)
+  expect(result).toBe(expected)
+})
+
+test('replaces const rpc = VirtualDom.registerMockRpc with using rpc = VirtualDom.registerMockRpc', () => {
+  const content = `
+import { VirtualDom } from '../src/VirtualDom'
+
+test('some test', () => {
+  const rpc = VirtualDom.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const expected = `
+import { VirtualDom } from '../src/VirtualDom'
+
+test('some test', () => {
+  using rpc = VirtualDom.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+})
+`
+
+  const result = replaceMockRpcPattern(content)
+  expect(result).toBe(expected)
+})
+
 test('replaces multiple occurrences', () => {
   const content = `
 test('test 1', () => {
@@ -42,9 +177,16 @@ test('test 1', () => {
 })
 
 test('test 2', () => {
-  const rpc = RendererWorker.registerMockRpc({
+  const rpc = EditorWorker.registerMockRpc({
     method: 'test2',
     handler: () => 'result2'
+  })
+})
+
+test('test 3', () => {
+  const rpc = TextSearchWorker.registerMockRpc({
+    method: 'test3',
+    handler: () => 'result3'
   })
 })
 `
@@ -58,9 +200,16 @@ test('test 1', () => {
 })
 
 test('test 2', () => {
-  using rpc = RendererWorker.registerMockRpc({
+  using rpc = EditorWorker.registerMockRpc({
     method: 'test2',
     handler: () => 'result2'
+  })
+})
+
+test('test 3', () => {
+  using rpc = TextSearchWorker.registerMockRpc({
+    method: 'test3',
+    handler: () => 'result3'
   })
 })
 `

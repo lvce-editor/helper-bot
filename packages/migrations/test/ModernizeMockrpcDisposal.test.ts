@@ -1,6 +1,7 @@
 import { test, expect, jest } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
+import { createMockNpmFetch } from '../src/parts/CreateMockNpmFetch/CreateMockNpmFetch.ts'
 import { modernizeMockrpcDisposal } from '../src/parts/ModernizeMockrpcDisposal/ModernizeMockrpcDisposal.ts'
 import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
@@ -45,20 +46,9 @@ test('some test', () => {
   })
   const mockExec = createMockExec(mockExecFn)
 
-  const mockFetch = jest.fn<typeof globalThis.fetch>(async (url) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/rpc/latest') {
-      return {
-        json: async () => ({ version: '5.0.0' }),
-        ok: true,
-      } as Response
-    }
-    if (url === 'https://registry.npmjs.org/@lvce-editor/rpc-registry/latest') {
-      return {
-        json: async () => ({ version: '7.0.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch call: ${url}`)
+  const mockFetch = createMockNpmFetch({
+    '@lvce-editor/rpc': '5.0.0',
+    '@lvce-editor/rpc-registry': '7.0.0',
   })
 
   const result = await modernizeMockrpcDisposal({
@@ -102,20 +92,9 @@ test('handles missing files gracefully', async () => {
   })
   const mockExec = createMockExec(mockExecFn)
 
-  const mockFetch = jest.fn<typeof globalThis.fetch>(async (url) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/rpc/latest') {
-      return {
-        json: async () => ({ version: '5.0.0' }),
-        ok: true,
-      } as Response
-    }
-    if (url === 'https://registry.npmjs.org/@lvce-editor/rpc-registry/latest') {
-      return {
-        json: async () => ({ version: '7.0.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch call: ${url}`)
+  const mockFetch = createMockNpmFetch({
+    '@lvce-editor/rpc': '5.0.0',
+    '@lvce-editor/rpc-registry': '7.0.0',
   })
 
   const result = await modernizeMockrpcDisposal({
@@ -169,20 +148,9 @@ test('some test', () => {
   })
   const mockExec = createMockExec(mockExecFn)
 
-  const mockFetch = jest.fn<typeof globalThis.fetch>(async (url) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/rpc/latest') {
-      return {
-        json: async () => ({ version: '5.0.0' }),
-        ok: true,
-      } as Response
-    }
-    if (url === 'https://registry.npmjs.org/@lvce-editor/rpc-registry/latest') {
-      return {
-        json: async () => ({ version: '7.0.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch call: ${url}`)
+  const mockFetch = createMockNpmFetch({
+    '@lvce-editor/rpc': '5.0.0',
+    '@lvce-editor/rpc-registry': '7.0.0',
   })
 
   const result = await modernizeMockrpcDisposal({
