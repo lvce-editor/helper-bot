@@ -1,8 +1,8 @@
 import type * as FsPromises from 'node:fs/promises'
-import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
 import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
-import { updatePackageJsonDependencies } from '../UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
+import { updatePackageJsonDependencies } from '../UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
+import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
 
 export const upgradePackageJsonFiles = async (
   clonedRepoUri: string,
@@ -36,16 +36,16 @@ export const upgradePackageJsonFiles = async (
           const normalizedPath = relativePath.replaceAll('\\', '/')
 
           changedFiles.push({
-            path: normalizedPath,
             content: stringifyJson(packageJson),
+            path: normalizedPath,
           })
         }
-      } catch (error) {
+      } catch {
         // Skip files that can't be parsed or read
         continue
       }
     }
-  } catch (error) {
+  } catch {
     // If we can't traverse the directory, return empty array
   }
 
