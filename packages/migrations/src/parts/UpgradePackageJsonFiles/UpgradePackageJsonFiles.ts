@@ -2,7 +2,7 @@ import type * as FsPromises from 'node:fs/promises'
 import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { updatePackageJsonDependencies } from '../UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
-import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
+import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export const upgradePackageJsonFiles = async (
   clonedRepoUri: string,
@@ -17,10 +17,10 @@ export const upgradePackageJsonFiles = async (
     const repoPath = uriToPath(clonedRepoUri)
     const packageJsonFiles = await findPackageJsonFiles(clonedRepoUri, fs)
 
-    for (const packageJsonPath of packageJsonFiles) {
+    for (const packageJsonUri of packageJsonFiles) {
       try {
         // Read package.json content
-        const content = await fs.readFile(pathToUri(packageJsonPath), 'utf8')
+        const content = await fs.readFile(packageJsonUri, 'utf8')
         const packageJson = JSON.parse(content)
 
         // Update dependencies
@@ -31,7 +31,8 @@ export const upgradePackageJsonFiles = async (
         })
 
         if (updated) {
-          // Convert back to relative path from repo root
+          // Convert URI to path, then to relative path from repo root
+          const packageJsonPath = uriToPath(packageJsonUri)
           const relativePath = packageJsonPath.replace(repoPath + '/', '')
           const normalizedPath = relativePath.replaceAll('\\', '/')
 

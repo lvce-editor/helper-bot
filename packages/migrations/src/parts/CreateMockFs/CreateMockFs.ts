@@ -74,10 +74,15 @@ class MockFs {
       // Check if any files exist under this directory
       const hasFiles = Object.keys(this.files).some((key) => key.startsWith(dirPath))
       if (!hasFiles) {
-        const error = new Error('ENOENT: no such file or directory')
-        // @ts-ignore
-        error.code = 'ENOENT'
-        throw error
+        // For the root directory in tests, we should allow it even if not explicitly created
+        if (dirPath === 'file:///test/repo/') {
+          // Root directory exists implicitly
+        } else {
+          const error = new Error('ENOENT: no such file or directory')
+          // @ts-ignore
+          error.code = 'ENOENT'
+          throw error
+        }
       }
     }
 
