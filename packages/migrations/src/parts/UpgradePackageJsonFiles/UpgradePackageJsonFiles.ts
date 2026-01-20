@@ -33,7 +33,7 @@ export const upgradePackageJsonFiles = async (
         if (updated) {
           // Convert URI to path, then to relative path from repo root
           const packageJsonPath = uriToPath(packageJsonUri)
-          const relativePath = packageJsonPath.replace(repoPath + '/', '')
+          const relativePath = packageJsonPath.replace(repoPath + '/', '').replace(/^\//, '')
           const normalizedPath = relativePath.replaceAll('\\', '/')
 
           changedFiles.push({

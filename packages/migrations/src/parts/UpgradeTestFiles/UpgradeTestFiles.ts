@@ -23,7 +23,7 @@ export const upgradeTestFiles = async (clonedRepoUri: string, fs: Readonly<typeo
         if (updatedContent !== content) {
           // Convert URI to path, then to relative path from repo root
           const testFilePath = uriToPath(testFileUri)
-          const relativePath = testFilePath.replace(repoPath + '/', '')
+          const relativePath = testFilePath.replace(repoPath + '/', '').replace(/^\//, '')
           const normalizedPath = relativePath.replaceAll('\\', '/')
 
           changedFiles.push({
