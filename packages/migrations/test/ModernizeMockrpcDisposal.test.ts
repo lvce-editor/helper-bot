@@ -318,6 +318,7 @@ test('handles network errors during npm fetch', async () => {
   expect(result).toEqual({
     changedFiles: [],
     errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Network timeout',
     status: 'error',
     statusCode: 424,
   })
