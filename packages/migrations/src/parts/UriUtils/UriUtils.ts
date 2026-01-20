@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 export const pathToUri = (path: string): string => {
   try {
     // If it's already a URI, return it
-    if (path.startsWith('file://')) {
+    if (path.startsWith('file://') || path.startsWith('test://')) {
       return path
     }
     // Convert path to file:// URI
@@ -27,14 +27,18 @@ export const normalizePath = (path: string): string => {
 }
 
 export const isUri = (path: string): boolean => {
-  return path.startsWith('file://') || (!path.includes('\\') && path.includes('/'))
+  return path.startsWith('file://') || path.startsWith('test://') || (!path.includes('\\') && path.includes('/'))
+}
+
+const isValidUri = (uri: string): boolean => {
+  return uri.startsWith('file://') || uri.startsWith('test://')
 }
 
 export const validateUri = (path: string | Buffer | URL, operation: string, strict: boolean = false): string => {
   if (path instanceof URL) {
     const uri = path.href
-    if (strict && !uri.startsWith('file://')) {
-      throw new Error(`${operation} requires a file:// URI, but received: ${uri}. Use pathToUri() to convert.`)
+    if (strict && !isValidUri(uri)) {
+      throw new Error(`${operation} requires a file:// or test:// URI, but received: ${uri}. Use pathToUri() to convert.`)
     }
     return uri
   }
@@ -43,10 +47,10 @@ export const validateUri = (path: string | Buffer | URL, operation: string, stri
   }
   const pathStr = path.toString()
 
-  // Strict mode: only accept file:// URIs
+  // Strict mode: only accept file:// or test:// URIs
   if (strict) {
-    if (!pathStr.startsWith('file://')) {
-      throw new Error(`${operation} requires a file:// URI string, but received: ${pathStr}. Use pathToUri() to convert.`)
+    if (!isValidUri(pathStr)) {
+      throw new Error(`${operation} requires a file:// or test:// URI string, but received: ${pathStr}. Use pathToUri() to convert.`)
     }
     return pathStr
   }

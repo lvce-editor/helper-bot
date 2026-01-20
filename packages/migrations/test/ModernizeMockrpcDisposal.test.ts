@@ -1,9 +1,8 @@
-import { test, expect, jest } from '@jest/globals'
+import { test, expect } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { createMockNpmFetch } from '../src/parts/CreateMockNpmFetch/CreateMockNpmFetch.ts'
 import { modernizeMockrpcDisposal } from '../src/parts/ModernizeMockrpcDisposal/ModernizeMockrpcDisposal.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('modernizes mockrpc-disposal successfully', async () => {
   const oldPackageJson = {
@@ -23,13 +22,36 @@ test('some test', () => {
     method: 'test',
     handler: () => 'result'
   })
-  
+
   // test logic here
 })
 `
 
-  const clonedRepoUri = pathToUri('/test/repo')
-  const repoUriWithSlash = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
+  // Use file:// URI directly for cross-platform compatibility
+  const clonedRepoUri = 'test:///application/some-folder'
+  const repoUriWithSlash = clonedRepoUri + '/'
+  const mockPackageLockJson = JSON.stringify(
+    {
+      dependencies: {
+        '@lvce-editor/rpc': {
+          version: '5.0.0',
+        },
+        '@lvce-editor/rpc-registry': {
+          version: '7.0.0',
+        },
+      },
+      lockfileVersion: 3,
+      name: 'test-package',
+      version: '1.0.0',
+    },
+    null,
+    2,
+  )
+
+  // Pre-compute package-lock.json URIs for cross-platform compatibility
+  const rootPackageLockUri = new URL('package-lock.json', repoUriWithSlash).toString()
+  const appPackageLockUri = new URL('packages/app/package-lock.json', repoUriWithSlash).toString()
+
   const mockFs = createMockFs({
     files: {
       // Create directory entries - include the root directory
@@ -49,12 +71,17 @@ test('some test', () => {
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async (file, args) => {
+    if (file === 'npm' && args?.[0] === 'install') {
+      // Write package-lock.json files when npm install is called
+      // We write both because we can't reliably determine which package we're in across platforms
+      // (the cwd path format differs between Windows and Unix)
+      await mockFs.writeFile(rootPackageLockUri, mockPackageLockJson)
+      await mockFs.writeFile(appPackageLockUri, mockPackageLockJson)
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   const mockFetch = createMockNpmFetch({
     '@lvce-editor/rpc': '5.0.0',
@@ -70,40 +97,46 @@ test('some test', () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(5) // 2 package.json files + 3 test files
-  if (result.status === 'success') {
-    expect(result.pullRequestTitle).toBe('feature: modernize mockrpc disposal')
-    expect(result.commitMessage).toBe('Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc')
-    expect(result.branchName).toMatch(/^modernize-mockrpc-disposal-\d+$/)
-  }
+  expect(result).toEqual({
+    branchName: expect.stringMatching(/^modernize-mockrpc-disposal-\d+$/),
+    changedFiles: expect.arrayContaining([
+      expect.objectContaining({ path: 'package.json' }),
+      expect.objectContaining({ path: 'packages/app/package.json' }),
+      expect.objectContaining({ path: 'package-lock.json' }),
+      expect.objectContaining({ path: 'packages/app/package-lock.json' }),
+      expect.objectContaining({ path: 'packages/app/test/some.test.ts' }),
+      expect.objectContaining({ path: 'packages/exec-worker/test/another.test.ts' }),
+      expect.objectContaining({ path: 'packages/github-worker/test/third.test.ts' }),
+    ]),
+    commitMessage: 'Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc',
+    pullRequestTitle: 'feature: modernize mockrpc disposal',
+    status: 'success',
+    statusCode: 201,
+  })
+
+  expect(result.changedFiles).toHaveLength(7)
 
   // Check package.json files were updated
   const rootPackageJsonChange = result.changedFiles.find((f) => f.path === 'package.json')
-  expect(rootPackageJsonChange).toBeDefined()
   const updatedPackageJson = JSON.parse(rootPackageJsonChange.content)
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
 
   // Check test files were updated
   const testFileChange = result.changedFiles.find((f) => f.path === 'packages/app/test/some.test.ts')
-  expect(testFileChange).toBeDefined()
   expect(testFileChange.content).toContain('using rpc = RendererWorker.registerMockRpc')
   expect(testFileChange.content).not.toContain('const rpc = RendererWorker.registerMockRpc')
 })
 
 test('handles missing files gracefully', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'test:///application/some-folder'
   const mockFs = createMockFs({
     files: {},
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   const mockFetch = createMockNpmFetch({
     '@lvce-editor/rpc': '5.0.0',
@@ -119,13 +152,14 @@ test('handles missing files gracefully', async () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(0)
-  if (result.status === 'success') {
-    expect(result.pullRequestTitle).toBe('')
-    expect(result.commitMessage).toBe('')
-    expect(result.branchName).toBe('')
-  }
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('skips files without mockrpc patterns', async () => {
@@ -146,20 +180,18 @@ test('some test', () => {
 })
 `
 
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'test:///application/some-folder'
+  const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
-      [new URL('packages/app/test/some.test.ts', clonedRepoUri).toString()]: testContentWithoutMockRpc,
+      [new URL('package.json', repoUriWithSlash).toString()]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
+      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).toString()]: testContentWithoutMockRpc,
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   const mockFetch = createMockNpmFetch({
     '@lvce-editor/rpc': '5.0.0',
@@ -175,20 +207,22 @@ test('some test', () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(0)
-  if (result.status === 'success') {
-    expect(result.pullRequestTitle).toBe('')
-    expect(result.commitMessage).toBe('')
-    expect(result.branchName).toBe('')
-  }
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
 })
 
 test('handles npm fetch failures gracefully', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'test:///application/some-folder'
+  const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]:
+      [new URL('package.json', repoUriWithSlash).toString()]:
         JSON.stringify(
           {
             dependencies: {
@@ -204,24 +238,20 @@ test('handles npm fetch failures gracefully', async () => {
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
-  // Mock fetch that returns error responses for npm registry calls
-  const mockFetch = jest.fn<typeof globalThis.fetch>(async (url: string | URL | Request) => {
-    const urlStr = url.toString()
-    if (urlStr.includes('registry.npmjs.org')) {
-      return new Response(null, {
-        status: 500,
-        statusText: 'Internal Server Error',
-      })
-    }
-    throw new Error(`Unexpected fetch call: ${urlStr}`)
-  })
+  const mockFetch = createMockNpmFetch(
+    {
+      '@lvce-editor/rpc': '5.0.0',
+      '@lvce-editor/rpc-registry': '7.0.0',
+    },
+    {
+      errorStatus: 500,
+      errorStatusText: 'Internal Server Error',
+    },
+  )
 
   const result = await modernizeMockrpcDisposal({
     clonedRepoUri,
@@ -232,18 +262,21 @@ test('handles npm fetch failures gracefully', async () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-    expect(result.errorMessage).toContain('Failed to fetch latest version')
-  }
+  expect(result).toEqual({
+    changedFiles: [],
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Failed to fetch latest version for @lvce-editor/rpc: Internal Server Error',
+    status: 'error',
+    statusCode: 424,
+  })
 })
 
 test('handles network errors during npm fetch', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'test:///application/some-folder'
+  const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]:
+      [new URL('package.json', repoUriWithSlash).toString()]:
         JSON.stringify(
           {
             dependencies: {
@@ -259,21 +292,19 @@ test('handles network errors during npm fetch', async () => {
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
-  // Mock fetch that throws network error
-  const mockFetch = jest.fn<typeof globalThis.fetch>(async (url: string | URL | Request) => {
-    const urlStr = url.toString()
-    if (urlStr.includes('registry.npmjs.org')) {
-      throw new Error('Network timeout')
-    }
-    throw new Error(`Unexpected fetch call: ${urlStr}`)
-  })
+  const mockFetch = createMockNpmFetch(
+    {
+      '@lvce-editor/rpc': '5.0.0',
+      '@lvce-editor/rpc-registry': '7.0.0',
+    },
+    {
+      throwError: 'Network timeout',
+    },
+  )
 
   const result = await modernizeMockrpcDisposal({
     clonedRepoUri,
@@ -284,9 +315,11 @@ test('handles network errors during npm fetch', async () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result.status).toBe('error')
-  if (result.status === 'error') {
-    expect(result.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-    expect(result.errorMessage).toContain('Network timeout')
-  }
+  expect(result).toEqual({
+    changedFiles: [],
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Network timeout',
+    status: 'error',
+    statusCode: 424,
+  })
 })
