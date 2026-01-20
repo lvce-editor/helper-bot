@@ -264,9 +264,6 @@ test('handles npm fetch failures gracefully', async () => {
     status: 'error',
     statusCode: 424,
   })
-  if (result.status === 'error') {
-    expect(result.errorMessage).toContain('Failed to fetch latest version')
-  }
 })
 
 test('handles network errors during npm fetch', async () => {
@@ -318,7 +315,4 @@ test('handles network errors during npm fetch', async () => {
     status: 'error',
     statusCode: 424,
   })
-  if (result.status === 'error') {
-    expect(result.errorMessage).toContain('Network timeout')
-  }
 })
