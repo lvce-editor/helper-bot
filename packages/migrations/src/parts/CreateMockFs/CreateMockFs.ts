@@ -75,7 +75,7 @@ class MockFs {
       const hasFiles = Object.keys(this.files).some((key) => key.startsWith(dirPath))
       if (!hasFiles) {
         // For the root directory in tests, we should allow it even if not explicitly created
-        if (dirPath === 'file:///test/repo/') {
+        if (dirPath.startsWith('file:///test/') || dirPath.startsWith('test:///')) {
           // Root directory exists implicitly
         } else {
           const error = new Error('ENOENT: no such file or directory')
