@@ -28,12 +28,15 @@ test('sets license to MIT when not set', async () => {
   })
 
   expect(result).toEqual({
+    branchName: 'feature/clean-package-json',
     changedFiles: [
       {
         content: expect.stringContaining('"license": "MIT"'),
         path: 'package.json',
       },
     ],
+    commitMessage: 'chore: clean package.json',
+    pullRequestTitle: 'chore: clean package.json',
     status: 'success',
     statusCode: 201,
   })
@@ -66,12 +69,15 @@ test('removes empty keywords array', async () => {
   })
 
   expect(result).toEqual({
+    branchName: 'feature/clean-package-json',
     changedFiles: [
       {
         content: expect.not.stringContaining('"keywords"'),
         path: 'package.json',
       },
     ],
+    commitMessage: 'chore: clean package.json',
+    pullRequestTitle: 'chore: clean package.json',
     status: 'success',
     statusCode: 201,
   })
@@ -102,12 +108,15 @@ test('sets author to Lvce Editor when empty string', async () => {
   })
 
   expect(result).toEqual({
+    branchName: 'feature/clean-package-json',
     changedFiles: [
       {
         content: expect.stringContaining('"author": "Lvce Editor"'),
         path: 'package.json',
       },
     ],
+    commitMessage: 'chore: clean package.json',
+    pullRequestTitle: 'chore: clean package.json',
     status: 'success',
     statusCode: 201,
   })

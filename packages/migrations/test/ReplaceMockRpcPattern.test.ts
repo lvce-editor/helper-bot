@@ -231,9 +231,40 @@ const anotherRpc = RendererWorker.registerMockRpc({
   const expected = `
 const otherVar = 'some value'
 const rpc = SomeOtherFunction()
-const anotherRpc = RendererWorker.registerMockRpc({
+using anotherRpc = RendererWorker.registerMockRpc({
   method: 'test',
   handler: () => 'result'
+})
+`
+
+  const result = replaceMockRpcPattern(content)
+  expect(result).toBe(expected)
+})
+
+test('replaces const mockRendererRpc = RendererWorker.registerMockRpc with using mockRendererRpc = RendererWorker.registerMockRpc', () => {
+  const content = `
+import { RendererWorker } from '../src/RendererWorker'
+
+test('some test', () => {
+  const mockRendererRpc = RendererWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+
+  // test logic here
+})
+`
+
+  const expected = `
+import { RendererWorker } from '../src/RendererWorker'
+
+test('some test', () => {
+  using mockRendererRpc = RendererWorker.registerMockRpc({
+    method: 'test',
+    handler: () => 'result'
+  })
+
+  // test logic here
 })
 `
 
