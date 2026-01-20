@@ -2,7 +2,6 @@ import type * as FsPromises from 'node:fs/promises'
 import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { updatePackageJsonDependencies } from '../UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
-import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export const upgradePackageJsonFiles = async (
   clonedRepoUri: string,
@@ -13,8 +12,6 @@ export const upgradePackageJsonFiles = async (
   const changedFiles: Array<{ path: string; content: string }> = []
 
   try {
-    // Convert URI to path for directory traversal
-    const repoPath = uriToPath(clonedRepoUri)
     const packageJsonFiles = await findPackageJsonFiles(clonedRepoUri, fs)
 
     for (const packageJsonUri of packageJsonFiles) {
@@ -31,14 +28,14 @@ export const upgradePackageJsonFiles = async (
         })
 
         if (updated) {
-          // Convert URI to path, then to relative path from repo root
-          const packageJsonPath = uriToPath(packageJsonUri)
-          const relativePath = packageJsonPath.replace(repoPath + '/', '').replace(/^\//, '')
-          const normalizedPath = relativePath.replaceAll('\\', '/')
+          // Get relative path from clonedRepoUri using URL pathname
+          const repoUrl = new URL(clonedRepoUri)
+          const fileUrl = new URL(packageJsonUri)
+          const relativePath = fileUrl.pathname.replace(repoUrl.pathname, '').replace(/^\//, '')
 
           changedFiles.push({
             content: stringifyJson(packageJson),
-            path: normalizedPath,
+            path: relativePath,
           })
         }
       } catch {

@@ -1,14 +1,11 @@
 import type * as FsPromises from 'node:fs/promises'
 import { findTestFiles } from '../FindTestFiles/FindTestFiles.ts'
 import { replaceMockRpcPattern } from '../ReplaceMockRpcPattern/ReplaceMockRpcPattern.ts'
-import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export const upgradeTestFiles = async (clonedRepoUri: string, fs: Readonly<typeof FsPromises>): Promise<Array<{ path: string; content: string }>> => {
   const changedFiles: Array<{ path: string; content: string }> = []
 
   try {
-    // Convert URI to path for directory traversal
-    const repoPath = uriToPath(clonedRepoUri)
     const testFiles = await findTestFiles(clonedRepoUri, fs)
 
     for (const testFileUri of testFiles) {
@@ -21,14 +18,14 @@ export const upgradeTestFiles = async (clonedRepoUri: string, fs: Readonly<typeo
 
         // Only add to changed files if content was actually modified
         if (updatedContent !== content) {
-          // Convert URI to path, then to relative path from repo root
-          const testFilePath = uriToPath(testFileUri)
-          const relativePath = testFilePath.replace(repoPath + '/', '').replace(/^\//, '')
-          const normalizedPath = relativePath.replaceAll('\\', '/')
+          // Get relative path from clonedRepoUri using URL pathname
+          const repoUrl = new URL(clonedRepoUri)
+          const fileUrl = new URL(testFileUri)
+          const relativePath = fileUrl.pathname.replace(repoUrl.pathname, '').replace(/^\//, '')
 
           changedFiles.push({
             content: updatedContent,
-            path: normalizedPath,
+            path: relativePath,
           })
         }
       } catch {
