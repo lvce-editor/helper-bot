@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 export const pathToUri = (path: string): string => {
   try {
     // If it's already a URI, return it
-    if (path.startsWith('file://')) {
+    if (path.startsWith('file://') || path.startsWith('test://')) {
       return path
     }
     // Convert path to file:// URI
@@ -27,7 +27,7 @@ export const normalizePath = (path: string): string => {
 }
 
 export const isUri = (path: string): boolean => {
-  return path.startsWith('file://') || (!path.includes('\\') && path.includes('/'))
+  return path.startsWith('file://') || path.startsWith('test://') || (!path.includes('\\') && path.includes('/'))
 }
 
 const isValidUri = (uri: string): boolean => {
