@@ -77,7 +77,11 @@ const wrapFs = (): typeof FsPromises => {
       const filePath = uriToPath(uri)
       return await FsPromises.rm(filePath, options)
     },
-    writeFile: async (path: string | Readonly<Buffer> | Readonly<URL>, data: string | Readonly<Buffer> | Readonly<Uint8Array>, options?: BufferEncoding): Promise<void> => {
+    writeFile: async (
+      path: string | Readonly<Buffer> | Readonly<URL>,
+      data: string | Readonly<Buffer> | Readonly<Uint8Array>,
+      options?: BufferEncoding,
+    ): Promise<void> => {
       const uri = validateUri(path, 'writeFile', true)
       const filePath = uriToPath(uri)
       return await FsPromises.writeFile(filePath, data, options)

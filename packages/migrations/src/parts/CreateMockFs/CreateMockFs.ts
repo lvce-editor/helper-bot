@@ -153,6 +153,8 @@ class MockFs {
   }
 }
 
-export const createMockFs = (options: Readonly<MockFsOptions> = {}): typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> } => {
+export const createMockFs = (
+  options: Readonly<MockFsOptions> = {},
+): typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> } => {
   return new MockFs(options) as unknown as typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> }
 }
