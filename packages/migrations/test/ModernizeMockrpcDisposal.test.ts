@@ -79,14 +79,14 @@ test('some test', () => {
   }
 
   // Check package.json files were updated
-  const rootPackageJsonChange = result.changedFiles.find(f => f.path === 'package.json')
+  const rootPackageJsonChange = result.changedFiles.find((f) => f.path === 'package.json')
   expect(rootPackageJsonChange).toBeDefined()
   const updatedPackageJson = JSON.parse(rootPackageJsonChange!.content)
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
 
   // Check test files were updated
-  const testFileChange = result.changedFiles.find(f => f.path === 'packages/app/test/some.test.ts')
+  const testFileChange = result.changedFiles.find((f) => f.path === 'packages/app/test/some.test.ts')
   expect(testFileChange).toBeDefined()
   expect(testFileChange!.content).toContain('using rpc = RendererWorker.registerMockRpc')
   expect(testFileChange!.content).not.toContain('const rpc = RendererWorker.registerMockRpc')
@@ -188,14 +188,19 @@ test('handles npm fetch failures gracefully', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify({
-        dependencies: {
-          '@lvce-editor/rpc': '^4.20.0',
-          '@lvce-editor/rpc-registry': '^6.1.0',
-        },
-        name: 'test-package',
-        version: '1.0.0',
-      }, null, 2) + '\n',
+      [new URL('package.json', clonedRepoUri).toString()]:
+        JSON.stringify(
+          {
+            dependencies: {
+              '@lvce-editor/rpc': '^4.20.0',
+              '@lvce-editor/rpc-registry': '^6.1.0',
+            },
+            name: 'test-package',
+            version: '1.0.0',
+          },
+          null,
+          2,
+        ) + '\n',
     },
   })
 
@@ -238,14 +243,19 @@ test('handles network errors during npm fetch', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify({
-        dependencies: {
-          '@lvce-editor/rpc': '^4.20.0',
-          '@lvce-editor/rpc-registry': '^6.1.0',
-        },
-        name: 'test-package',
-        version: '1.0.0',
-      }, null, 2) + '\n',
+      [new URL('package.json', clonedRepoUri).toString()]:
+        JSON.stringify(
+          {
+            dependencies: {
+              '@lvce-editor/rpc': '^4.20.0',
+              '@lvce-editor/rpc-registry': '^6.1.0',
+            },
+            name: 'test-package',
+            version: '1.0.0',
+          },
+          null,
+          2,
+        ) + '\n',
     },
   })
 
