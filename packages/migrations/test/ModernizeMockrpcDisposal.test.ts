@@ -75,7 +75,7 @@ test('some test', () => {
   if (result.status === 'success') {
     expect(result.pullRequestTitle).toBe('Modernize mockrpc-disposal')
     expect(result.commitMessage).toBe('Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc')
-    expect(result.branchName).toBe('modernize-mockrpc-disposal')
+    expect(result.branchName).toMatch(/^modernize-mockrpc-disposal-\d+$/)
   }
 
   // Check package.json files were updated
