@@ -28,7 +28,7 @@ test('some test', () => {
 `
 
   // Use file:// URI directly for cross-platform compatibility
-  const clonedRepoUri = 'file:///test/repo'
+  const clonedRepoUri = 'test:///application/some-folder'
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockPackageLockJson = JSON.stringify(
     {
@@ -129,7 +129,7 @@ test('some test', () => {
 })
 
 test('handles missing files gracefully', async () => {
-  const clonedRepoUri = 'file:///test/repo'
+  const clonedRepoUri = 'test:///application/some-folder'
   const mockFs = createMockFs({
     files: {},
   })
@@ -180,7 +180,7 @@ test('some test', () => {
 })
 `
 
-  const clonedRepoUri = 'file:///test/repo'
+  const clonedRepoUri = 'test:///application/some-folder'
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
@@ -218,7 +218,7 @@ test('some test', () => {
 })
 
 test('handles npm fetch failures gracefully', async () => {
-  const clonedRepoUri = 'file:///test/repo'
+  const clonedRepoUri = 'test:///application/some-folder'
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
@@ -272,7 +272,7 @@ test('handles npm fetch failures gracefully', async () => {
 })
 
 test('handles network errors during npm fetch', async () => {
-  const clonedRepoUri = 'file:///test/repo'
+  const clonedRepoUri = 'test:///application/some-folder'
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
