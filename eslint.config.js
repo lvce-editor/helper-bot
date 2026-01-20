@@ -10,8 +10,6 @@ export default [
   {
     rules: {
       '@typescript-eslint/prefer-readonly-parameter-types': 'off',
-      'unicorn/consistent-function-scoping': 'off',
-      'github-actions/ci-versions': 'off',
     },
   },
 ]

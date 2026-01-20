@@ -20,8 +20,6 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     const updateDependenciesScriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
     const updateDependenciesScriptExists = await options.fs.exists(updateDependenciesScriptPath)
     if (!updateDependenciesScriptExists) {
-      console.info(`[update-all-dependencies] No update dependencies script found`)
-
       return {
         ...emptyMigrationResult,
         data: {
@@ -53,8 +51,6 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
       exec: options.exec,
       fs: options.fs,
     })
-
-    console.info(`[update-all-dependencies] ${changedFiles.length} changed files.`)
 
     // If no changed files, return empty result
     if (changedFiles.length === 0) {

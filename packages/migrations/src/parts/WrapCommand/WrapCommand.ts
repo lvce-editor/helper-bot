@@ -8,7 +8,12 @@ import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
 
 const workerUrl = process.env.NODE_ENV === 'production' ? execWorkerUrl : execWorkerUrlDev
 
-const launchExecWorker = async () => {
+interface ExecWorkerRpc {
+  [Symbol.asyncDispose](): Promise<void>
+  invoke(method: string, ...params: readonly any[]): Promise<any>
+}
+
+const launchExecWorker = async (): Promise<ExecWorkerRpc> => {
   const rpc = await NodeWorkerRpcParent.create({
     commandMap: {},
     path: workerUrl,
@@ -16,21 +21,27 @@ const launchExecWorker = async () => {
   })
 
   return {
-    invoke(method: string, ...params: readonly any[]) {
+    invoke(method: string, ...params: readonly any[]): Promise<any> {
       return rpc.invoke(method, ...params)
     },
-    async [Symbol.asyncDispose]() {
+    async [Symbol.asyncDispose](): Promise<void> {
       await rpc.dispose()
     },
   }
 }
 
+const execWithWorker = async (
+  file: string,
+  args?: readonly string[],
+  options?: { cwd?: string; env?: any },
+): Promise<{ exitCode: number; stderr: string; stdout: string }> => {
+  await using rpc = await launchExecWorker()
+  const result = await rpc.invoke('Exec.exec', file, args, options)
+  return result
+}
+
 const wrapExeca = (): ExecFunction => {
-  return async (file: string, args?: readonly string[], options?: { cwd?: string; env?: any }) => {
-    await using rpc = await launchExecWorker()
-    const result = await rpc.invoke('Exec.exec', file, args, options)
-    return result
-  }
+  return execWithWorker
 }
 
 const wrapFs = (): typeof FsPromises => {
