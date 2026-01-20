@@ -5,7 +5,7 @@ import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { updateAllDependencies } from '../src/parts/UpdateAllDependencies/UpdateAllDependencies.ts'
 import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
-test('runs npm ci and detects changed files', async () => {
+test('runs npm install and detects changed files', async () => {
   const packageJson = {
     name: 'test-package',
     version: '1.0.0',
@@ -25,8 +25,8 @@ test('runs npm ci and detects changed files', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
-      // Simulate npm ci modifying package-lock.json
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      // Simulate npm install modifying package-lock.json
       await mockFs.writeFile(new URL('package-lock.json', clonedRepoUri).toString(), '{"lockfileVersion": 3}\n')
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -86,7 +86,7 @@ test('returns empty result when no files changed', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -171,7 +171,7 @@ test('runs postinstall script when it exists', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -225,7 +225,7 @@ test('runs update-dependencies.sh when it exists', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -289,7 +289,7 @@ test('runs both postinstall and update-dependencies.sh', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -331,7 +331,7 @@ test('runs both postinstall and update-dependencies.sh', async () => {
   expect(mockExecFn).toHaveBeenCalledTimes(5)
 })
 
-test('handles npm ci failure', async () => {
+test('handles npm install failure', async () => {
   const packageJson = {
     name: 'test-package',
     version: '1.0.0',
@@ -348,8 +348,8 @@ test('handles npm ci failure', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
-      const error = new Error('npm ci failed')
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+      const error = new Error('npm install failed')
       // @ts-ignore
       error.exitCode = 1
       throw error
@@ -370,7 +370,7 @@ test('handles npm ci failure', async () => {
   expect(result.status).toBe('error')
   const errorResult: MigrationErrorResult = result as MigrationErrorResult
   expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(errorResult.errorMessage).toContain('Failed to run npm ci --ignore-scripts')
+  expect(errorResult.errorMessage).toContain('Failed to run npm install --ignore-scripts')
   expect(errorResult.changedFiles).toEqual([])
 })
 
@@ -394,7 +394,7 @@ test('handles postinstall script failure', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')} with cwd ${cwd}`)
@@ -442,7 +442,7 @@ test('handles update-dependencies.sh failure', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -494,7 +494,7 @@ test('handles multiple changed files', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -544,7 +544,7 @@ test('skips deleted files', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -594,7 +594,7 @@ test('handles added files', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -645,7 +645,7 @@ test('handles untracked files', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -695,7 +695,7 @@ test('handles package.json without scripts', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
@@ -747,7 +747,7 @@ test('handles package.json with empty scripts object', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
@@ -792,7 +792,7 @@ test('handles invalid package.json', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 1, stderr: 'Unexpected token { in JSON at position 13', stdout: '' }
     }
     if (file === 'npm' && args?.[0] === 'run' && args?.[1] === 'postinstall' && cwd === clonedRepoUri) {
@@ -816,7 +816,7 @@ test('handles invalid package.json', async () => {
   expect(result.status).toBe('error')
   const errorResult: MigrationErrorResult = result as MigrationErrorResult
   expect(errorResult.errorCode).toBe('UPDATE_DEPENDENCIES_FAILED')
-  expect(errorResult.errorMessage).toMatch(/Failed to run npm ci|Unexpected token/)
+  expect(errorResult.errorMessage).toMatch(/Failed to run npm install|Unexpected token/)
   expect(mockExecFn).toHaveBeenCalledTimes(2)
 })
 
@@ -839,7 +839,7 @@ test('handles git status with empty lines', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -888,7 +888,7 @@ test('handles git status with short lines', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
@@ -936,7 +936,7 @@ test('handles file read error', async () => {
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     const cwd = options?.cwd
-    if (file === 'npm' && args?.[0] === 'ci' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.[0] === 'install' && args?.[1] === '--ignore-scripts' && cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'chmod' && args?.[0] === '+x' && args?.[1] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
