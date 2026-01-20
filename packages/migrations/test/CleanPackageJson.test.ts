@@ -27,10 +27,19 @@ test('sets license to MIT when not set', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  expect(result.changedFiles).toHaveLength(1)
-  expect(result.changedFiles[0].path).toBe('package.json')
+  expect(result).toEqual({
+    branchName: 'feature/clean-package-json',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"license": "MIT"'),
+        path: 'package.json',
+      },
+    ],
+    commitMessage: 'chore: clean package.json',
+    pullRequestTitle: 'chore: clean package.json',
+    status: 'success',
+    statusCode: 201,
+  })
   const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
   expect(updatedPackageJson.license).toBe('MIT')
   expect(updatedPackageJson.name).toBe('test-package')
@@ -59,8 +68,19 @@ test('removes empty keywords array', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
+  expect(result).toEqual({
+    branchName: 'feature/clean-package-json',
+    changedFiles: [
+      {
+        content: expect.not.stringContaining('"keywords"'),
+        path: 'package.json',
+      },
+    ],
+    commitMessage: 'chore: clean package.json',
+    pullRequestTitle: 'chore: clean package.json',
+    status: 'success',
+    statusCode: 201,
+  })
   const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
   expect(updatedPackageJson.keywords).toBeUndefined()
 })
@@ -87,8 +107,19 @@ test('sets author to Lvce Editor when empty string', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
+  expect(result).toEqual({
+    branchName: 'feature/clean-package-json',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"author": "Lvce Editor"'),
+        path: 'package.json',
+      },
+    ],
+    commitMessage: 'chore: clean package.json',
+    pullRequestTitle: 'chore: clean package.json',
+    status: 'success',
+    statusCode: 201,
+  })
   const updatedPackageJson = JSON.parse(result.changedFiles[0].content)
   expect(updatedPackageJson.author).toBe('Lvce Editor')
 })
