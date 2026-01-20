@@ -98,6 +98,7 @@ test('some test', () => {
   })
 
   expect(result).toEqual({
+    branchName: expect.stringMatching(/^modernize-mockrpc-disposal-\d+$/),
     changedFiles: expect.arrayContaining([
       expect.objectContaining({ path: 'package.json' }),
       expect.objectContaining({ path: 'packages/app/package.json' }),
@@ -264,6 +265,7 @@ test('handles npm fetch failures gracefully', async () => {
   expect(result).toEqual({
     changedFiles: [],
     errorCode: 'UPDATE_DEPENDENCIES_FAILED',
+    errorMessage: 'Failed to fetch latest version for @lvce-editor/rpc: Internal Server Error',
     status: 'error',
     statusCode: 424,
   })
