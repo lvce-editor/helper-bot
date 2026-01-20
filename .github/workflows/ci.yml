@@ -30,10 +30,5 @@ jobs:
         run: npm ci
         if: steps.npm-cache.outputs.cache-hit != 'true'
       - run: npm test
+      - run: npm run lint
       - run: npm run build
-      # - name: deploy
-      #   uses: fjogeleit/http-request-action@v1
-      #   if: matrix.os == 'ubuntu-24.04'
-      #   with:
-      #     url: ${{ secrets.DEPLOY_HOOK_URL }}
-      #     method: 'GET'
