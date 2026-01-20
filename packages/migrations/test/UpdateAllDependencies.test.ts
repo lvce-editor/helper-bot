@@ -50,15 +50,15 @@ test('runs update-dependencies.sh and detects changed files', async () => {
   })
 
   expect(result).toEqual({
-    branchName: expect.stringMatching(/^chore\/update-all-dependencies-\d+$/),
+    branchName: expect.stringMatching(/^feature\/update-dependencies-\d+$/),
     changedFiles: [
       {
         content: '{"lockfileVersion": 3}\n',
         path: 'package-lock.json',
       },
     ],
-    commitMessage: 'chore: update all dependencies',
-    pullRequestTitle: 'chore: update all dependencies',
+    commitMessage: 'feature: update dependencies',
+    pullRequestTitle: 'feature: update dependencies',
     status: 'success',
     statusCode: 201,
   })
@@ -228,15 +228,15 @@ test('runs update-dependencies.sh when it exists', async () => {
   })
 
   expect(result).toEqual({
-    branchName: expect.stringMatching(/^chore\/update-all-dependencies-\d+$/),
+    branchName: expect.stringMatching(/^feature\/update-dependencies-\d+$/),
     changedFiles: [
       {
         content: 'updated\n',
         path: 'updated.txt',
       },
     ],
-    commitMessage: 'chore: update all dependencies',
-    pullRequestTitle: 'chore: update all dependencies',
+    commitMessage: 'feature: update dependencies',
+    pullRequestTitle: 'feature: update dependencies',
     status: 'success',
     statusCode: 201,
   })
