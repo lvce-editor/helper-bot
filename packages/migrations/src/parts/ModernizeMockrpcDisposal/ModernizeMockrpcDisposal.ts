@@ -15,7 +15,7 @@ export const modernizeMockrpcDisposal = async (options: Readonly<BaseMigrationOp
     ])
 
     // 1. Upgrade package.json files
-    const packageJsonChanges = await upgradePackageJsonFiles(options.clonedRepoUri, options.fs, latestRpcVersion, latestRpcRegistryVersion)
+    const packageJsonChanges = await upgradePackageJsonFiles(options.clonedRepoUri, options.fs, options.exec, latestRpcVersion, latestRpcRegistryVersion)
 
     // 2. Upgrade test files
     const testFileChanges = await upgradeTestFiles(options.clonedRepoUri, options.fs)

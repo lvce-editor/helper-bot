@@ -30,6 +30,24 @@ test('some test', () => {
 
   const clonedRepoUri = pathToUri('/test/repo')
   const repoUriWithSlash = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
+  const mockPackageLockJson = JSON.stringify(
+    {
+      lockfileVersion: 3,
+      name: 'test-package',
+      version: '1.0.0',
+      dependencies: {
+        '@lvce-editor/rpc': {
+          version: '5.0.0',
+        },
+        '@lvce-editor/rpc-registry': {
+          version: '7.0.0',
+        },
+      },
+    },
+    null,
+    2,
+  )
+
   const mockFs = createMockFs({
     files: {
       // Create directory entries - include the root directory
@@ -51,7 +69,18 @@ test('some test', () => {
 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  >(async (file, args, options) => {
+    if (file === 'npm' && args?.[0] === 'install') {
+      // Write package-lock.json when npm install is called
+      const cwd = options?.cwd
+      if (cwd) {
+        // cwd is a file system path, convert it to URI format
+        const cwdUri = cwd.startsWith('file://') ? cwd : `file://${cwd}`
+        const packageLockPath = new URL('package-lock.json', cwdUri.endsWith('/') ? cwdUri : cwdUri + '/').toString()
+        await mockFs.writeFile(packageLockPath, mockPackageLockJson)
+      }
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
     return { exitCode: 0, stderr: '', stdout: '' }
   })
   const mockExec = createMockExec(mockExecFn)
@@ -71,7 +100,7 @@ test('some test', () => {
   })
 
   expect(result.status).toBe('success')
-  expect(result.changedFiles).toHaveLength(5) // 2 package.json files + 3 test files
+  expect(result.changedFiles).toHaveLength(7) // 2 package.json files + 2 package-lock.json files + 3 test files
   if (result.status === 'success') {
     expect(result.pullRequestTitle).toBe('feature: modernize mockrpc disposal')
     expect(result.commitMessage).toBe('Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc')
@@ -84,6 +113,12 @@ test('some test', () => {
   const updatedPackageJson = JSON.parse(rootPackageJsonChange.content)
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
+
+  // Check package-lock.json files were created
+  const rootPackageLockChange = result.changedFiles.find((f) => f.path === 'package-lock.json')
+  expect(rootPackageLockChange).toBeDefined()
+  const appPackageLockChange = result.changedFiles.find((f) => f.path === 'packages/app/package-lock.json')
+  expect(appPackageLockChange).toBeDefined()
 
   // Check test files were updated
   const testFileChange = result.changedFiles.find((f) => f.path === 'packages/app/test/some.test.ts')

@@ -1,11 +1,14 @@
 import type * as FsPromises from 'node:fs/promises'
+import type { ExecFunction } from '../Types/Types.ts'
 import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { updatePackageJsonDependencies } from '../UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
+import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export const upgradePackageJsonFiles = async (
   clonedRepoUri: string,
   fs: Readonly<typeof FsPromises>,
+  exec: ExecFunction,
   latestRpcVersion: string,
   latestRpcRegistryVersion: string,
 ): Promise<Array<{ path: string; content: string }>> => {
@@ -33,8 +36,36 @@ export const upgradePackageJsonFiles = async (
           const fileUrl = new URL(packageJsonUri)
           const relativePath = fileUrl.pathname.replace(repoUrl.pathname, '').replace(/^\//, '')
 
+          // Write updated package.json back
+          const updatedPackageJsonContent = stringifyJson(packageJson)
+          await fs.writeFile(packageJsonUri, updatedPackageJsonContent, 'utf8')
+
+          // Run npm install to update package-lock.json
+          try {
+            const packageJsonDirUri = new URL('.', packageJsonUri).toString().replace(/\/$/, '')
+            const packageJsonDir = uriToPath(packageJsonDirUri)
+            await exec('npm', ['install', '--ignore-scripts', '--prefer-online'], {
+              cwd: packageJsonDir,
+            })
+
+            // Read updated package-lock.json
+            const packageLockJsonUri = packageJsonUri.replace('package.json', 'package-lock.json')
+            const packageLockJsonExists = await fs.exists(packageLockJsonUri)
+            if (packageLockJsonExists) {
+              const packageLockJsonContent = await fs.readFile(packageLockJsonUri, 'utf8')
+              const packageLockJsonPath = relativePath.replace('package.json', 'package-lock.json')
+              changedFiles.push({
+                content: packageLockJsonContent,
+                path: packageLockJsonPath,
+              })
+            }
+          } catch (error) {
+            // If npm install fails, continue without package-lock.json
+            // The package.json will still be updated
+          }
+
           changedFiles.push({
-            content: stringifyJson(packageJson),
+            content: updatedPackageJsonContent,
             path: relativePath,
           })
         }
