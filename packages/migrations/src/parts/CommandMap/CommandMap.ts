@@ -18,6 +18,7 @@ import { lintAndFix } from '../LintAndFix/LintAndFix.ts'
 import { listCommands2 } from '../ListCommands2/ListCommands2.ts'
 import { modernDirname } from '../ModernDirname/ModernDirname.ts'
 import { modernizeBranchProtection } from '../ModernizeBranchProtection/ModernizeBranchProtection.ts'
+import { modernizeMockrpcDisposal } from '../ModernizeMockrpcDisposal/ModernizeMockrpcDisposal.ts'
 import { modernizeStaticBuild } from '../ModernizeStaticBuild/ModernizeStaticBuild.ts'
 import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
@@ -54,6 +55,7 @@ export const commandMap = {
   '/migrations2/lint-and-fix': wrapCommand(lintAndFix),
   '/migrations2/list': wrapResponseCommand(handleMigrationsList),
   '/migrations2/modernize-branch-protection': wrapCommand(modernizeBranchProtection),
+  '/migrations2/modernize-mock-rpc-disposal': wrapCommand(modernizeMockrpcDisposal),
   '/migrations2/modernize-static-build': wrapCommand(modernizeStaticBuild),
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
   '/migrations2/remove-gitpod-yml': wrapCommand(removeGitpodyml),
