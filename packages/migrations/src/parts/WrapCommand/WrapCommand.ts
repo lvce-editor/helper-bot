@@ -57,32 +57,32 @@ const wrapFs = (): typeof FsPromises => {
         return false
       }
     },
-    mkdir: async (path: string | Buffer | URL, options?: any): Promise<string | undefined> => {
+    mkdir: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<string | undefined> => {
       const uri = validateUri(path, 'mkdir', true)
       const filePath = uriToPath(uri)
       return await FsPromises.mkdir(filePath, options)
     },
-    readdir: async (path: string | Buffer | URL, options?: any): Promise<string[] | any[]> => {
+    readdir: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<string[] | any[]> => {
       const uri = validateUri(path, 'readdir', true)
       const filePath = uriToPath(uri)
       return await FsPromises.readdir(filePath, options)
     },
-    readFile: async (path: string | Buffer | URL, encoding?: BufferEncoding): Promise<string> => {
+    readFile: async (path: string | Readonly<Buffer> | Readonly<URL>, encoding?: BufferEncoding): Promise<string> => {
       const uri = validateUri(path, 'readFile', true)
       const filePath = uriToPath(uri)
       return await FsPromises.readFile(filePath, encoding)
     },
-    rm: async (path: string | Buffer | URL, options?: any): Promise<void> => {
+    rm: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<void> => {
       const uri = validateUri(path, 'rm', true)
       const filePath = uriToPath(uri)
       return await FsPromises.rm(filePath, options)
     },
-    writeFile: async (path: string | Buffer | URL, data: string | Buffer | Uint8Array, options?: BufferEncoding): Promise<void> => {
+    writeFile: async (path: string | Readonly<Buffer> | Readonly<URL>, data: string | Readonly<Buffer> | Readonly<Uint8Array>, options?: BufferEncoding): Promise<void> => {
       const uri = validateUri(path, 'writeFile', true)
       const filePath = uriToPath(uri)
       return await FsPromises.writeFile(filePath, data, options)
     },
-  } as typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> }
+  } as typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> }
 }
 
 export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T) => Promise<MigrationResult>) => {
