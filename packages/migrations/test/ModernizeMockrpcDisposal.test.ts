@@ -3,7 +3,6 @@ import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { createMockNpmFetch } from '../src/parts/CreateMockNpmFetch/CreateMockNpmFetch.ts'
 import { modernizeMockrpcDisposal } from '../src/parts/ModernizeMockrpcDisposal/ModernizeMockrpcDisposal.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('modernizes mockrpc-disposal successfully', async () => {
   const oldPackageJson = {
