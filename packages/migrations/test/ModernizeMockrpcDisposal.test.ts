@@ -72,8 +72,8 @@ test('some test', () => {
       // Write package-lock.json when npm install is called
       const cwd = options?.cwd
       if (cwd) {
-        // cwd is a file system path, convert it to URI format
-        const cwdUri = cwd.startsWith('file://') ? cwd : `file://${cwd}`
+        // cwd is a file system path, convert it to URI format using pathToUri for cross-platform support
+        const cwdUri = pathToUri(cwd)
         const packageLockPath = new URL('package-lock.json', cwdUri.endsWith('/') ? cwdUri : cwdUri + '/').toString()
         await mockFs.writeFile(packageLockPath, mockPackageLockJson)
       }
