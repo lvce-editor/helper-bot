@@ -7,7 +7,7 @@ import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export const upgradePackageJsonFiles = async (
   clonedRepoUri: string,
-  fs: Readonly<typeof FsPromises>,
+  fs: Readonly<typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> }>,
   exec: ExecFunction,
   latestRpcVersion: string,
   latestRpcRegistryVersion: string,

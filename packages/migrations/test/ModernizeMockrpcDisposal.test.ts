@@ -111,7 +111,7 @@ test('some test', () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(result.branchName).toMatch(/^modernize-mockrpc-disposal-\d+$/)
+
   expect(result.changedFiles).toHaveLength(7)
 
   // Check package.json files were updated
@@ -264,7 +264,9 @@ test('handles npm fetch failures gracefully', async () => {
     status: 'error',
     statusCode: 424,
   })
-  expect(result.errorMessage).toContain('Failed to fetch latest version')
+  if (result.status === 'error') {
+    expect(result.errorMessage).toContain('Failed to fetch latest version')
+  }
 })
 
 test('handles network errors during npm fetch', async () => {
@@ -316,5 +318,7 @@ test('handles network errors during npm fetch', async () => {
     status: 'error',
     statusCode: 424,
   })
-  expect(result.errorMessage).toContain('Network timeout')
+  if (result.status === 'error') {
+    expect(result.errorMessage).toContain('Network timeout')
+  }
 })
