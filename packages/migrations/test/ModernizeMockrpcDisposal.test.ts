@@ -74,7 +74,7 @@ test('some test', () => {
       if (cwd) {
         // Determine which package-lock.json to write based on the cwd path
         // We use path matching instead of URI conversion for cross-platform compatibility
-        const normalizedCwd = cwd.replace(/\\/g, '/')
+        const normalizedCwd = cwd.replaceAll('\\', '/')
         let packageLockUri: string
         if (normalizedCwd.endsWith('/packages/app') || normalizedCwd === '/test/repo/packages/app') {
           packageLockUri = new URL('packages/app/package-lock.json', repoUriWithSlash).toString()
