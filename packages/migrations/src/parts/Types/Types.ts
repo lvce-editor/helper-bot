@@ -1,14 +1,14 @@
 import type * as FsPromises from 'node:fs/promises'
 
 export interface ExecFunction {
-  (file: string, args?: readonly string[], options?: { cwd?: string }): Promise<{ stdout: string; stderr: string; exitCode: number }>
+  (file: string, args?: readonly string[], options?: Readonly<{ cwd?: string }>): Promise<{ exitCode: number; stderr: string; stdout: string }>
 }
 
 export interface BaseMigrationOptions {
   readonly clonedRepoUri: string
   readonly exec: ExecFunction
   readonly fetch: typeof globalThis.fetch
-  readonly fs: typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> }
+  readonly fs: typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> }
   readonly [key: string]: any
   readonly repositoryName: string
   readonly repositoryOwner: string
@@ -22,7 +22,7 @@ export interface ChangedFile {
 
 export interface MigrationSuccessResult {
   readonly branchName?: string
-  readonly changedFiles: ChangedFile[]
+  readonly changedFiles: readonly ChangedFile[]
   readonly commitMessage?: string
   readonly data?: any
   readonly pullRequestTitle: string
@@ -31,7 +31,7 @@ export interface MigrationSuccessResult {
 }
 
 export interface MigrationErrorResult {
-  readonly changedFiles: ChangedFile[]
+  readonly changedFiles: readonly ChangedFile[]
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly status: 'error'
