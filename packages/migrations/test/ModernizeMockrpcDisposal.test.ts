@@ -23,7 +23,7 @@ test('some test', () => {
     method: 'test',
     handler: () => 'result'
   })
-  
+
   // test logic here
 })
 `
@@ -32,9 +32,6 @@ test('some test', () => {
   const repoUriWithSlash = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockPackageLockJson = JSON.stringify(
     {
-      lockfileVersion: 3,
-      name: 'test-package',
-      version: '1.0.0',
       dependencies: {
         '@lvce-editor/rpc': {
           version: '5.0.0',
@@ -43,6 +40,9 @@ test('some test', () => {
           version: '7.0.0',
         },
       },
+      lockfileVersion: 3,
+      name: 'test-package',
+      version: '1.0.0',
     },
     null,
     2,
@@ -67,9 +67,7 @@ test('some test', () => {
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async (file, args, options) => {
+  const mockExec = createMockExec(async (file, args, options) => {
     if (file === 'npm' && args?.[0] === 'install') {
       // Write package-lock.json when npm install is called
       const cwd = options?.cwd
@@ -83,7 +81,6 @@ test('some test', () => {
     }
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   const mockFetch = createMockNpmFetch({
     '@lvce-editor/rpc': '5.0.0',
@@ -133,12 +130,9 @@ test('handles missing files gracefully', async () => {
     files: {},
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   const mockFetch = createMockNpmFetch({
     '@lvce-editor/rpc': '5.0.0',
@@ -189,12 +183,9 @@ test('some test', () => {
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   const mockFetch = createMockNpmFetch({
     '@lvce-editor/rpc': '5.0.0',
@@ -239,12 +230,9 @@ test('handles npm fetch failures gracefully', async () => {
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   // Mock fetch that returns error responses for npm registry calls
   const mockFetch = jest.fn<typeof globalThis.fetch>(async (url: string | URL | Request) => {
@@ -294,12 +282,9 @@ test('handles network errors during npm fetch', async () => {
     },
   })
 
-  const mockExecFn = jest.fn<
-    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
-  >(async () => {
+  const mockExec = createMockExec(async () => {
     return { exitCode: 0, stderr: '', stdout: '' }
   })
-  const mockExec = createMockExec(mockExecFn)
 
   // Mock fetch that throws network error
   const mockFetch = jest.fn<typeof globalThis.fetch>(async (url: string | URL | Request) => {
