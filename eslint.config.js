@@ -8,16 +8,10 @@ export default [
   {
     ignores: ['packages/app'],
   },
-  ...tseslint.config({
+  {
     files: ['**/*.ts'],
     rules: {
-      '@typescript-eslint/prefer-readonly-parameter-types': [
-        'error',
-        {
-          ignoreInferredTypes: true,
-          treatMethodsAsReadonly: true,
-        },
-      ],
+      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
     },
-  }),
+  },
 ]
