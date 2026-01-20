@@ -33,7 +33,7 @@ const launchExecWorker = async (): Promise<ExecWorkerRpc> => {
 const execWithWorker = async (
   file: string,
   args?: readonly string[],
-  options?: { cwd?: string; env?: any },
+  options?: Readonly<{ cwd?: string; env?: any }>,
 ): Promise<{ exitCode: number; stderr: string; stdout: string }> => {
   await using rpc = await launchExecWorker()
   const result = await rpc.invoke('Exec.exec', file, args, options)
@@ -47,7 +47,7 @@ const wrapExeca = (): ExecFunction => {
 const wrapFs = (): typeof FsPromises => {
   return {
     ...FsPromises,
-    exists: async (path: string | Buffer | URL): Promise<boolean> => {
+    exists: async (path: string | Readonly<Buffer> | Readonly<URL>): Promise<boolean> => {
       const uri = validateUri(path, 'exists', true)
       const filePath = uriToPath(uri)
       try {

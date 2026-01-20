@@ -4,7 +4,7 @@ import { validateUri } from '../UriUtils/UriUtils.ts'
 const defaultMockExec = async (
   _file: string,
   _args?: readonly string[],
-  options?: { cwd?: string },
+  options?: Readonly<{ cwd?: string }>,
 ): Promise<{ exitCode: number; stderr: string; stdout: string }> => {
   if (options?.cwd) {
     validateUri(options.cwd, 'exec cwd')
@@ -13,10 +13,10 @@ const defaultMockExec = async (
 }
 
 export const createMockExec = (
-  mockFn?: (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ exitCode: number; stderr: string; stdout: string }>,
+  mockFn?: (file: string, args?: readonly string[], options?: Readonly<{ cwd?: string }>) => Promise<{ exitCode: number; stderr: string; stdout: string }>,
 ): ExecFunction => {
   if (mockFn) {
-    return ((file: string, args?: readonly string[], options?: { cwd?: string }) => {
+    return ((file: string, args?: readonly string[], options?: Readonly<{ cwd?: string }>) => {
       if (options?.cwd) {
         validateUri(options.cwd, 'exec cwd')
       }

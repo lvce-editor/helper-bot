@@ -34,7 +34,7 @@ const isValidUri = (uri: string): boolean => {
   return uri.startsWith('file://') || uri.startsWith('test://')
 }
 
-export const validateUri = (path: string | Buffer | URL, operation: string, strict: boolean = false): string => {
+export const validateUri = (path: string | Readonly<Buffer> | Readonly<URL>, operation: string, strict: boolean = false): string => {
   if (path instanceof URL) {
     const uri = path.href
     if (strict && !isValidUri(uri)) {
