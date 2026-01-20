@@ -59,7 +59,7 @@ export const upgradePackageJsonFiles = async (
                 path: packageLockJsonPath,
               })
             }
-          } catch (error) {
+          } catch {
             // If npm install fails, continue without package-lock.json
             // The package.json will still be updated
           }
