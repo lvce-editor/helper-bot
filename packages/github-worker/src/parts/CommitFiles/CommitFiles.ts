@@ -21,7 +21,7 @@ export interface CommitFilesResult {
   readonly commitSha: string
 }
 
-export const commitFiles = async (options: CommitFilesOptions): Promise<CommitFilesResult | undefined> => {
+export const commitFiles = async (options: Readonly<CommitFilesOptions>): Promise<CommitFilesResult | undefined> => {
   const { branchName, commitMessage, files, githubToken, owner, repo } = options
 
   if (files.length === 0) {

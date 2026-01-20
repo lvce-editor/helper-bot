@@ -8,8 +8,6 @@ export default [
     ignores: ['packages/app'],
   },
   {
-    rules: {
-      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
-    },
+    rules: {},
   },
 ]

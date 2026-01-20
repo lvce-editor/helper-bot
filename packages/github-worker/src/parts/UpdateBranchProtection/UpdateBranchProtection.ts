@@ -37,7 +37,7 @@ const updateContextOsVersions = (context: string, osVersions: UpdateBranchProtec
 }
 
 const updateBranchRulesetsRequiredChecks = async (
-  octokit: Octokit,
+  octokit: Readonly<Octokit>,
   owner: string,
   repo: string,
   osVersions: UpdateBranchProtectionOptions['osVersions'],
@@ -213,7 +213,7 @@ const updateBranchRulesetsRequiredChecks = async (
 }
 
 const updateClassicBranchProtectionRequiredChecks = async (
-  octokit: Octokit,
+  octokit: Readonly<Octokit>,
   owner: string,
   repo: string,
   branch: string,

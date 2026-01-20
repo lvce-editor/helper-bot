@@ -30,7 +30,7 @@ export const isUri = (path: string): boolean => {
   return path.startsWith('file://') || (!path.includes('\\') && path.includes('/'))
 }
 
-export const validateUri = (path: string | Buffer | URL, operation: string, strict: boolean = false): string => {
+export const validateUri = (path: string | Readonly<Buffer> | Readonly<URL>, operation: string, strict: boolean = false): string => {
   if (path instanceof URL) {
     const uri = path.href
     if (strict && !uri.startsWith('file://')) {
