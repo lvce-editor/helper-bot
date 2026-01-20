@@ -97,10 +97,6 @@ test('some test', () => {
   })
 
   expect(result).toMatchObject({
-    status: 'success',
-    statusCode: 201,
-    pullRequestTitle: 'feature: modernize mockrpc disposal',
-    commitMessage: 'Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc',
     changedFiles: expect.arrayContaining([
       expect.objectContaining({ path: 'package.json' }),
       expect.objectContaining({ path: 'packages/app/package.json' }),
@@ -110,6 +106,10 @@ test('some test', () => {
       expect.objectContaining({ path: 'packages/exec-worker/test/another.test.ts' }),
       expect.objectContaining({ path: 'packages/github-worker/test/third.test.ts' }),
     ]),
+    commitMessage: 'Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc',
+    pullRequestTitle: 'feature: modernize mockrpc disposal',
+    status: 'success',
+    statusCode: 201,
   })
   expect(result.branchName).toMatch(/^modernize-mockrpc-disposal-\d+$/)
   expect(result.changedFiles).toHaveLength(7)
@@ -151,12 +151,12 @@ test('handles missing files gracefully', async () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 200,
     branchName: '',
     changedFiles: [],
     commitMessage: '',
     pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -205,12 +205,12 @@ test('some test', () => {
   })
 
   expect(result).toEqual({
-    status: 'success',
-    statusCode: 200,
     branchName: '',
     changedFiles: [],
     commitMessage: '',
     pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
   })
 })
 
@@ -259,10 +259,10 @@ test('handles npm fetch failures gracefully', async () => {
   })
 
   expect(result).toMatchObject({
+    changedFiles: [],
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
     status: 'error',
     statusCode: 424,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    changedFiles: [],
   })
   expect(result.errorMessage).toContain('Failed to fetch latest version')
 })
@@ -311,10 +311,10 @@ test('handles network errors during npm fetch', async () => {
   })
 
   expect(result).toMatchObject({
+    changedFiles: [],
+    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
     status: 'error',
     statusCode: 424,
-    errorCode: 'UPDATE_DEPENDENCIES_FAILED',
-    changedFiles: [],
   })
   expect(result.errorMessage).toContain('Network timeout')
 })
