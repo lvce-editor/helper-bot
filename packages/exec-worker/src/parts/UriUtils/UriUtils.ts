@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 export const pathToUri = (path: string): string => {
