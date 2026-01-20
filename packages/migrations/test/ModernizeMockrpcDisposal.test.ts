@@ -32,20 +32,20 @@ test('some test', () => {
   const repoUriWithSlash = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', repoUriWithSlash).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('packages/app/package.json', repoUriWithSlash).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).toString()]: oldTestContent,
-      [new URL('packages/exec-worker/test/another.test.ts', repoUriWithSlash).toString()]: oldTestContent,
-      [new URL('packages/github-worker/test/third.test.ts', repoUriWithSlash).toString()]: oldTestContent,
       // Create directory entries - include the root directory
       [clonedRepoUri]: '[DIRECTORY]',
+      [new URL('package.json', repoUriWithSlash).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('packages/', repoUriWithSlash).toString()]: '[DIRECTORY]',
       [new URL('packages/app/', repoUriWithSlash).toString()]: '[DIRECTORY]',
+      [new URL('packages/app/package.json', repoUriWithSlash).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
       [new URL('packages/app/test/', repoUriWithSlash).toString()]: '[DIRECTORY]',
+      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).toString()]: oldTestContent,
       [new URL('packages/exec-worker/', repoUriWithSlash).toString()]: '[DIRECTORY]',
       [new URL('packages/exec-worker/test/', repoUriWithSlash).toString()]: '[DIRECTORY]',
+      [new URL('packages/exec-worker/test/another.test.ts', repoUriWithSlash).toString()]: oldTestContent,
       [new URL('packages/github-worker/', repoUriWithSlash).toString()]: '[DIRECTORY]',
       [new URL('packages/github-worker/test/', repoUriWithSlash).toString()]: '[DIRECTORY]',
+      [new URL('packages/github-worker/test/third.test.ts', repoUriWithSlash).toString()]: oldTestContent,
     },
   })
 
@@ -81,15 +81,15 @@ test('some test', () => {
   // Check package.json files were updated
   const rootPackageJsonChange = result.changedFiles.find((f) => f.path === 'package.json')
   expect(rootPackageJsonChange).toBeDefined()
-  const updatedPackageJson = JSON.parse(rootPackageJsonChange!.content)
+  const updatedPackageJson = JSON.parse(rootPackageJsonChange.content)
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
 
   // Check test files were updated
   const testFileChange = result.changedFiles.find((f) => f.path === 'packages/app/test/some.test.ts')
   expect(testFileChange).toBeDefined()
-  expect(testFileChange!.content).toContain('using rpc = RendererWorker.registerMockRpc')
-  expect(testFileChange!.content).not.toContain('const rpc = RendererWorker.registerMockRpc')
+  expect(testFileChange.content).toContain('using rpc = RendererWorker.registerMockRpc')
+  expect(testFileChange.content).not.toContain('const rpc = RendererWorker.registerMockRpc')
 })
 
 test('handles missing files gracefully', async () => {

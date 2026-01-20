@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
 export const createMockNpmFetch = (packageVersions: Record<string, string>): typeof globalThis.fetch => {
   return async (url: string | URL | Request) => {
     const urlStr = url.toString()
