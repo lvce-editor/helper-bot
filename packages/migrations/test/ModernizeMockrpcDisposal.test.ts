@@ -48,6 +48,10 @@ test('some test', () => {
     2,
   )
 
+  // Pre-compute package-lock.json URIs for cross-platform compatibility
+  const rootPackageLockUri = new URL('package-lock.json', repoUriWithSlash).toString()
+  const appPackageLockUri = new URL('packages/app/package-lock.json', repoUriWithSlash).toString()
+
   const mockFs = createMockFs({
     files: {
       // Create directory entries - include the root directory
@@ -67,22 +71,13 @@ test('some test', () => {
     },
   })
 
-  const mockExec = createMockExec(async (file, args, options) => {
+  const mockExec = createMockExec(async (file, args) => {
     if (file === 'npm' && args?.[0] === 'install') {
-      // Write package-lock.json when npm install is called
-      const cwd = options?.cwd
-      if (cwd) {
-        // Determine which package-lock.json to write based on the cwd path
-        // We use path matching instead of URI conversion for cross-platform compatibility
-        const normalizedCwd = cwd.replaceAll('\\', '/')
-        let packageLockUri: string
-        if (normalizedCwd.endsWith('/packages/app') || normalizedCwd === '/test/repo/packages/app') {
-          packageLockUri = new URL('packages/app/package-lock.json', repoUriWithSlash).toString()
-        } else {
-          packageLockUri = new URL('package-lock.json', repoUriWithSlash).toString()
-        }
-        await mockFs.writeFile(packageLockUri, mockPackageLockJson)
-      }
+      // Write package-lock.json files when npm install is called
+      // We write both because we can't reliably determine which package we're in across platforms
+      // (the cwd path format differs between Windows and Unix)
+      await mockFs.writeFile(rootPackageLockUri, mockPackageLockJson)
+      await mockFs.writeFile(appPackageLockUri, mockPackageLockJson)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     return { exitCode: 0, stderr: '', stdout: '' }
@@ -102,7 +97,7 @@ test('some test', () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result).toMatchObject({
+  expect(result).toEqual({
     changedFiles: expect.arrayContaining([
       expect.objectContaining({ path: 'package.json' }),
       expect.objectContaining({ path: 'packages/app/package.json' }),
@@ -266,7 +261,7 @@ test('handles npm fetch failures gracefully', async () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result).toMatchObject({
+  expect(result).toEqual({
     changedFiles: [],
     errorCode: 'UPDATE_DEPENDENCIES_FAILED',
     status: 'error',
@@ -318,7 +313,7 @@ test('handles network errors during npm fetch', async () => {
     repositoryOwner: 'test-owner',
   })
 
-  expect(result).toMatchObject({
+  expect(result).toEqual({
     changedFiles: [],
     errorCode: 'UPDATE_DEPENDENCIES_FAILED',
     status: 'error',
