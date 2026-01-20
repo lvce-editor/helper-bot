@@ -73,7 +73,7 @@ test('some test', () => {
   expect(result.status).toBe('success')
   expect(result.changedFiles).toHaveLength(5) // 2 package.json files + 3 test files
   if (result.status === 'success') {
-    expect(result.pullRequestTitle).toBe('Modernize mockrpc-disposal')
+    expect(result.pullRequestTitle).toBe('feature: modernize mockrpc disposal')
     expect(result.commitMessage).toBe('Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc')
     expect(result.branchName).toMatch(/^modernize-mockrpc-disposal-\d+$/)
   }

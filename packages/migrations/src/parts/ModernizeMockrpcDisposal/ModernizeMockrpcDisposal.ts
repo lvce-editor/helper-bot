@@ -37,7 +37,7 @@ export const modernizeMockrpcDisposal = async (options: Readonly<BaseMigrationOp
       branchName: `modernize-mockrpc-disposal-${Date.now()}`,
       changedFiles,
       commitMessage: 'Modernize mockrpc-disposal: update dependencies and replace const with using for mockRpc',
-      pullRequestTitle: 'Modernize mockrpc-disposal',
+      pullRequestTitle: 'feature: modernize mockrpc disposal',
       status: 'success',
     })
   } catch (error) {
