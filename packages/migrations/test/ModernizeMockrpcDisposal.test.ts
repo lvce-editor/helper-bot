@@ -28,8 +28,9 @@ test('some test', () => {
 })
 `
 
-  const clonedRepoUri = pathToUri('/test/repo')
-  const repoUriWithSlash = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
+  // Use file:// URI directly for cross-platform compatibility
+  const clonedRepoUri = 'file:///test/repo'
+  const repoUriWithSlash = clonedRepoUri + '/'
   const mockPackageLockJson = JSON.stringify(
     {
       dependencies: {
@@ -127,7 +128,7 @@ test('some test', () => {
 })
 
 test('handles missing files gracefully', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'file:///test/repo'
   const mockFs = createMockFs({
     files: {},
   })
@@ -178,11 +179,12 @@ test('some test', () => {
 })
 `
 
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'file:///test/repo'
+  const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
-      [new URL('packages/app/test/some.test.ts', clonedRepoUri).toString()]: testContentWithoutMockRpc,
+      [new URL('package.json', repoUriWithSlash).toString()]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
+      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).toString()]: testContentWithoutMockRpc,
     },
   })
 
@@ -215,10 +217,11 @@ test('some test', () => {
 })
 
 test('handles npm fetch failures gracefully', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'file:///test/repo'
+  const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]:
+      [new URL('package.json', repoUriWithSlash).toString()]:
         JSON.stringify(
           {
             dependencies: {
@@ -267,10 +270,11 @@ test('handles npm fetch failures gracefully', async () => {
 })
 
 test('handles network errors during npm fetch', async () => {
-  const clonedRepoUri = pathToUri('/test/repo')
+  const clonedRepoUri = 'file:///test/repo'
+  const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]:
+      [new URL('package.json', repoUriWithSlash).toString()]:
         JSON.stringify(
           {
             dependencies: {
