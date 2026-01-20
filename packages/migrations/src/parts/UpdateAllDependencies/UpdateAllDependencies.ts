@@ -62,8 +62,8 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     }
 
     // Return result with changed files
-    const pullRequestTitle = 'chore: update all dependencies'
-    const branchName = `chore/update-all-dependencies-${Date.now()}`
+    const pullRequestTitle = 'feature: update dependencies'
+    const branchName = `feature/update-dependencies-${Date.now()}`
 
     return {
       branchName,
