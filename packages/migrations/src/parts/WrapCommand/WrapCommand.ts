@@ -8,7 +8,12 @@ import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
 
 const workerUrl = process.env.NODE_ENV === 'production' ? execWorkerUrl : execWorkerUrlDev
 
-const launchExecWorker = async () => {
+interface ExecWorkerRpc {
+  [Symbol.asyncDispose](): Promise<void>
+  invoke(method: string, ...params: readonly any[]): Promise<any>
+}
+
+const launchExecWorker = async (): Promise<ExecWorkerRpc> => {
   const rpc = await NodeWorkerRpcParent.create({
     commandMap: {},
     path: workerUrl,
@@ -16,27 +21,33 @@ const launchExecWorker = async () => {
   })
 
   return {
-    invoke(method: string, ...params: readonly any[]) {
+    invoke(method: string, ...params: readonly any[]): Promise<any> {
       return rpc.invoke(method, ...params)
     },
-    async [Symbol.asyncDispose]() {
+    async [Symbol.asyncDispose](): Promise<void> {
       await rpc.dispose()
     },
   }
 }
 
+const execWithWorker = async (
+  file: string,
+  args?: readonly string[],
+  options?: Readonly<{ cwd?: string; env?: any }>,
+): Promise<{ exitCode: number; stderr: string; stdout: string }> => {
+  await using rpc = await launchExecWorker()
+  const result = await rpc.invoke('Exec.exec', file, args, options)
+  return result
+}
+
 const wrapExeca = (): ExecFunction => {
-  return async (file: string, args?: readonly string[], options?: { cwd?: string; env?: any }) => {
-    await using rpc = await launchExecWorker()
-    const result = await rpc.invoke('Exec.exec', file, args, options)
-    return result
-  }
+  return execWithWorker
 }
 
 const wrapFs = (): typeof FsPromises => {
   return {
     ...FsPromises,
-    exists: async (path: string | Buffer | URL): Promise<boolean> => {
+    exists: async (path: string | Readonly<Buffer> | Readonly<URL>): Promise<boolean> => {
       const uri = validateUri(path, 'exists', true)
       const filePath = uriToPath(uri)
       try {
@@ -46,32 +57,36 @@ const wrapFs = (): typeof FsPromises => {
         return false
       }
     },
-    mkdir: async (path: string | Buffer | URL, options?: any): Promise<string | undefined> => {
+    mkdir: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<string | undefined> => {
       const uri = validateUri(path, 'mkdir', true)
       const filePath = uriToPath(uri)
       return await FsPromises.mkdir(filePath, options)
     },
-    readdir: async (path: string | Buffer | URL, options?: any): Promise<string[] | any[]> => {
+    readdir: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<string[] | any[]> => {
       const uri = validateUri(path, 'readdir', true)
       const filePath = uriToPath(uri)
       return await FsPromises.readdir(filePath, options)
     },
-    readFile: async (path: string | Buffer | URL, encoding?: BufferEncoding): Promise<string> => {
+    readFile: async (path: string | Readonly<Buffer> | Readonly<URL>, encoding?: BufferEncoding): Promise<string> => {
       const uri = validateUri(path, 'readFile', true)
       const filePath = uriToPath(uri)
       return await FsPromises.readFile(filePath, encoding)
     },
-    rm: async (path: string | Buffer | URL, options?: any): Promise<void> => {
+    rm: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<void> => {
       const uri = validateUri(path, 'rm', true)
       const filePath = uriToPath(uri)
       return await FsPromises.rm(filePath, options)
     },
-    writeFile: async (path: string | Buffer | URL, data: string | Buffer | Uint8Array, options?: BufferEncoding): Promise<void> => {
+    writeFile: async (
+      path: string | Readonly<Buffer> | Readonly<URL>,
+      data: string | Readonly<Buffer> | Readonly<Uint8Array>,
+      options?: BufferEncoding,
+    ): Promise<void> => {
       const uri = validateUri(path, 'writeFile', true)
       const filePath = uriToPath(uri)
       return await FsPromises.writeFile(filePath, data, options)
     },
-  } as typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> }
+  } as typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> }
 }
 
 export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T) => Promise<MigrationResult>) => {

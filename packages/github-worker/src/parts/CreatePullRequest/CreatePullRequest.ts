@@ -15,7 +15,7 @@ export interface CreatePullRequestResult {
   readonly pullRequestNumber: number
 }
 
-const enableAutoSquash = async (octokit: Octokit, pullRequestData: { data: { node_id: string } }): Promise<void> => {
+const enableAutoSquash = async (octokit: Readonly<Octokit>, pullRequestData: Readonly<{ data: { node_id: string } }>): Promise<void> => {
   await octokit.graphql(
     `mutation MyMutation {
       enablePullRequestAutoMerge(input: { pullRequestId: "${pullRequestData.data.node_id}", mergeMethod: SQUASH }) {

@@ -23,7 +23,7 @@ const createMockOctokitConstructor = (mockOctokit: Octokit): any => {
   }
 }
 
-test.skip('successfully migrates from classic to ruleset', async (): Promise<void> => {
+test('successfully migrates from classic to ruleset', async (): Promise<void> => {
   const requests: MockRequest[] = []
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -107,7 +107,7 @@ test.skip('successfully migrates from classic to ruleset', async (): Promise<voi
   ])
 })
 
-test.skip('creates default ruleset when no classic protection found', async (): Promise<void> => {
+test('creates default ruleset when no classic protection found', async (): Promise<void> => {
   const requests: MockRequest[] = []
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -169,7 +169,7 @@ test.skip('creates default ruleset when no classic protection found', async (): 
   ])
 })
 
-test.skip('returns success when ruleset already exists', async (): Promise<void> => {
+test('returns success when ruleset already exists', async (): Promise<void> => {
   const mockOctokit = createMockOctokit(async (route: string) => {
     if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
       return {
@@ -224,7 +224,7 @@ test.skip('returns success when ruleset already exists', async (): Promise<void>
   })
 })
 
-test.skip('returns error when creating ruleset fails', async (): Promise<void> => {
+test('returns error when creating ruleset fails', async (): Promise<void> => {
   const mockOctokit = createMockOctokit(async (route: string) => {
     if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
       return {
@@ -277,7 +277,7 @@ test.skip('returns error when creating ruleset fails', async (): Promise<void> =
   })
 })
 
-test.skip('returns error when deleting classic protection fails', async (): Promise<void> => {
+test('returns error when deleting classic protection fails', async (): Promise<void> => {
   const mockOctokit = createMockOctokit(async (route: string) => {
     if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
       return {
@@ -340,7 +340,7 @@ test.skip('returns error when deleting classic protection fails', async (): Prom
   })
 })
 
-test.skip('handles custom branch name', async (): Promise<void> => {
+test('handles custom branch name', async (): Promise<void> => {
   const requests: MockRequest[] = []
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -412,7 +412,7 @@ test.skip('handles custom branch name', async (): Promise<void> => {
   expect(requests.some((req) => req.route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection')).toBe(true)
 })
 
-test.skip('converts linear history requirement', async (): Promise<void> => {
+test('converts linear history requirement', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -473,7 +473,7 @@ test.skip('converts linear history requirement', async (): Promise<void> => {
   expect(createdRuleset.rules.some((rule: any) => rule.type === 'non_fast_forward')).toBe(true)
 })
 
-test.skip('always enables linear history even when not in classic protection', async (): Promise<void> => {
+test('always enables linear history even when not in classic protection', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -535,7 +535,7 @@ test.skip('always enables linear history even when not in classic protection', a
   expect(createdRuleset.rules.some((rule: any) => rule.type === 'non_fast_forward')).toBe(true)
 })
 
-test.skip('converts force push protection', async (): Promise<void> => {
+test('converts force push protection', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -596,7 +596,7 @@ test.skip('converts force push protection', async (): Promise<void> => {
   expect(createdRuleset.rules.some((rule: any) => rule.type === 'non_fast_forward')).toBe(true)
 })
 
-test.skip('converts deletion protection', async (): Promise<void> => {
+test('converts deletion protection', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -657,7 +657,7 @@ test.skip('converts deletion protection', async (): Promise<void> => {
   expect(createdRuleset.rules.some((rule: any) => rule.type === 'deletion')).toBe(true)
 })
 
-test.skip('converts pull request review requirements', async (): Promise<void> => {
+test('converts pull request review requirements', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -734,7 +734,7 @@ test.skip('converts pull request review requirements', async (): Promise<void> =
   })
 })
 
-test.skip('converts required status checks', async (): Promise<void> => {
+test('converts required status checks', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -807,7 +807,7 @@ test.skip('converts required status checks', async (): Promise<void> => {
   })
 })
 
-test.skip('adds bypass actors when enforce_admins is disabled', async (): Promise<void> => {
+test('adds bypass actors when enforce_admins is disabled', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -872,7 +872,7 @@ test.skip('adds bypass actors when enforce_admins is disabled', async (): Promis
   expect(createdRuleset.bypass_actors).toEqual([])
 })
 
-test.skip('includes authorization header in requests', async (): Promise<void> => {
+test('includes authorization header in requests', async (): Promise<void> => {
   const mockOctokit = createMockOctokit(async (route: string) => {
     if (route === 'GET /repos/{owner}/{repo}/branches/{branch}/protection') {
       return {
@@ -927,7 +927,7 @@ test.skip('includes authorization header in requests', async (): Promise<void> =
   expect(result.status).toBe('success')
 })
 
-test.skip('creates default ruleset when 403 error occurs fetching classic protection', async (): Promise<void> => {
+test('creates default ruleset when 403 error occurs fetching classic protection', async (): Promise<void> => {
   const requests: MockRequest[] = []
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -989,7 +989,7 @@ test.skip('creates default ruleset when 403 error occurs fetching classic protec
   ])
 })
 
-test.skip('creates default ruleset with correct structure when no classic protection exists', async (): Promise<void> => {
+test('creates default ruleset with correct structure when no classic protection exists', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {
@@ -1049,12 +1049,20 @@ test.skip('creates default ruleset with correct structure when no classic protec
     }),
   )
   // Verify default rules are included
-  expect(createdRuleset.rules).toEqual(expect.arrayContaining([{ type: 'non_fast_forward' }, { type: 'required_linear_history' }, { type: 'deletion' }]))
-  expect(createdRuleset.rules.length).toBe(3)
+  expect(createdRuleset.rules).toEqual(
+    expect.arrayContaining([
+      { type: 'non_fast_forward' },
+      { type: 'required_linear_history' },
+      { type: 'deletion' },
+      expect.objectContaining({ type: 'pull_request' }),
+      expect.objectContaining({ type: 'required_status_checks' }),
+    ]),
+  )
+  expect(createdRuleset.rules.length).toBe(5)
   expect(createdRuleset.bypass_actors).toEqual([])
 })
 
-test.skip('creates correct conditions for branch targeting', async (): Promise<void> => {
+test('creates correct conditions for branch targeting', async (): Promise<void> => {
   let createdRuleset: any = null
 
   const mockOctokit = createMockOctokit(async (route: string, options: any) => {

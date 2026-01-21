@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 export const createMockNpmFetch = (
-  packageVersions: Record<string, string>,
-  options?: {
+  packageVersions: Readonly<Record<string, string>>,
+  options?: Readonly<{
     errorStatus?: number
     errorStatusText?: string
     throwError?: string
-  },
+  }>,
 ): typeof globalThis.fetch => {
-  return async (url: string | URL | Request) => {
+  return async (url: string | Readonly<URL> | Readonly<Request>) => {
     const urlStr = url.toString()
 
     if (urlStr.includes('registry.npmjs.org')) {

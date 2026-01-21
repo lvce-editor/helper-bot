@@ -8,11 +8,11 @@ export interface MockFsOptions {
 class MockFs {
   files: Record<string, string>
 
-  constructor(options: MockFsOptions = {}) {
+  constructor(options: Readonly<MockFsOptions> = {}) {
     this.files = { ...options.files }
   }
 
-  async readFile(path: string | Buffer | URL, encoding?: string): Promise<string> {
+  async readFile(path: string | Readonly<Buffer> | Readonly<URL>, encoding?: string): Promise<string> {
     const pathStr = validateUri(path, 'readFile', true)
     if (this.files[pathStr] === undefined) {
       const error = new Error('ENOENT: no such file or directory')
@@ -23,13 +23,13 @@ class MockFs {
     return this.files[pathStr]
   }
 
-  async writeFile(path: string | Buffer | URL, data: string | Buffer): Promise<void> {
+  async writeFile(path: string | Readonly<Buffer> | Readonly<URL>, data: string | Readonly<Buffer>): Promise<void> {
     const pathStr = validateUri(path, 'writeFile')
     const dataStr = typeof data === 'string' ? data : data.toString()
     this.files[pathStr] = dataStr
   }
 
-  async mkdir(path: string | Buffer | URL, options?: any): Promise<void> {
+  async mkdir(path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<void> {
     // Mock implementation - just track that directory exists
     const pathStr = validateUri(path, 'mkdir')
     if (!this.files[pathStr]) {
@@ -37,7 +37,7 @@ class MockFs {
     }
   }
 
-  async rm(path: string | Buffer | URL, options?: any): Promise<void> {
+  async rm(path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<void> {
     const pathStr = validateUri(path, 'rm')
     delete this.files[pathStr]
     // Also remove all files that start with this path
@@ -54,7 +54,7 @@ class MockFs {
     return tempPath
   }
 
-  async exists(path: string | Buffer | URL): Promise<boolean> {
+  async exists(path: string | Readonly<Buffer> | Readonly<URL>): Promise<boolean> {
     const pathStr = validateUri(path, 'exists', true)
     if (this.files[pathStr] !== undefined) {
       return true
@@ -64,7 +64,7 @@ class MockFs {
     return Object.keys(this.files).some((key) => key.startsWith(dirPath))
   }
 
-  async readdir(path: string | Buffer | URL, options?: { withFileTypes?: boolean; recursive?: boolean }): Promise<any> {
+  async readdir(path: string | Readonly<Buffer> | Readonly<URL>, options?: Readonly<{ withFileTypes?: boolean; recursive?: boolean }>): Promise<any> {
     const pathStr = validateUri(path, 'readdir', true)
     // Ensure path ends with /
     const dirPath = pathStr.endsWith('/') ? pathStr : pathStr + '/'
@@ -149,10 +149,12 @@ class MockFs {
       return entries
     }
 
-    return entries.map((entry) => entry.name)
+    return entries.map((entry: Readonly<{ name: string }>) => entry.name)
   }
 }
 
-export const createMockFs = (options: MockFsOptions = {}): typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> } => {
-  return new MockFs(options) as unknown as typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> }
+export const createMockFs = (
+  options: Readonly<MockFsOptions> = {},
+): typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> } => {
+  return new MockFs(options) as unknown as typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> }
 }

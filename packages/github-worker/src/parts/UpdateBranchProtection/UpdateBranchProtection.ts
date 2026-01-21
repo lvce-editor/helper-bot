@@ -37,7 +37,7 @@ const updateContextOsVersions = (context: string, osVersions: UpdateBranchProtec
 }
 
 const updateBranchRulesetsRequiredChecks = async (
-  octokit: Octokit,
+  octokit: Readonly<Octokit>,
   owner: string,
   repo: string,
   osVersions: UpdateBranchProtectionOptions['osVersions'],
@@ -66,11 +66,16 @@ const updateBranchRulesetsRequiredChecks = async (
   // Octokit wraps the response, so if the API returns { data: [...] },
   // octokit.request() returns { data: { data: [...] }, status: 200, ... }
   // Check both structures
-  const rulesetsData = Array.isArray(rulesetsResponse.data?.data)
-    ? rulesetsResponse.data.data
-    : Array.isArray(rulesetsResponse.data)
-      ? rulesetsResponse.data
-      : []
+  const getRulesetsData = (): any[] => {
+    if (Array.isArray(rulesetsResponse.data?.data)) {
+      return rulesetsResponse.data.data
+    }
+    if (Array.isArray(rulesetsResponse.data)) {
+      return rulesetsResponse.data
+    }
+    return []
+  }
+  const rulesetsData = getRulesetsData()
   const rulesets: any[] = rulesetsData
   let updatedRulesets = 0
 
@@ -208,7 +213,7 @@ const updateBranchRulesetsRequiredChecks = async (
 }
 
 const updateClassicBranchProtectionRequiredChecks = async (
-  octokit: Octokit,
+  octokit: Readonly<Octokit>,
   owner: string,
   repo: string,
   branch: string,
