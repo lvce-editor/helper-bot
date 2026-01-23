@@ -37,6 +37,6 @@
     "@lvce-editor/rpc": "^5.4.0",
     "@lvce-editor/verror": "^1.7.0",
     "@octokit/rest": "^22.0.1",
-    "@sentry/node": "^10.35.0"
+    "@sentry/node": "^10.36.0"
   }
 }

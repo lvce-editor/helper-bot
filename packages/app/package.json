@@ -16,7 +16,7 @@
     "@lvce-editor/rpc": "^5.4.0",
     "@lvce-editor/rpc-registry": "^7.5.0",
     "@lvce-editor/verror": "^1.7.0",
-    "@sentry/node": "^10.35.0",
+    "@sentry/node": "^10.36.0",
     "body-parser": "^2.2.2",
     "cookie-parser": "^1.4.7",
     "execa": "^9.6.1",
