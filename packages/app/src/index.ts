@@ -33,7 +33,7 @@ const updateRepositoryDependencies = async (context: Context<'release'>) => {
 }
 
 const updateWebsiteConfig = async (context: Context<'release'>) => {
-  const { payload } = context
+  const { payload, octokit } = context
   const releasedRepo = payload.repository.name
   
   // Only trigger update-website-config for lvce-editor releases
@@ -42,7 +42,10 @@ const updateWebsiteConfig = async (context: Context<'release'>) => {
   }
 
   try {
-    const githubToken = context.token
+    const authToken: any = await octokit.auth({
+      type: 'installation',
+    })
+    const githubToken = typeof authToken === 'string' ? authToken : authToken.token
     const migrationParams = {
       githubToken,
       repositoryName: 'lvce-editor.github.io',
@@ -55,11 +58,7 @@ const updateWebsiteConfig = async (context: Context<'release'>) => {
 }
 
 const handleReleaseReleased = async (context: Context<'release'>) => {
-  await Promise.all([
-    updateBuiltinExtensions(context),
-    updateRepositoryDependencies(context),
-    updateWebsiteConfig(context),
-  ])
+  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context), updateWebsiteConfig(context)])
 }
 
 const send = (res: any, result: any) => {
