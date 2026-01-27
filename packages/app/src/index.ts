@@ -35,7 +35,7 @@ const updateRepositoryDependencies = async (context: Context<'release'>) => {
 const updateWebsiteConfig = async (context: Context<'release'>) => {
   const { payload, octokit } = context
   const releasedRepo = payload.repository.name
-  
+
   // Only trigger update-website-config for lvce-editor releases
   if (releasedRepo !== 'lvce-editor') {
     return
