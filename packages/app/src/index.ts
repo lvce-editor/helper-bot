@@ -32,8 +32,34 @@ const updateRepositoryDependencies = async (context: Context<'release'>) => {
   }
 }
 
+const updateWebsiteConfig = async (context: Context<'release'>) => {
+  const { payload } = context
+  const releasedRepo = payload.repository.name
+  
+  // Only trigger update-website-config for lvce-editor releases
+  if (releasedRepo !== 'lvce-editor') {
+    return
+  }
+
+  try {
+    const githubToken = context.token
+    const migrationParams = {
+      githubToken,
+      repositoryName: 'lvce-editor.github.io',
+      repositoryOwner: 'lvce-editor',
+    }
+    await MigrationsWorker.invoke('/migrations2/update-website-config', migrationParams)
+  } catch (error) {
+    captureException(error as Error)
+  }
+}
+
 const handleReleaseReleased = async (context: Context<'release'>) => {
-  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context)])
+  await Promise.all([
+    updateBuiltinExtensions(context),
+    updateRepositoryDependencies(context),
+    updateWebsiteConfig(context),
+  ])
 }
 
 const send = (res: any, result: any) => {

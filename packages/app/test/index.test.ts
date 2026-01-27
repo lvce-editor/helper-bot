@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, afterEach } from '@jest/globals'
+import { beforeEach, expect, test, afterEach, jest } from '@jest/globals'
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import * as myProbotApp from '../src/index.ts'
@@ -104,6 +104,53 @@ test('creates a pull request to update versions when a release is created', asyn
     },
   })
   expect(mock.pendingMocks()).toEqual([])
+})
+
+test('calls update-website-config migration when lvce-editor is released', async () => {
+  // Mock the MigrationsWorker.invoke function
+  const mockInvoke = jest.fn().mockResolvedValue({
+    type: 'success',
+    status: 'success',
+    changedFiles: [],
+    pullRequestTitle: 'feature: update website config',
+  })
+
+  // Temporarily replace the invoke function
+  const MigrationsWorker = require('../src/migrationsWorker.ts')
+  const originalInvoke = MigrationsWorker.invoke
+  MigrationsWorker.invoke = mockInvoke
+
+  try {
+    // Receive a webhook event for lvce-editor release
+    await probot?.receive({
+      name: 'release',
+      payload: {
+        action: 'released',
+        release: {
+          tag_name: 'v1.0.0',
+        },
+        repository: {
+          name: 'lvce-editor',
+          // @ts-ignore
+          owner: {
+            login: 'lvce-editor',
+          },
+        },
+      },
+    })
+
+    // Verify that update-website-config migration was called
+    expect(mockInvoke).toHaveBeenCalledWith(
+      '/migrations2/update-website-config',
+      expect.objectContaining({
+        repositoryName: 'lvce-editor.github.io',
+        repositoryOwner: 'lvce-editor',
+      }),
+    )
+  } finally {
+    // Restore the original invoke function
+    MigrationsWorker.invoke = originalInvoke
+  }
 })
 
 test("doesn't create a pull request when the new file content would be the same", async () => {
