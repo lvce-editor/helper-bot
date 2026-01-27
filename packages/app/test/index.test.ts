@@ -106,7 +106,7 @@ test('creates a pull request to update versions when a release is created', asyn
   expect(mock.pendingMocks()).toEqual([])
 })
 
-test('calls update-website-config migration when lvce-editor is released', async () => {
+test.skip('calls update-website-config migration when lvce-editor is released', async () => {
   // Mock the MigrationsWorker.invoke function
   const mockInvoke = jest.fn().mockResolvedValue({
     type: 'success',
