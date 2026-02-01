@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@lvce-editor/rpc": "^5.5.0",
-    "@lvce-editor/rpc-registry": "^8.1.0",
+    "@lvce-editor/rpc-registry": "^8.5.0",
     "@lvce-editor/verror": "^1.7.0",
     "@sentry/node": "^10.38.0",
     "body-parser": "^2.2.2",
