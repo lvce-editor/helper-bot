@@ -31,6 +31,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "language-models-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "color-picker-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
