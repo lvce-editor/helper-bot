@@ -85,7 +85,7 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
     const beforeClosing = content.slice(0, closingBracketIndex).trimEnd()
 
     // Always add a comma and space before the new object
-    newContent = beforeClosing + ', { rules: { \'@cspell/spellchecker\': \'off\' } }]' + content.slice(closingBracketIndex + 1)
+    newContent = beforeClosing + ", { rules: { '@cspell/spellchecker': 'off' } }]" + content.slice(closingBracketIndex + 1)
   }
 
   if (newContent === content) {
