@@ -2,6 +2,7 @@ import type * as FsPromises from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { downgradeEslintIfNeeded } from '../DowngradeEslintIfNeeded/DowngradeEslintIfNeeded.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
@@ -33,9 +34,16 @@ const getNewPackageFilesCore = async (
     await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)], {
       cwd: tmpFolderUri,
     })
+
+    // Check if ESLint 10 was installed and downgrade if needed
+    const packageJsonUri = new URL('package.json', tmpFolderUri).toString()
+    await downgradeEslintIfNeeded(fs, exec, packageJsonUri, uriToPath(tmpFolderUri))
+
+    // Read the updated package.json and package-lock.json
+    const newPackageJsonString = await fs.readFile(packageJsonUri, 'utf8')
     const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).toString(), 'utf8')
     return {
-      newPackageJsonString: oldPackageJsonStringified,
+      newPackageJsonString,
       newPackageLockJsonString,
     }
   } catch (error) {
