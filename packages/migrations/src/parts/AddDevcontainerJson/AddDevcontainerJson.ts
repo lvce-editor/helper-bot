@@ -39,8 +39,8 @@ export const addDevcontainerJson = async (options: Readonly<AddDevcontainerJsonO
           path: '.devcontainer/devcontainer.json',
         },
       ],
-      commitMessage: 'chore: add dev container configuration',
-      pullRequestTitle: 'chore: add dev container configuration',
+      commitMessage: 'feature: add dev container configuration',
+      pullRequestTitle: 'feature: add dev container configuration',
       status: 'success',
       statusCode: 201,
     }
