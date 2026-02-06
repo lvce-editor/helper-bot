@@ -16,6 +16,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "preview-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "main-area-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
