@@ -21,16 +21,20 @@ test('creates devcontainer.json when it does not exist', async () => {
     repositoryOwner: 'test',
   })
 
-  expect(result.status).toBe('success')
-  expect(result.statusCode).toBe(201)
-  expect(result.branchName).toBe('feature/add-dev-container-json')
-  expect(result.commitMessage).toBe('feature: add dev container configuration')
-  expect(result.pullRequestTitle).toBe('feature: add dev container configuration')
-  expect(result.changedFiles).toHaveLength(1)
+  expect(result).toMatchObject({
+    branchName: 'feature/add-dev-container-json',
+    changedFiles: expect.arrayContaining([
+      expect.objectContaining({
+        path: '.devcontainer/devcontainer.json',
+      }),
+    ]),
+    commitMessage: 'feature: add dev container configuration',
+    pullRequestTitle: 'feature: add dev container configuration',
+    status: 'success',
+    statusCode: 201,
+  })
 
   const changedFile = result.changedFiles[0]
-  expect(changedFile.path).toBe('.devcontainer/devcontainer.json')
-
   const content = JSON.parse(changedFile.content)
   expect(content).toEqual({
     customizations: {
@@ -44,21 +48,6 @@ test('creates devcontainer.json when it does not exist', async () => {
     postCreateCommand: 'npm ci',
     postStartCommand: 'npm run dev',
     remoteUser: 'node',
-  })
-
-  // Validate entire result object
-  expect(result).toMatchObject({
-    branchName: 'feature/add-dev-container-json',
-    changedFiles: expect.arrayContaining([
-      expect.objectContaining({
-        content: expect.stringContaining('"customizations"'),
-        path: '.devcontainer/devcontainer.json',
-      }),
-    ]),
-    commitMessage: 'feature: add dev container configuration',
-    pullRequestTitle: 'feature: add dev container configuration',
-    status: 'success',
-    statusCode: 201,
   })
 })
 
