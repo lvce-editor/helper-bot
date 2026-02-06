@@ -2,7 +2,6 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 
 export type AddDevcontainerJsonOptions = BaseMigrationOptions
 
@@ -17,19 +16,20 @@ export const addDevcontainerJson = async (options: Readonly<AddDevcontainerJsonO
     }
 
     // Create a devcontainer.json with Node.js 24 configuration
-    const devcontainerContent = stringifyJson({
-      customizations: {
-        vscode: {
-          extensions: ['dbaeumer.vscode-eslint', 'esbenp.prettier-vscode'],
-        },
-      },
-      features: {},
-      forwardPorts: [3000],
-      image: 'mcr.microsoft.com/devcontainers/javascript-node:24',
-      postCreateCommand: 'npm ci',
-      postStartCommand: 'npm run dev',
-      remoteUser: 'node',
-    })
+    const devcontainerContent = `{
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  },
+  "features": {},
+  "forwardPorts": [3000],
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+  "postCreateCommand": "npm ci",
+  "postStartCommand": "npm run dev",
+  "remoteUser": "node"
+}
+`
 
     return {
       branchName: 'feature/add-dev-container-json',
