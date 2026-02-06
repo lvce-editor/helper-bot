@@ -45,6 +45,21 @@ test('creates devcontainer.json when it does not exist', async () => {
     postStartCommand: 'npm run dev',
     remoteUser: 'node',
   })
+
+  // Validate entire result object
+  expect(result).toMatchObject({
+    status: 'success',
+    statusCode: 201,
+    branchName: 'feature/add-dev-container-json',
+    commitMessage: 'feature: add dev container configuration',
+    pullRequestTitle: 'feature: add dev container configuration',
+    changedFiles: expect.arrayContaining([
+      expect.objectContaining({
+        path: '.devcontainer/devcontainer.json',
+        content: expect.stringContaining('"customizations"'),
+      }),
+    ]),
+  })
 })
 
 test('returns empty result when devcontainer.json already exists', async () => {
