@@ -1,10 +1,10 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import { downgradeEslintIfNeeded } from '../DowngradeEslintIfNeeded/DowngradeEslintIfNeeded.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
 import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { downgradeEslintIfNeeded } from '../DowngradeEslintIfNeeded/DowngradeEslintIfNeeded.ts'
-import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
 import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export type UpdateAllDependenciesOptions = BaseMigrationOptions
