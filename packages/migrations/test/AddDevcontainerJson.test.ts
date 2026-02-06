@@ -23,9 +23,9 @@ test('creates devcontainer.json when it does not exist', async () => {
 
   expect(result.status).toBe('success')
   expect(result.statusCode).toBe(201)
-  expect(result.branchName).toBe('feature/add-dev-container')
-  expect(result.commitMessage).toBe('chore: add dev container configuration')
-  expect(result.pullRequestTitle).toBe('chore: add dev container configuration')
+  expect(result.branchName).toBe('feature/add-dev-container-json')
+  expect(result.commitMessage).toBe('feature: add dev container configuration')
+  expect(result.pullRequestTitle).toBe('feature: add dev container configuration')
   expect(result.changedFiles).toHaveLength(1)
 
   const changedFile = result.changedFiles[0]
@@ -38,9 +38,9 @@ test('creates devcontainer.json when it does not exist', async () => {
         extensions: ['dbaeumer.vscode-eslint', 'esbenp.prettier-vscode'],
       },
     },
+    features: {},
     forwardPorts: [3000],
-    image: 'mcr.microsoft.com/devcontainers/node:24',
-    name: 'text-search-worker',
+    image: 'mcr.microsoft.com/devcontainers/javascript-node:24',
     postCreateCommand: 'npm ci',
     postStartCommand: 'npm run dev',
     remoteUser: 'node',
