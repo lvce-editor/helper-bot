@@ -3,6 +3,9 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { downgradeEslintIfNeeded } from '../DowngradeEslintIfNeeded/DowngradeEslintIfNeeded.ts'
+import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
+import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export type UpdateAllDependenciesOptions = BaseMigrationOptions
 
@@ -41,6 +44,13 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
           NODE_OPTIONS: '--max_old_space_size=1500',
         },
       })
+
+      // Check all package.json files for ESLint 10 and downgrade if needed
+      const packageJsonFiles = await findPackageJsonFiles(options.clonedRepoUri, options.fs)
+      for (const packageJsonUri of packageJsonFiles) {
+        const packageDir = uriToPath(new URL('.', packageJsonUri).toString().replace(/\/$/, ''))
+        await downgradeEslintIfNeeded(options.fs, options.exec, packageJsonUri, packageDir)
+      }
     } catch (error) {
       throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`)
     }
