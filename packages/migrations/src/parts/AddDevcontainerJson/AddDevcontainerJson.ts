@@ -20,24 +20,27 @@ export const addDevcontainerJson = async (options: Readonly<AddDevcontainerJsonO
     const devcontainerContent = stringifyJson({
       customizations: {
         vscode: {
-          extensions: [],
+          extensions: ['dbaeumer.vscode-eslint', 'esbenp.prettier-vscode'],
         },
       },
       features: {},
-      image: 'mcr.microsoft.com/devcontainers/javascript-node:1-24',
-      name: 'Node.js 24',
+      forwardPorts: [3000],
+      image: 'mcr.microsoft.com/devcontainers/javascript-node:24',
+      postCreateCommand: 'npm ci',
+      postStartCommand: 'npm run dev',
+      remoteUser: 'node',
     })
 
     return {
-      branchName: 'feature/add-devcontainer-json',
+      branchName: 'feature/add-dev-container-json',
       changedFiles: [
         {
           content: devcontainerContent,
           path: '.devcontainer/devcontainer.json',
         },
       ],
-      commitMessage: 'chore: add devcontainer.json with Node.js 24',
-      pullRequestTitle: 'chore: add devcontainer.json with Node.js 24',
+      commitMessage: 'feature: add dev container configuration',
+      pullRequestTitle: 'feature: add dev container configuration',
       status: 'success',
       statusCode: 201,
     }
