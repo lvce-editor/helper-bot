@@ -262,6 +262,18 @@
       "asName": "source-control-worker"
     },
     {
+      "fromRepo": "lvce-editor",
+      "toRepo": "editor-worker",
+      "toFolder": "packages/server",
+      "asName": "@lvce-editor/server"
+    },
+    {
+      "fromRepo": "lvce-editor",
+      "toRepo": "main-area-worker",
+      "toFolder": "packages/server",
+      "asName": "@lvce-editor/server"
+    },
+    {
       "fromRepo": "file-search-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
