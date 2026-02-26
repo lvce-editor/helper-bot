@@ -284,6 +284,16 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "quick-pick-worker",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
+      "fromRepo": "chat-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "hover-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
