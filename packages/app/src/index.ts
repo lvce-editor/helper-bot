@@ -3,7 +3,6 @@ import type { ApplicationFunctionOptions, Context, Probot } from 'probot'
 import { handleDependencies } from './dependencies.ts'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
 import { updateDependencies } from './updateDependencies.ts'
-import dependenciesConfig from './dependencies.json' with { type: 'json' }
 import { captureException } from './errorHandling.ts'
 import { availableParallelism } from 'node:os'
 import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.ts'
@@ -19,8 +18,9 @@ import {
 import { registerMigrations2Endpoints } from './migrations2/endpoints.ts'
 import * as MigrationsWorker from './migrationsWorker.ts'
 import bodyParser from 'body-parser'
+import { getDependenciesConfig } from './getDependenciesConfig.ts'
 
-const dependencies = dependenciesConfig.dependencies
+const dependencies = getDependenciesConfig().dependencies
 
 const updateRepositoryDependencies = async (context: Context<'release'>) => {
   for (const dependency of dependencies) {

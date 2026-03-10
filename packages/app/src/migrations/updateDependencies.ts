@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createPullRequest } from '../createPullRequest.ts'
 import { captureException } from '../errorHandling.ts'
-import dependenciesConfig from '../dependencies.json' with { type: 'json' }
+import { getDependenciesConfig } from '../getDependenciesConfig.ts'
 import type { Migration, MigrationParams, MigrationResult } from './types.ts'
 
 const shortCommitMessageRepos = ['renderer-process', 'editor-worker', 'text-search-worker', 'file-search-worker', 'virtual-dom', 'iframe-worker']
@@ -216,6 +216,7 @@ export const updateDependenciesMigration: Migration = {
 
       const latestRelease = releases.data[0]
       const tagName = latestRelease.tag_name
+      const dependenciesConfig = getDependenciesConfig()
 
       // Find dependencies that match this repository
       const dependencies = dependenciesConfig.dependencies
