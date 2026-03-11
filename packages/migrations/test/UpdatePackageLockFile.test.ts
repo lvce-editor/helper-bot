@@ -5,7 +5,7 @@ import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { updatePackageLockFile } from '../src/parts/UpdatePackageLockFile/UpdatePackageLockFile.ts'
 import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
-test('updates top-level package-lock.json with npm install --ignore-scripts', async () => {
+test('updates top-level package-lock.json with npm install --package-lock-only --ignore-scripts', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
@@ -16,7 +16,7 @@ test('updates top-level package-lock.json with npm install --ignore-scripts', as
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
-    if (file === 'npm' && args?.join(' ') === 'install --ignore-scripts' && options?.cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.join(' ') === 'install --package-lock-only --ignore-scripts' && options?.cwd === clonedRepoUri) {
       await mockFs.writeFile(new URL('package-lock.json', clonedRepoUri).toString(), '{"lockfileVersion": 3, "updated": true}\n')
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -47,7 +47,7 @@ test('updates top-level package-lock.json with npm install --ignore-scripts', as
   })
 
   expect(mockExecFn).toHaveBeenCalledTimes(1)
-  expect(mockExecFn).toHaveBeenCalledWith('npm', ['install', '--ignore-scripts'], { cwd: clonedRepoUri })
+  expect(mockExecFn).toHaveBeenCalledWith('npm', ['install', '--package-lock-only', '--ignore-scripts'], { cwd: clonedRepoUri })
 })
 
 test('returns empty result when package-lock.json stays unchanged', async () => {
@@ -62,7 +62,7 @@ test('returns empty result when package-lock.json stays unchanged', async () => 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
-    if (file === 'npm' && args?.join(' ') === 'install --ignore-scripts' && options?.cwd === clonedRepoUri) {
+    if (file === 'npm' && args?.join(' ') === 'install --package-lock-only --ignore-scripts' && options?.cwd === clonedRepoUri) {
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
