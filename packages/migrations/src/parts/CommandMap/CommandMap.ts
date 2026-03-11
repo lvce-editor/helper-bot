@@ -1,3 +1,4 @@
+import { addContributingSectionToReadme } from '../AddContributingSectionToReadme/AddContributingSectionToReadme.ts'
 import { addDevcontainerJson } from '../AddDevcontainerJson/AddDevcontainerJson.ts'
 import { addEslint } from '../AddEslint/AddEslint.ts'
 import { addEslintConfig } from '../AddEslintConfig/AddEslintConfig.ts'
@@ -39,6 +40,7 @@ import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 export const commandMap = {
   '/hello-world': wrapResponseCommand(handleHelloWorld),
   '/meta/list-commands-2': listCommands2,
+  '/migrations2/add-contributing-section-to-readme': wrapCommand(addContributingSectionToReadme),
   '/migrations2/add-devcontainer-json': wrapCommand(addDevcontainerJson),
   '/migrations2/add-eslint': wrapCommand(addEslint),
   '/migrations2/add-eslint-config': wrapCommand(addEslintConfig),
