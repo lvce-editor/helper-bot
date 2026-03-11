@@ -32,6 +32,7 @@ import { updateCiVersions } from '../UpdateCiVersions/UpdateCiVersions.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
+import { updatePackageLockFile } from '../UpdatePackageLockFile/UpdatePackageLockFile.ts'
 import { updateSpecificDependency } from '../UpdateSpecificDependency/UpdateSpecificDependency.ts'
 import { updateWebsiteConfig } from '../UpdateWebsiteConfig/UpdateWebsiteConfig.ts'
 import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
@@ -70,6 +71,7 @@ export const commandMap = {
   '/migrations2/update-dependencies': wrapCommand(updateDependencies),
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
   '/migrations2/update-node-version': wrapCommand(updateNodeVersion),
+  '/migrations2/update-package-lock-file': wrapCommand(updatePackageLockFile),
   '/migrations2/update-specific-dependency': wrapCommand(updateSpecificDependency),
   '/migrations2/update-website-config': wrapCommand(updateWebsiteConfig),
   '/multi-migrations/generic': wrapCommand(multiMigrations),
