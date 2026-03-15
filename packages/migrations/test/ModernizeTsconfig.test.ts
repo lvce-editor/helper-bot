@@ -1,10 +1,8 @@
-import { test, expect } from '@jest/globals'
+import { test, expect, jest } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { modernizeTsconfig } from '../src/parts/ModernizeTsconfig/ModernizeTsconfig.ts'
 import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
-
-const mockExec = createMockExec()
 
 test('updates moduleResolution and module in e2e tsconfig', async () => {
   const content = `{
@@ -17,15 +15,37 @@ test('updates moduleResolution and module in e2e tsconfig', async () => {
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
+  const targetPath = new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()]: content,
+      [targetPath]: content,
+      [new URL('package.json', clonedRepoUri).toString()]: '{"scripts":{"format":"prettier --write ."}}',
     },
+  })
+  const mockExecFn = jest.fn(async (file: string, args?: readonly string[], options?: { cwd?: string }) => {
+    if (file === 'npm' && args?.join(' ') === 'ci --ignore-scripts' && options?.cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'npm' && args?.join(' ') === 'run format' && options?.cwd === clonedRepoUri) {
+      await mockFs.writeFile(
+        targetPath,
+        `{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodeNext",
+    "target": "es2022"
+  }
+}
+`,
+      )
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
   })
 
   const result = await modernizeTsconfig({
     clonedRepoUri,
-    exec: mockExec,
+    exec: createMockExec(mockExecFn),
     fetch: globalThis.fetch,
     fs: mockFs,
     repositoryName: 'repo',
@@ -38,8 +58,8 @@ test('updates moduleResolution and module in e2e tsconfig', async () => {
       {
         content: `{
   "compilerOptions": {
-    "moduleResolution": "nodeNext",
     "module": "nodenext",
+    "moduleResolution": "nodeNext",
     "target": "es2022"
   }
 }
@@ -52,6 +72,10 @@ test('updates moduleResolution and module in e2e tsconfig', async () => {
     status: 'success',
     statusCode: 201,
   })
+
+  expect(mockExecFn).toHaveBeenCalledTimes(2)
+  expect(mockExecFn).toHaveBeenNthCalledWith(1, 'npm', ['ci', '--ignore-scripts'], { cwd: clonedRepoUri })
+  expect(mockExecFn).toHaveBeenNthCalledWith(2, 'npm', ['run', 'format'], { cwd: clonedRepoUri })
 })
 
 test('creates compilerOptions when missing', async () => {
@@ -64,12 +88,19 @@ test('creates compilerOptions when missing', async () => {
   const mockFs = createMockFs({
     files: {
       [new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()]: content,
+      [new URL('package.json', clonedRepoUri).toString()]: '{"scripts":{"test":"npm test"}}',
     },
+  })
+  const mockExecFn = jest.fn(async (file: string, args?: readonly string[], options?: { cwd?: string }) => {
+    if (file === 'npm' && args?.join(' ') === 'ci --ignore-scripts' && options?.cwd === clonedRepoUri) {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
   })
 
   const result = await modernizeTsconfig({
     clonedRepoUri,
-    exec: mockExec,
+    exec: createMockExec(mockExecFn),
     fetch: globalThis.fetch,
     fs: mockFs,
     repositoryName: 'repo',
@@ -96,6 +127,9 @@ test('creates compilerOptions when missing', async () => {
     status: 'success',
     statusCode: 201,
   })
+
+  expect(mockExecFn).toHaveBeenCalledTimes(1)
+  expect(mockExecFn).toHaveBeenCalledWith('npm', ['ci', '--ignore-scripts'], { cwd: clonedRepoUri })
 })
 
 test('skips when values are already modernized', async () => {
@@ -113,10 +147,13 @@ test('skips when values are already modernized', async () => {
       [new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()]: content,
     },
   })
+  const mockExecFn = jest.fn(async () => {
+    throw new Error('exec should not be called')
+  })
 
   const result = await modernizeTsconfig({
     clonedRepoUri,
-    exec: mockExec,
+    exec: createMockExec(mockExecFn),
     fetch: globalThis.fetch,
     fs: mockFs,
     repositoryName: 'repo',
@@ -131,15 +168,20 @@ test('skips when values are already modernized', async () => {
     status: 'success',
     statusCode: 200,
   })
+
+  expect(mockExecFn).not.toHaveBeenCalled()
 })
 
 test('handles missing tsconfig file', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()
+  const mockExecFn = jest.fn(async () => {
+    throw new Error('exec should not be called')
+  })
 
   const result = await modernizeTsconfig({
     clonedRepoUri,
-    exec: mockExec,
+    exec: createMockExec(mockExecFn),
     fetch: globalThis.fetch,
     fs: mockFs,
     repositoryName: 'repo',
@@ -154,4 +196,6 @@ test('handles missing tsconfig file', async () => {
     status: 'success',
     statusCode: 200,
   })
+
+  expect(mockExecFn).not.toHaveBeenCalled()
 })
