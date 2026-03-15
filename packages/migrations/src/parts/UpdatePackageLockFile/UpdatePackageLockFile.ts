@@ -11,6 +11,10 @@ export const updatePackageLockFile = async (options: Readonly<UpdatePackageLockF
     const hadPackageLockFile = await options.fs.exists(packageLockUri)
     const oldPackageLockContent = hadPackageLockFile ? await options.fs.readFile(packageLockUri, 'utf8') : ''
 
+    if (hadPackageLockFile) {
+      await options.fs.rm(packageLockUri, { force: true })
+    }
+
     await options.exec('npm', ['install', '--package-lock-only', '--ignore-scripts'], {
       cwd: options.clonedRepoUri,
     })

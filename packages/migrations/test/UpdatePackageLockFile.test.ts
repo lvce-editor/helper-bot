@@ -7,9 +7,11 @@ import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('updates top-level package-lock.json with npm install --package-lock-only --ignore-scripts', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
+  const packageLockUri = new URL('package-lock.json', clonedRepoUri).toString()
+  let packageLockMissingWhenNpmRan = false
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).toString()]: '{"lockfileVersion": 3}\n',
+      [packageLockUri]: '{"lockfileVersion": 3}\n',
     },
   })
 
@@ -17,7 +19,8 @@ test('updates top-level package-lock.json with npm install --package-lock-only -
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     if (file === 'npm' && args?.join(' ') === 'install --package-lock-only --ignore-scripts' && options?.cwd === clonedRepoUri) {
-      await mockFs.writeFile(new URL('package-lock.json', clonedRepoUri).toString(), '{"lockfileVersion": 3, "updated": true}\n')
+      packageLockMissingWhenNpmRan = !(await mockFs.exists(packageLockUri))
+      await mockFs.writeFile(packageLockUri, '{"lockfileVersion": 3, "updated": true}\n')
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
@@ -47,15 +50,18 @@ test('updates top-level package-lock.json with npm install --package-lock-only -
   })
 
   expect(mockExecFn).toHaveBeenCalledTimes(1)
+  expect(packageLockMissingWhenNpmRan).toBe(true)
   expect(mockExecFn).toHaveBeenCalledWith('npm', ['install', '--package-lock-only', '--ignore-scripts'], { cwd: clonedRepoUri })
 })
 
 test('returns empty result when package-lock.json stays unchanged', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
+  const packageLockUri = new URL('package-lock.json', clonedRepoUri).toString()
   const packageLockContent = '{"lockfileVersion": 3}\n'
+  let packageLockMissingWhenNpmRan = false
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).toString()]: packageLockContent,
+      [packageLockUri]: packageLockContent,
     },
   })
 
@@ -63,6 +69,8 @@ test('returns empty result when package-lock.json stays unchanged', async () => 
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
   >(async (file, args, options) => {
     if (file === 'npm' && args?.join(' ') === 'install --package-lock-only --ignore-scripts' && options?.cwd === clonedRepoUri) {
+      packageLockMissingWhenNpmRan = !(await mockFs.exists(packageLockUri))
+      await mockFs.writeFile(packageLockUri, packageLockContent)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
@@ -85,6 +93,7 @@ test('returns empty result when package-lock.json stays unchanged', async () => 
     status: 'success',
     statusCode: 200,
   })
+  expect(packageLockMissingWhenNpmRan).toBe(true)
 })
 
 test('returns error result when npm install fails', async () => {
