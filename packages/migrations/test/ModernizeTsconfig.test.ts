@@ -18,8 +18,8 @@ test('updates moduleResolution and module in e2e tsconfig', async () => {
   const targetPath = new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()
   const mockFs = createMockFs({
     files: {
-      [targetPath]: content,
       [new URL('package.json', clonedRepoUri).toString()]: '{"scripts":{"format":"prettier --write ."}}',
+      [targetPath]: content,
     },
   })
   const mockExecFn = jest.fn(async (file: string, args?: readonly string[], options?: { cwd?: string }) => {
@@ -87,8 +87,8 @@ test('creates compilerOptions when missing', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()]: content,
       [new URL('package.json', clonedRepoUri).toString()]: '{"scripts":{"test":"npm test"}}',
+      [new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()]: content,
     },
   })
   const mockExecFn = jest.fn(async (file: string, args?: readonly string[], options?: { cwd?: string }) => {
