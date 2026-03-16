@@ -33,12 +33,33 @@ export const modernizeTsconfig = async (options: Readonly<ModernizeTsconfigOptio
     tsconfig.compilerOptions.module = 'nodenext'
 
     const updatedContent = JSON.stringify(tsconfig, null, 2) + '\n'
+    await options.fs.writeFile(targetPath, updatedContent)
+
+    await options.exec('npm', ['ci', '--ignore-scripts'], {
+      cwd: options.clonedRepoUri,
+    })
+
+    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const hasPackageJson = await options.fs.exists(packageJsonPath)
+    if (hasPackageJson) {
+      const packageJsonContent = await options.fs.readFile(packageJsonPath, 'utf8')
+      const packageJson = JSON.parse(packageJsonContent) as {
+        scripts?: Record<string, string>
+      }
+      if (packageJson.scripts?.format) {
+        await options.exec('npm', ['run', 'format'], {
+          cwd: options.clonedRepoUri,
+        })
+      }
+    }
+
+    const finalContent = await options.fs.readFile(targetPath, 'utf8')
 
     return {
       branchName: 'feature/modernize-tsconfig',
       changedFiles: [
         {
-          content: updatedContent,
+          content: finalContent,
           path: TARGET_FILE_PATH,
         },
       ],
