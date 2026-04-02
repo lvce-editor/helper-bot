@@ -33,7 +33,7 @@ const addEslintCore = async (fs: Readonly<typeof FsPromises>, exec: BaseMigratio
     // eslint-disable-next-line no-console
     console.info(`[lint-and-fix] npm install eslint exited with code ${exitCode}`)
   } catch (error) {
-    throw new Error(`Failed to add eslint: ${stringifyError(error)}`)
+    throw new Error(`Failed to add eslint: ${stringifyError(error)}`, { cause: error })
   }
 }
 
@@ -49,7 +49,7 @@ const upgradeEslintConfig = async (exec: BaseMigrationOptions['exec'], clonedRep
       throw new Error(`npm install --save-dev ${packages.join(' ')} exited with code ${exitCode}: ${stderr}`)
     }
   } catch (error) {
-    throw new Error(`Failed to upgrade @lvce-editor/eslint-config: ${stringifyError(error)}`)
+    throw new Error(`Failed to upgrade @lvce-editor/eslint-config: ${stringifyError(error)}`, { cause: error })
   }
 }
 

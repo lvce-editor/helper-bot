@@ -73,7 +73,7 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
         await downgradeEslintIfNeeded(options.fs, options.exec, packageJsonUri, packageDir, previousVersions)
       }
     } catch (error) {
-      throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`)
+      throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`, { cause: error })
     }
 
     // Check for changed files using git

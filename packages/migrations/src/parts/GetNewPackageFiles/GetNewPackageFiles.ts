@@ -47,7 +47,7 @@ const getNewPackageFilesCore = async (
       newPackageLockJsonString,
     }
   } catch (error) {
-    throw new Error(`Failed to update dependencies: ${stringifyError(error)}`)
+    throw new Error(`Failed to update dependencies: ${stringifyError(error)}`, { cause: error })
   } finally {
     for (const folder of toRemove) {
       await fs.rm(folder, {
