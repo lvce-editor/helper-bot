@@ -1,26 +1,10 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
-import { downgradeEslintIfNeeded, type PreviousEslintVersions } from '../DowngradeEslintIfNeeded/DowngradeEslintIfNeeded.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
-import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
 import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { uriToPath } from '../UriUtils/UriUtils.ts'
 
 export type UpdateAllDependenciesOptions = BaseMigrationOptions
-
-const readPreviousEslintVersions = async (fs: Readonly<BaseMigrationOptions['fs']>, packageJsonUri: string): Promise<PreviousEslintVersions> => {
-  try {
-    const content = await fs.readFile(packageJsonUri, 'utf8')
-    const packageJson = JSON.parse(content)
-    return {
-      dependencies: packageJson.dependencies?.eslint,
-      devDependencies: packageJson.devDependencies?.eslint,
-    }
-  } catch {
-    return {}
-  }
-}
 
 export const updateAllDependencies = async (options: Readonly<UpdateAllDependenciesOptions>): Promise<MigrationResult> => {
   try {
@@ -44,13 +28,6 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
       }
     }
 
-    const previousEslintVersionsByFile = new Map<string, PreviousEslintVersions>()
-    const packageJsonFilesBeforeUpdate = await findPackageJsonFiles(options.clonedRepoUri, options.fs)
-    for (const packageJsonUri of packageJsonFilesBeforeUpdate) {
-      const previousVersions = await readPreviousEslintVersions(options.fs, packageJsonUri)
-      previousEslintVersionsByFile.set(packageJsonUri, previousVersions)
-    }
-
     try {
       // Make the script executable and run it
       await options.exec('chmod', ['+x', 'scripts/update-dependencies.sh'], {
@@ -64,14 +41,6 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
           NODE_OPTIONS: '--max_old_space_size=1500',
         },
       })
-
-      // Check all package.json files for ESLint 10 and downgrade if needed
-      const packageJsonFiles = await findPackageJsonFiles(options.clonedRepoUri, options.fs)
-      for (const packageJsonUri of packageJsonFiles) {
-        const packageDir = uriToPath(new URL('.', packageJsonUri).toString().replace(/\/$/, ''))
-        const previousVersions = previousEslintVersionsByFile.get(packageJsonUri)
-        await downgradeEslintIfNeeded(options.fs, options.exec, packageJsonUri, packageDir, previousVersions)
-      }
     } catch (error) {
       throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`)
     }
