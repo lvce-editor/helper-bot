@@ -29,9 +29,7 @@ export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNee
 
     if (!latestRelease) {
       return {
-        branchName: undefined,
         changedFiles: [],
-        commitMessage: undefined,
         data: {
           message: 'No releases or tags found. Skipping release creation.',
         },
@@ -52,9 +50,7 @@ export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNee
 
     if (!hasCommits) {
       return {
-        branchName: undefined,
         changedFiles: [],
-        commitMessage: undefined,
         data: {
           message: `No new commits since ${latestTagName}. No release needed.`,
         },
@@ -76,9 +72,7 @@ export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNee
     })
 
     return {
-      branchName: undefined,
       changedFiles: [],
-      commitMessage: undefined,
       data: {
         message: `Created new tag ${newVersion} with ${commitCount === 1 ? '1 new commit' : `${commitCount} new commits`} since ${latestTagName}. GitHub Actions CI will create the release.`,
         releaseTag: newVersion,

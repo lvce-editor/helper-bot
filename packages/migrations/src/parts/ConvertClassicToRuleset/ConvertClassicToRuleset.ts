@@ -20,10 +20,10 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     rules.push({
       parameters: {
         allowed_merge_methods: ['squash'],
-        dismiss_stale_reviews_on_push: reviews.dismiss_stale_reviews,
-        require_code_owner_review: reviews.require_code_owner_reviews,
+        dismiss_stale_reviews_on_push: reviews.dismiss_stale_reviews ?? false,
+        require_code_owner_review: reviews.require_code_owner_reviews ?? false,
         require_last_push_approval: false,
-        required_approving_review_count: reviews.required_approving_review_count,
+        required_approving_review_count: reviews.required_approving_review_count ?? 0,
         required_review_thread_resolution: classicProtection.required_conversation_resolution?.enabled || false,
       },
       type: 'pull_request',
@@ -35,11 +35,11 @@ export const convertClassicToRuleset = (classicProtection: ClassicBranchProtecti
     const statusChecks = classicProtection.required_status_checks
     rules.push({
       parameters: {
-        required_status_checks: statusChecks.contexts.map((context) => ({
+        required_status_checks: (statusChecks.contexts ?? []).map((context) => ({
           context,
           integration_id: GITHUB_ACTIONS_INTEGRATION_ID,
         })),
-        strict_required_status_checks_policy: statusChecks.strict,
+        strict_required_status_checks_policy: statusChecks.strict ?? false,
       },
       type: 'required_status_checks',
     })
