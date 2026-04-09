@@ -299,6 +299,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "chat-debug-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "chat-tool-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
