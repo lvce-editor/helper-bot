@@ -15,7 +15,7 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
     return { changed: false, newContent: content }
   }
 
-  let newContent = content
+  let newContent: string
 
   // Check if there's already a rules object in the array
   // We need to find the last rules object in the export default array

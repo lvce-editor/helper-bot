@@ -115,6 +115,8 @@ test('adds repository link to both root and monorepo extension.json when both ex
 
   const rootFile = result.changedFiles.find((f) => f.path === 'extension.json')
   const monorepoFile = result.changedFiles.find((f) => f.path === 'packages/extension/extension.json')
+  expect(rootFile).toBeDefined()
+  expect(monorepoFile).toBeDefined()
   expect(result).toEqual({
     branchName: 'feature/add-repository-link',
     changedFiles: [
@@ -132,6 +134,9 @@ test('adds repository link to both root and monorepo extension.json when both ex
     status: 'success',
     statusCode: 201,
   })
+  if (!rootFile || !monorepoFile) {
+    throw new Error('Expected changed files to be present')
+  }
   const rootContent = JSON.parse(rootFile.content)
   const monorepoContent = JSON.parse(monorepoFile.content)
   expect(rootContent.repository).toBe('https://github.com/test/my-repo')

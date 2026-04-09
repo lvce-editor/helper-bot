@@ -70,7 +70,11 @@ const wrapFs = (): typeof FsPromises => {
     readFile: async (path: string | Readonly<Buffer> | Readonly<URL>, encoding?: BufferEncoding): Promise<string> => {
       const uri = validateUri(path, 'readFile', true)
       const filePath = uriToPath(uri)
-      return await FsPromises.readFile(filePath, encoding)
+      const content = await FsPromises.readFile(filePath, encoding)
+      if (typeof content === 'string') {
+        return content
+      }
+      return content.toString(encoding ?? 'utf8')
     },
     rm: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<void> => {
       const uri = validateUri(path, 'rm', true)

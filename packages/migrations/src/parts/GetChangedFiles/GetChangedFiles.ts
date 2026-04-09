@@ -47,7 +47,7 @@ export const getChangedFiles = async (options: Readonly<GetChangedFilesOptions>)
         path: normalizePath(filePath),
       })
     } catch (error) {
-      throw new Error(`Failed to read ${fileUri}: ${stringifyError(error)}`)
+      throw new Error(`Failed to read ${fileUri}: ${stringifyError(error)}`, { cause: error })
     }
   }
 

@@ -42,7 +42,7 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
         },
       })
     } catch (error) {
-      throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`)
+      throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`, { cause: error })
     }
 
     // Check for changed files using git

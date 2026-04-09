@@ -50,9 +50,9 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
     }
 
     const osVersions = {
-      macos: options.macos,
-      ubuntu: options.ubuntu,
-      windows: options.windows,
+      ...(options.macos === undefined ? {} : { macos: options.macos }),
+      ...(options.ubuntu === undefined ? {} : { ubuntu: options.ubuntu }),
+      ...(options.windows === undefined ? {} : { windows: options.windows }),
     }
 
     const changedFiles: Array<{ path: string; content: string }> = []

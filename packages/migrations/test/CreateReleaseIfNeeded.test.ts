@@ -66,9 +66,7 @@ test('returns success when no releases or tags found', async (): Promise<void> =
   })
 
   expect(result).toEqual({
-    branchName: undefined,
     changedFiles: [],
-    commitMessage: undefined,
     data: {
       message: 'No releases or tags found. Skipping release creation.',
     },
@@ -120,9 +118,7 @@ test('returns success when no new commits since last release', async (): Promise
   })
 
   expect(result).toEqual({
-    branchName: undefined,
     changedFiles: [],
-    commitMessage: undefined,
     data: {
       message: 'No new commits since v1.2.3. No release needed.',
     },
@@ -187,9 +183,7 @@ test('creates new release when there are new commits', async (): Promise<void> =
   })
 
   expect(result).toEqual({
-    branchName: undefined,
     changedFiles: [],
-    commitMessage: undefined,
     data: {
       message: 'Created new tag v1.3.0 with 5 new commits since v1.2.3. GitHub Actions CI will create the release.',
       releaseTag: 'v1.3.0',
@@ -255,9 +249,7 @@ test('creates new release with single commit', async (): Promise<void> => {
   })
 
   expect(result).toEqual({
-    branchName: undefined,
     changedFiles: [],
-    commitMessage: undefined,
     data: {
       message: 'Created new tag v2.6.0 with 1 new commit since v2.5.10. GitHub Actions CI will create the release.',
       releaseTag: 'v2.6.0',

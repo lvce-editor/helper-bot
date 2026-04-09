@@ -40,7 +40,7 @@ const addEslintCore = async (
       newPackageLockJsonString,
     }
   } catch (error) {
-    throw new Error(`Failed to add eslint: ${stringifyError(error)}`)
+    throw new Error(`Failed to add eslint: ${stringifyError(error)}`, { cause: error })
   } finally {
     for (const folder of toRemove) {
       await fs.rm(folder, {
