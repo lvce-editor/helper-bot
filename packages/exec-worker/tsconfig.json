@@ -20,6 +20,7 @@
     "strictNullChecks": true,
     "noUnusedLocals": true,
     "outDir": "dist",
+    "rootDir": ".",
     "noEmit": false,
     "rewriteRelativeImportExtensions": true
   },
