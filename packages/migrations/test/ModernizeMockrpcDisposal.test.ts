@@ -118,12 +118,20 @@ test('some test', () => {
 
   // Check package.json files were updated
   const rootPackageJsonChange = result.changedFiles.find((f) => f.path === 'package.json')
+  expect(rootPackageJsonChange).toBeDefined()
+  if (!rootPackageJsonChange) {
+    throw new Error('Expected package.json change to be present')
+  }
   const updatedPackageJson = JSON.parse(rootPackageJsonChange.content)
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc']).toBe('^5.0.0')
   expect(updatedPackageJson.dependencies['@lvce-editor/rpc-registry']).toBe('^7.0.0')
 
   // Check test files were updated
   const testFileChange = result.changedFiles.find((f) => f.path === 'packages/app/test/some.test.ts')
+  expect(testFileChange).toBeDefined()
+  if (!testFileChange) {
+    throw new Error('Expected test file change to be present')
+  }
   expect(testFileChange.content).toContain('using rpc = RendererWorker.registerMockRpc')
   expect(testFileChange.content).not.toContain('const rpc = RendererWorker.registerMockRpc')
 })
