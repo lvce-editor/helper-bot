@@ -231,6 +231,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "diff-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "icon-theme-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
