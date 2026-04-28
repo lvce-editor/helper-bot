@@ -26,6 +26,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "auth-process",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/shared-process"
+    },
+    {
       "fromRepo": "preview-sandbox-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
