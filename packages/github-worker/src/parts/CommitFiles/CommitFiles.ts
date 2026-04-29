@@ -47,9 +47,9 @@ export const commitFiles = async (options: Readonly<CommitFilesOptions>): Promis
 
   const treeEntries = files.map((file) => ({
     content: file.content,
-    mode: (file.mode || '100644') as '100644',
+    mode: (file.mode || '100644'),
     path: file.path,
-    type: (file.type || 'blob') as 'blob',
+    type: (file.type || 'blob'),
   }))
 
   const newTree = await octokit.rest.git.createTree({

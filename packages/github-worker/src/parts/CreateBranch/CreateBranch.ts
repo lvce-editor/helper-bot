@@ -25,7 +25,7 @@ export const createBranch = async (options: CreateBranchOptions): Promise<void> 
       repo,
     })
   } catch (error) {
-    throw new VError(error as Error, `failed to get base ref heads/${baseBranch} for ${owner}/${repo}`)
+    throw new VError(error, `failed to get base ref heads/${baseBranch} for ${owner}/${repo}`)
   }
 
   try {
@@ -36,6 +36,6 @@ export const createBranch = async (options: CreateBranchOptions): Promise<void> 
       sha: baseRef.data.object.sha,
     })
   } catch (error) {
-    throw new VError(error as Error, `failed to create branch ${branchName} for ${owner}/${repo}`)
+    throw new VError(error, `failed to create branch ${branchName} for ${owner}/${repo}`)
   }
 }

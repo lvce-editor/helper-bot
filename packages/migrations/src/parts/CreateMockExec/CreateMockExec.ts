@@ -21,7 +21,7 @@ export const createMockExec = (
         validateUri(options.cwd, 'exec cwd')
       }
       return mockFn(file, args, options)
-    }) as ExecFunction
+    })
   }
   return defaultMockExec
 }
