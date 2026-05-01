@@ -2,6 +2,7 @@ import { beforeEach, expect, test, afterEach, jest } from '@jest/globals'
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import * as myProbotApp from '../src/index.ts'
+import * as MigrationsWorker from '../src/migrationsWorker.ts'
 
 let probot: Probot | undefined
 
@@ -106,28 +107,23 @@ test('creates a pull request to update versions when a release is created', asyn
   expect(mock.pendingMocks()).toEqual([])
 })
 
-test.skip('calls update-website-config migration when lvce-editor is released', async () => {
-  // Mock the MigrationsWorker.invoke function
-  const mockInvoke = jest.fn().mockResolvedValue({
+test('calls update-website-config migration when lvce-editor is published', async () => {
+  const mockInvoke = jest.spyOn(MigrationsWorker, 'invoke').mockResolvedValue({
     type: 'success',
     status: 'success',
     changedFiles: [],
     pullRequestTitle: 'feature: update website config',
   })
 
-  // Temporarily replace the invoke function
-  const MigrationsWorker = require('../src/migrationsWorker.ts')
-  const originalInvoke = MigrationsWorker.invoke
-  MigrationsWorker.invoke = mockInvoke
-
   try {
-    // Receive a webhook event for lvce-editor release
     await probot?.receive({
       name: 'release',
       payload: {
-        action: 'released',
+        action: 'published',
         release: {
           tag_name: 'v1.0.0',
+          draft: false,
+          prerelease: false,
         },
         repository: {
           name: 'lvce-editor',
@@ -139,7 +135,6 @@ test.skip('calls update-website-config migration when lvce-editor is released', 
       },
     })
 
-    // Verify that update-website-config migration was called
     expect(mockInvoke).toHaveBeenCalledWith(
       '/migrations2/update-website-config',
       expect.objectContaining({
@@ -148,8 +143,41 @@ test.skip('calls update-website-config migration when lvce-editor is released', 
       }),
     )
   } finally {
-    // Restore the original invoke function
-    MigrationsWorker.invoke = originalInvoke
+    mockInvoke.mockRestore()
+  }
+})
+
+test("doesn't call update-website-config migration for lvce-editor prereleases", async () => {
+  const mockInvoke = jest.spyOn(MigrationsWorker, 'invoke').mockResolvedValue({
+    type: 'success',
+    status: 'success',
+    changedFiles: [],
+    pullRequestTitle: 'feature: update website config',
+  })
+
+  try {
+    await probot?.receive({
+      name: 'release',
+      payload: {
+        action: 'published',
+        release: {
+          tag_name: 'v1.0.0-beta.1',
+          draft: false,
+          prerelease: true,
+        },
+        repository: {
+          name: 'lvce-editor',
+          // @ts-ignore
+          owner: {
+            login: 'lvce-editor',
+          },
+        },
+      },
+    })
+
+    expect(mockInvoke).not.toHaveBeenCalled()
+  } finally {
+    mockInvoke.mockRestore()
   }
 })
 

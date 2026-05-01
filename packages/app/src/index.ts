@@ -57,7 +57,18 @@ const updateWebsiteConfig = async (context: Context<'release'>) => {
   }
 }
 
+const shouldHandleRelease = (context: Context<'release'>): boolean => {
+  const { action, release } = context.payload
+  if (release.draft || release.prerelease) {
+    return false
+  }
+  return action === 'created' || action === 'published' || action === 'released'
+}
+
 const handleReleaseReleased = async (context: Context<'release'>) => {
+  if (!shouldHandleRelease(context)) {
+    return
+  }
   await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context), updateWebsiteConfig(context)])
 }
 
@@ -178,6 +189,6 @@ export default (app: Probot, { getRouter }: ApplicationFunctionOptions) => {
   console.log('Application starting up...')
   console.log(`cpus: ${availableParallelism()}`)
   enableCustomRoutes(app, getRouter)
-  app.on('release.released', handleReleaseReleased)
+  app.on('release', handleReleaseReleased)
   console.log('Event handlers registered')
 }
