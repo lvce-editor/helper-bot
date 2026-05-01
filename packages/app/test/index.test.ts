@@ -27,6 +27,9 @@ afterEach(() => {
 })
 
 test('creates a pull request to update versions when a release is created', async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
     .reply(200, {
@@ -106,54 +109,10 @@ test('creates a pull request to update versions when a release is created', asyn
   expect(mock.pendingMocks()).toEqual([])
 })
 
-test.skip('calls update-website-config migration when lvce-editor is released', async () => {
-  // Mock the MigrationsWorker.invoke function
-  const mockInvoke = jest.fn().mockResolvedValue({
-    type: 'success',
-    status: 'success',
-    changedFiles: [],
-    pullRequestTitle: 'feature: update website config',
-  })
-
-  // Temporarily replace the invoke function
-  const MigrationsWorker = require('../src/migrationsWorker.ts')
-  const originalInvoke = MigrationsWorker.invoke
-  MigrationsWorker.invoke = mockInvoke
-
-  try {
-    // Receive a webhook event for lvce-editor release
-    await probot?.receive({
-      name: 'release',
-      payload: {
-        action: 'released',
-        release: {
-          tag_name: 'v1.0.0',
-        },
-        repository: {
-          name: 'lvce-editor',
-          // @ts-ignore
-          owner: {
-            login: 'lvce-editor',
-          },
-        },
-      },
-    })
-
-    // Verify that update-website-config migration was called
-    expect(mockInvoke).toHaveBeenCalledWith(
-      '/migrations2/update-website-config',
-      expect.objectContaining({
-        repositoryName: 'lvce-editor.github.io',
-        repositoryOwner: 'lvce-editor',
-      }),
-    )
-  } finally {
-    // Restore the original invoke function
-    MigrationsWorker.invoke = originalInvoke
-  }
-})
-
 test("doesn't create a pull request when the new file content would be the same", async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json')
     .reply(200, {
