@@ -26,36 +26,93 @@ export interface MultiMigrationsUpdateNodeVersionData {
   readonly total: number
 }
 
+const validateRepositoryNames = (repositoryNames: readonly string[]): string | undefined => {
+  if (!repositoryNames || repositoryNames.length === 0) {
+    return 'repositoryNames is required and must be a non-empty array'
+  }
+
+  for (const repo of repositoryNames) {
+    if (typeof repo !== 'string' || !repo.includes('/')) {
+      return `Invalid repository name format: ${repo}. Expected format: owner/repo`
+    }
+  }
+
+  return undefined
+}
+
+const parseResponseData = (responseText: string): any => {
+  try {
+    return JSON.parse(responseText)
+  } catch {
+    return responseText
+  }
+}
+
+const getSuccessMessage = (responseData: any): string => {
+  return typeof responseData === 'string' ? responseData : responseData.message || 'Success'
+}
+
+const getErrorMessage = (responseData: any, status: number): string => {
+  if (typeof responseData === 'string') {
+    return responseData
+  }
+  return responseData.error || responseData.details || `HTTP ${status}`
+}
+
+const runMigrationRequest = async (
+  fetchFn: typeof globalThis.fetch,
+  baseUrl: string,
+  endpointSecret: string,
+  migrationName: string,
+  migrationOptions: Record<string, any> | undefined,
+  repository: string,
+): Promise<RepositoryResult> => {
+  const url = new URL(`/my-app/migrations2/${migrationName}`, baseUrl)
+  const response = await fetchFn(url.toString(), {
+    body: JSON.stringify({
+      repository,
+      ...migrationOptions,
+    }),
+    headers: {
+      Authorization: `Bearer ${endpointSecret}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  })
+
+  const responseData = parseResponseData(await response.text())
+  if (response.ok) {
+    return {
+      message: getSuccessMessage(responseData),
+      repository,
+      success: true,
+    }
+  }
+
+  return {
+    error: getErrorMessage(responseData, response.status),
+    repository,
+    success: false,
+  }
+}
+
 export const multiMigrations = async (options: Readonly<MultiMigrationsUpdateNodeVersionOptions>): Promise<MigrationResult> => {
   try {
     const { fetch: fetchFn, migrationOptions, repositoryNames } = options
 
-    if (!repositoryNames || repositoryNames.length === 0) {
+    const validationError = validateRepositoryNames(repositoryNames)
+    if (validationError) {
       return {
         changedFiles: [],
         errorCode: ERROR_CODES.VALIDATION_ERROR,
-        errorMessage: 'repositoryNames is required and must be a non-empty array',
+        errorMessage: validationError,
         status: 'error',
         statusCode: 400,
       }
     }
 
-    // Validate repository names format
-    for (const repo of repositoryNames) {
-      if (typeof repo !== 'string' || !repo.includes('/')) {
-        return {
-          changedFiles: [],
-          errorCode: ERROR_CODES.VALIDATION_ERROR,
-          errorMessage: `Invalid repository name format: ${repo}. Expected format: owner/repo`,
-          status: 'error',
-          statusCode: 400,
-        }
-      }
-    }
-
-    // Get server URL from options or environment variable
-    const baseUrl = process.env.SERVER_URL || 'http://localhost:3000'
-    const endpointSecret = process.env.DEPENDENCIES_SECRET
+    const baseUrl = options.serverUrl || process.env.SERVER_URL || 'http://localhost:3000'
+    const endpointSecret = options.secret || process.env.DEPENDENCIES_SECRET
 
     if (!endpointSecret) {
       return {
@@ -69,43 +126,9 @@ export const multiMigrations = async (options: Readonly<MultiMigrationsUpdateNod
 
     const results: RepositoryResult[] = []
 
-    // Process repositories one after another (sequentially)
     for (const repository of repositoryNames) {
       try {
-        const url = new URL(`/my-app/migrations2/${options.migrationName}`, baseUrl)
-        const response = await fetchFn(url.toString(), {
-          body: JSON.stringify({
-            repository,
-            ...migrationOptions,
-          }),
-          headers: {
-            Authorization: `Bearer ${endpointSecret}`,
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        })
-
-        const responseText = await response.text()
-        let responseData: any
-        try {
-          responseData = JSON.parse(responseText)
-        } catch {
-          responseData = responseText
-        }
-
-        if (response.ok) {
-          results.push({
-            message: typeof responseData === 'string' ? responseData : responseData.message || 'Success',
-            repository,
-            success: true,
-          })
-        } else {
-          results.push({
-            error: typeof responseData === 'string' ? responseData : responseData.error || responseData.details || `HTTP ${response.status}`,
-            repository,
-            success: false,
-          })
-        }
+        results.push(await runMigrationRequest(fetchFn, baseUrl, endpointSecret, options.migrationName, migrationOptions, repository))
       } catch (error) {
         results.push({
           error: stringifyError(error),

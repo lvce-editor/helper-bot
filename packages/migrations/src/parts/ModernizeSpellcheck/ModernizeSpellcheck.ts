@@ -3,89 +3,80 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
+const hasSpellcheckerRule = (content: string): boolean => {
+  return content.includes("'@cspell/spellchecker': 'off'") || content.includes('"@cspell/spellchecker": "off"')
+}
+
+const findLastNonEmptyLineIndex = (lines: readonly string[]): number => {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (lines[i].trim().length > 0) {
+      return i
+    }
+  }
+  return -1
+}
+
+const updateMultilineRules = (content: string, fullRulesObject: string, rulesContent: string): string => {
+  const lines = rulesContent.split('\n')
+  const lastContentLineIndex = findLastNonEmptyLineIndex(lines)
+  if (lastContentLineIndex === -1) {
+    return content
+  }
+
+  const lastContentLine = lines[lastContentLineIndex]
+  const match = lastContentLine.match(/^(\s+)/)
+  const indent = match ? match[1] : '      '
+  if (!lastContentLine.trimEnd().endsWith(',')) {
+    lines[lastContentLineIndex] = `${lastContentLine},`
+  }
+  lines.splice(lastContentLineIndex + 1, 0, `${indent}'@cspell/spellchecker': 'off'`)
+
+  const newRulesContent = lines.join('\n')
+  const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
+  return content.replace(fullRulesObject, newRulesObject)
+}
+
+const updateInlineRules = (content: string, fullRulesObject: string, rulesContent: string): string => {
+  const trimmedRulesContent = rulesContent.trim()
+  const separator = trimmedRulesContent.length > 0 ? ', ' : ''
+  const leadingSpace = rulesContent.startsWith(' ') ? ' ' : ''
+  const trailingSpace = rulesContent.endsWith(' ') ? ' ' : ''
+  const newRulesContent = `${leadingSpace}${trimmedRulesContent}${separator}'@cspell/spellchecker': 'off'${trailingSpace}`
+  const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
+  return content.replace(fullRulesObject, newRulesObject)
+}
+
+const appendRulesObject = (content: string): string => {
+  const closingBracketIndex = content.lastIndexOf(']')
+  if (closingBracketIndex === -1) {
+    return content
+  }
+  const beforeClosing = content.slice(0, closingBracketIndex).trimEnd()
+  return `${beforeClosing}, { rules: { '@cspell/spellchecker': 'off' } }]${content.slice(closingBracketIndex + 1)}`
+}
+
 const processFile = (content: string): { newContent: string; changed: boolean } => {
-  // Check if cspell is already disabled
-  if (content.includes("'@cspell/spellchecker': 'off'") || content.includes('"@cspell/spellchecker": "off"')) {
+  if (hasSpellcheckerRule(content)) {
     return { changed: false, newContent: content }
   }
 
-  // Check if there's an export default array
   const exportDefaultMatch = content.match(/export\s+default\s+(\[[\s\S]*\])/)
   if (!exportDefaultMatch) {
     return { changed: false, newContent: content }
   }
 
   let newContent: string
-
-  // Check if there's already a rules object in the array
-  // We need to find the last rules object in the export default array
   const arrayContent = exportDefaultMatch[1]
   const rulesObjectMatch = arrayContent.match(/{[\s\S]*?rules:\s*{([^}]*)}[\s\S]*?}/)
 
   if (rulesObjectMatch) {
-    // There's already a rules object, we need to add our rule to it
     const rulesContent = rulesObjectMatch[1]
     const fullRulesObject = rulesObjectMatch[0]
-
-    // Detect the formatting style (inline or multiline)
-    const isMultiline = rulesContent.includes('\n')
-
-    if (isMultiline) {
-      // Preserve multiline formatting
-      // Find the last line with content before the closing brace
-      const lines = rulesContent.split('\n')
-      let lastContentLineIndex = -1
-      for (let i = lines.length - 1; i >= 0; i--) {
-        if (lines[i].trim().length > 0) {
-          lastContentLineIndex = i
-          break
-        }
-      }
-
-      if (lastContentLineIndex === -1) {
-        return { changed: false, newContent: content }
-      }
-
-      // Detect indentation from the last rule line
-      const lastContentLine = lines[lastContentLineIndex]
-      const match = lastContentLine.match(/^(\s+)/)
-      const indent = match ? match[1] : '      '
-
-      // Add comma to the last line if it doesn't have one
-      if (!lastContentLine.trimEnd().endsWith(',')) {
-        lines[lastContentLineIndex] = lastContentLine + ','
-      }
-
-      // Add the new rule
-      lines.splice(lastContentLineIndex + 1, 0, indent + "'@cspell/spellchecker': 'off'")
-
-      const newRulesContent = lines.join('\n')
-      const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
-      newContent = content.replace(fullRulesObject, newRulesObject)
-    } else {
-      // Inline formatting
-      const trimmedRulesContent = rulesContent.trim()
-      const needsComma = trimmedRulesContent.length > 0
-      const separator = needsComma ? ', ' : ''
-      const leadingSpace = rulesContent.startsWith(' ') ? ' ' : ''
-      const trailingSpace = rulesContent.endsWith(' ') ? ' ' : ''
-      const newRulesContent = leadingSpace + trimmedRulesContent + separator + "'@cspell/spellchecker': 'off'" + trailingSpace
-      const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
-      newContent = content.replace(fullRulesObject, newRulesObject)
-    }
+    newContent = rulesContent.includes('\n')
+      ? updateMultilineRules(content, fullRulesObject, rulesContent)
+      : updateInlineRules(content, fullRulesObject, rulesContent)
   } else {
-    // No rules object exists, add one to the end of the array
-    // Find the closing bracket of the export default array
-    const closingBracketIndex = content.lastIndexOf(']')
-    if (closingBracketIndex === -1) {
-      return { changed: false, newContent: content }
-    }
-
-    // Check what comes before the closing bracket
-    const beforeClosing = content.slice(0, closingBracketIndex).trimEnd()
-
-    // Always add a comma and space before the new object
-    newContent = beforeClosing + ", { rules: { '@cspell/spellchecker': 'off' } }]" + content.slice(closingBracketIndex + 1)
+    newContent = appendRulesObject(content)
   }
 
   if (newContent === content) {

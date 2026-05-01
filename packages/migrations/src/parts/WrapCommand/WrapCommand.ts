@@ -8,6 +8,8 @@ import { uriToPath, validateUri } from '../UriUtils/UriUtils.ts'
 
 const workerUrl = process.env.NODE_ENV === 'production' ? execWorkerUrl : execWorkerUrlDev
 
+type FileSystemPath = string | Readonly<Buffer> | Readonly<URL>
+
 interface ExecWorkerRpc {
   [Symbol.asyncDispose](): Promise<void>
   invoke(method: string, ...params: readonly any[]): Promise<any>
@@ -47,7 +49,7 @@ const wrapExeca = (): ExecFunction => {
 const wrapFs = (): typeof FsPromises => {
   return {
     ...FsPromises,
-    exists: async (path: string | Readonly<Buffer> | Readonly<URL>): Promise<boolean> => {
+    exists: async (path: FileSystemPath): Promise<boolean> => {
       const uri = validateUri(path, 'exists', true)
       const filePath = uriToPath(uri)
       try {
@@ -57,17 +59,17 @@ const wrapFs = (): typeof FsPromises => {
         return false
       }
     },
-    mkdir: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<string | undefined> => {
+    mkdir: async (path: FileSystemPath, options?: any): Promise<string | undefined> => {
       const uri = validateUri(path, 'mkdir', true)
       const filePath = uriToPath(uri)
       return await FsPromises.mkdir(filePath, options)
     },
-    readdir: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<string[] | any[]> => {
+    readdir: async (path: FileSystemPath, options?: any): Promise<string[] | any[]> => {
       const uri = validateUri(path, 'readdir', true)
       const filePath = uriToPath(uri)
       return await FsPromises.readdir(filePath, options)
     },
-    readFile: async (path: string | Readonly<Buffer> | Readonly<URL>, encoding?: BufferEncoding): Promise<string> => {
+    readFile: async (path: FileSystemPath, encoding?: BufferEncoding): Promise<string> => {
       const uri = validateUri(path, 'readFile', true)
       const filePath = uriToPath(uri)
       const content = await FsPromises.readFile(filePath, encoding)
@@ -76,21 +78,17 @@ const wrapFs = (): typeof FsPromises => {
       }
       return content.toString(encoding ?? 'utf8')
     },
-    rm: async (path: string | Readonly<Buffer> | Readonly<URL>, options?: any): Promise<void> => {
+    rm: async (path: FileSystemPath, options?: any): Promise<void> => {
       const uri = validateUri(path, 'rm', true)
       const filePath = uriToPath(uri)
       return await FsPromises.rm(filePath, options)
     },
-    writeFile: async (
-      path: string | Readonly<Buffer> | Readonly<URL>,
-      data: string | Readonly<Buffer> | Readonly<Uint8Array>,
-      options?: BufferEncoding,
-    ): Promise<void> => {
+    writeFile: async (path: FileSystemPath, data: string | Readonly<Buffer> | Readonly<Uint8Array>, options?: BufferEncoding): Promise<void> => {
       const uri = validateUri(path, 'writeFile', true)
       const filePath = uriToPath(uri)
       return await FsPromises.writeFile(filePath, data, options)
     },
-  } as typeof FsPromises & { exists: (path: string | Readonly<Buffer> | Readonly<URL>) => Promise<boolean> }
+  } as typeof FsPromises & { exists: (path: FileSystemPath) => Promise<boolean> }
 }
 
 export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T) => Promise<MigrationResult>) => {
