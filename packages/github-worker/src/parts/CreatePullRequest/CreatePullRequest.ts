@@ -48,6 +48,6 @@ export const createPullRequest = async (options: CreatePullRequestOptions): Prom
       pullRequestNumber: pullRequestData.data.number,
     }
   } catch (error) {
-    throw new VError(error as Error, `failed to open pull request from ${headBranch} to ${baseBranch} in ${owner}/${repo}`)
+    throw new VError(error, `failed to open pull request from ${headBranch} to ${baseBranch} in ${owner}/${repo}`)
   }
 }

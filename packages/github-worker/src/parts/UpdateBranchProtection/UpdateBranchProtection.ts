@@ -205,7 +205,7 @@ const updateBranchRulesetsRequiredChecks = async (
       }
       updatedRulesets++
     } catch (error) {
-      throw new VError(error as Error, `failed to update ruleset ${String(ruleset && ruleset.id)} for ${owner}/${repo}`)
+      throw new VError(error, `failed to update ruleset ${String(ruleset && ruleset.id)} for ${owner}/${repo}`)
     }
   }
 
@@ -263,7 +263,7 @@ const updateClassicBranchProtectionRequiredChecks = async (
     })
     return true
   } catch (error) {
-    throw new VError(error as Error, `failed to update required status checks for ${owner}/${repo}@${branch}`)
+    throw new VError(error, `failed to update required status checks for ${owner}/${repo}@${branch}`)
   }
 }
 
@@ -306,6 +306,6 @@ export const updateBranchProtection = async (options: UpdateBranchProtectionOpti
       updatedRulesets,
     }
   } catch (error) {
-    throw new VError(error as Error, `failed to update branch protection for ${owner}/${repo}`)
+    throw new VError(error, `failed to update branch protection for ${owner}/${repo}`)
   }
 }

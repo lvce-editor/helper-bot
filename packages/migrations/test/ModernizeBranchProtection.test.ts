@@ -80,7 +80,7 @@ test('successfully migrates from classic to ruleset', async (): Promise<void> =>
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -143,7 +143,7 @@ test('creates default ruleset when no classic protection found', async (): Promi
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -203,7 +203,7 @@ test('returns success when ruleset already exists', async (): Promise<void> => {
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -260,7 +260,7 @@ test('returns error when creating ruleset fails', async (): Promise<void> => {
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -323,7 +323,7 @@ test('returns error when deleting classic protection fails', async (): Promise<v
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -390,7 +390,7 @@ test('handles custom branch name', async (): Promise<void> => {
     branch: 'develop',
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -461,7 +461,7 @@ test('converts linear history requirement', async (): Promise<void> => {
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -523,7 +523,7 @@ test('always enables linear history even when not in classic protection', async 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -584,7 +584,7 @@ test('converts force push protection', async (): Promise<void> => {
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -645,7 +645,7 @@ test('converts deletion protection', async (): Promise<void> => {
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -711,7 +711,7 @@ test('converts pull request review requirements', async (): Promise<void> => {
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -784,7 +784,7 @@ test('converts required status checks', async (): Promise<void> => {
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -860,7 +860,7 @@ test('adds bypass actors when enforce_admins is disabled', async (): Promise<voi
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -916,7 +916,7 @@ test('includes authorization header in requests', async (): Promise<void> => {
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'secret-token-123',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -963,7 +963,7 @@ test('creates default ruleset when 403 error occurs fetching classic protection'
   const result = await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -1026,7 +1026,7 @@ test('creates default ruleset with correct structure when no classic protection 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),
@@ -1112,7 +1112,7 @@ test('creates correct conditions for branch targeting', async (): Promise<void> 
   await modernizeBranchProtection({
     clonedRepoUri: 'file:///tmp/test',
     exec: async () => ({ exitCode: 0, stderr: '', stdout: '' }),
-    fetch: fetch as any,
+    fetch: fetch,
     fs: FsPromises as any,
     githubToken: 'test-token',
     OctokitConstructor: createMockOctokitConstructor(mockOctokit),

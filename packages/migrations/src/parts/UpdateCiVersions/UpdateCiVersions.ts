@@ -66,7 +66,7 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
 
       try {
         const content = await options.fs.readFile(filePath, 'utf8')
-        const ciConfig = config as CiVersionsConfig
+        const ciConfig = config
         const updated = updateRunnerVersionsInYaml(content, ciConfig.latestVersions)
 
         if (updated !== content) {

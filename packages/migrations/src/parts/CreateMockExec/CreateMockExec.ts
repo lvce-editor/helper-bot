@@ -16,12 +16,12 @@ export const createMockExec = (
   mockFn?: (file: string, args?: readonly string[], options?: Readonly<{ cwd?: string }>) => Promise<{ exitCode: number; stderr: string; stdout: string }>,
 ): ExecFunction => {
   if (mockFn) {
-    return ((file: string, args?: readonly string[], options?: Readonly<{ cwd?: string }>) => {
+    return (file: string, args?: readonly string[], options?: Readonly<{ cwd?: string }>) => {
       if (options?.cwd) {
         validateUri(options.cwd, 'exec cwd')
       }
       return mockFn(file, args, options)
-    }) as ExecFunction
+    }
   }
   return defaultMockExec
 }
