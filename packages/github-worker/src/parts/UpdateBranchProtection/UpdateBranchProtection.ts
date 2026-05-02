@@ -19,6 +19,126 @@ export interface UpdateBranchProtectionResult {
   readonly updatedRulesets: number
 }
 
+const candidatePropNames = ['checks', 'required_checks']
+
+const isNotFoundError = (error: unknown): boolean => {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 404
+}
+
+const getRulesetsData = (rulesetsResponse: any): any[] => {
+  if (Array.isArray(rulesetsResponse.data?.data)) {
+    return rulesetsResponse.data.data
+  }
+  if (Array.isArray(rulesetsResponse.data)) {
+    return rulesetsResponse.data
+  }
+  return []
+}
+
+const updateRuleCheck = (check: any, osVersions: UpdateBranchProtectionOptions['osVersions']): { changed: boolean; value: any } => {
+  if (typeof check === 'string') {
+    const newContext = updateContextOsVersions(check, osVersions)
+    return {
+      changed: newContext !== check,
+      value: newContext,
+    }
+  }
+  if (check && typeof check === 'object' && 'context' in check) {
+    const oldContext = String(check.context)
+    const newContext = updateContextOsVersions(oldContext, osVersions)
+    return {
+      changed: newContext !== oldContext,
+      value: { ...check, context: newContext },
+    }
+  }
+  return {
+    changed: false,
+    value: check,
+  }
+}
+
+const updateCheckCollection = (checks: readonly any[], osVersions: UpdateBranchProtectionOptions['osVersions']): { changed: boolean; values: any[] } => {
+  let changed = false
+  const values = checks.map((check) => {
+    const result = updateRuleCheck(check, osVersions)
+    changed ||= result.changed
+    return result.value
+  })
+  return { changed, values }
+}
+
+const updateRulesetRule = (rule: any, osVersions: UpdateBranchProtectionOptions['osVersions']): { changed: boolean; rule: any } => {
+  const parameters = rule && rule.parameters ? rule.parameters : undefined
+  if (!parameters) {
+    return {
+      changed: false,
+      rule,
+    }
+  }
+
+  let changed = false
+  let updatedParameters = { ...parameters }
+  for (const propName of candidatePropNames) {
+    const checks = parameters[propName]
+    if (!Array.isArray(checks)) {
+      continue
+    }
+    const updatedChecks = updateCheckCollection(checks, osVersions)
+    changed ||= updatedChecks.changed
+    updatedParameters = {
+      ...updatedParameters,
+      [propName]: updatedChecks.values,
+    }
+  }
+
+  const requiredStatusChecks = parameters.required_status_checks
+  if (requiredStatusChecks && Array.isArray(requiredStatusChecks.required_checks)) {
+    const updatedRequiredChecks = updateCheckCollection(requiredStatusChecks.required_checks, osVersions)
+    changed ||= updatedRequiredChecks.changed
+    updatedParameters = {
+      ...updatedParameters,
+      required_status_checks: {
+        ...updatedParameters.required_status_checks,
+        required_checks: updatedRequiredChecks.values,
+      },
+    }
+  }
+
+  return {
+    changed,
+    rule: {
+      ...rule,
+      parameters: updatedParameters,
+    },
+  }
+}
+
+const patchRuleset = async (octokit: Readonly<Octokit>, owner: string, repo: string, ruleset: any, newRules: readonly any[]): Promise<void> => {
+  const commonPayload = {
+    bypass_actors: ruleset.bypass_actors,
+    conditions: ruleset.conditions,
+    enforcement: ruleset.enforcement,
+    name: ruleset.name,
+    rules: newRules,
+    ruleset_id: ruleset.id,
+    target: ruleset.target,
+  }
+
+  if (ruleset.source && ruleset.source.type === 'Organization') {
+    await octokit.request('PATCH /orgs/{org}/rulesets/{ruleset_id}', {
+      ...commonPayload,
+      org: owner,
+    })
+    return
+  }
+
+  await octokit.request('PATCH /repos/{owner}/{repo}/rulesets/{ruleset_id}', {
+    ...commonPayload,
+    owner,
+    repo,
+  })
+}
+
 const updateContextOsVersions = (context: string, osVersions: UpdateBranchProtectionOptions['osVersions']): string => {
   if (!osVersions) {
     return context
@@ -63,109 +183,16 @@ const updateBranchRulesetsRequiredChecks = async (
     throw new VError(error as Error, `failed to list rulesets for ${owner}/${repo}`)
   }
 
-  // Octokit wraps the response, so if the API returns { data: [...] },
-  // octokit.request() returns { data: { data: [...] }, status: 200, ... }
-  // Check both structures
-  const getRulesetsData = (): any[] => {
-    if (Array.isArray(rulesetsResponse.data?.data)) {
-      return rulesetsResponse.data.data
-    }
-    if (Array.isArray(rulesetsResponse.data)) {
-      return rulesetsResponse.data
-    }
-    return []
-  }
-  const rulesetsData = getRulesetsData()
-  const rulesets: any[] = rulesetsData
+  const rulesets = getRulesetsData(rulesetsResponse)
   let updatedRulesets = 0
 
   for (const ruleset of rulesets) {
     const originalRules = Array.isArray(ruleset.rules) ? ruleset.rules : []
     let rulesChanged = false
-
     const newRules = originalRules.map((rule: any) => {
-      // Heuristics for required status checks rule. Different orgs might have slightly
-      // different shapes; we try to update any "checks" arrays with "context" strings.
-      const parameters = rule && rule.parameters ? rule.parameters : undefined
-      if (!parameters) {
-        return rule
-      }
-
-      // candidate property names that may contain status check entries
-      const candidatePropNames = ['checks', 'required_checks']
-
-      let updatedRule = { ...rule }
-      let updatedParameters = { ...parameters }
-      for (const propName of candidatePropNames) {
-        const checks = parameters[propName]
-        if (!checks || !Array.isArray(checks)) {
-          continue
-        }
-
-        const newChecks = checks.map((check: any) => {
-          if (typeof check === 'string') {
-            const newContext = updateContextOsVersions(check, osVersions)
-            if (newContext !== check) {
-              rulesChanged = true
-            }
-            return newContext
-          }
-          if (check && typeof check === 'object' && 'context' in check) {
-            const oldContext = String(check.context)
-            const newContext = updateContextOsVersions(oldContext, osVersions)
-            if (newContext !== oldContext) {
-              rulesChanged = true
-            }
-            return { ...check, context: newContext }
-          }
-          return check
-        })
-
-        // Always update parameters with newChecks - the map always returns a new array
-        updatedParameters = {
-          ...updatedParameters,
-          [propName]: newChecks,
-        }
-      }
-
-      // Handle new ruleset shape: parameters.required_status_checks.required_checks
-      if (parameters.required_status_checks && Array.isArray(parameters.required_status_checks.required_checks)) {
-        const requiredChecks = parameters.required_status_checks.required_checks
-        const newRequiredChecks = requiredChecks.map((check: any) => {
-          if (typeof check === 'string') {
-            const newContext = updateContextOsVersions(check, osVersions)
-            if (newContext !== check) {
-              rulesChanged = true
-            }
-            return newContext
-          }
-          if (check && typeof check === 'object' && 'context' in check) {
-            const oldContext = String(check.context)
-            const newContext = updateContextOsVersions(oldContext, osVersions)
-            if (newContext !== oldContext) {
-              rulesChanged = true
-            }
-            return { ...check, context: newContext }
-          }
-          return check
-        })
-        // Always update parameters with newRequiredChecks - the map always returns a new array
-        updatedParameters = {
-          ...updatedParameters,
-          required_status_checks: {
-            ...updatedParameters.required_status_checks,
-            required_checks: newRequiredChecks,
-          },
-        }
-      }
-
-      // Always update the rule with updatedParameters to ensure consistency
-      updatedRule = {
-        ...updatedRule,
-        parameters: updatedParameters,
-      }
-
-      return updatedRule
+      const result = updateRulesetRule(rule, osVersions)
+      rulesChanged ||= result.changed
+      return result.rule
     })
 
     // Use rulesChanged flag which is set when changes are detected
@@ -178,31 +205,7 @@ const updateBranchRulesetsRequiredChecks = async (
 
     // PATCH the ruleset with updated rules, keeping other fields the same
     try {
-      const sourceType = ruleset.source && ruleset.source.type
-      if (sourceType === 'Organization') {
-        await octokit.request('PATCH /orgs/{org}/rulesets/{ruleset_id}', {
-          bypass_actors: ruleset.bypass_actors,
-          conditions: ruleset.conditions,
-          enforcement: ruleset.enforcement,
-          name: ruleset.name,
-          org: owner,
-          rules: newRules,
-          ruleset_id: ruleset.id,
-          target: ruleset.target,
-        })
-      } else {
-        await octokit.request('PATCH /repos/{owner}/{repo}/rulesets/{ruleset_id}', {
-          bypass_actors: ruleset.bypass_actors,
-          conditions: ruleset.conditions,
-          enforcement: ruleset.enforcement,
-          name: ruleset.name,
-          owner,
-          repo,
-          rules: newRules,
-          ruleset_id: ruleset.id,
-          target: ruleset.target,
-        })
-      }
+      await patchRuleset(octokit, owner, repo, ruleset, newRules)
       updatedRulesets++
     } catch (error) {
       throw new VError(error, `failed to update ruleset ${String(ruleset && ruleset.id)} for ${owner}/${repo}`)
@@ -232,8 +235,7 @@ const updateClassicBranchProtectionRequiredChecks = async (
       repo,
     })
   } catch (error: any) {
-    // @ts-ignore
-    if (error && error.status === 404) {
+    if (isNotFoundError(error)) {
       return false
     }
     throw new VError(error as Error, `failed to get branch protection for ${owner}/${repo}@${branch}`)
@@ -294,9 +296,7 @@ export const updateBranchProtection = async (options: UpdateBranchProtectionOpti
           repo,
         })
       } catch (error: any) {
-        // Ignore 404 errors - branch protection might not be enabled
-        // @ts-ignore
-        if (error && error.status !== 404) {
+        if (!isNotFoundError(error)) {
           throw error
         }
       }

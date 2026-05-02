@@ -19,6 +19,41 @@ interface CiVersionsConfig {
   }
 }
 
+const isTargetWorkflowFile = (entry: Readonly<{ isFile: () => boolean; name: string }>): boolean => {
+  return entry.isFile() && TARGET_FILES.includes(entry.name)
+}
+
+const getUpdatedWorkflowFile = async (
+  options: Readonly<UpdateCiVersionsOptions>,
+  workflowsPath: string,
+  entry: Readonly<{ name: string; isFile: () => boolean }>,
+): Promise<{ content: string; path: string } | undefined> => {
+  if (!isTargetWorkflowFile(entry)) {
+    return undefined
+  }
+
+  const fileName = entry.name
+  const filePath = new URL(fileName, workflowsPath).toString()
+  const relativePath = normalizePath(`${WORKFLOWS_DIR}/${fileName}`)
+
+  try {
+    const content = await options.fs.readFile(filePath, 'utf8')
+    const updated = updateRunnerVersionsInYaml(content, config.latestVersions)
+    if (updated === content) {
+      return undefined
+    }
+    return {
+      content: updated.endsWith('\n') ? updated : `${updated}\n`,
+      path: relativePath,
+    }
+  } catch (error: any) {
+    if (error && error.code === 'ENOENT') {
+      return undefined
+    }
+    throw error
+  }
+}
+
 const updateRunnerVersionsInYaml = (yamlContent: string, versions: CiVersionsConfig['latestVersions']): string => {
   let updated = yamlContent
   // Update Ubuntu versions to latest (e.g., ubuntu-22.04 -> ubuntu-24.04)
@@ -50,38 +85,10 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
 
     const changedFiles: Array<{ path: string; content: string }> = []
 
-    // Process each target workflow file
     for (const entry of entries) {
-      if (!entry.isFile()) {
-        continue
-      }
-
-      const fileName = entry.name
-      if (!TARGET_FILES.includes(fileName)) {
-        continue
-      }
-
-      const filePath = new URL(fileName, workflowsPath).toString()
-      const relativePath = normalizePath(`${WORKFLOWS_DIR}/${fileName}`)
-
-      try {
-        const content = await options.fs.readFile(filePath, 'utf8')
-        const ciConfig = config
-        const updated = updateRunnerVersionsInYaml(content, ciConfig.latestVersions)
-
-        if (updated !== content) {
-          // Ensure trailing newline like repo style
-          const finalContent = updated.endsWith('\n') ? updated : updated + '\n'
-          changedFiles.push({
-            content: finalContent,
-            path: relativePath,
-          })
-        }
-      } catch (error: any) {
-        if (error && error.code === 'ENOENT') {
-          continue
-        }
-        throw error
+      const updatedFile = await getUpdatedWorkflowFile(options, workflowsPath, entry)
+      if (updatedFile) {
+        changedFiles.push(updatedFile)
       }
     }
 

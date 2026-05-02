@@ -39,6 +39,103 @@ export interface ApplyMigrationResultResult {
   readonly status: 'success'
 }
 
+interface TreeEntry {
+  readonly content: string
+  readonly mode: '100644'
+  readonly path: string
+  readonly type: 'blob'
+}
+
+interface DeletionEntry {
+  readonly mode: '100644'
+  readonly path: string
+  readonly sha: string | null
+  readonly type: 'blob'
+}
+
+const isNotFoundError = (error: unknown): boolean => {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 404
+}
+
+const getExistingContent = async (octokit: Readonly<Octokit>, owner: string, repo: string, baseBranch: string, path: string): Promise<string | null> => {
+  try {
+    const fileContent = await octokit.rest.repos.getContent({
+      owner,
+      path,
+      ref: baseBranch,
+      repo,
+    })
+    if ('content' in fileContent.data && typeof fileContent.data.content === 'string') {
+      return Buffer.from(fileContent.data.content, 'base64').toString('utf8')
+    }
+    return null
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return null
+    }
+    throw error
+  }
+}
+
+const shouldDeleteFile = async (octokit: Readonly<Octokit>, owner: string, repo: string, baseBranch: string, path: string): Promise<boolean> => {
+  try {
+    await octokit.rest.repos.getContent({
+      owner,
+      path,
+      ref: baseBranch,
+      repo,
+    })
+    return true
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return false
+    }
+    throw error
+  }
+}
+
+const collectTreeChanges = async (
+  octokit: Readonly<Octokit>,
+  owner: string,
+  repo: string,
+  baseBranch: string,
+  changedFiles: readonly ChangedFile[],
+): Promise<{ filesToDelete: string[]; treeEntries: TreeEntry[] }> => {
+  const treeEntries: TreeEntry[] = []
+  const filesToDelete: string[] = []
+
+  for (const changedFile of changedFiles) {
+    if (changedFile.type === 'deleted') {
+      if (await shouldDeleteFile(octokit, owner, repo, baseBranch, changedFile.path)) {
+        filesToDelete.push(changedFile.path)
+      }
+      continue
+    }
+
+    const existingContent = await getExistingContent(octokit, owner, repo, baseBranch, changedFile.path)
+    if (existingContent !== null && existingContent === changedFile.content) {
+      continue
+    }
+    treeEntries.push({
+      content: changedFile.content,
+      mode: '100644',
+      path: changedFile.path,
+      type: 'blob',
+    })
+  }
+
+  return { filesToDelete, treeEntries }
+}
+
+const toDeletionEntries = (filesToDelete: readonly string[]): DeletionEntry[] => {
+  return filesToDelete.map((path) => ({
+    mode: '100644',
+    path,
+    sha: null,
+    type: 'blob',
+  }))
+}
+
 const enableAutoSquash = async (octokit: Readonly<Octokit>, pullRequestData: Readonly<{ data: { node_id: string } }>): Promise<void> => {
   await octokit.graphql(
     `mutation MyMutation {
@@ -86,68 +183,7 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
   })
 
   const startingCommitSha = latestCommit.data.sha
-
-  // Collect files that actually changed and build tree entries
-  const treeEntries: Array<{
-    path: string
-    mode: '100644'
-    type: 'blob'
-    content: string
-  }> = []
-  const filesToDelete: string[] = []
-
-  for (const changedFile of changedFiles) {
-    // Handle deleted files
-    if (changedFile.type === 'deleted') {
-      // Check if file exists
-      try {
-        await octokit.rest.repos.getContent({
-          owner,
-          path: changedFile.path,
-          ref: baseBranch,
-          repo,
-        })
-        filesToDelete.push(changedFile.path)
-      } catch (error) {
-        // File doesn't exist, nothing to delete
-        // @ts-ignore
-        if (error && error.status !== 404) {
-          throw error
-        }
-      }
-      continue
-    }
-
-    // For created/updated files, check if content actually changed
-    let existingContent: string | null = null
-    try {
-      const fileContent = await octokit.rest.repos.getContent({
-        owner,
-        path: changedFile.path,
-        ref: baseBranch,
-        repo,
-      })
-      if ('content' in fileContent.data && typeof fileContent.data.content === 'string') {
-        existingContent = Buffer.from(fileContent.data.content, 'base64').toString('utf8')
-      }
-    } catch (error) {
-      // File doesn't exist, that's okay - we'll create it
-      // @ts-ignore
-      if (error && error.status !== 404) {
-        throw error
-      }
-    }
-
-    // Only add to tree if content actually changed
-    if (existingContent === null || existingContent !== changedFile.content) {
-      treeEntries.push({
-        content: changedFile.content,
-        mode: '100644',
-        path: changedFile.path,
-        type: 'blob',
-      })
-    }
-  }
+  const { filesToDelete, treeEntries } = await collectTreeChanges(octokit, owner, repo, baseBranch, changedFiles)
 
   // If there are no actual changes (all files unchanged), return undefined
   if (treeEntries.length === 0 && filesToDelete.length === 0) {
@@ -165,21 +201,10 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
   // Create tree with all changes
   // When using base_tree, files not specified remain unchanged
   // To delete files, include them in the tree with sha: null
-  const deletionEntries = filesToDelete.map((path) => ({
-    mode: '100644' as const,
-    path,
-    sha: null as unknown as string,
-    type: 'blob' as const,
-  }))
+  const deletionEntries = toDeletionEntries(filesToDelete)
 
   // Combine: deletion entries + new/updated files
-  const allTreeEntries = [...deletionEntries, ...treeEntries] as Array<{
-    content?: string
-    mode: '100644'
-    path: string
-    sha: string | null
-    type: 'blob'
-  }>
+  const allTreeEntries = [...deletionEntries, ...treeEntries]
 
   const newTree = await octokit.rest.git.createTree({
     base_tree: latestCommit.data.tree.sha,

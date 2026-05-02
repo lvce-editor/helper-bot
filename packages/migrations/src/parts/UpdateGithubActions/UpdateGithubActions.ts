@@ -31,6 +31,42 @@ export interface UpdateGithubActionsOptions extends BaseMigrationOptions {
   windows?: string
 }
 
+const isWorkflowFile = (entry: Readonly<{ isFile: () => boolean; name: string }>): boolean => {
+  return entry.isFile() && (entry.name.endsWith('.yml') || entry.name.endsWith('.yaml'))
+}
+
+const getChangedWorkflowFile = async (
+  options: Readonly<UpdateGithubActionsOptions>,
+  workflowsPath: string,
+  entry: Readonly<{ name: string; isFile: () => boolean }>,
+  osVersions: { ubuntu?: string; windows?: string; macos?: string },
+): Promise<{ content: string; path: string } | undefined> => {
+  if (!isWorkflowFile(entry)) {
+    return undefined
+  }
+
+  const fileName = entry.name
+  const filePath = new URL(fileName, workflowsPath).toString()
+  const relativePath = normalizePath(new URL(fileName, WORKFLOWS_DIR).toString())
+
+  try {
+    const content = await options.fs.readFile(filePath, 'utf8')
+    const updated = updateOsVersionsInYaml(content, osVersions)
+    if (updated === content) {
+      return undefined
+    }
+    return {
+      content: updated.endsWith('\n') ? updated : `${updated}\n`,
+      path: relativePath,
+    }
+  } catch (error: any) {
+    if (error && error.code === 'ENOENT') {
+      return undefined
+    }
+    throw error
+  }
+}
+
 export const updateGithubActions = async (options: Readonly<UpdateGithubActionsOptions>): Promise<MigrationResult> => {
   try {
     const workflowsPath = new URL(WORKFLOWS_DIR, options.clonedRepoUri).toString()
@@ -57,37 +93,10 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
 
     const changedFiles: Array<{ path: string; content: string }> = []
 
-    // Process each workflow file
     for (const entry of entries) {
-      if (!entry.isFile()) {
-        continue
-      }
-
-      const fileName = entry.name
-      if (!fileName.endsWith('.yml') && !fileName.endsWith('.yaml')) {
-        continue
-      }
-
-      const filePath = new URL(fileName, workflowsPath).toString()
-      const relativePath = normalizePath(new URL(fileName, WORKFLOWS_DIR).toString())
-
-      try {
-        const content = await options.fs.readFile(filePath, 'utf8')
-        const updated = updateOsVersionsInYaml(content, osVersions)
-
-        if (updated !== content) {
-          // Ensure trailing newline like repo style
-          const finalContent = updated.endsWith('\n') ? updated : updated + '\n'
-          changedFiles.push({
-            content: finalContent,
-            path: relativePath,
-          })
-        }
-      } catch (error: any) {
-        if (error && error.code === 'ENOENT') {
-          continue
-        }
-        throw error
+      const changedFile = await getChangedWorkflowFile(options, workflowsPath, entry, osVersions)
+      if (changedFile) {
+        changedFiles.push(changedFile)
       }
     }
 

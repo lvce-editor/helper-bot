@@ -2,11 +2,22 @@ import { beforeEach, expect, test, afterEach, jest } from '@jest/globals'
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import * as myProbotApp from '../src/index.ts'
+import * as MigrationsWorker from '../src/migrationsWorker.ts'
 
 let probot: Probot | undefined
+const mockMigrationsInvoke = jest.fn().mockResolvedValue({
+  type: 'success',
+  status: 'success',
+  changedFiles: [],
+  pullRequestTitle: 'feature: update website config',
+})
 
 beforeEach(() => {
   nock.disableNetConnect()
+  mockMigrationsInvoke.mockClear()
+  MigrationsWorker.setFactory(async () => ({
+    invoke: mockMigrationsInvoke,
+  }))
   probot = new Probot({
     appId: 123,
     privateKey: '123',
@@ -107,6 +118,71 @@ test('creates a pull request to update versions when a release is created', asyn
     },
   })
   expect(mock.pendingMocks()).toEqual([])
+})
+
+test('calls update-website-config migration when lvce-editor is published', async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
+  const mock = nock('https://api.github.com')
+    .get('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json')
+    .reply(200, {
+      content: Buffer.from(JSON.stringify([], null, 2) + '\n').toString('base64'),
+    })
+
+  await probot?.receive({
+    name: 'release',
+    payload: {
+      action: 'published',
+      release: {
+        tag_name: 'v1.0.0',
+        draft: false,
+        prerelease: false,
+      },
+      repository: {
+        name: 'lvce-editor',
+        // @ts-ignore
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+    },
+  })
+
+  expect(mockMigrationsInvoke).toHaveBeenCalledWith(
+    '/migrations2/update-website-config',
+    expect.objectContaining({
+      repositoryName: 'lvce-editor.github.io',
+      repositoryOwner: 'lvce-editor',
+    }),
+  )
+  expect(mock.pendingMocks()).toEqual([])
+})
+
+test("doesn't call update-website-config migration for lvce-editor prereleases", async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
+  await probot?.receive({
+    name: 'release',
+    payload: {
+      action: 'published',
+      release: {
+        tag_name: 'v1.0.0-beta.1',
+        draft: false,
+        prerelease: true,
+      },
+      repository: {
+        name: 'lvce-editor',
+        // @ts-ignore
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+    },
+  })
+
+  expect(mockMigrationsInvoke).not.toHaveBeenCalled()
 })
 
 test("doesn't create a pull request when the new file content would be the same", async () => {

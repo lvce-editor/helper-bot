@@ -15,6 +15,10 @@ export interface CreateReleaseIfNeededOptions extends BaseMigrationOptions {
   readonly OctokitConstructor?: typeof OctokitConstructor
 }
 
+const getCommitSummary = (commitCount: number): string => {
+  return commitCount === 1 ? '1 new commit' : `${commitCount} new commits`
+}
+
 export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNeededOptions>): Promise<MigrationResult> => {
   try {
     const { githubToken, OctokitConstructor: OctokitCtor = OctokitConstructor, repositoryName: repo, repositoryOwner: owner } = options
@@ -74,7 +78,7 @@ export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNee
     return {
       changedFiles: [],
       data: {
-        message: `Created new tag ${newVersion} with ${commitCount === 1 ? '1 new commit' : `${commitCount} new commits`} since ${latestTagName}. GitHub Actions CI will create the release.`,
+        message: `Created new tag ${newVersion} with ${getCommitSummary(commitCount)} since ${latestTagName}. GitHub Actions CI will create the release.`,
         releaseTag: newVersion,
       },
       pullRequestTitle: 'create-release-if-needed',
