@@ -110,8 +110,10 @@ test('creates a pull request to update versions when a release is created', asyn
   expect(mock.pendingMocks()).toEqual([])
 })
 
-<<<<<<< HEAD
 test('calls update-website-config migration when lvce-editor is published', async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
   const mockInvoke = jest.spyOn(MigrationsWorker, 'invoke').mockResolvedValue({
     type: 'success',
     status: 'success',
@@ -152,6 +154,9 @@ test('calls update-website-config migration when lvce-editor is published', asyn
 })
 
 test("doesn't call update-website-config migration for lvce-editor prereleases", async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
   const mockInvoke = jest.spyOn(MigrationsWorker, 'invoke').mockResolvedValue({
     type: 'success',
     status: 'success',
@@ -185,8 +190,6 @@ test("doesn't call update-website-config migration for lvce-editor prereleases",
   }
 })
 
-=======
->>>>>>> origin/main
 test("doesn't create a pull request when the new file content would be the same", async () => {
   if (!probot) {
     throw new Error('probot not initialized')
