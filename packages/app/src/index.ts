@@ -57,7 +57,11 @@ const updateWebsiteConfig = async (context: Context<'release'>) => {
   }
 }
 
+<<<<<<< HEAD
 const shouldHandleRelease = (context: Context<'release'>): boolean => {
+=======
+export const shouldHandleRelease = (context: Context<'release'>): boolean => {
+>>>>>>> origin/main
   const { action, release } = context.payload
   if (release.draft || release.prerelease) {
     return false
@@ -65,7 +69,11 @@ const shouldHandleRelease = (context: Context<'release'>): boolean => {
   return action === 'created' || action === 'published' || action === 'released'
 }
 
+<<<<<<< HEAD
 const handleReleaseReleased = async (context: Context<'release'>) => {
+=======
+export const handleReleaseReleased = async (context: Context<'release'>) => {
+>>>>>>> origin/main
   if (!shouldHandleRelease(context)) {
     return
   }

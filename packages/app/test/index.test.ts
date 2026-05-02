@@ -28,6 +28,9 @@ afterEach(() => {
 })
 
 test('creates a pull request to update versions when a release is created', async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
     .reply(200, {
@@ -107,6 +110,7 @@ test('creates a pull request to update versions when a release is created', asyn
   expect(mock.pendingMocks()).toEqual([])
 })
 
+<<<<<<< HEAD
 test('calls update-website-config migration when lvce-editor is published', async () => {
   const mockInvoke = jest.spyOn(MigrationsWorker, 'invoke').mockResolvedValue({
     type: 'success',
@@ -181,7 +185,12 @@ test("doesn't call update-website-config migration for lvce-editor prereleases",
   }
 })
 
+=======
+>>>>>>> origin/main
 test("doesn't create a pull request when the new file content would be the same", async () => {
+  if (!probot) {
+    throw new Error('probot not initialized')
+  }
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json')
     .reply(200, {
