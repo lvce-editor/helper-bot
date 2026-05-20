@@ -107,3 +107,34 @@ test('writes deleted file paths to the manifest without creating file entries', 
     targetRepository: 'lvce-editor/example-repo',
   })
 })
+
+test('writes an error manifest when the target repository is outside lvce-editor', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  const result = await runMigrationWorkflow({
+    invokeMigration: async (): Promise<MigrationResult> => {
+      throw new Error('should not run')
+    },
+    migrationId: '/migrations2/update-website-config',
+    outputDir,
+    requestId: 'request-3',
+    targetRepository: 'other-org/example-repo',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+
+  expect(result).toEqual({
+    changedFiles: [],
+    errorMessage: 'Target repository must belong to lvce-editor',
+    status: 'error',
+    statusCode: 500,
+  })
+  expect(JSON.parse(manifestContent)).toEqual({
+    errorMessage: 'Target repository must belong to lvce-editor',
+    migrationId: '/migrations2/update-website-config',
+    requestId: 'request-3',
+    status: 'error',
+    targetRepository: 'other-org/example-repo',
+  })
+})

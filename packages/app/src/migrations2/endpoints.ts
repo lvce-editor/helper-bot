@@ -3,7 +3,12 @@ import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
 import { captureException } from '../errorHandling.ts'
 import { dispatchMigrationWorkflow } from '../parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
-import { assertAllowedTargetRepository, assertSafeMigrationOptions, isValidBaseBranch, parseTargetRepository } from '../parts/MigrationSecurity/MigrationSecurity.ts'
+import {
+  assertAllowedTargetRepository,
+  assertSafeMigrationOptions,
+  isValidBaseBranch,
+  parseTargetRepository,
+} from '../parts/MigrationSecurity/MigrationSecurity.ts'
 
 export const migrations2RoutePatterns = ['/migrations2/*', '/multi-migrations/*'] as const
 

@@ -2,10 +2,13 @@ import type { Context, Probot } from 'probot'
 import { captureException } from '../../errorHandling.ts'
 import * as GithubWorker from '../../githubWorker.ts'
 import { downloadMigrationArtifact } from '../DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
+import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
 
 const HELPER_BOT_OWNER = 'lvce-editor'
 const HELPER_BOT_REPO = 'helper-bot'
 const WORKFLOW_NAME = 'run-migration-on-demand'
+const WORKFLOW_EVENT = 'workflow_dispatch'
+const WORKFLOW_BRANCH = 'main'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
   readonly app: Probot
@@ -41,6 +44,12 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     if (workflowRun.name !== WORKFLOW_NAME) {
       return
     }
+    if (workflowRun.event !== WORKFLOW_EVENT) {
+      return
+    }
+    if (workflowRun.head_branch !== WORKFLOW_BRANCH) {
+      return
+    }
     try {
       const artifact = await downloadArtifact({
         octokit: context.octokit,
@@ -58,7 +67,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       if (artifact.changedFiles.length === 0) {
         return
       }
-      const [owner, repo] = artifact.manifest.targetRepository.split('/')
+      const { owner, repo } = assertAllowedTargetRepository(artifact.manifest.targetRepository)
       const githubToken = await getInstallationToken(options.app, owner, repo)
       await invokeGithubWorker('/github/apply-migration-result', {
         baseBranch: artifact.manifest.baseBranch,
@@ -71,6 +80,9 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         repo,
       })
     } catch (error) {
+      if (error instanceof Error && error.message.includes('Target repository must belong to')) {
+        return
+      }
       captureException(error as Error)
     }
   }

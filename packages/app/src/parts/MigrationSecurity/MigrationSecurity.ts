@@ -1,7 +1,8 @@
 export const ALLOWED_TARGET_REPOSITORY_OWNER = 'lvce-editor'
 
 const targetRepositoryPattern = /^(?<owner>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})?)\/(?<repo>[A-Za-z0-9._-]+)$/
-const sensitiveOptionNamePattern = /^(access[-_]?token|api[-_]?key|auth[-_]?token|bearer|client[-_]?secret|credential|credentials|github[-_]?token|password|passphrase|private[-_]?key|secret|token)$/i
+const sensitiveOptionNamePattern =
+  /^(access[-_]?token|api[-_]?key|auth[-_]?token|bearer|client[-_]?secret|credential|credentials|github[-_]?token|password|passphrase|private[-_]?key|secret|token)$/i
 const baseBranchPattern = /^(?!\/)(?!.*\.\.)(?!.*\/$)[A-Za-z0-9._/-]+$/
 
 export interface ParsedTargetRepository {

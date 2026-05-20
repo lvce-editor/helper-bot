@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, normalize, sep } from 'node:path'
 import type { ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { commandMap } from '../CommandMap/CommandMap.ts'
+import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
 
 export interface ArtifactManifest {
   readonly baseBranch?: string
@@ -53,7 +54,7 @@ const writeManifest = async (outputDir: string, manifest: Readonly<ArtifactManif
 }
 
 const getInvocationOptions = (targetRepository: string, migrationOptionsJson: string | undefined, githubToken: string | undefined): Record<string, any> => {
-  const [repositoryOwner, repositoryName] = targetRepository.split('/')
+  const { owner: repositoryOwner, repo: repositoryName } = assertAllowedTargetRepository(targetRepository)
   const parsedOptions = migrationOptionsJson ? JSON.parse(migrationOptionsJson) : {}
   return {
     ...parsedOptions,
@@ -94,8 +95,8 @@ const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Read
 
 export const runMigrationWorkflow = async (options: Readonly<RunMigrationWorkflowOptions>): Promise<MigrationResult> => {
   const invokeMigration = options.invokeMigration || invokeMigrationCommand
-  const invocationOptions = getInvocationOptions(options.targetRepository, options.migrationOptionsJson, options.githubToken)
   try {
+    const invocationOptions = getInvocationOptions(options.targetRepository, options.migrationOptionsJson, options.githubToken)
     const result = await invokeMigration(options.migrationId, invocationOptions)
     for (const changedFile of result.changedFiles) {
       await writeChangedFile(options.outputDir, changedFile)
