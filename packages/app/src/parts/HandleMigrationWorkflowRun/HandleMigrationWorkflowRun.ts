@@ -10,7 +10,7 @@ const HELPER_BOT_REPO = 'helper-bot'
 const WORKFLOW_EVENT = 'workflow_dispatch'
 // @ts-ignore
 const WORKFLOW_BRANCH = 'main'
-const WORKFLOW_PATH = ".github/workflows/run-migration-on-demand.yml"
+const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
