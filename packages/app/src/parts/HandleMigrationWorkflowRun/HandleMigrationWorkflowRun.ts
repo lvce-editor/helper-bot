@@ -9,11 +9,26 @@ const HELPER_BOT_REPO = 'helper-bot'
 const WORKFLOW_NAME = 'run-migration-on-demand'
 const WORKFLOW_EVENT = 'workflow_dispatch'
 const WORKFLOW_BRANCH = 'main'
+const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
   readonly app: Probot
   readonly downloadMigrationArtifact?: typeof downloadMigrationArtifact
   readonly invokeGithubWorker?: typeof GithubWorker.invoke
+}
+
+const getMigrationLabel = (manifest: { migrationId: string; targetRepository: string }): string => {
+  return `${manifest.targetRepository} ${manifest.migrationId}`
+}
+
+const getGithubWorkerData = (result: any): any => {
+  if (!result) {
+    return undefined
+  }
+  if (result.type === 'success') {
+    return result.data
+  }
+  return result
 }
 
 const getInstallationToken = async (app: Probot, owner: string, repo: string): Promise<string> => {
@@ -50,6 +65,8 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     if (workflowRun.head_branch !== WORKFLOW_BRANCH) {
       return
     }
+    console.log(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
+    let migrationLabel = `workflow run ${workflowRun.id}`
     try {
       const artifact = await downloadArtifact({
         octokit: context.octokit,
@@ -58,18 +75,27 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         runId: workflowRun.id,
       })
       if (!artifact) {
+        console.log(`${LOG_PREFIX} ${migrationLabel}: no migration artifact found`)
         return
       }
+      migrationLabel = getMigrationLabel(artifact.manifest)
+      console.log(`${LOG_PREFIX} received webhook migration on demand for ${migrationLabel}`)
       if (artifact.manifest.status === 'error') {
-        console.error(artifact.manifest.errorCode || 'MIGRATION_WORKFLOW_ERROR', artifact.manifest.errorMessage || 'Migration workflow failed')
+        console.error(
+          `${LOG_PREFIX} failed to make pr for ${migrationLabel}`,
+          artifact.manifest.errorCode || 'MIGRATION_WORKFLOW_ERROR',
+          artifact.manifest.errorMessage || 'Migration workflow failed',
+        )
         return
       }
       if (artifact.changedFiles.length === 0) {
+        console.log(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
         return
       }
       const { owner, repo } = assertAllowedTargetRepository(artifact.manifest.targetRepository)
       const githubToken = await getInstallationToken(options.app, owner, repo)
-      await invokeGithubWorker('/github/apply-migration-result', {
+      console.log(`${LOG_PREFIX} making pr for ${migrationLabel}`)
+      const workerResult = await invokeGithubWorker('/github/apply-migration-result', {
         baseBranch: artifact.manifest.baseBranch,
         branchName: artifact.manifest.branchName,
         changedFiles: artifact.changedFiles,
@@ -79,10 +105,23 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         pullRequestTitle: artifact.manifest.pullRequestTitle,
         repo,
       })
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('Target repository must belong to')) {
+      const workerData = getGithubWorkerData(workerResult)
+      if (!workerData) {
+        console.log(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
         return
       }
+      if (workerData.status === 'success') {
+        const pullRequestSuffix = typeof workerData.pullRequestNumber === 'number' ? ` (#${workerData.pullRequestNumber})` : ''
+        console.log(`${LOG_PREFIX} made pr for ${migrationLabel}${pullRequestSuffix}`)
+        return
+      }
+      console.log(`${LOG_PREFIX} ${migrationLabel}: github worker response status ${workerData.status || 'unknown'}`)
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Target repository must belong to')) {
+        console.warn(`${LOG_PREFIX} ${migrationLabel}: ${error.message}`)
+        return
+      }
+      console.error(`${LOG_PREFIX} failed to make pr for ${migrationLabel}`, error)
       captureException(error as Error)
     }
   }
