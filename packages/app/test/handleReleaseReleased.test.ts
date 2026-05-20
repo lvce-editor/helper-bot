@@ -2,7 +2,7 @@ import { beforeEach, expect, jest, test } from '@jest/globals'
 
 const mockUpdateBuiltinExtensions = jest.fn()
 const mockUpdateDependencies = jest.fn()
-const mockInvoke = jest.fn()
+const mockDispatchMigrationWorkflow = jest.fn()
 const mockCaptureException = jest.fn()
 
 jest.unstable_mockModule('../src/updateBuiltinExtensions.ts', () => ({
@@ -20,7 +20,11 @@ jest.unstable_mockModule('../src/getDependenciesConfig.ts', () => ({
 }))
 
 jest.unstable_mockModule('../src/migrationsWorker.ts', () => ({
-  invoke: mockInvoke,
+  invoke: jest.fn(),
+}))
+
+jest.unstable_mockModule('../src/parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts', () => ({
+  dispatchMigrationWorkflow: mockDispatchMigrationWorkflow,
 }))
 
 jest.unstable_mockModule('../src/errorHandling.ts', () => ({
@@ -32,14 +36,13 @@ const { handleReleaseReleased, shouldHandleRelease } = await import('../src/inde
 beforeEach(() => {
   mockUpdateBuiltinExtensions.mockResolvedValue(undefined)
   mockUpdateDependencies.mockResolvedValue(undefined)
-  mockInvoke.mockResolvedValue({
-    type: 'success',
-    status: 'success',
+  mockDispatchMigrationWorkflow.mockResolvedValue({
+    requestId: 'request-1',
   })
   mockCaptureException.mockReset()
   mockUpdateBuiltinExtensions.mockClear()
   mockUpdateDependencies.mockClear()
-  mockInvoke.mockClear()
+  mockDispatchMigrationWorkflow.mockClear()
 })
 
 const createContext = (action: string, repositoryName: string, release: Record<string, unknown> = {}) => {
@@ -85,13 +88,13 @@ test('calls update-website-config migration when lvce-editor is published', asyn
 
   await handleReleaseReleased(context)
 
-  expect(context.octokit.auth).toHaveBeenCalledWith({
-    type: 'installation',
-  })
-  expect(mockInvoke).toHaveBeenCalledWith('/migrations2/update-website-config', {
-    githubToken: 'test-token',
-    repositoryName: 'lvce-editor.github.io',
-    repositoryOwner: 'lvce-editor',
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app: undefined,
+    migrationId: '/migrations2/update-website-config',
+    migrationOptions: {
+      releasedTag: 'v1.0.0',
+    },
+    targetRepository: 'lvce-editor/lvce-editor.github.io',
   })
 })
 
@@ -100,8 +103,7 @@ test('does not call update-website-config migration for prereleases', async () =
 
   await handleReleaseReleased(context)
 
-  expect(context.octokit.auth).not.toHaveBeenCalled()
-  expect(mockInvoke).not.toHaveBeenCalled()
+  expect(mockDispatchMigrationWorkflow).not.toHaveBeenCalled()
 })
 
 test('does not call update-website-config migration for other repositories', async () => {
@@ -109,6 +111,5 @@ test('does not call update-website-config migration for other repositories', asy
 
   await handleReleaseReleased(context)
 
-  expect(context.octokit.auth).not.toHaveBeenCalled()
-  expect(mockInvoke).not.toHaveBeenCalled()
+  expect(mockDispatchMigrationWorkflow).not.toHaveBeenCalled()
 })
