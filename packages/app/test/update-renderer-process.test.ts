@@ -89,7 +89,7 @@ test('creates a pull request to update versions when a release is created', asyn
     })
   })
   // @ts-ignore
-  jest.spyOn(fs, 'rm').mockImplementation(() => {})
+  jest.spyOn(fs, 'rm').mockImplementation(() => { })
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
     .reply(200, {
