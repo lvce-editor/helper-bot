@@ -81,7 +81,7 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
 
     try {
       const commandKey = req.path
-      const baseBranch = body.baseBranch
+      const { baseBranch } = body
       const migrationOptions = Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'baseBranch' && key !== 'repository'))
       if (baseBranch !== undefined && (typeof baseBranch !== 'string' || !isValidBaseBranch(baseBranch))) {
         res.status(400).json({
