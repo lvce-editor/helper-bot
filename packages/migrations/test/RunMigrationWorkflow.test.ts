@@ -4,10 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { MigrationResult } from '../src/parts/Types/Types.ts'
 
-test('writes a manifest and changed files for a successful migration run', async () => {
-  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
-  const calls: Array<[string, Record<string, any>]> = []
-  const invokeMigration = async (migrationId: string, options: Record<string, any>): Promise<MigrationResult> => {
+const createInvokeMigration = (calls: Array<[string, Record<string, any>]>) => {
+  return async (migrationId: string, options: Record<string, any>): Promise<MigrationResult> => {
     calls.push([migrationId, options])
     return {
       branchName: 'feature/update-website-config',
@@ -23,6 +21,29 @@ test('writes a manifest and changed files for a successful migration run', async
       statusCode: 200,
     }
   }
+}
+
+const invokeDeletionMigration = async (): Promise<MigrationResult> => {
+  return {
+    branchName: 'feature/remove-gitpod-yml',
+    changedFiles: [
+      {
+        content: '',
+        path: '.gitpod.yml',
+        type: 'deleted',
+      },
+    ],
+    commitMessage: 'ci: remove .gitpod.yml',
+    pullRequestTitle: 'ci: remove .gitpod.yml',
+    status: 'success',
+    statusCode: 200,
+  }
+}
+
+test('writes a manifest and changed files for a successful migration run', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+  const calls: Array<[string, Record<string, any>]> = []
+  const invokeMigration = createInvokeMigration(calls)
 
   const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
   await runMigrationWorkflow({
@@ -63,26 +84,10 @@ test('writes a manifest and changed files for a successful migration run', async
 
 test('writes deleted file paths to the manifest without creating file entries', async () => {
   const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
-  const invokeMigration = async (): Promise<MigrationResult> => {
-    return {
-      branchName: 'feature/remove-gitpod-yml',
-      changedFiles: [
-        {
-          content: '',
-          path: '.gitpod.yml',
-          type: 'deleted',
-        },
-      ],
-      commitMessage: 'ci: remove .gitpod.yml',
-      pullRequestTitle: 'ci: remove .gitpod.yml',
-      status: 'success',
-      statusCode: 200,
-    }
-  }
 
   const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
   await runMigrationWorkflow({
-    invokeMigration,
+    invokeMigration: invokeDeletionMigration,
     migrationId: '/migrations2/remove-gitpod-yml',
     outputDir,
     requestId: 'request-2',
