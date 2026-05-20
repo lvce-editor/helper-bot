@@ -93,7 +93,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       return
     }
     if (workflowRun.name !== WORKFLOW_NAME) {
-      console.info(`[workflow_completed] workflow mismatch`)
+      console.info(`[workflow_completed] workflow mismatch: ${workflowRun.name} ${WORKFLOW_NAME}`)
       return
     }
     if (workflowRun.event !== WORKFLOW_EVENT) {
