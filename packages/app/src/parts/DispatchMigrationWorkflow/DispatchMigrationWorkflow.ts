@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Probot } from 'probot'
+import { assertAllowedTargetRepository, assertSafeMigrationOptions, isValidBaseBranch } from '../MigrationSecurity/MigrationSecurity.ts'
 
 const HELPER_BOT_OWNER = 'lvce-editor'
 const HELPER_BOT_REPO = 'helper-bot'
@@ -34,6 +35,11 @@ export interface DispatchMigrationWorkflowResult {
 }
 
 export const dispatchMigrationWorkflow = async (options: Readonly<DispatchMigrationWorkflowOptions>): Promise<DispatchMigrationWorkflowResult> => {
+  assertAllowedTargetRepository(options.targetRepository)
+  assertSafeMigrationOptions(options.migrationOptions)
+  if (options.baseBranch && !isValidBaseBranch(options.baseBranch)) {
+    throw new Error('Invalid base branch')
+  }
   const requestId = options.requestId || randomUUID()
   const runName = getRunName(options.targetRepository, options.migrationId)
   const appOctokit = await options.app.auth()

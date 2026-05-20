@@ -1,7 +1,9 @@
+import { timingSafeEqual } from 'node:crypto'
 import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
 import { captureException } from '../errorHandling.ts'
 import { dispatchMigrationWorkflow } from '../parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
+import { assertAllowedTargetRepository, assertSafeMigrationOptions, isValidBaseBranch, parseTargetRepository } from '../parts/MigrationSecurity/MigrationSecurity.ts'
 
 export const migrations2RoutePatterns = ['/migrations2/*', '/multi-migrations/*'] as const
 
@@ -12,7 +14,13 @@ const verifySecret = (req: Request, res: Response, secret: string | undefined): 
     return false
   }
   const providedToken = authHeader.slice(7) // Remove 'Bearer ' prefix
-  if (providedToken !== secret) {
+  if (!secret) {
+    res.status(401).send('Unauthorized')
+    return false
+  }
+  const providedTokenBuffer = Buffer.from(providedToken)
+  const secretBuffer = Buffer.from(secret)
+  if (providedTokenBuffer.length !== secretBuffer.length || !timingSafeEqual(providedTokenBuffer, secretBuffer)) {
     res.status(401).send('Unauthorized')
     return false
   }
@@ -26,10 +34,7 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
     }
     const { body } = req
 
-    console.log('body is')
-    console.log(body)
-
-    if (!body) {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
       res.status(400).json({
         code: 'MISSING_POST_BODY',
         error: 'Missing post body',
@@ -45,10 +50,19 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
       })
       return
     }
-    if (typeof repository !== 'string' || !repository.includes('/')) {
+    if (typeof repository !== 'string' || !parseTargetRepository(repository)) {
       res.status(400).json({
         code: 'INVALID_REPOSITORY',
         error: 'Invalid repository parameter',
+      })
+      return
+    }
+    try {
+      assertAllowedTargetRepository(repository)
+    } catch (error) {
+      res.status(403).json({
+        code: 'FORBIDDEN_REPOSITORY',
+        error: error instanceof Error ? error.message : String(error),
       })
       return
     }
@@ -56,6 +70,14 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
     try {
       const commandKey = req.path
       const { repository: ignoredRepository, baseBranch, ...migrationOptions } = body
+      if (baseBranch !== undefined && (typeof baseBranch !== 'string' || !isValidBaseBranch(baseBranch))) {
+        res.status(400).json({
+          code: 'INVALID_BASE_BRANCH',
+          error: 'Invalid baseBranch parameter',
+        })
+        return
+      }
+      assertSafeMigrationOptions(migrationOptions)
       const dispatchResult = await dispatchMigrationWorkflow({
         app,
         baseBranch: baseBranch || 'main',
@@ -69,6 +91,13 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
         status: 'queued',
       })
     } catch (error) {
+      if (error instanceof Error && error.message.includes('looks like a secret')) {
+        res.status(400).json({
+          code: 'SENSITIVE_MIGRATION_OPTION',
+          error: error.message,
+        })
+        return
+      }
       console.error(error)
       captureException(error as Error)
       res.status(500).json({
