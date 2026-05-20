@@ -1,19 +1,17 @@
 import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 
-let consoleLogSpy: ReturnType<typeof jest.spyOn>
-let consoleErrorSpy: ReturnType<typeof jest.spyOn>
-let consoleWarnSpy: ReturnType<typeof jest.spyOn>
+let errorSpy: jest.MockedFunction<(...args: readonly unknown[]) => void>
+let infoSpy: jest.MockedFunction<(...args: readonly unknown[]) => void>
+let warnSpy: jest.MockedFunction<(...args: readonly unknown[]) => void>
 
 beforeEach(() => {
-  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-  consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+  errorSpy = jest.fn()
+  infoSpy = jest.fn()
+  warnSpy = jest.fn()
 })
 
 afterEach(() => {
-  consoleLogSpy.mockRestore()
-  consoleErrorSpy.mockRestore()
-  consoleWarnSpy.mockRestore()
+  jest.restoreAllMocks()
 })
 
 test('applies an uploaded migration artifact when the workflow run completes', async () => {
@@ -63,6 +61,11 @@ test('applies an uploaded migration artifact when the workflow run completes', a
       }) as any,
   }
   const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
     octokit: {},
     payload: {
       action: 'completed',
@@ -118,12 +121,12 @@ test('applies an uploaded migration artifact when the workflow run completes', a
     pullRequestTitle: 'feature: update website config',
     repo: 'lvce-editor.github.io',
   })
-  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] received completed migration workflow webhook for run 123')
-  expect(consoleLogSpy).toHaveBeenCalledWith(
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] received completed migration workflow webhook for run 123')
+  expect(infoSpy).toHaveBeenCalledWith(
     '[HandleMigrationWorkflowRun] received webhook migration on demand for lvce-editor/lvce-editor.github.io /migrations2/update-website-config',
   )
-  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] making pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
-  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] made pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] making pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] made pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
 })
 
 test('ignores unrelated workflow runs', async () => {
@@ -133,6 +136,11 @@ test('ignores unrelated workflow runs', async () => {
     auth: jest.fn(),
   }
   const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
     octokit: {},
     payload: {
       action: 'completed',
@@ -171,6 +179,11 @@ test('ignores workflow runs that were not dispatched manually on main', async ()
     auth: jest.fn(),
   }
   const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
     octokit: {},
     payload: {
       action: 'completed',
@@ -222,6 +235,11 @@ test('rejects artifacts that target repositories outside lvce-editor', async () 
     auth: jest.fn(),
   }
   const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
     octokit: {},
     payload: {
       action: 'completed',
@@ -251,7 +269,7 @@ test('rejects artifacts that target repositories outside lvce-editor', async () 
 
   expect(app.auth).not.toHaveBeenCalled()
   expect(invokeGithubWorker).not.toHaveBeenCalled()
-  expect(consoleWarnSpy).toHaveBeenCalledWith(
+  expect(warnSpy).toHaveBeenCalledWith(
     '[HandleMigrationWorkflowRun] other-org/example-repo /migrations2/update-website-config: Target repository must belong to lvce-editor',
   )
 })
@@ -271,6 +289,11 @@ test('logs when a workflow artifact contains no changed files', async () => {
     auth: jest.fn(),
   }
   const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
     octokit: {},
     payload: {
       action: 'completed',
@@ -299,7 +322,7 @@ test('logs when a workflow artifact contains no changed files', async () => {
   await handleMigrationWorkflowRun(context)
 
   expect(invokeGithubWorker).not.toHaveBeenCalled()
-  expect(consoleLogSpy).toHaveBeenCalledWith(
+  expect(infoSpy).toHaveBeenCalledWith(
     '[HandleMigrationWorkflowRun] lvce-editor/explorer-view /migrations2/update-dependencies: workflow run produced no changes',
   )
 })
@@ -346,6 +369,11 @@ test('logs when the github worker reports no effective changes', async () => {
       }) as any,
   }
   const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
     octokit: {},
     payload: {
       action: 'completed',
@@ -374,7 +402,7 @@ test('logs when the github worker reports no effective changes', async () => {
   await handleMigrationWorkflowRun(context)
 
   expect(invokeGithubWorker).toHaveBeenCalledTimes(1)
-  expect(consoleLogSpy).toHaveBeenCalledWith(
+  expect(infoSpy).toHaveBeenCalledWith(
     '[HandleMigrationWorkflowRun] lvce-editor/explorer-view /migrations2/update-dependencies: workflow run produced no changes',
   )
 })
@@ -421,6 +449,11 @@ test('logs failures from the github worker', async () => {
       }) as any,
   }
   const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
     octokit: {},
     payload: {
       action: 'completed',
@@ -440,8 +473,6 @@ test('logs failures from the github worker', async () => {
   }
 
   const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
-  const { captureException } = await import('../src/errorHandling.ts')
-  const captureExceptionSpy = jest.spyOn({ captureException }, 'captureException').mockImplementation(() => {})
   const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
     app,
     downloadMigrationArtifact,
@@ -450,9 +481,8 @@ test('logs failures from the github worker', async () => {
 
   await handleMigrationWorkflowRun(context)
 
-  expect(consoleErrorSpy).toHaveBeenCalledWith(
+  expect(errorSpy).toHaveBeenCalledWith(
     '[HandleMigrationWorkflowRun] failed to make pr for lvce-editor/explorer-view /migrations2/update-dependencies',
     expect.any(Error),
   )
-  captureExceptionSpy.mockRestore()
 })
