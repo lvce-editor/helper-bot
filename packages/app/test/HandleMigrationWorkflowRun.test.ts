@@ -5,9 +5,9 @@ let consoleErrorSpy: ReturnType<typeof jest.spyOn>
 let consoleWarnSpy: ReturnType<typeof jest.spyOn>
 
 beforeEach(() => {
-  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
-  consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { })
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
+  consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { })
 })
 
 afterEach(() => {
@@ -445,7 +445,7 @@ test('logs failures from the github worker', async () => {
 
   const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
   const { captureException } = await import('../src/errorHandling.ts')
-  const captureExceptionSpy = jest.spyOn({ captureException }, 'captureException').mockImplementation(() => {})
+  const captureExceptionSpy = jest.spyOn({ captureException }, 'captureException').mockImplementation(() => { })
   const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
     app,
     downloadMigrationArtifact,
