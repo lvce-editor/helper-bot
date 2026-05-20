@@ -17,8 +17,30 @@ export interface CreateHandleMigrationWorkflowRunOptions {
   readonly invokeGithubWorker?: typeof GithubWorker.invoke
 }
 
+interface Logger {
+  readonly error: (...args: readonly unknown[]) => void
+  readonly info: (...args: readonly unknown[]) => void
+  readonly warn: (...args: readonly unknown[]) => void
+}
+
 const getMigrationLabel = (manifest: { migrationId: string; targetRepository: string }): string => {
   return `${manifest.targetRepository} ${manifest.migrationId}`
+}
+
+const fallbackLogger: Logger = {
+  error: (...args) => {
+    console.error(...args)
+  },
+  info: (...args) => {
+    console.warn(...args)
+  },
+  warn: (...args) => {
+    console.warn(...args)
+  },
+}
+
+const getLogger = (context: Context<'workflow_run'>): Logger => {
+  return (context as any).log || fallbackLogger
 }
 
 const getGithubWorkerData = (result: any): any => {
@@ -29,6 +51,20 @@ const getGithubWorkerData = (result: any): any => {
     return result.data
   }
   return result
+}
+
+const logGithubWorkerOutcome = (logger: Logger, migrationLabel: string, workerResult: any): void => {
+  const workerData = getGithubWorkerData(workerResult)
+  if (!workerData) {
+    logger.info(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
+    return
+  }
+  if (workerData.status === 'success') {
+    const pullRequestSuffix = typeof workerData.pullRequestNumber === 'number' ? ` (#${workerData.pullRequestNumber})` : ''
+    logger.info(`${LOG_PREFIX} made pr for ${migrationLabel}${pullRequestSuffix}`)
+    return
+  }
+  logger.warn(`${LOG_PREFIX} ${migrationLabel}: github worker response status ${workerData.status || 'unknown'}`)
 }
 
 const getInstallationToken = async (app: Probot, owner: string, repo: string): Promise<string> => {
@@ -50,6 +86,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
 
   return async (context: Context<'workflow_run'>): Promise<void> => {
     const { action, repository, workflow_run: workflowRun } = context.payload as any
+    const logger = getLogger(context)
     if (action !== 'completed') {
       return
     }
@@ -65,7 +102,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     if (workflowRun.head_branch !== WORKFLOW_BRANCH) {
       return
     }
-    console.log(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
+    logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
     let migrationLabel = `workflow run ${workflowRun.id}`
     try {
       const artifact = await downloadArtifact({
@@ -75,13 +112,13 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         runId: workflowRun.id,
       })
       if (!artifact) {
-        console.log(`${LOG_PREFIX} ${migrationLabel}: no migration artifact found`)
+        logger.info(`${LOG_PREFIX} ${migrationLabel}: no migration artifact found`)
         return
       }
       migrationLabel = getMigrationLabel(artifact.manifest)
-      console.log(`${LOG_PREFIX} received webhook migration on demand for ${migrationLabel}`)
+      logger.info(`${LOG_PREFIX} received webhook migration on demand for ${migrationLabel}`)
       if (artifact.manifest.status === 'error') {
-        console.error(
+        logger.error(
           `${LOG_PREFIX} failed to make pr for ${migrationLabel}`,
           artifact.manifest.errorCode || 'MIGRATION_WORKFLOW_ERROR',
           artifact.manifest.errorMessage || 'Migration workflow failed',
@@ -89,12 +126,12 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         return
       }
       if (artifact.changedFiles.length === 0) {
-        console.log(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
+        logger.info(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
         return
       }
       const { owner, repo } = assertAllowedTargetRepository(artifact.manifest.targetRepository)
       const githubToken = await getInstallationToken(options.app, owner, repo)
-      console.log(`${LOG_PREFIX} making pr for ${migrationLabel}`)
+      logger.info(`${LOG_PREFIX} making pr for ${migrationLabel}`)
       const workerResult = await invokeGithubWorker('/github/apply-migration-result', {
         baseBranch: artifact.manifest.baseBranch,
         branchName: artifact.manifest.branchName,
@@ -105,23 +142,13 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         pullRequestTitle: artifact.manifest.pullRequestTitle,
         repo,
       })
-      const workerData = getGithubWorkerData(workerResult)
-      if (!workerData) {
-        console.log(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
-        return
-      }
-      if (workerData.status === 'success') {
-        const pullRequestSuffix = typeof workerData.pullRequestNumber === 'number' ? ` (#${workerData.pullRequestNumber})` : ''
-        console.log(`${LOG_PREFIX} made pr for ${migrationLabel}${pullRequestSuffix}`)
-        return
-      }
-      console.log(`${LOG_PREFIX} ${migrationLabel}: github worker response status ${workerData.status || 'unknown'}`)
+      logGithubWorkerOutcome(logger, migrationLabel, workerResult)
     } catch (error) {
       if (error instanceof Error && error.message.includes('Target repository must belong to')) {
-        console.warn(`${LOG_PREFIX} ${migrationLabel}: ${error.message}`)
+        logger.warn(`${LOG_PREFIX} ${migrationLabel}: ${error.message}`)
         return
       }
-      console.error(`${LOG_PREFIX} failed to make pr for ${migrationLabel}`, error)
+      logger.error(`${LOG_PREFIX} failed to make pr for ${migrationLabel}`, error)
       captureException(error as Error)
     }
   }
