@@ -19,7 +19,17 @@ const migrationArtifactArchive = Buffer.from(
   'base64',
 )
 
-test('downloads and extracts migration artifacts with extract-zip', async () => {
+test('downloads and extracts migration artifacts with unzip', async () => {
+  const manifest = {
+    baseBranch: 'main',
+    branchName: 'feature/update-website-config',
+    commitMessage: 'feature: update website config',
+    migrationId: '/migrations2/update-website-config',
+    pullRequestTitle: 'feature: update website config',
+    requestId: 'request-1',
+    status: 'success' as const,
+    targetRepository: 'lvce-editor/lvce-editor.github.io',
+  }
   const octokit: any = {
     rest: {
       actions: {
@@ -55,16 +65,7 @@ test('downloads and extracts migration artifacts with extract-zip', async () => 
         path: 'packages/website/config.json',
       },
     ],
-    manifest: {
-      baseBranch: 'main',
-      branchName: 'feature/update-website-config',
-      commitMessage: 'feature: update website config',
-      migrationId: '/migrations2/update-website-config',
-      pullRequestTitle: 'feature: update website config',
-      requestId: 'request-1',
-      status: 'success',
-      targetRepository: 'lvce-editor/lvce-editor.github.io',
-    },
+    manifest,
   })
 })
 

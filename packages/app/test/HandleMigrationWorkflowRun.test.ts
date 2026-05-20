@@ -34,7 +34,7 @@ test('applies an uploaded migration artifact when the workflow run completes', a
     token: 'installation-token',
   })
   const app: any = {
-    auth: ((jest.fn() as any)
+    auth: (jest.fn() as any)
       .mockResolvedValueOnce({
         rest: {
           apps: {
@@ -44,7 +44,7 @@ test('applies an uploaded migration artifact when the workflow run completes', a
       })
       .mockResolvedValueOnce({
         auth,
-      })) as any,
+      }) as any,
   }
   const context: any = {
     octokit: {},

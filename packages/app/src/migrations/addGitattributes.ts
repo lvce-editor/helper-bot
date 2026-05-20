@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { access, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { createPullRequest } from '../createPullRequest.ts'
 import type { Migration, MigrationParams, MigrationResult } from './types.ts'
@@ -14,6 +14,11 @@ export const checkAndAddGitattributes = async (root: string): Promise<boolean> =
     console.log('.gitattributes file already exists')
     return false
   } catch (error) {
+    try {
+      await access(root)
+    } catch {
+      return false
+    }
     // File doesn't exist, try to create it
     try {
       await writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
