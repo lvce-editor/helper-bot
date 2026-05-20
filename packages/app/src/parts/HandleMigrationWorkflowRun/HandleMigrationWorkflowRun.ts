@@ -6,10 +6,11 @@ import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSec
 
 const HELPER_BOT_OWNER = 'lvce-editor'
 const HELPER_BOT_REPO = 'helper-bot'
-const WORKFLOW_NAME = 'run-migration-on-demand'
+// const WORKFLOW_NAME = 'run-migration-on-demand'
 const WORKFLOW_EVENT = 'workflow_dispatch'
 // @ts-ignore
 const WORKFLOW_BRANCH = 'main'
+const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
@@ -92,8 +93,8 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       console.info(`[workflow_completed] repo mismatch`)
       return
     }
-    if (workflowRun.name !== WORKFLOW_NAME) {
-      console.info(`[workflow_completed] workflow mismatch: ${workflowRun.name} ${WORKFLOW_NAME}`)
+    if (workflowRun.path !== WORKFLOW_PATH) {
+      console.info(`[workflow_completed] workflow path mismatch: ${workflowRun.path} ${WORKFLOW_PATH}`)
       return
     }
     if (workflowRun.event !== WORKFLOW_EVENT) {
