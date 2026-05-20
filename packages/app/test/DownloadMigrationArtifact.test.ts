@@ -1,60 +1,32 @@
-import { beforeEach, expect, jest, test } from '@jest/globals'
+import { expect, test } from '@jest/globals'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import type { ArtifactManifest } from '../src/parts/DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
+import { downloadMigrationArtifact, getChangedFiles } from '../src/parts/DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
 
-const mockExtract = jest.fn<typeof import('extract-zip').default>()
-
-const mockFs = {
-  mkdtemp: jest.fn<typeof import('node:fs/promises').mkdtemp>(),
-  readFile: jest.fn<typeof import('node:fs/promises').readFile>(),
-  rm: jest.fn<typeof import('node:fs/promises').rm>(),
-  writeFile: jest.fn<typeof import('node:fs/promises').writeFile>(),
-}
-
-jest.unstable_mockModule('extract-zip', () => ({
-  default: mockExtract,
-}))
-
-jest.unstable_mockModule('node:fs/promises', () => mockFs)
-
-jest.unstable_mockModule('node:os', () => ({
-  tmpdir() {
-    return '/tmp'
-  },
-}))
-
-const { downloadMigrationArtifact } = await import('../src/parts/DownloadMigrationArtifact/DownloadMigrationArtifact.ts')
-
-beforeEach(() => {
-  mockExtract.mockReset()
-  mockFs.mkdtemp.mockReset()
-  mockFs.readFile.mockReset()
-  mockFs.rm.mockReset()
-  mockFs.writeFile.mockReset()
-
-  mockFs.mkdtemp.mockResolvedValue('/tmp/migration-artifact-test')
-  mockFs.writeFile.mockResolvedValue(undefined)
-  mockFs.rm.mockResolvedValue(undefined)
-})
+const migrationArtifactArchive = Buffer.from(
+  [
+    'UEsDBBQAAAAIAHZ9tFxNYeveqgAAADwBAAANAAAAbWFuaWZlc3QuanNvbo1Ouw7CQAz7lepm2gpGRjYG',
+    'GBA/kF7TI9I9yiUHQoh/JxSEuiAxxXbsOHfTAeMmQ7QnszYBKJqF6Sa+h4CqDQhSMrZl7EGwvmLHpNOm',
+    'OJBTs00hkOyQGdzMv67egeoTqL6BQC6DUIrbXu3tl/LqZ8dYvD/guSDLkcT/VZPf/qnkg+ul6iwaZBW5',
+    'WKtfqySQHcoBx6QnUr7p0l8s1ti/aDvDjSM5la6hZB5PUEsDBBQAAAAIAHZ9tFz2WnB9GwAAABkAAAAi',
+    'AAAAZmlsZXMvcGFja2FnZXMvd2Vic2l0ZS9jb25maWcuanNvbqvmUlBQKkstKs7Mz1OyUlAy1DPQM1Di',
+    'quUCAFBLAQIUAxQAAAAIAHZ9tFxNYeveqgAAADwBAAANAAAAAAAAAAAAAACkgQAAAABtYW5pZmVzdC5q',
+    'c29uUEsBAhQDFAAAAAgAdn20XPZacH0bAAAAGQAAACIAAAAAAAAAAAAAAKSB1QAAAGZpbGVzL3BhY2th',
+    'Z2VzL3dlYnNpdGUvY29uZmlnLmpzb25QSwUGAAAAAAIAAgCLAAAAMAEAAAAA',
+  ].join(''),
+  'base64',
+)
 
 test('downloads and extracts migration artifacts with extract-zip', async () => {
-  const manifest = {
-    baseBranch: 'main',
-    branchName: 'feature/update-website-config',
-    changedFiles: [
-      {
-        path: 'packages/website/config.json',
-      },
-    ],
-    commitMessage: 'feature: update website config',
-    migrationId: '/migrations2/update-website-config',
-    pullRequestTitle: 'feature: update website config',
-    requestId: 'request-1',
-    status: 'success' as const,
-    targetRepository: 'lvce-editor/lvce-editor.github.io',
-  }
   const octokit: any = {
     rest: {
       actions: {
-        listWorkflowRunArtifacts: jest.fn().mockResolvedValue({
+        downloadArtifact: async () => ({
+          data: migrationArtifactArchive,
+        }),
+        listWorkflowRunArtifacts: async () => ({
           data: {
             artifacts: [
               {
@@ -65,23 +37,9 @@ test('downloads and extracts migration artifacts with extract-zip', async () => 
             ],
           },
         }),
-        downloadArtifact: jest.fn().mockResolvedValue({
-          data: Buffer.from('artifact-bytes'),
-        }),
       },
     },
   }
-
-  mockExtract.mockResolvedValue(undefined)
-  mockFs.readFile.mockImplementation(async (path) => {
-    if (path === '/tmp/migration-artifact-test/artifact/manifest.json') {
-      return JSON.stringify(manifest)
-    }
-    if (path === '/tmp/migration-artifact-test/artifact/files/packages/website/config.json') {
-      return '{\n  "version": "1.0.0"\n}\n'
-    }
-    throw new Error(`Unexpected path: ${String(path)}`)
-  })
 
   const result = await downloadMigrationArtifact({
     octokit,
@@ -97,23 +55,18 @@ test('downloads and extracts migration artifacts with extract-zip', async () => 
         path: 'packages/website/config.json',
       },
     ],
-    manifest,
-  })
-  expect(mockFs.writeFile).toHaveBeenCalledWith('/tmp/migration-artifact-test/artifact.zip', Buffer.from('artifact-bytes'))
-  expect(mockExtract).toHaveBeenCalledWith('/tmp/migration-artifact-test/artifact.zip', {
-    dir: '/tmp/migration-artifact-test/artifact',
-  })
-  expect(mockFs.rm).toHaveBeenCalledWith('/tmp/migration-artifact-test', {
-    force: true,
-    recursive: true,
+    manifest: {
+      baseBranch: 'main',
+      branchName: 'feature/update-website-config',
+      commitMessage: 'feature: update website config',
+      migrationId: '/migrations2/update-website-config',
+      pullRequestTitle: 'feature: update website config',
+      requestId: 'request-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/lvce-editor.github.io',
+    },
   })
 })
-import { expect, test } from '@jest/globals'
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import type { ArtifactManifest } from '../src/parts/DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
-import { getChangedFiles } from '../src/parts/DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
 
 test('reconstructs changed files from the files directory and deleted file metadata', async () => {
   const artifactRoot = await mkdtemp(join(tmpdir(), 'download-migration-artifact-'))

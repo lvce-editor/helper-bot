@@ -1,4 +1,3 @@
-import { execa } from 'execa'
 import extract from 'extract-zip'
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
