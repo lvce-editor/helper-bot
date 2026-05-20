@@ -13,6 +13,7 @@ jest.unstable_mockModule('execa', () => {
 
 jest.unstable_mockModule('node:fs/promises', () => {
   return {
+    access: jest.fn(),
     mkdtemp: jest.fn(),
     readFile: jest.fn(),
     writeFile: jest.fn(),

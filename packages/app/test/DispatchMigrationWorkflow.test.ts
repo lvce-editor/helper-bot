@@ -48,6 +48,7 @@ test('dispatches the on-demand migration workflow in the helper-bot repository',
       migrationId: '/migrations2/update-website-config',
       migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
       requestId: 'request-1',
+      runName: 'migration-on-demand/lvce-editor.github.io/update-website-config',
       targetRepository: 'lvce-editor/lvce-editor.github.io',
     },
     owner: 'lvce-editor',
@@ -58,4 +59,46 @@ test('dispatches the on-demand migration workflow in the helper-bot repository',
   expect(result).toEqual({
     requestId: 'request-1',
   })
+})
+
+test('rejects target repositories outside the lvce-editor organization', async () => {
+  const app: any = {
+    auth: jest.fn(),
+  }
+
+  const { dispatchMigrationWorkflow } = await import('../src/parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts')
+
+  await expect(
+    dispatchMigrationWorkflow({
+      app,
+      migrationId: '/migrations2/update-website-config',
+      migrationOptions: {},
+      targetRepository: 'other-org/example-repo',
+    }),
+  ).rejects.toThrow('Target repository must belong to lvce-editor')
+
+  expect(app.auth).not.toHaveBeenCalled()
+})
+
+test('rejects migration options that look like secrets', async () => {
+  const app: any = {
+    auth: jest.fn(),
+  }
+
+  const { dispatchMigrationWorkflow } = await import('../src/parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts')
+
+  await expect(
+    dispatchMigrationWorkflow({
+      app,
+      migrationId: '/migrations2/update-website-config',
+      migrationOptions: {
+        nested: {
+          githubToken: 'secret-value',
+        },
+      },
+      targetRepository: 'lvce-editor/lvce-editor.github.io',
+    }),
+  ).rejects.toThrow('Migration option "nested.githubToken" looks like a secret and must not be sent to the workflow')
+
+  expect(app.auth).not.toHaveBeenCalled()
 })

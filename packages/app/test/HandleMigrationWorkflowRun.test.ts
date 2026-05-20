@@ -1,7 +1,7 @@
 import { expect, jest, test } from '@jest/globals'
 
 test('applies an uploaded migration artifact when the workflow run completes', async () => {
-  const downloadMigrationArtifact = jest.fn().mockResolvedValue({
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
     changedFiles: [
       {
         content: '{\n  "version": "1.0.0"\n}\n',
@@ -11,11 +11,6 @@ test('applies an uploaded migration artifact when the workflow run completes', a
     manifest: {
       baseBranch: 'main',
       branchName: 'feature/update-website-config',
-      changedFiles: [
-        {
-          path: 'packages/website/config.json',
-        },
-      ],
       commitMessage: 'feature: update website config',
       migrationId: '/migrations2/update-website-config',
       pullRequestTitle: 'feature: update website config',
@@ -24,23 +19,22 @@ test('applies an uploaded migration artifact when the workflow run completes', a
       targetRepository: 'lvce-editor/lvce-editor.github.io',
     },
   })
-  const invokeGithubWorker = jest.fn().mockResolvedValue({
+  const invokeGithubWorker = (jest.fn() as any).mockResolvedValue({
     data: {
       status: 'success',
     },
     type: 'success',
   })
-  const getRepoInstallation = jest.fn().mockResolvedValue({
+  const getRepoInstallation = (jest.fn() as any).mockResolvedValue({
     data: {
       id: 77,
     },
   })
-  const auth = jest.fn().mockResolvedValue({
+  const auth = (jest.fn() as any).mockResolvedValue({
     token: 'installation-token',
   })
   const app: any = {
-    auth: jest
-      .fn()
+    auth: (jest.fn() as any)
       .mockResolvedValueOnce({
         rest: {
           apps: {
@@ -50,7 +44,7 @@ test('applies an uploaded migration artifact when the workflow run completes', a
       })
       .mockResolvedValueOnce({
         auth,
-      }),
+      }) as any,
   }
   const context: any = {
     octokit: {},
@@ -63,6 +57,8 @@ test('applies an uploaded migration artifact when the workflow run completes', a
         },
       },
       workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
         id: 123,
         name: 'run-migration-on-demand',
       },
@@ -109,8 +105,8 @@ test('applies an uploaded migration artifact when the workflow run completes', a
 })
 
 test('ignores unrelated workflow runs', async () => {
-  const downloadMigrationArtifact = jest.fn()
-  const invokeGithubWorker = jest.fn()
+  const downloadMigrationArtifact = jest.fn() as any
+  const invokeGithubWorker = jest.fn() as any
   const app: any = {
     auth: jest.fn(),
   }
@@ -125,6 +121,8 @@ test('ignores unrelated workflow runs', async () => {
         },
       },
       workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
         id: 123,
         name: 'ci',
       },
@@ -141,5 +139,94 @@ test('ignores unrelated workflow runs', async () => {
   await handleMigrationWorkflowRun(context)
 
   expect(downloadMigrationArtifact).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
+})
+
+test('ignores workflow runs that were not dispatched manually on main', async () => {
+  const downloadMigrationArtifact = jest.fn() as any
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'pull_request',
+        head_branch: 'feature/test',
+        id: 123,
+        name: 'run-migration-on-demand',
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(downloadMigrationArtifact).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
+})
+
+test('rejects artifacts that target repositories outside lvce-editor', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [
+      {
+        content: 'value\n',
+        path: 'file.txt',
+      },
+    ],
+    manifest: {
+      migrationId: '/migrations2/update-website-config',
+      requestId: 'request-1',
+      status: 'success',
+      targetRepository: 'other-org/example-repo',
+    },
+  })
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        name: 'run-migration-on-demand',
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(app.auth).not.toHaveBeenCalled()
   expect(invokeGithubWorker).not.toHaveBeenCalled()
 })

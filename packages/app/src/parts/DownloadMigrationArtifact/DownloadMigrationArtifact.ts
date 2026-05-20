@@ -1,18 +1,13 @@
-import { execa } from 'execa'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import extract from 'extract-zip'
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
-
-export interface ArtifactChangedFile {
-  readonly path: string
-  readonly type?: 'created' | 'updated' | 'deleted'
-}
 
 export interface ArtifactManifest {
   readonly baseBranch?: string
   readonly branchName?: string
-  readonly changedFiles: readonly ArtifactChangedFile[]
   readonly commitMessage?: string
+  readonly deletedFiles?: readonly string[]
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly migrationId: string
@@ -60,25 +55,8 @@ const getArtifactArchiveBuffer = async (data: unknown): Promise<Buffer> => {
   throw new Error('Unsupported artifact archive payload')
 }
 
-const extractWithUnzip = async (archivePath: string, outputDir: string): Promise<void> => {
-  await execa('unzip', ['-o', archivePath, '-d', outputDir])
-}
-
-const extractWithPython = async (archivePath: string, outputDir: string): Promise<void> => {
-  await execa('python3', ['-m', 'zipfile', '-e', archivePath, outputDir])
-}
-
 const extractArtifactArchive = async (archivePath: string, outputDir: string): Promise<void> => {
-  try {
-    await extractWithUnzip(archivePath, outputDir)
-    return
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    if (!message.includes('ENOENT')) {
-      throw error
-    }
-  }
-  await extractWithPython(archivePath, outputDir)
+  await extract(archivePath, { dir: outputDir })
 }
 
 const resolveArtifactPath = (root: string, relativePath: string): string => {
@@ -89,24 +67,50 @@ const resolveArtifactPath = (root: string, relativePath: string): string => {
   return resolved
 }
 
-const getChangedFiles = async (artifactRoot: string, manifest: ArtifactManifest): Promise<readonly ChangedFile[]> => {
-  const filesRoot = join(artifactRoot, 'files')
-  const changedFiles: ChangedFile[] = []
-  for (const file of manifest.changedFiles) {
-    if (file.type === 'deleted') {
-      changedFiles.push({
-        content: '',
-        path: file.path,
-        type: 'deleted',
-      })
+const listArtifactFiles = async (filesRoot: string, relativeDir = ''): Promise<readonly string[]> => {
+  const directoryPath = relativeDir ? resolveArtifactPath(filesRoot, relativeDir) : filesRoot
+  let entries
+  try {
+    entries = await readdir(directoryPath, { withFileTypes: true })
+  } catch (error: any) {
+    if (error && error.code === 'ENOENT') {
+      return []
+    }
+    throw error
+  }
+  const paths: string[] = []
+  entries.sort((a, b) => a.name.localeCompare(b.name))
+  for (const entry of entries) {
+    const relativePath = relativeDir ? join(relativeDir, entry.name) : entry.name
+    if (entry.isDirectory()) {
+      paths.push(...(await listArtifactFiles(filesRoot, relativePath)))
       continue
     }
-    const filePath = resolveArtifactPath(filesRoot, file.path)
+    if (!entry.isFile()) {
+      continue
+    }
+    paths.push(relativePath.split(sep).join('/'))
+  }
+  return paths
+}
+
+export const getChangedFiles = async (artifactRoot: string, manifest: ArtifactManifest): Promise<readonly ChangedFile[]> => {
+  const filesRoot = join(artifactRoot, 'files')
+  const filePaths = await listArtifactFiles(filesRoot)
+  const changedFiles: ChangedFile[] = []
+  for (const relativePath of filePaths) {
+    const filePath = resolveArtifactPath(filesRoot, relativePath)
     const content = await readFile(filePath, 'utf8')
     changedFiles.push({
       content,
-      path: file.path,
-      ...(file.type ? { type: file.type } : {}),
+      path: relativePath,
+    })
+  }
+  for (const deletedFile of manifest.deletedFiles || []) {
+    changedFiles.push({
+      content: '',
+      path: deletedFile,
+      type: 'deleted',
     })
   }
   return changedFiles

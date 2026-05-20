@@ -1,8 +1,12 @@
-import { test, expect } from '@jest/globals'
+import { afterEach, expect, jest, test } from '@jest/globals'
 import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { checkAndAddGitattributes } from '../src/migrations/addGitattributes.ts'
+
+afterEach(() => {
+  jest.restoreAllMocks()
+})
 
 test('should add .gitattributes file when it does not exist', async () => {
   const tempDir = await mkdtemp(join(tmpdir(), 'test-add-gitattributes-'))
@@ -55,8 +59,11 @@ test('should not modify existing .gitattributes file', async () => {
 
 test('should handle file read error gracefully', async () => {
   const nonExistentPath = join(tmpdir(), 'non-existent-directory')
+  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
   // Should not throw an error and should return false (indicating it couldn't create the file)
   const result = await checkAndAddGitattributes(nonExistentPath)
+
   expect(result).toBe(false)
+  expect(warnSpy).not.toHaveBeenCalled()
 })

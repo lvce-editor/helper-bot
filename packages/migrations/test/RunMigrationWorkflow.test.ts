@@ -4,10 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { MigrationResult } from '../src/parts/Types/Types.ts'
 
-test('writes a manifest and changed files for a successful migration run', async () => {
-  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
-  const calls: Array<[string, Record<string, any>]> = []
-  const invokeMigration = async (migrationId: string, options: Record<string, any>): Promise<MigrationResult> => {
+const createInvokeMigration = (calls: Array<[string, Record<string, any>]>) => {
+  return async (migrationId: string, options: Record<string, any>): Promise<MigrationResult> => {
     calls.push([migrationId, options])
     return {
       branchName: 'feature/update-website-config',
@@ -23,6 +21,29 @@ test('writes a manifest and changed files for a successful migration run', async
       statusCode: 200,
     }
   }
+}
+
+const invokeDeletionMigration = async (): Promise<MigrationResult> => {
+  return {
+    branchName: 'feature/remove-gitpod-yml',
+    changedFiles: [
+      {
+        content: '',
+        path: '.gitpod.yml',
+        type: 'deleted',
+      },
+    ],
+    commitMessage: 'ci: remove .gitpod.yml',
+    pullRequestTitle: 'ci: remove .gitpod.yml',
+    status: 'success',
+    statusCode: 200,
+  }
+}
+
+test('writes a manifest and changed files for a successful migration run', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+  const calls: Array<[string, Record<string, any>]> = []
+  const invokeMigration = createInvokeMigration(calls)
 
   const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
   await runMigrationWorkflow({
@@ -41,11 +62,6 @@ test('writes a manifest and changed files for a successful migration run', async
   expect(JSON.parse(manifestContent)).toEqual({
     baseBranch: 'main',
     branchName: 'feature/update-website-config',
-    changedFiles: [
-      {
-        path: 'packages/website/config.json',
-      },
-    ],
     commitMessage: 'feature: update website config',
     migrationId: '/migrations2/update-website-config',
     pullRequestTitle: 'feature: update website config',
@@ -64,4 +80,61 @@ test('writes a manifest and changed files for a successful migration run', async
       },
     ],
   ])
+})
+
+test('writes deleted file paths to the manifest without creating file entries', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    invokeMigration: invokeDeletionMigration,
+    migrationId: '/migrations2/remove-gitpod-yml',
+    outputDir,
+    requestId: 'request-2',
+    targetRepository: 'lvce-editor/example-repo',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+
+  expect(JSON.parse(manifestContent)).toEqual({
+    branchName: 'feature/remove-gitpod-yml',
+    commitMessage: 'ci: remove .gitpod.yml',
+    deletedFiles: ['.gitpod.yml'],
+    migrationId: '/migrations2/remove-gitpod-yml',
+    pullRequestTitle: 'ci: remove .gitpod.yml',
+    requestId: 'request-2',
+    status: 'success',
+    targetRepository: 'lvce-editor/example-repo',
+  })
+})
+
+test('writes an error manifest when the target repository is outside lvce-editor', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  const result = await runMigrationWorkflow({
+    invokeMigration: async (): Promise<MigrationResult> => {
+      throw new Error('should not run')
+    },
+    migrationId: '/migrations2/update-website-config',
+    outputDir,
+    requestId: 'request-3',
+    targetRepository: 'other-org/example-repo',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+
+  expect(result).toEqual({
+    changedFiles: [],
+    errorMessage: 'Target repository must belong to lvce-editor',
+    status: 'error',
+    statusCode: 500,
+  })
+  expect(JSON.parse(manifestContent)).toEqual({
+    errorMessage: 'Target repository must belong to lvce-editor',
+    migrationId: '/migrations2/update-website-config',
+    requestId: 'request-3',
+    status: 'error',
+    targetRepository: 'other-org/example-repo',
+  })
 })
