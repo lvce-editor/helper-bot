@@ -18,7 +18,7 @@ test('processes items in order', async () => {
 
 test('handles errors gracefully', async () => {
   const processedItems: number[] = []
-  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
   const { addToQueue } = createQueue<number>(async (item) => {
     if (item === 2) {
       throw new Error('Test error')
