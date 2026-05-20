@@ -2,25 +2,41 @@ import { beforeEach, expect, test, afterEach, jest } from '@jest/globals'
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import * as myProbotApp from '../src/index.ts'
-import * as MigrationsWorker from '../src/migrationsWorker.ts'
 
 let probot: Probot | undefined
-const mockMigrationsInvoke = jest.fn().mockResolvedValue({
-  type: 'success',
-  status: 'success',
-  changedFiles: [],
-  pullRequestTitle: 'feature: update website config',
-})
+const privateKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAu5amcvGOpDUVJmkyX4UtcOQPydBlSl8a/SV4QpUq+8CY7xaf
+IzJ0b+1PfT4WgvQo8ouFE1OCIVK7v2DuB6FRkZRJ3U8m/LX8GgMp0c2VmeFdaguv
+sPQe8ra+fcpZETNkZKnt1YgmX3NsvqjYtDAgKt8Bd6q9yRuGRpYLrMrkPd6zv7UK
+eiDiBQBHZxtJaMDWP/pRAsN5PHBzJ+YdfwOWTtWH7Zks98Tiq3oQHVriGPPH9Vlk
+s9S2RPgWdpYvHnsIdzTZXL2/MDWFukUVBWfT1Rk8RIx33C3ov63qwSs0LIFzoEcf
++P7/79j/c9+tqywBZNCiFHjJZ9oP0EBoZ7sLFQIDAQABAoIBABBS6MMh4B7L+74u
+81I6nZywS+ts9hOFuSyEQTXSEz57IRPVLR37+wPua7djWsQkiReqKndnEfDiaTIb
+Njt1v0pi1BatF6BwGbMNyWrXcAhHA0ECKVTFuZe3bVY28I89oKPd4bNuOKCfw7vH
+p6vucC4q387RDdjdS08DKZrswPXdMBLZIACr9I63xTxEoukBL7qsvKOokx96A7cH
+Aan/56p11MpD7S4GjdkYFwN2mtkAoucApjtg5HV+woKsLqakDliCXOzCxVTzHwqt
+42+nVEjWCI+QfkiJyNQYtSxyTFtyDnwiQ4WaEcC0giWtRyIpHcwDVwy7WGxnCkys
+lAWScpUCgYEA7l3XG8mYhZDomiVUGUmp2SlLd+N3QnBxks8DK5KxYoA1AUDnXdmT
+s+B0tWIPzyAvvnsj40y/o6Qz4Ah3HDyJRiKNJ+GBPewLmjR/npyoPJywkFadiMbs
+ai/eq7xZyAjIDE/MYecumbJMWVDyfUJ90OA+Ir0SZbal6O8SWlQORXcCgYEAyXcu
+HDc+0r/wiTWp9Rvl+28XvSONcnOaiqcj0q4rbv+2gqFZt7Aulb0QNm/Ow3JY79y2
+/6xXBYDLwO/ohP9cDljAxD1CPxzpJWSaDM6Fge+KUf2Y2CS9R+SJBzcd92VJuUXD
+Kc7yxKbBtsgkgByJvelL1wF3IDxh86EsllohBtMCgYEAoYG5v10v18ggolkKi3vK
+9pYxSVE5PC4d9gAHwN1LDVebEndcjM1gc69wxHlmBsxjLSgYX+lfq8wVTgXOVrZ5
+uKiuhcgYntEx51EM63Zv02nDhHj7knJeO3Cl6izblFrG2Pi0nd1bSM5zRs0/EDoe
+L4nQ8A61yW8hKRvbjpKHfO8CgYBqBliz7LcZPn4eF6ncHtSH4E1D8sPr6b75HUET
+DSo6fkTUtol6zDOYBinUHD9aSIFZqnR8VXxunvucDCX4aFNQEZFRNVP51wMz9J/G
+AaHtYd0PjUC075DVlwYuT+lrW1jTMk2lYQ4ORBxKT0Y2Tc6HrZGGE3VX968tAjNu
+5PvglQKBgQDtR4eIdMJ60FfQoX/9MrxEV7Fkru3DBfr48ZC5HKksj7MytOD23ouc
+cDIUGO9eluOat3V1vIlRyZ4BJsL/YbrVh8HfZ4+XD5vn37krunyR8HfY0GeWpFTH
+/ku7U7Z+BSQ9+D3Ifvt7jimPoGTWP7aoNRfFwwAg8muCZSEuTdMdVA==
+-----END RSA PRIVATE KEY-----`
 
 beforeEach(() => {
   nock.disableNetConnect()
-  mockMigrationsInvoke.mockClear()
-  MigrationsWorker.setFactory(async () => ({
-    invoke: mockMigrationsInvoke,
-  }))
   probot = new Probot({
     appId: 123,
-    privateKey: '123',
+    privateKey,
     // disable request throttling and retries for testing
     Octokit: ProbotOctokit.defaults({
       retry: { enabled: false },
@@ -129,6 +145,31 @@ test('calls update-website-config migration when lvce-editor is published', asyn
     .reply(200, {
       content: Buffer.from(JSON.stringify([], null, 2) + '\n').toString('base64'),
     })
+    .get('/repos/lvce-editor/helper-bot/installation')
+    .reply(200, {
+      id: 44,
+    })
+    .post('/app/installations/44/access_tokens')
+    .reply(200, {
+      expires_at: '2026-05-20T00:00:00Z',
+      permissions: {},
+      repository_selection: 'selected',
+      token: 'installation-token',
+    })
+    .post('/repos/lvce-editor/helper-bot/actions/workflows/run-migration-on-demand.yml/dispatches', (body) => {
+      expect(body).toEqual({
+        inputs: {
+          baseBranch: 'main',
+          migrationId: '/migrations2/update-website-config',
+          migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
+          requestId: expect.any(String),
+          targetRepository: 'lvce-editor/lvce-editor.github.io',
+        },
+        ref: 'main',
+      })
+      return true
+    })
+    .reply(204)
 
   await probot?.receive({
     name: 'release',
@@ -148,14 +189,6 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       },
     },
   })
-
-  expect(mockMigrationsInvoke).toHaveBeenCalledWith(
-    '/migrations2/update-website-config',
-    expect.objectContaining({
-      repositoryName: 'lvce-editor.github.io',
-      repositoryOwner: 'lvce-editor',
-    }),
-  )
   expect(mock.pendingMocks()).toEqual([])
 })
 
@@ -181,8 +214,6 @@ test("doesn't call update-website-config migration for lvce-editor prereleases",
       },
     },
   })
-
-  expect(mockMigrationsInvoke).not.toHaveBeenCalled()
 })
 
 test("doesn't create a pull request when the new file content would be the same", async () => {

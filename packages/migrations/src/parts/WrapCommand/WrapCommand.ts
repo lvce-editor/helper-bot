@@ -94,7 +94,7 @@ const wrapFs = (): typeof FsPromises => {
 export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T) => Promise<MigrationResult>) => {
   return async (options: Omit<T, 'fs' | 'clonedRepoUri' | 'fetch' | 'exec'>): Promise<MigrationResult> => {
     const exec = wrapExeca()
-    const clonedRepo = await cloneRepositoryTmp(exec, options.repositoryOwner, options.repositoryName)
+    const clonedRepo = await cloneRepositoryTmp(exec, options.repositoryOwner, options.repositoryName, options.githubToken)
     try {
       return await command({
         ...options,

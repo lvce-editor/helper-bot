@@ -1,0 +1,67 @@
+import { expect, test } from '@jest/globals'
+import { mkdtemp, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import type { MigrationResult } from '../src/parts/Types/Types.ts'
+
+test('writes a manifest and changed files for a successful migration run', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+  const calls: Array<[string, Record<string, any>]> = []
+  const invokeMigration = async (migrationId: string, options: Record<string, any>): Promise<MigrationResult> => {
+    calls.push([migrationId, options])
+    return {
+      branchName: 'feature/update-website-config',
+      changedFiles: [
+        {
+          content: '{\n  "version": "1.0.0"\n}\n',
+          path: 'packages/website/config.json',
+        },
+      ],
+      commitMessage: 'feature: update website config',
+      pullRequestTitle: 'feature: update website config',
+      status: 'success',
+      statusCode: 200,
+    }
+  }
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    baseBranch: 'main',
+    invokeMigration,
+    migrationId: '/migrations2/update-website-config',
+    migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
+    outputDir,
+    requestId: 'request-1',
+    targetRepository: 'lvce-editor/lvce-editor.github.io',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+  const fileContent = await readFile(join(outputDir, 'files', 'packages', 'website', 'config.json'), 'utf8')
+
+  expect(JSON.parse(manifestContent)).toEqual({
+    baseBranch: 'main',
+    branchName: 'feature/update-website-config',
+    changedFiles: [
+      {
+        path: 'packages/website/config.json',
+      },
+    ],
+    commitMessage: 'feature: update website config',
+    migrationId: '/migrations2/update-website-config',
+    pullRequestTitle: 'feature: update website config',
+    requestId: 'request-1',
+    status: 'success',
+    targetRepository: 'lvce-editor/lvce-editor.github.io',
+  })
+  expect(fileContent).toBe('{\n  "version": "1.0.0"\n}\n')
+  expect(calls).toEqual([
+    [
+      '/migrations2/update-website-config',
+      {
+        releasedTag: 'v1.0.0',
+        repositoryName: 'lvce-editor.github.io',
+        repositoryOwner: 'lvce-editor',
+      },
+    ],
+  ])
+})

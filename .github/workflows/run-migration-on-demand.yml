@@ -1,0 +1,70 @@
+# eslint-disable github-actions/on
+name: run-migration-on-demand
+
+on:
+  workflow_dispatch:
+    inputs:
+      requestId:
+        description: Correlation id for the migration request
+        required: true
+        type: string
+      migrationId:
+        description: Migration command id
+        required: true
+        type: string
+      targetRepository:
+        description: Target repository in owner/repo form
+        required: true
+        type: string
+      baseBranch:
+        description: Base branch for the eventual pull request
+        required: false
+        default: main
+        type: string
+      migrationOptionsJson:
+        description: JSON string with migration options
+        required: false
+        default: '{}'
+        type: string
+
+jobs:
+  run-migration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+      - name: Compute node modules cache key
+        id: nodeModulesCacheKey
+        run: echo "value=$(node scripts/computeNodeModulesCacheKey.js)" >> $GITHUB_OUTPUT
+        shell: bash
+      - uses: actions/cache@v5
+        id: npm-cache
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-cacheNodeModules-${{ steps.nodeModulesCacheKey.outputs.value }}
+      - name: npm ci
+        run: npm ci
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+      - name: Build
+        run: npm run build
+      - name: Run migration
+        env:
+          BASE_BRANCH: ${{ inputs.baseBranch }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIGRATION_ARTIFACT_DIR: ${{ runner.temp }}/migration-result
+          MIGRATION_ID: ${{ inputs.migrationId }}
+          MIGRATION_OPTIONS_JSON: ${{ inputs.migrationOptionsJson }}
+          REQUEST_ID: ${{ inputs.requestId }}
+          TARGET_REPOSITORY: ${{ inputs.targetRepository }}
+        run: node packages/migrations/dist/runMigrationWorkflow.js
+      - name: Upload migration artifact
+        if: always()
+        # eslint-disable-next-line github-actions/action-versions
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-result-${{ inputs.requestId }}
+          path: ${{ runner.temp }}/migration-result
+          if-no-files-found: error

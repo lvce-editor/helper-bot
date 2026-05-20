@@ -1,4 +1,4 @@
-import { test, expect } from '@jest/globals'
+import { jest, test, expect } from '@jest/globals'
 import { createQueue } from '../src/createQueue.ts'
 
 test('processes items in order', async () => {
@@ -18,6 +18,7 @@ test('processes items in order', async () => {
 
 test('handles errors gracefully', async () => {
   const processedItems: number[] = []
+  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
   const { addToQueue } = createQueue<number>(async (item) => {
     if (item === 2) {
       throw new Error('Test error')
@@ -27,10 +28,14 @@ test('handles errors gracefully', async () => {
 
   await Promise.all([addToQueue(1), addToQueue(2), addToQueue(3)])
 
-  // Wait for all items to be processed
-  await new Promise((resolve) => setTimeout(resolve, 100))
+  try {
+    // Wait for all items to be processed
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
-  expect(processedItems).toEqual([1, 3])
+    expect(processedItems).toEqual([1, 3])
+  } finally {
+    consoleErrorSpy.mockRestore()
+  }
 })
 
 test('processes one item at a time', async () => {

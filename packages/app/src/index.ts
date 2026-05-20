@@ -15,8 +15,9 @@ import {
   handleAddOidcPermissions,
   handleRemoveNpmToken,
 } from './migrations/endpoints.ts'
-import { registerMigrations2Endpoints } from './migrations2/endpoints.ts'
-import * as MigrationsWorker from './migrationsWorker.ts'
+import { migrations2RoutePatterns, registerMigrations2Endpoints } from './migrations2/endpoints.ts'
+import { dispatchMigrationWorkflow } from './parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
+import { createHandleMigrationWorkflowRun } from './parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts'
 import bodyParser from 'body-parser'
 import { getDependenciesConfig } from './getDependenciesConfig.ts'
 
@@ -32,8 +33,8 @@ const updateRepositoryDependencies = async (context: Context<'release'>) => {
   }
 }
 
-const updateWebsiteConfig = async (context: Context<'release'>) => {
-  const { payload, octokit } = context
+const updateWebsiteConfig = async (context: Context<'release'>, app?: Probot) => {
+  const { payload } = context
   const releasedRepo = payload.repository.name
 
   // Only trigger update-website-config for lvce-editor releases
@@ -42,16 +43,15 @@ const updateWebsiteConfig = async (context: Context<'release'>) => {
   }
 
   try {
-    const authToken: any = await octokit.auth({
-      type: 'installation',
+    await dispatchMigrationWorkflow({
+      // @ts-ignore
+      app,
+      migrationId: '/migrations2/update-website-config',
+      migrationOptions: {
+        releasedTag: payload.release.tag_name,
+      },
+      targetRepository: 'lvce-editor/lvce-editor.github.io',
     })
-    const githubToken = typeof authToken === 'string' ? authToken : authToken.token
-    const migrationParams = {
-      githubToken,
-      repositoryName: 'lvce-editor.github.io',
-      repositoryOwner: 'lvce-editor',
-    }
-    await MigrationsWorker.invoke('/migrations2/update-website-config', migrationParams)
   } catch (error) {
     captureException(error as Error)
   }
@@ -65,29 +65,19 @@ export const shouldHandleRelease = (context: Context<'release'>): boolean => {
   return action === 'created' || action === 'published' || action === 'released'
 }
 
-export const handleReleaseReleased = async (context: Context<'release'>) => {
+export const handleReleaseReleased = async (context: Context<'release'>, app?: Probot) => {
   if (!shouldHandleRelease(context)) {
     return
   }
-  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context), updateWebsiteConfig(context)])
-}
-
-const send = (res: any, result: any) => {
-  if (result.type === 'error') {
-    res.send(result.error)
-  } else {
-    res.send(result.text)
-  }
+  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context), updateWebsiteConfig(context, app)])
 }
 
 const handleHelloWorld = async (req: any, res: any) => {
-  const result = await MigrationsWorker.invoke('/hello-world')
-  send(res, result)
+  res.send('Hello World')
 }
 
 const handleMigrationsList = async (req: any, res: any) => {
-  const result = await MigrationsWorker.invoke('/migrations2/list')
-  send(res, result)
+  res.json([...migrations2RoutePatterns])
 }
 
 const enableCustomRoutes = async (app: Probot, getRouter: ApplicationFunctionOptions['getRouter']) => {
@@ -189,6 +179,7 @@ export default (app: Probot, { getRouter }: ApplicationFunctionOptions) => {
   console.log('Application starting up...')
   console.log(`cpus: ${availableParallelism()}`)
   enableCustomRoutes(app, getRouter)
-  app.on('release', handleReleaseReleased)
+  app.on('release', (context) => handleReleaseReleased(context, app))
+  app.on('workflow_run', createHandleMigrationWorkflowRun({ app }) as any)
   console.log('Event handlers registered')
 }

@@ -1,7 +1,9 @@
 default_events:
   - release
+  - workflow_run
 
 default_permissions:
+  actions: read
   contents: write
   metadata: read
   pull_requests: write
