@@ -10,6 +10,8 @@ beforeEach(() => {
   warnSpy = jest.fn()
 })
 
+const MIGRATION_WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
+
 afterEach(() => {
   jest.restoreAllMocks()
 })
@@ -79,7 +81,7 @@ test('applies an uploaded migration artifact when the workflow run completes', a
         event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        name: 'run-migration-on-demand',
+        path: MIGRATION_WORKFLOW_PATH,
       },
     },
   }
@@ -154,7 +156,7 @@ test('ignores unrelated workflow runs', async () => {
         event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        name: 'ci',
+        path: '.github/workflows/ci.yml',
       },
     },
   }
@@ -197,7 +199,7 @@ test('ignores workflow runs that were not dispatched manually on main', async ()
         event: 'pull_request',
         head_branch: 'feature/test',
         id: 123,
-        name: 'run-migration-on-demand',
+        path: MIGRATION_WORKFLOW_PATH,
       },
     },
   }
@@ -253,7 +255,7 @@ test('rejects artifacts that target repositories outside lvce-editor', async () 
         event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        name: 'run-migration-on-demand',
+        path: MIGRATION_WORKFLOW_PATH,
       },
     },
   }
@@ -307,7 +309,7 @@ test('logs when a workflow artifact contains no changed files', async () => {
         event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        name: 'run-migration-on-demand',
+        path: MIGRATION_WORKFLOW_PATH,
       },
     },
   }
@@ -387,7 +389,7 @@ test('logs when the github worker reports no effective changes', async () => {
         event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        name: 'run-migration-on-demand',
+        path: MIGRATION_WORKFLOW_PATH,
       },
     },
   }
@@ -467,7 +469,7 @@ test('logs failures from the github worker', async () => {
         event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        name: 'run-migration-on-demand',
+        path: MIGRATION_WORKFLOW_PATH,
       },
     },
   }
