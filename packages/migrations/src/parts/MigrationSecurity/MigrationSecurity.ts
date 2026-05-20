@@ -1,20 +1,28 @@
 export const ALLOWED_TARGET_REPOSITORY_OWNER = 'lvce-editor'
 
-const targetRepositoryPattern = /^(?<owner>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})?)\/(?<repo>[A-Za-z0-9._-]+)$/
-
 export interface ParsedTargetRepository {
   readonly owner: string
   readonly repo: string
 }
 
 export const parseTargetRepository = (targetRepository: string): ParsedTargetRepository | undefined => {
-  const match = targetRepository.match(targetRepositoryPattern)
-  if (!match || !match.groups) {
+  const parts = targetRepository.split('/')
+  if (parts.length !== 2) {
+    return undefined
+  }
+  const [owner, repo] = parts
+  if (!owner || !repo) {
+    return undefined
+  }
+  if (owner.length > 39 || owner.startsWith('-') || owner.endsWith('-')) {
+    return undefined
+  }
+  if (!/^[A-Za-z0-9-]+$/.test(owner) || !/^[A-Za-z0-9._-]+$/.test(repo)) {
     return undefined
   }
   return {
-    owner: match.groups.owner,
-    repo: match.groups.repo,
+    owner,
+    repo,
   }
 }
 

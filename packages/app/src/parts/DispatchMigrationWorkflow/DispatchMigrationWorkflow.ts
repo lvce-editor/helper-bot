@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto'
 import type { Probot } from 'probot'
+import { randomUUID } from 'node:crypto'
 import { assertAllowedTargetRepository, assertSafeMigrationOptions, isValidBaseBranch } from '../MigrationSecurity/MigrationSecurity.ts'
 
 const HELPER_BOT_OWNER = 'lvce-editor'

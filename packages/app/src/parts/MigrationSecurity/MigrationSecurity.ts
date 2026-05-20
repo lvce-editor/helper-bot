@@ -1,9 +1,21 @@
 export const ALLOWED_TARGET_REPOSITORY_OWNER = 'lvce-editor'
 
-const targetRepositoryPattern = /^(?<owner>[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})?)\/(?<repo>[A-Za-z0-9._-]+)$/
-const sensitiveOptionNamePattern =
-  /^(access[-_]?token|api[-_]?key|auth[-_]?token|bearer|client[-_]?secret|credential|credentials|github[-_]?token|password|passphrase|private[-_]?key|secret|token)$/i
 const baseBranchPattern = /^(?!\/)(?!.*\.\.)(?!.*\/$)[A-Za-z0-9._/-]+$/
+const sensitiveOptionNames = new Set([
+  'accesstoken',
+  'apikey',
+  'authtoken',
+  'bearer',
+  'clientsecret',
+  'credential',
+  'credentials',
+  'githubtoken',
+  'password',
+  'passphrase',
+  'privatekey',
+  'secret',
+  'token',
+])
 
 export interface ParsedTargetRepository {
   readonly owner: string
@@ -25,7 +37,8 @@ const getSensitiveOptionPath = (value: unknown, path = ''): string | undefined =
   }
   for (const [key, nestedValue] of Object.entries(value)) {
     const currentPath = path ? `${path}.${key}` : key
-    if (sensitiveOptionNamePattern.test(key)) {
+    const normalizedKey = key.replaceAll('-', '').replaceAll('_', '').toLowerCase()
+    if (sensitiveOptionNames.has(normalizedKey)) {
       return currentPath
     }
     const sensitivePath = getSensitiveOptionPath(nestedValue, currentPath)
@@ -37,13 +50,23 @@ const getSensitiveOptionPath = (value: unknown, path = ''): string | undefined =
 }
 
 export const parseTargetRepository = (targetRepository: string): ParsedTargetRepository | undefined => {
-  const match = targetRepository.match(targetRepositoryPattern)
-  if (!match || !match.groups) {
+  const parts = targetRepository.split('/')
+  if (parts.length !== 2) {
+    return undefined
+  }
+  const [owner, repo] = parts
+  if (!owner || !repo) {
+    return undefined
+  }
+  if (owner.length > 39 || owner.startsWith('-') || owner.endsWith('-')) {
+    return undefined
+  }
+  if (!/^[A-Za-z0-9-]+$/.test(owner) || !/^[A-Za-z0-9._-]+$/.test(repo)) {
     return undefined
   }
   return {
-    owner: match.groups.owner,
-    repo: match.groups.repo,
+    owner,
+    repo,
   }
 }
 

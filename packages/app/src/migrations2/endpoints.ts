@@ -1,6 +1,6 @@
-import { timingSafeEqual } from 'node:crypto'
 import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
+import { timingSafeEqual } from 'node:crypto'
 import { captureException } from '../errorHandling.ts'
 import { dispatchMigrationWorkflow } from '../parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 import {
@@ -11,6 +11,13 @@ import {
 } from '../parts/MigrationSecurity/MigrationSecurity.ts'
 
 export const migrations2RoutePatterns = ['/migrations2/*', '/multi-migrations/*'] as const
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message
+  }
+  return 'Unknown error'
+}
 
 const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
   const authHeader = req.headers.authorization
@@ -33,7 +40,7 @@ const verifySecret = (req: Request, res: Response, secret: string | undefined): 
 }
 
 export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret: string | undefined }) => {
-  return async (req: Request, res: Response) => {
+  return async (req: Request, res: Response): Promise<void> => {
     if (!verifySecret(req, res, secret)) {
       return
     }
@@ -67,14 +74,15 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
     } catch (error) {
       res.status(403).json({
         code: 'FORBIDDEN_REPOSITORY',
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       })
       return
     }
 
     try {
       const commandKey = req.path
-      const { repository: ignoredRepository, baseBranch, ...migrationOptions } = body
+      const baseBranch = body.baseBranch
+      const migrationOptions = Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'baseBranch' && key !== 'repository'))
       if (baseBranch !== undefined && (typeof baseBranch !== 'string' || !isValidBaseBranch(baseBranch))) {
         res.status(400).json({
           code: 'INVALID_BASE_BRANCH',
@@ -107,20 +115,17 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
       captureException(error as Error)
       res.status(500).json({
         code: 'MIGRATION_ENDPOINT_ERROR',
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       })
     }
   }
 }
 
-export const registerMigrations2Endpoints = async (router: any, app: Probot, secret: string | undefined) => {
+export const registerMigrations2Endpoints = async (router: any, app: Probot, secret: string | undefined): Promise<void> => {
   const handler = createMigrations2Handler({
     app,
     secret,
   })
   router.post(/^\/migrations2\/.+$/, handler)
   router.post(/^\/multi-migrations\/.+$/, handler)
-  for (const routePattern of migrations2RoutePatterns) {
-    console.log(`Registered migrations2 endpoint pattern: ${routePattern}`)
-  }
 }
