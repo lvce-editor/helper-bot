@@ -6,7 +6,7 @@ import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSec
 
 const HELPER_BOT_OWNER = 'lvce-editor'
 const HELPER_BOT_REPO = 'helper-bot'
-const WORKFLOW_NAME = 'run-migration-on-demand'
+// const WORKFLOW_NAME = 'run-migration-on-demand'
 const WORKFLOW_EVENT = 'workflow_dispatch'
 // @ts-ignore
 const WORKFLOW_BRANCH = 'main'
