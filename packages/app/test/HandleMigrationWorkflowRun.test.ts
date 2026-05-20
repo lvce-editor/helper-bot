@@ -5,9 +5,9 @@ let consoleErrorSpy: ReturnType<typeof jest.spyOn>
 let consoleWarnSpy: ReturnType<typeof jest.spyOn>
 
 beforeEach(() => {
-  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => { })
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
-  consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { })
+  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 })
 
 afterEach(() => {
@@ -122,12 +122,8 @@ test('applies an uploaded migration artifact when the workflow run completes', a
   expect(consoleLogSpy).toHaveBeenCalledWith(
     '[HandleMigrationWorkflowRun] received webhook migration on demand for lvce-editor/lvce-editor.github.io /migrations2/update-website-config',
   )
-  expect(consoleLogSpy).toHaveBeenCalledWith(
-    '[HandleMigrationWorkflowRun] making pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config',
-  )
-  expect(consoleLogSpy).toHaveBeenCalledWith(
-    '[HandleMigrationWorkflowRun] made pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config',
-  )
+  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] making pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
+  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] made pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
 })
 
 test('ignores unrelated workflow runs', async () => {
@@ -445,7 +441,7 @@ test('logs failures from the github worker', async () => {
 
   const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
   const { captureException } = await import('../src/errorHandling.ts')
-  const captureExceptionSpy = jest.spyOn({ captureException }, 'captureException').mockImplementation(() => { })
+  const captureExceptionSpy = jest.spyOn({ captureException }, 'captureException').mockImplementation(() => {})
   const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
     app,
     downloadMigrationArtifact,
