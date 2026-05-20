@@ -1,4 +1,20 @@
-import { expect, jest, test } from '@jest/globals'
+import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
+
+let consoleLogSpy: ReturnType<typeof jest.spyOn>
+let consoleErrorSpy: ReturnType<typeof jest.spyOn>
+let consoleWarnSpy: ReturnType<typeof jest.spyOn>
+
+beforeEach(() => {
+  consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+})
+
+afterEach(() => {
+  consoleLogSpy.mockRestore()
+  consoleErrorSpy.mockRestore()
+  consoleWarnSpy.mockRestore()
+})
 
 test('applies an uploaded migration artifact when the workflow run completes', async () => {
   const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
@@ -102,6 +118,12 @@ test('applies an uploaded migration artifact when the workflow run completes', a
     pullRequestTitle: 'feature: update website config',
     repo: 'lvce-editor.github.io',
   })
+  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] received completed migration workflow webhook for run 123')
+  expect(consoleLogSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] received webhook migration on demand for lvce-editor/lvce-editor.github.io /migrations2/update-website-config',
+  )
+  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] making pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
+  expect(consoleLogSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] made pr for lvce-editor/lvce-editor.github.io /migrations2/update-website-config')
 })
 
 test('ignores unrelated workflow runs', async () => {
@@ -229,4 +251,208 @@ test('rejects artifacts that target repositories outside lvce-editor', async () 
 
   expect(app.auth).not.toHaveBeenCalled()
   expect(invokeGithubWorker).not.toHaveBeenCalled()
+  expect(consoleWarnSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] other-org/example-repo /migrations2/update-website-config: Target repository must belong to lvce-editor',
+  )
+})
+
+test('logs when a workflow artifact contains no changed files', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      migrationId: '/migrations2/update-dependencies',
+      requestId: 'request-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/explorer-view',
+    },
+  })
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        name: 'run-migration-on-demand',
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
+  expect(consoleLogSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/explorer-view /migrations2/update-dependencies: workflow run produced no changes',
+  )
+})
+
+test('logs when the github worker reports no effective changes', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [
+      {
+        content: 'same content',
+        path: 'file.txt',
+      },
+    ],
+    manifest: {
+      baseBranch: 'main',
+      branchName: 'feature/update-dependencies',
+      commitMessage: 'chore: update dependencies',
+      migrationId: '/migrations2/update-dependencies',
+      pullRequestTitle: 'chore: update dependencies',
+      requestId: 'request-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/explorer-view',
+    },
+  })
+  const invokeGithubWorker = (jest.fn() as any).mockResolvedValue(undefined)
+  const getRepoInstallation = (jest.fn() as any).mockResolvedValue({
+    data: {
+      id: 77,
+    },
+  })
+  const auth = (jest.fn() as any).mockResolvedValue({
+    token: 'installation-token',
+  })
+  const app: any = {
+    auth: (jest.fn() as any)
+      .mockResolvedValueOnce({
+        rest: {
+          apps: {
+            getRepoInstallation,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        auth,
+      }) as any,
+  }
+  const context: any = {
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        name: 'run-migration-on-demand',
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(invokeGithubWorker).toHaveBeenCalledTimes(1)
+  expect(consoleLogSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/explorer-view /migrations2/update-dependencies: workflow run produced no changes',
+  )
+})
+
+test('logs failures from the github worker', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [
+      {
+        content: 'new content',
+        path: 'file.txt',
+      },
+    ],
+    manifest: {
+      baseBranch: 'main',
+      branchName: 'feature/update-dependencies',
+      commitMessage: 'chore: update dependencies',
+      migrationId: '/migrations2/update-dependencies',
+      pullRequestTitle: 'chore: update dependencies',
+      requestId: 'request-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/explorer-view',
+    },
+  })
+  const invokeGithubWorker = (jest.fn() as any).mockRejectedValue(new Error('worker failed'))
+  const getRepoInstallation = (jest.fn() as any).mockResolvedValue({
+    data: {
+      id: 77,
+    },
+  })
+  const auth = (jest.fn() as any).mockResolvedValue({
+    token: 'installation-token',
+  })
+  const app: any = {
+    auth: (jest.fn() as any)
+      .mockResolvedValueOnce({
+        rest: {
+          apps: {
+            getRepoInstallation,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        auth,
+      }) as any,
+  }
+  const context: any = {
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        name: 'run-migration-on-demand',
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const { captureException } = await import('../src/errorHandling.ts')
+  const captureExceptionSpy = jest.spyOn({ captureException }, 'captureException').mockImplementation(() => {})
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(consoleErrorSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] failed to make pr for lvce-editor/explorer-view /migrations2/update-dependencies',
+    expect.any(Error),
+  )
+  captureExceptionSpy.mockRestore()
 })
