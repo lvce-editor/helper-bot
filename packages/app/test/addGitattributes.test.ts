@@ -59,7 +59,7 @@ test('should not modify existing .gitattributes file', async () => {
 
 test('should handle file read error gracefully', async () => {
   const nonExistentPath = join(tmpdir(), 'non-existent-directory')
-  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { })
+  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
 
   // Should not throw an error and should return false (indicating it couldn't create the file)
   const result = await checkAndAddGitattributes(nonExistentPath)
