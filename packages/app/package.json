@@ -19,6 +19,7 @@
     "@sentry/node": "^10.53.1",
     "body-parser": "^2.2.2",
     "cookie-parser": "^1.4.7",
+    "extract-zip": "^2.0.1",
     "execa": "^9.6.1",
     "probot": "^13.4.5"
   },

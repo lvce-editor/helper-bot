@@ -1,4 +1,5 @@
 import { execa } from 'execa'
+import extract from 'extract-zip'
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
@@ -55,25 +56,8 @@ const getArtifactArchiveBuffer = async (data: unknown): Promise<Buffer> => {
   throw new Error('Unsupported artifact archive payload')
 }
 
-const extractWithUnzip = async (archivePath: string, outputDir: string): Promise<void> => {
-  await execa('unzip', ['-o', archivePath, '-d', outputDir])
-}
-
-const extractWithPython = async (archivePath: string, outputDir: string): Promise<void> => {
-  await execa('python3', ['-m', 'zipfile', '-e', archivePath, outputDir])
-}
-
 const extractArtifactArchive = async (archivePath: string, outputDir: string): Promise<void> => {
-  try {
-    await extractWithUnzip(archivePath, outputDir)
-    return
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    if (!message.includes('ENOENT')) {
-      throw error
-    }
-  }
-  await extractWithPython(archivePath, outputDir)
+  await extract(archivePath, { dir: outputDir })
 }
 
 const resolveArtifactPath = (root: string, relativePath: string): string => {
