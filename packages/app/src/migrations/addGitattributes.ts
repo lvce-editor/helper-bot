@@ -100,8 +100,9 @@ export const addGitattributesMigration: Migration = {
         await rm(tempDir, { force: true, recursive: true })
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error'
       return {
-        error: error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error',
+        error: errorMessage,
         success: false,
       }
     }
