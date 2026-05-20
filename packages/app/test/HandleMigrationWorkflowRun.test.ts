@@ -11,11 +11,6 @@ test('applies an uploaded migration artifact when the workflow run completes', a
     manifest: {
       baseBranch: 'main',
       branchName: 'feature/update-website-config',
-      changedFiles: [
-        {
-          path: 'packages/website/config.json',
-        },
-      ],
       commitMessage: 'feature: update website config',
       migrationId: '/migrations2/update-website-config',
       pullRequestTitle: 'feature: update website config',

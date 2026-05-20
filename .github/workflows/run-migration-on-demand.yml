@@ -1,9 +1,15 @@
 # eslint-disable github-actions/on
 name: run-migration-on-demand
+run-name: ${{ inputs.runName }}
 
 on:
   workflow_dispatch:
     inputs:
+      runName:
+        description: Display name for the workflow run
+        required: false
+        default: run-migration-on-demand
+        type: string
       requestId:
         description: Correlation id for the migration request
         required: true

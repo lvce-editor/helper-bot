@@ -163,6 +163,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
           migrationId: '/migrations2/update-website-config',
           migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
           requestId: expect.any(String),
+          runName: 'migration-on-demand/lvce-editor.github.io/update-website-config',
           targetRepository: 'lvce-editor/lvce-editor.github.io',
         },
         ref: 'main',

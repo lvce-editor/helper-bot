@@ -3,16 +3,11 @@ import { dirname, join, normalize, sep } from 'node:path'
 import type { ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { commandMap } from '../CommandMap/CommandMap.ts'
 
-export interface ArtifactChangedFile {
-  readonly path: string
-  readonly type?: 'created' | 'updated' | 'deleted'
-}
-
 export interface ArtifactManifest {
   readonly baseBranch?: string
   readonly branchName?: string
-  readonly changedFiles: readonly ArtifactChangedFile[]
   readonly commitMessage?: string
+  readonly deletedFiles?: readonly string[]
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly migrationId: string
@@ -81,14 +76,12 @@ const invokeMigrationCommand = async (migrationId: string, options: Record<strin
 }
 
 const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Readonly<MigrationResult>): ArtifactManifest => {
+  const deletedFiles = result.changedFiles.filter((changedFile) => changedFile.type === 'deleted').map((changedFile) => changedFile.path)
   return {
     ...(options.baseBranch ? { baseBranch: options.baseBranch } : {}),
     ...('branchName' in result && result.branchName ? { branchName: result.branchName } : {}),
-    changedFiles: result.changedFiles.map((changedFile) => ({
-      path: changedFile.path,
-      ...(changedFile.type ? { type: changedFile.type } : {}),
-    })),
     ...('commitMessage' in result && result.commitMessage ? { commitMessage: result.commitMessage } : {}),
+    ...(deletedFiles.length > 0 ? { deletedFiles } : {}),
     ...('errorCode' in result && result.errorCode ? { errorCode: result.errorCode } : {}),
     ...('errorMessage' in result && result.errorMessage ? { errorMessage: result.errorMessage } : {}),
     migrationId: options.migrationId,
