@@ -85,21 +85,18 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
   const invokeGithubWorker = options.invokeGithubWorker || GithubWorker.invoke
 
   return async (context: Context<'workflow_run'>): Promise<void> => {
-    const { action, repository, workflow_run: workflowRun } = context.payload as any
+    const { repository, workflow_run: workflowRun } = context.payload
     const logger = getLogger(context)
-    if (action !== 'completed') {
-      return
-    }
     if (repository.owner.login !== HELPER_BOT_OWNER || repository.name !== HELPER_BOT_REPO) {
+      console.info(`[workflow_completed] repo mismatch`)
       return
     }
     if (workflowRun.name !== WORKFLOW_NAME) {
+      console.info(`[workflow_completed] workflow mismatch`)
       return
     }
     if (workflowRun.event !== WORKFLOW_EVENT) {
-      return
-    }
-    if (workflowRun.head_branch !== WORKFLOW_BRANCH) {
+      console.info(`[workflow_completed] event mismatch`)
       return
     }
     logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
