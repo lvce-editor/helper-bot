@@ -1,7 +1,7 @@
 import { access, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { createPullRequest } from '../createPullRequest.ts'
 import type { Migration, MigrationParams, MigrationResult } from './types.ts'
+import { createPullRequest } from '../createPullRequest.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 
@@ -9,23 +9,18 @@ export const checkAndAddGitattributes = async (root: string): Promise<boolean> =
   const gitattributesPath = join(root, '.gitattributes')
 
   try {
-    // Check if .gitattributes already exists
     await readFile(gitattributesPath, 'utf8')
-    console.log('.gitattributes file already exists')
     return false
-  } catch (error) {
+  } catch {
     try {
       await access(root)
     } catch {
       return false
     }
-    // File doesn't exist, try to create it
     try {
       await writeFile(gitattributesPath, GITATTRIBUTES_CONTENT, 'utf8')
-      console.log('Created .gitattributes file')
       return true
     } catch (writeError) {
-      // Directory doesn't exist or other write error
       console.warn('Failed to create .gitattributes file:', writeError)
       return false
     }
@@ -33,11 +28,11 @@ export const checkAndAddGitattributes = async (root: string): Promise<boolean> =
 }
 
 export const addGitattributesMigration: Migration = {
-  name: 'addGitattributes',
   description: 'Add .gitattributes file with text=auto eol=lf if missing',
+  name: 'addGitattributes',
   run: async (params: MigrationParams): Promise<MigrationResult> => {
     try {
-      const { octokit, owner, repo, baseBranch = 'main' } = params
+      const { baseBranch = 'main', octokit, owner, repo } = params
 
       // Create a temporary directory to clone the repo
       const { mkdtemp } = await import('node:fs/promises')
@@ -56,8 +51,8 @@ export const addGitattributesMigration: Migration = {
 
         if (!hasChanges) {
           return {
-            success: true,
             message: '.gitattributes file already exists',
+            success: true,
           }
         }
 
@@ -68,8 +63,8 @@ export const addGitattributesMigration: Migration = {
 
         if (!stdout) {
           return {
-            success: true,
             message: 'No changes needed',
+            success: true,
           }
         }
 
@@ -85,30 +80,29 @@ export const addGitattributesMigration: Migration = {
         // Create pull request
         const changedFiles = stdout.split('\n').filter(Boolean).length
         await createPullRequest({
-          octokit,
           baseBranch,
-          newBranch,
           commitableFiles: [], // Files are already committed
           commitMessage: 'ci: add .gitattributes file',
+          newBranch,
+          octokit,
           owner,
           pullRequestTitle: 'ci: add .gitattributes file',
           repo,
         })
 
         return {
-          success: true,
           changedFiles,
-          newBranch,
           message: '.gitattributes file added successfully',
+          newBranch,
+          success: true,
         }
       } finally {
-        // Clean up temporary directory
-        await rm(tempDir, { recursive: true, force: true })
+        await rm(tempDir, { force: true, recursive: true })
       }
     } catch (error) {
       return {
+        error: error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error',
         success: false,
-        error: error instanceof Error ? error.message : String(error),
       }
     }
   },
