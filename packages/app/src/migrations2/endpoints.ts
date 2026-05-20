@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express'
 import type { Probot } from 'probot'
 import { captureException } from '../errorHandling.ts'
-import * as MigrationsWorker from '../migrationsWorker.ts'
 import { dispatchMigrationWorkflow } from '../parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
+
+export const migrations2RoutePatterns = ['/migrations2/*', '/multi-migrations/*'] as const
 
 const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
   const authHeader = req.headers.authorization
@@ -18,7 +19,7 @@ const verifySecret = (req: Request, res: Response, secret: string | undefined): 
   return true
 }
 
-export const createMigrations2Handler = (commandKey: string, { app, secret }: { app: Probot; secret: string | undefined }) => {
+export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret: string | undefined }) => {
   return async (req: Request, res: Response) => {
     if (!verifySecret(req, res, secret)) {
       return
@@ -53,6 +54,7 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
     }
 
     try {
+      const commandKey = req.path
       const { repository: ignoredRepository, baseBranch, ...migrationOptions } = body
       const dispatchResult = await dispatchMigrationWorkflow({
         app,
@@ -78,29 +80,13 @@ export const createMigrations2Handler = (commandKey: string, { app, secret }: { 
 }
 
 export const registerMigrations2Endpoints = async (router: any, app: Probot, secret: string | undefined) => {
-  // Migrations2 endpoints - dynamically registered
-  try {
-    const commandsResult = await MigrationsWorker.invoke('/meta/list-commands-2')
-    const commands: string[] = commandsResult
-
-    // Filter commands that start with /migrations2
-    const migrations2Commands = commands.filter((cmd: string) => cmd.startsWith('/migrations2') || cmd.startsWith('/multi-migrations'))
-
-    // Register each migrations2 command as an endpoint
-    for (const commandKey of migrations2Commands) {
-      // Convert /migrations2/command-name to /migrations2/command-name endpoint
-      const endpointPath = commandKey
-      router.post(
-        endpointPath,
-        createMigrations2Handler(commandKey, {
-          app,
-          secret,
-        }),
-      )
-      console.log(`Registered migrations2 endpoint: ${endpointPath}`)
-    }
-  } catch (error) {
-    console.error('Failed to register migrations2 endpoints:', error)
-    process.exit(1)
+  const handler = createMigrations2Handler({
+    app,
+    secret,
+  })
+  router.post(/^\/migrations2\/.+$/, handler)
+  router.post(/^\/multi-migrations\/.+$/, handler)
+  for (const routePattern of migrations2RoutePatterns) {
+    console.log(`Registered migrations2 endpoint pattern: ${routePattern}`)
   }
 }

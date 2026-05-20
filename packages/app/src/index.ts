@@ -15,8 +15,7 @@ import {
   handleAddOidcPermissions,
   handleRemoveNpmToken,
 } from './migrations/endpoints.ts'
-import { registerMigrations2Endpoints } from './migrations2/endpoints.ts'
-import * as MigrationsWorker from './migrationsWorker.ts'
+import { migrations2RoutePatterns, registerMigrations2Endpoints } from './migrations2/endpoints.ts'
 import { dispatchMigrationWorkflow } from './parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 import { createHandleMigrationWorkflowRun } from './parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts'
 import bodyParser from 'body-parser'
@@ -73,22 +72,12 @@ export const handleReleaseReleased = async (context: Context<'release'>, app?: P
   await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context), updateWebsiteConfig(context, app)])
 }
 
-const send = (res: any, result: any) => {
-  if (result.type === 'error') {
-    res.send(result.error)
-  } else {
-    res.send(result.text)
-  }
-}
-
 const handleHelloWorld = async (req: any, res: any) => {
-  const result = await MigrationsWorker.invoke('/hello-world')
-  send(res, result)
+  res.send('Hello World')
 }
 
 const handleMigrationsList = async (req: any, res: any) => {
-  const result = await MigrationsWorker.invoke('/migrations2/list')
-  send(res, result)
+  res.json([...migrations2RoutePatterns])
 }
 
 const enableCustomRoutes = async (app: Probot, getRouter: ApplicationFunctionOptions['getRouter']) => {

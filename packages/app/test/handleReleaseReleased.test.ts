@@ -19,10 +19,6 @@ jest.unstable_mockModule('../src/getDependenciesConfig.ts', () => ({
   }),
 }))
 
-jest.unstable_mockModule('../src/migrationsWorker.ts', () => ({
-  invoke: jest.fn(),
-}))
-
 jest.unstable_mockModule('../src/parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts', () => ({
   dispatchMigrationWorkflow: mockDispatchMigrationWorkflow,
 }))

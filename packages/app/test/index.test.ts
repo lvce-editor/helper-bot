@@ -2,7 +2,6 @@ import { beforeEach, expect, test, afterEach, jest } from '@jest/globals'
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import * as myProbotApp from '../src/index.ts'
-import * as MigrationsWorker from '../src/migrationsWorker.ts'
 
 let probot: Probot | undefined
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
@@ -32,24 +31,9 @@ AaHtYd0PjUC075DVlwYuT+lrW1jTMk2lYQ4ORBxKT0Y2Tc6HrZGGE3VX968tAjNu
 cDIUGO9eluOat3V1vIlRyZ4BJsL/YbrVh8HfZ4+XD5vn37krunyR8HfY0GeWpFTH
 /ku7U7Z+BSQ9+D3Ifvt7jimPoGTWP7aoNRfFwwAg8muCZSEuTdMdVA==
 -----END RSA PRIVATE KEY-----`
-const mockMigrationsInvoke = jest.fn().mockImplementation((method: string) => {
-  if (method === '/meta/list-commands-2') {
-    return []
-  }
-  return {
-    changedFiles: [],
-    pullRequestTitle: 'feature: update website config',
-    status: 'success',
-    type: 'success',
-  }
-})
 
 beforeEach(() => {
   nock.disableNetConnect()
-  mockMigrationsInvoke.mockClear()
-  MigrationsWorker.setFactory(async () => ({
-    invoke: mockMigrationsInvoke,
-  }))
   probot = new Probot({
     appId: 123,
     privateKey,
@@ -230,8 +214,6 @@ test("doesn't call update-website-config migration for lvce-editor prereleases",
       },
     },
   })
-
-  expect(mockMigrationsInvoke).not.toHaveBeenCalled()
 })
 
 test("doesn't create a pull request when the new file content would be the same", async () => {
