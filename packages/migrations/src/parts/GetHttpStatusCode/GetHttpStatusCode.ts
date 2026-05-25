@@ -41,6 +41,7 @@ export const createMigrationResult = (result: MigrationResultWithoutStatusCode):
     ...(successResult.branchName === undefined ? {} : { branchName: successResult.branchName }),
     ...(successResult.commitMessage === undefined ? {} : { commitMessage: successResult.commitMessage }),
     ...(successResult.data === undefined ? {} : { data: successResult.data }),
+    ...(successResult.repoCommands === undefined ? {} : { repoCommands: successResult.repoCommands }),
   }
   return migrationSuccessResult
 }

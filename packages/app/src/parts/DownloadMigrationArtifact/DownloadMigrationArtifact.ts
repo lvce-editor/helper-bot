@@ -12,6 +12,10 @@ export interface ArtifactManifest {
   readonly errorMessage?: string
   readonly migrationId: string
   readonly pullRequestTitle?: string
+  readonly repoCommands?: readonly {
+    readonly branch: string
+    readonly type: 'modernize-branch-protection'
+  }[]
   readonly requestId: string
   readonly status: 'error' | 'success'
   readonly targetRepository: string

@@ -20,12 +20,20 @@ export interface ChangedFile {
   readonly type?: 'deleted'
 }
 
+export interface ModernizeBranchProtectionCommand {
+  readonly branch: string
+  readonly type: 'modernize-branch-protection'
+}
+
+export type RepoCommand = ModernizeBranchProtectionCommand
+
 export interface MigrationSuccessResult {
   readonly branchName?: string
   readonly changedFiles: readonly ChangedFile[]
   readonly commitMessage?: string
   readonly data?: any
   readonly pullRequestTitle: string
+  readonly repoCommands?: readonly RepoCommand[]
   readonly status: 'success'
   readonly statusCode: number
 }

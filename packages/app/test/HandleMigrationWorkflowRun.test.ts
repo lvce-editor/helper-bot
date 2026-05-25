@@ -329,6 +329,103 @@ test('logs when a workflow artifact contains no changed files', async () => {
   )
 })
 
+test('applies repo commands even when the artifact has no changed files', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      migrationId: '/migrations2/modernize-branch-protection',
+      repoCommands: [
+        {
+          branch: 'main',
+          type: 'modernize-branch-protection',
+        },
+      ],
+      requestId: 'request-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/explorer-view',
+    },
+  })
+  const invokeGithubWorker = (jest.fn() as any).mockResolvedValue({
+    data: {
+      changedFiles: 0,
+      message: 'Migration completed successfully',
+      status: 'success',
+    },
+    type: 'success',
+  })
+  const getRepoInstallation = (jest.fn() as any).mockResolvedValue({
+    data: {
+      id: 77,
+    },
+  })
+  const auth = (jest.fn() as any).mockResolvedValue({
+    token: 'installation-token',
+  })
+  const app: any = {
+    auth: (jest.fn() as any)
+      .mockResolvedValueOnce({
+        rest: {
+          apps: {
+            getRepoInstallation,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        auth,
+      }) as any,
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(invokeGithubWorker).toHaveBeenCalledWith('/github/apply-migration-result', {
+    baseBranch: undefined,
+    branchName: undefined,
+    changedFiles: [],
+    commitMessage: undefined,
+    githubToken: 'installation-token',
+    owner: 'lvce-editor',
+    pullRequestTitle: undefined,
+    repo: 'explorer-view',
+    repoCommands: [
+      {
+        branch: 'main',
+        type: 'modernize-branch-protection',
+      },
+    ],
+  })
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] made pr for lvce-editor/explorer-view /migrations2/modernize-branch-protection')
+})
+
 test('logs when the github worker reports no effective changes', async () => {
   const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
     changedFiles: [

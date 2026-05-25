@@ -123,6 +123,49 @@ test('returns undefined when no changed files', async (): Promise<void> => {
   expect(result).toBeUndefined()
 })
 
+test('applies branch protection modernization commands without creating a pull request', async (): Promise<void> => {
+  const scope = nock('https://api.github.com')
+    .get('/repos/test-owner/test-repo/rulesets')
+    .query({ includes_parents: false })
+    .reply(200, [])
+    .get('/repos/test-owner/test-repo/branches/main/protection')
+    .reply(403, {
+      message: 'Forbidden',
+    })
+    .post('/repos/test-owner/test-repo/rulesets', (body: any) => {
+      return body.name === 'Protect main' && body.target === 'branch'
+    })
+    .reply(201, {
+      id: 456,
+      name: 'Protect main',
+    })
+
+  const result = await applyMigrationResult({
+    changedFiles: [],
+    githubToken: 'test-token',
+    owner: 'test-owner',
+    pullRequestTitle: '',
+    repo: 'test-repo',
+    repoCommands: [
+      {
+        branch: 'main',
+        type: 'modernize-branch-protection',
+      },
+    ],
+  })
+
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: 0,
+    data: {
+      appliedRepoCommands: 1,
+    },
+    message: 'Migration completed successfully',
+    status: 'success',
+  })
+  expect(scope.isDone()).toBe(true)
+})
+
 test('handles file creation', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
     .get('/repos/test-owner/test-repo/git/ref/heads%2Fmain')
