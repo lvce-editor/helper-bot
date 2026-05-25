@@ -31,7 +31,7 @@ interface ClassicBranchProtection {
 interface Ruleset {
   readonly id: number
   readonly name: string
-  readonly target: string
+  readonly target?: string
 }
 
 interface RulesetData {
@@ -162,7 +162,7 @@ const getBranchRulesets = async (octokit: Readonly<Octokit>, owner: string, repo
     repo,
   })
   if (Array.isArray(response.data)) {
-    return response.data as readonly Ruleset[]
+    return response.data
   }
   return []
 }
@@ -177,7 +177,7 @@ const getClassicBranchProtection = async (octokit: Readonly<Octokit>, owner: str
       owner,
       repo,
     })
-    return response.data as ClassicBranchProtection
+    return response.data
   } catch (error: any) {
     if (error && (error.status === 403 || error.status === 404)) {
       return null
