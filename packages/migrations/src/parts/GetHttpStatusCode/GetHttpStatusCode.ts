@@ -51,7 +51,6 @@ export const emptyMigrationResult: MigrationSuccessResult = {
   changedFiles: [],
   commitMessage: '',
   pullRequestTitle: '',
-  repoCommands: [],
   status: 'success',
   statusCode: 200,
 }
