@@ -22,7 +22,7 @@
   "devDependencies": {
     "@jest/globals": "^30.4.1",
     "@lerna/legacy-package-management": "^8.2.4",
-    "@lvce-editor/eslint-config": "^10.2.0",
+    "@lvce-editor/eslint-config": "^10.5.0",
     "@swc-node/jest": "^1.9.1",
     "@types/node": "^25.9.1",
     "eslint": "^10.4.0",
@@ -30,7 +30,7 @@
     "lerna": "^8.2.4",
     "nock": "^14.0.15",
     "prettier": "^3.8.3",
-    "ts-jest": "^29.4.10",
+    "ts-jest": "^29.4.11",
     "typescript": "^6.0.3"
   }
 }
