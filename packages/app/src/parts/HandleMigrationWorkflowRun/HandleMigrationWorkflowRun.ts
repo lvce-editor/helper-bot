@@ -124,7 +124,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         )
         return
       }
-      if (artifact.changedFiles.length === 0) {
+      if (artifact.changedFiles.length === 0 && (!artifact.manifest.repoCommands || artifact.manifest.repoCommands.length === 0)) {
         logger.info(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
         return
       }
@@ -140,6 +140,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         owner,
         pullRequestTitle: artifact.manifest.pullRequestTitle,
         repo,
+        ...(artifact.manifest.repoCommands ? { repoCommands: artifact.manifest.repoCommands } : {}),
       })
       logGithubWorkerOutcome(logger, migrationLabel, workerResult)
     } catch (error) {

@@ -108,6 +108,51 @@ test('writes deleted file paths to the manifest without creating file entries', 
   })
 })
 
+test('writes repo commands to the manifest', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    invokeMigration: async (): Promise<MigrationResult> => {
+      return {
+        changedFiles: [],
+        data: {
+          branch: 'main',
+          message: 'Queued branch protection modernization',
+        },
+        pullRequestTitle: '',
+        repoCommands: [
+          {
+            branch: 'main',
+            type: 'modernize-branch-protection',
+          },
+        ],
+        status: 'success',
+        statusCode: 200,
+      }
+    },
+    migrationId: '/migrations2/modernize-branch-protection',
+    outputDir,
+    requestId: 'request-commands',
+    targetRepository: 'lvce-editor/example-repo',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+
+  expect(JSON.parse(manifestContent)).toEqual({
+    migrationId: '/migrations2/modernize-branch-protection',
+    repoCommands: [
+      {
+        branch: 'main',
+        type: 'modernize-branch-protection',
+      },
+    ],
+    requestId: 'request-commands',
+    status: 'success',
+    targetRepository: 'lvce-editor/example-repo',
+  })
+})
+
 test('writes an error manifest when the target repository is outside lvce-editor', async () => {
   const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
 

@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, normalize, sep } from 'node:path'
-import type { ChangedFile, MigrationResult } from '../Types/Types.ts'
+import type { ChangedFile, MigrationResult, RepoCommand } from '../Types/Types.ts'
 import { commandMap } from '../CommandMap/CommandMap.ts'
 import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
 
@@ -13,6 +13,7 @@ export interface ArtifactManifest {
   readonly errorMessage?: string
   readonly migrationId: string
   readonly pullRequestTitle?: string
+  readonly repoCommands?: readonly RepoCommand[]
   readonly requestId: string
   readonly status: 'error' | 'success'
   readonly targetRepository: string
@@ -87,6 +88,7 @@ const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Read
     ...('errorMessage' in result && result.errorMessage ? { errorMessage: result.errorMessage } : {}),
     migrationId: options.migrationId,
     ...('pullRequestTitle' in result && result.pullRequestTitle ? { pullRequestTitle: result.pullRequestTitle } : {}),
+    ...('repoCommands' in result && result.repoCommands ? { repoCommands: result.repoCommands } : {}),
     requestId: options.requestId,
     status: result.status,
     targetRepository: options.targetRepository,

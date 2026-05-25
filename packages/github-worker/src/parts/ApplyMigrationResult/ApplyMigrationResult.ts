@@ -1,5 +1,6 @@
 import type { Octokit } from '@octokit/rest'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
+import { applyRepoCommands, type RepoCommand } from '../ApplyRepoCommands/ApplyRepoCommands.ts'
 
 export interface ChangedFile {
   readonly content: string
@@ -28,6 +29,7 @@ export interface ApplyMigrationResultOptions {
   readonly owner: string
   readonly pullRequestTitle: string
   readonly repo: string
+  readonly repoCommands?: readonly RepoCommand[]
 }
 
 export interface ApplyMigrationResultResult {
@@ -156,15 +158,28 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
     owner,
     pullRequestTitle,
     repo,
+    repoCommands = [],
   } = options
 
-  if (changedFiles.length === 0) {
+  if (changedFiles.length === 0 && repoCommands.length === 0) {
     return undefined
   }
 
   const octokit: Octokit = new OctokitConstructor({
     auth: githubToken,
   })
+
+  const appliedRepoCommands = await applyRepoCommands(octokit, owner, repo, repoCommands)
+
+  if (changedFiles.length === 0) {
+    return {
+      branchName: '',
+      changedFiles: 0,
+      ...(appliedRepoCommands === 0 ? {} : { data: { appliedRepoCommands } }),
+      message: 'Migration completed successfully',
+      status: 'success',
+    }
+  }
 
   const branchName = providedBranchName || `migration-${Date.now()}`
   const commitMessage = providedCommitMessage || pullRequestTitle
