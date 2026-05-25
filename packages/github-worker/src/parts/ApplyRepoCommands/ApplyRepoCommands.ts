@@ -231,12 +231,7 @@ const applyModernizeBranchProtection = async (octokit: Readonly<Octokit>, owner:
   }
 }
 
-export const applyRepoCommands = async (
-  octokit: Readonly<Octokit>,
-  owner: string,
-  repo: string,
-  repoCommands: readonly RepoCommand[],
-): Promise<number> => {
+export const applyRepoCommands = async (octokit: Readonly<Octokit>, owner: string, repo: string, repoCommands: readonly RepoCommand[]): Promise<number> => {
   for (const repoCommand of repoCommands) {
     if (repoCommand.type === 'modernize-branch-protection') {
       await applyModernizeBranchProtection(octokit, owner, repo, repoCommand.branch)
