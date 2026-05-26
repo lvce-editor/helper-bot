@@ -19,6 +19,10 @@ const getErrorMessage = (error: unknown): string => {
   return 'Unknown error'
 }
 
+const isGithubActionsUnavailableError = (error: unknown): boolean => {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 500
+}
+
 const verifySecret = (req: Request, res: Response, secret: string | undefined): boolean => {
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -113,6 +117,13 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
       }
       console.error(error)
       captureException(error as Error)
+      if (isGithubActionsUnavailableError(error)) {
+        res.status(500).json({
+          code: 'E_GITHUB_ACTIONS_UNAVAILABLE',
+          error: 'Migration failed because Github Actions is currently unavailble',
+        })
+        return
+      }
       res.status(500).json({
         code: 'MIGRATION_ENDPOINT_ERROR',
         error: getErrorMessage(error),
