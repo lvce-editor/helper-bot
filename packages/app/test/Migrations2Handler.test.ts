@@ -210,6 +210,42 @@ test('dispatches one workflow per repository for multi-migrations', async () => 
   })
 })
 
+test('normalizes bare multi-migration names to migrations2 command ids', async () => {
+  mockDispatchMigrationWorkflow.mockResolvedValue({
+    requestId: 'request-1',
+  })
+  const app = {} as any
+  const response = createResponse()
+  const handler = createMigrations2Handler({
+    app,
+    secret: 'top-secret',
+  })
+
+  await handler(
+    {
+      body: {
+        migrationName: 'update-node-version',
+        migrationOptions: {},
+        repositoryNames: ['lvce-editor/helper-bot'],
+      },
+      headers: {
+        authorization: 'Bearer top-secret',
+      },
+      path: '/multi-migrations/generic',
+    } as any,
+    response,
+  )
+
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    baseBranch: 'main',
+    migrationId: '/migrations2/update-node-version',
+    migrationOptions: {},
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+  expect(response.status).toHaveBeenCalledWith(202)
+})
+
 test('rejects multi-migration repositories outside the lvce-editor organization', async () => {
   const response = createResponse()
   const handler = createMigrations2Handler({

@@ -12,6 +12,13 @@ import {
 
 export const migrations2RoutePatterns = ['/migrations2/*', '/multi-migrations/*'] as const
 
+const normalizeMultiMigrationId = (migrationName: string): string => {
+  if (migrationName.startsWith('/')) {
+    return migrationName
+  }
+  return `/migrations2/${migrationName}`
+}
+
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message
@@ -112,12 +119,13 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
         }
         const safeMigrationOptions = migrationOptions || {}
         assertSafeMigrationOptions(safeMigrationOptions)
+        const migrationId = normalizeMultiMigrationId(migrationName)
         const results = []
         for (const repositoryName of repositoryNames) {
           const dispatchResult = await dispatchMigrationWorkflow({
             app,
             baseBranch: baseBranch || 'main',
-            migrationId: migrationName,
+            migrationId,
             migrationOptions: safeMigrationOptions,
             targetRepository: repositoryName,
           })
