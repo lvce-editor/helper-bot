@@ -58,35 +58,10 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
       return
     }
 
-    const { repository } = body
-    if (!repository) {
-      res.status(400).json({
-        code: 'MISSING_REPOSITORY',
-        error: 'Missing repository parameter',
-      })
-      return
-    }
-    if (typeof repository !== 'string' || !parseTargetRepository(repository)) {
-      res.status(400).json({
-        code: 'INVALID_REPOSITORY',
-        error: 'Invalid repository parameter',
-      })
-      return
-    }
     try {
-      assertAllowedTargetRepository(repository)
-    } catch (error) {
-      res.status(403).json({
-        code: 'FORBIDDEN_REPOSITORY',
-        error: getErrorMessage(error),
-      })
-      return
-    }
-
-    try {
+      const isMultiMigration = req.path.startsWith('/multi-migrations/')
       const commandKey = req.path
       const { baseBranch } = body
-      const migrationOptions = Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'baseBranch' && key !== 'repository'))
       if (baseBranch !== undefined && (typeof baseBranch !== 'string' || !isValidBaseBranch(baseBranch))) {
         res.status(400).json({
           code: 'INVALID_BASE_BRANCH',
@@ -94,6 +69,98 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
         })
         return
       }
+      if (isMultiMigration) {
+        const { migrationName, migrationOptions, repositoryNames } = body
+        if (typeof migrationName !== 'string' || migrationName.length === 0) {
+          res.status(400).json({
+            code: 'MISSING_MIGRATION_NAME',
+            error: 'Missing migrationName parameter',
+          })
+          return
+        }
+        if (!Array.isArray(repositoryNames) || repositoryNames.length === 0) {
+          res.status(400).json({
+            code: 'INVALID_REPOSITORY_NAMES',
+            error: 'repositoryNames is required and must be a non-empty array',
+          })
+          return
+        }
+        for (const repositoryName of repositoryNames) {
+          if (typeof repositoryName !== 'string' || !parseTargetRepository(repositoryName)) {
+            res.status(400).json({
+              code: 'INVALID_REPOSITORY',
+              error: 'Invalid repository parameter',
+            })
+            return
+          }
+          try {
+            assertAllowedTargetRepository(repositoryName)
+          } catch (error) {
+            res.status(403).json({
+              code: 'FORBIDDEN_REPOSITORY',
+              error: getErrorMessage(error),
+            })
+            return
+          }
+        }
+        if (migrationOptions !== undefined && (!migrationOptions || typeof migrationOptions !== 'object' || Array.isArray(migrationOptions))) {
+          res.status(400).json({
+            code: 'INVALID_MIGRATION_OPTIONS',
+            error: 'migrationOptions must be an object',
+          })
+          return
+        }
+        const safeMigrationOptions = migrationOptions || {}
+        assertSafeMigrationOptions(safeMigrationOptions)
+        const results = []
+        for (const repositoryName of repositoryNames) {
+          const dispatchResult = await dispatchMigrationWorkflow({
+            app,
+            baseBranch: baseBranch || 'main',
+            migrationId: migrationName,
+            migrationOptions: safeMigrationOptions,
+            targetRepository: repositoryName,
+          })
+          results.push({
+            repository: repositoryName,
+            requestId: dispatchResult.requestId,
+          })
+        }
+        res.status(202).json({
+          message: 'Migration workflows dispatched successfully',
+          results,
+          status: 'queued',
+          total: results.length,
+        })
+        return
+      }
+
+      const { repository } = body
+      if (!repository) {
+        res.status(400).json({
+          code: 'MISSING_REPOSITORY',
+          error: 'Missing repository parameter',
+        })
+        return
+      }
+      if (typeof repository !== 'string' || !parseTargetRepository(repository)) {
+        res.status(400).json({
+          code: 'INVALID_REPOSITORY',
+          error: 'Invalid repository parameter',
+        })
+        return
+      }
+      try {
+        assertAllowedTargetRepository(repository)
+      } catch (error) {
+        res.status(403).json({
+          code: 'FORBIDDEN_REPOSITORY',
+          error: getErrorMessage(error),
+        })
+        return
+      }
+
+      const migrationOptions = Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'baseBranch' && key !== 'repository'))
       assertSafeMigrationOptions(migrationOptions)
       const dispatchResult = await dispatchMigrationWorkflow({
         app,
