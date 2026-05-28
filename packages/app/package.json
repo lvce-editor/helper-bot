@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@lvce-editor/rpc": "^6.4.0",
-    "@lvce-editor/rpc-registry": "^9.23.0",
+    "@lvce-editor/rpc-registry": "^9.24.0",
     "@lvce-editor/verror": "^1.7.0",
     "body-parser": "^2.2.2",
     "cookie-parser": "^1.4.7",
