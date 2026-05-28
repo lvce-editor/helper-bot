@@ -73,4 +73,5 @@ jobs:
         with:
           name: migration-result-${{ inputs.requestId }}
           path: ${{ runner.temp }}/migration-result
+          include-hidden-files: true
           if-no-files-found: error
