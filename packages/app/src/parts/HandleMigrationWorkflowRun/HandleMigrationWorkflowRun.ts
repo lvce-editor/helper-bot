@@ -145,9 +145,11 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
     let migrationLabel = `workflow run ${workflowRun.id}`
     try {
+      const installationId = (context.payload as any).installation?.id
+      const artifactOctokit = typeof installationId === 'number' ? await options.app.auth(installationId) : context.octokit
       logger.info(`${LOG_PREFIX} downloading migration artifact for workflow run ${workflowRun.id}`)
       const artifact = await downloadArtifact({
-        octokit: context.octokit,
+        octokit: artifactOctokit,
         owner: sourceOwner,
         repo: sourceRepo,
         runId: workflowRun.id,
