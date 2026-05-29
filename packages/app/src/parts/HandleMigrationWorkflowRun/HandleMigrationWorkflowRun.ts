@@ -145,12 +145,14 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
     let migrationLabel = `workflow run ${workflowRun.id}`
     try {
+      logger.info(`${LOG_PREFIX} downloading migration artifact for workflow run ${workflowRun.id}`)
       const artifact = await downloadArtifact({
         octokit: context.octokit,
         owner: sourceOwner,
         repo: sourceRepo,
         runId: workflowRun.id,
       })
+      logger.info(`${LOG_PREFIX} finished downloading migration artifact for workflow run ${workflowRun.id}`)
       if (!artifact) {
         logger.info(`${LOG_PREFIX} ${migrationLabel}: no migration artifact found`)
         return
