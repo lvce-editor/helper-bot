@@ -25,6 +25,14 @@ interface Logger {
   readonly warn: (...args: readonly unknown[]) => void
 }
 
+interface RepositoryRef {
+  readonly owner?: {
+    readonly login?: string
+  }
+  readonly name?: string
+  readonly full_name?: string
+}
+
 const getMigrationLabel = (manifest: { migrationId: string; targetRepository: string }): string => {
   return `${manifest.targetRepository} ${manifest.migrationId}`
 }
@@ -43,6 +51,35 @@ const fallbackLogger: Logger = {
 
 const getLogger = (context: Context<'workflow_run'>): Logger => {
   return (context as any).log || fallbackLogger
+}
+
+const isHelperBotRepository = (repository: RepositoryRef | undefined): boolean => {
+  if (!repository) {
+    return false
+  }
+  if (repository.full_name) {
+    return repository.full_name === `${HELPER_BOT_OWNER}/${HELPER_BOT_REPO}`
+  }
+  return repository.owner?.login === HELPER_BOT_OWNER && repository.name === HELPER_BOT_REPO
+}
+
+const getRepositoryLabel = (repository: RepositoryRef | undefined): string => {
+  if (!repository) {
+    return 'unknown'
+  }
+  if (repository.full_name) {
+    return repository.full_name
+  }
+  const owner = repository.owner?.login || 'unknown'
+  const name = repository.name || 'unknown'
+  return `${owner}/${name}`
+}
+
+const getWorkflowRepository = (repository: RepositoryRef | undefined, workflowRepository: RepositoryRef | undefined): RepositoryRef => {
+  if (isHelperBotRepository(workflowRepository)) {
+    return workflowRepository
+  }
+  return repository || {}
 }
 
 const getGithubWorkerData = (result: any): any => {
@@ -89,8 +126,11 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
   return async (context: Context<'workflow_run'>): Promise<void> => {
     const { repository, workflow_run: workflowRun } = context.payload
     const logger = getLogger(context)
-    if (repository.owner.login !== HELPER_BOT_OWNER || repository.name !== HELPER_BOT_REPO) {
-      console.info(`[workflow_completed] repo mismatch`)
+    const workflowRepository = (workflowRun as any).repository as RepositoryRef | undefined
+    if (!isHelperBotRepository(repository) && !isHelperBotRepository(workflowRepository)) {
+      console.info(
+        `[workflow_completed] repo mismatch: payload=${getRepositoryLabel(repository)} workflow_run=${getRepositoryLabel(workflowRepository)}`,
+      )
       return
     }
     if (workflowRun.path !== WORKFLOW_PATH) {
@@ -101,13 +141,16 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       console.info(`[workflow_completed] event mismatch`)
       return
     }
+    const sourceRepository = getWorkflowRepository(repository, workflowRepository)
+    const sourceOwner = sourceRepository.owner?.login || HELPER_BOT_OWNER
+    const sourceRepo = sourceRepository.name || HELPER_BOT_REPO
     logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
     let migrationLabel = `workflow run ${workflowRun.id}`
     try {
       const artifact = await downloadArtifact({
         octokit: context.octokit,
-        owner: repository.owner.login,
-        repo: repository.name,
+        owner: sourceOwner,
+        repo: sourceRepo,
         runId: workflowRun.id,
       })
       if (!artifact) {
