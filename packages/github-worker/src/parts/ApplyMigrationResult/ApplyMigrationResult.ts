@@ -59,6 +59,10 @@ const isNotFoundError = (error: unknown): boolean => {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 404
 }
 
+const isReferenceAlreadyExistsError = (error: unknown): boolean => {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 422
+}
+
 const getExistingContent = async (octokit: Readonly<Octokit>, owner: string, repo: string, baseBranch: string, path: string): Promise<string | null> => {
   try {
     const fileContent = await octokit.rest.repos.getContent({
@@ -205,13 +209,18 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
     return undefined
   }
 
-  // Create new branch pointing to base commit
-  await octokit.rest.git.createRef({
-    owner,
-    ref: `refs/heads/${branchName}`,
-    repo,
-    sha: startingCommitSha,
-  })
+  try {
+    await octokit.rest.git.createRef({
+      owner,
+      ref: `refs/heads/${branchName}`,
+      repo,
+      sha: startingCommitSha,
+    })
+  } catch (error) {
+    if (!isReferenceAlreadyExistsError(error)) {
+      throw error
+    }
+  }
 
   // Create tree with all changes
   // When using base_tree, files not specified remain unchanged

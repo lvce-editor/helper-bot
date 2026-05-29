@@ -40,6 +40,10 @@ const enableAutoSquash = async (octokit: Context<'release'>['octokit'], pullRequ
   )
 }
 
+const isReferenceAlreadyExistsError = (error: unknown): boolean => {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 422
+}
+
 export const updateBuiltinExtensions = async (context: Context<'release'>) => {
   const { payload, octokit } = context
   const tagName = payload.release.tag_name
@@ -83,12 +87,18 @@ export const updateBuiltinExtensions = async (context: Context<'release'>) => {
     ref: `heads/${baseBranch}`,
   })
 
-  await octokit.rest.git.createRef({
-    owner,
-    repo,
-    ref: `refs/heads/${newBranch}`,
-    sha: mainBranchRef.data.object.sha,
-  })
+  try {
+    await octokit.rest.git.createRef({
+      owner,
+      repo,
+      ref: `refs/heads/${newBranch}`,
+      sha: mainBranchRef.data.object.sha,
+    })
+  } catch (error) {
+    if (!isReferenceAlreadyExistsError(error)) {
+      throw error
+    }
+  }
   console.log('created branch')
 
   await context.octokit.rest.repos.createOrUpdateFileContents({

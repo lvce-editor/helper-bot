@@ -205,11 +205,6 @@ export default (app: Probot, { addHandler }: ApplicationFunctionOptions) => {
     }
   }
   app.on('release', (context) => handleReleaseReleased(context, app))
-  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({ app })
-  app.on('workflow_run.completed', ((context: Context<'workflow_run'>) => {
-    void handleMigrationWorkflowRun(context).catch((error) => {
-      captureException(error as Error)
-    })
-  }) as any)
+  app.on('workflow_run.completed', createHandleMigrationWorkflowRun({ app }) as any)
   console.log('Event handlers registered')
 }
