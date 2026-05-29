@@ -153,22 +153,29 @@ export const updateBuiltinExtensions = async (context: Context<'release'>) => {
     }
   }
 
-  const branchFilesJson = await context.octokit.rest.repos.getContent({
-    owner,
-    repo,
-    path: filesPath,
-    ref: newBranch,
-  })
-
-  if (!('content' in branchFilesJson.data)) {
-    console.log('no content in branch files')
-    return
+  let fileSha = filesJson.data.sha
+  let shouldUpdateFile = true
+  if (branchAlreadyExists) {
+    const branchFilesJson = await context.octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: filesPath,
+      ref: newBranch,
+    })
+    if (!('content' in branchFilesJson.data)) {
+      console.log('no content in branch files')
+      return
+    }
+    const branchFilesJsonDecoded = Buffer.from(branchFilesJson.data.content, 'base64').toString()
+    if (branchFilesJsonDecoded === filesJsonStringNew) {
+      console.log('no update necessary')
+      shouldUpdateFile = false
+    } else {
+      fileSha = branchFilesJson.data.sha
+    }
   }
 
-  const branchFilesJsonDecoded = Buffer.from(branchFilesJson.data.content, 'base64').toString()
-  if (branchFilesJsonDecoded === filesJsonStringNew) {
-    console.log('no update necessary')
-  } else {
+  if (shouldUpdateFile) {
     await context.octokit.rest.repos.createOrUpdateFileContents({
       owner,
       repo,
@@ -176,7 +183,7 @@ export const updateBuiltinExtensions = async (context: Context<'release'>) => {
       message: getCommitMessage(releasedRepo, tagName),
       content: filesJsonBase64New,
       branch: newBranch,
-      sha: branchFilesJson.data.sha,
+      sha: fileSha,
     })
   }
 
