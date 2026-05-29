@@ -194,7 +194,13 @@ const createCustomRoutesHandler = (app: Probot): Handler => {
 export default (app: Probot, { addHandler }: ApplicationFunctionOptions) => {
   console.log('Application starting up...')
   console.log(`cpus: ${availableParallelism()}`)
-  addHandler(createCustomRoutesHandler(app))
+  try {
+    addHandler(createCustomRoutesHandler(app))
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== 'No server instance') {
+      throw error
+    }
+  }
   app.on('release', (context) => handleReleaseReleased(context, app))
   const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({ app })
   app.on('workflow_run.completed', ((context: Context<'workflow_run'>) => {
