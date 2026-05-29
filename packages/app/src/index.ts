@@ -180,6 +180,11 @@ export default (app: Probot, { getRouter }: ApplicationFunctionOptions) => {
   console.log(`cpus: ${availableParallelism()}`)
   enableCustomRoutes(app, getRouter)
   app.on('release', (context) => handleReleaseReleased(context, app))
-  app.on('workflow_run.completed', createHandleMigrationWorkflowRun({ app }) as any)
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({ app })
+  app.on('workflow_run.completed', ((context: Context<'workflow_run'>) => {
+    void handleMigrationWorkflowRun(context).catch((error) => {
+      captureException(error as Error)
+    })
+  }) as any)
   console.log('Event handlers registered')
 }
