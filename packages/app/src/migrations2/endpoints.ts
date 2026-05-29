@@ -199,7 +199,7 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
   }
 }
 
-export const registerMigrations2Endpoints = async (router: any, app: Probot, secret: string | undefined): Promise<void> => {
+export const registerMigrations2Endpoints = (router: any, app: Probot, secret: string | undefined): void => {
   const handler = createMigrations2Handler({
     app,
     secret,
