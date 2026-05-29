@@ -63,6 +63,46 @@ const isReferenceAlreadyExistsError = (error: unknown): boolean => {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 422
 }
 
+const findOpenPullRequest = async (octokit: Readonly<Octokit>, owner: string, repo: string, branchName: string): Promise<any | undefined> => {
+  const pullRequests = await octokit.rest.pulls.list({
+    head: `${owner}:${branchName}`,
+    owner,
+    repo,
+    state: 'open',
+  })
+  return pullRequests.data[0]
+}
+
+const createPullRequest = async (
+  octokit: Readonly<Octokit>,
+  owner: string,
+  repo: string,
+  branchName: string,
+  baseBranch: string,
+  pullRequestTitle: string,
+): Promise<any> => {
+  try {
+    return await octokit.rest.pulls.create({
+      base: baseBranch,
+      head: branchName,
+      owner,
+      repo,
+      title: pullRequestTitle,
+    })
+  } catch (error) {
+    if (!isReferenceAlreadyExistsError(error)) {
+      throw error
+    }
+    const existingPullRequest = await findOpenPullRequest(octokit, owner, repo, branchName)
+    if (!existingPullRequest) {
+      throw error
+    }
+    return {
+      data: existingPullRequest,
+    }
+  }
+}
+
 const getExistingContent = async (octokit: Readonly<Octokit>, owner: string, repo: string, baseBranch: string, path: string): Promise<string | null> => {
   try {
     const fileContent = await octokit.rest.repos.getContent({
@@ -256,13 +296,7 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
   })
 
   // Create pull request
-  const pullRequestData = await octokit.rest.pulls.create({
-    base: baseBranch,
-    head: branchName,
-    owner,
-    repo,
-    title: pullRequestTitle,
-  })
+  const pullRequestData = await createPullRequest(octokit, owner, repo, branchName, baseBranch, pullRequestTitle)
 
   // Enable auto merge squash
   await enableAutoSquash(octokit, pullRequestData)
