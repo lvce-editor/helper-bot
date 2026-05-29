@@ -128,9 +128,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     const logger = getLogger(context)
     const workflowRepository = (workflowRun as any).repository as RepositoryRef | undefined
     if (!isHelperBotRepository(repository) && !isHelperBotRepository(workflowRepository)) {
-      console.info(
-        `[workflow_completed] repo mismatch: payload=${getRepositoryLabel(repository)} workflow_run=${getRepositoryLabel(workflowRepository)}`,
-      )
+      console.info(`[workflow_completed] repo mismatch: payload=${getRepositoryLabel(repository)} workflow_run=${getRepositoryLabel(workflowRepository)}`)
       return
     }
     if (workflowRun.path !== WORKFLOW_PATH) {
