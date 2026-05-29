@@ -1,5 +1,5 @@
 import './errorHandling.ts'
-import type { ApplicationFunctionOptions, Context, Probot } from 'probot'
+import type { ApplicationFunctionOptions, Context, Handler, Probot } from 'probot'
 import { handleDependencies } from './dependencies.ts'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
 import { updateDependencies } from './updateDependencies.ts'
@@ -18,7 +18,7 @@ import {
 import { migrations2RoutePatterns, registerMigrations2Endpoints } from './migrations2/endpoints.ts'
 import { dispatchMigrationWorkflow } from './parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 import { createHandleMigrationWorkflowRun } from './parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts'
-import bodyParser from 'body-parser'
+import express from 'express'
 import { getDependenciesConfig } from './getDependenciesConfig.ts'
 
 const dependencies = getDependenciesConfig().dependencies
@@ -80,21 +80,16 @@ const handleMigrationsList = async (req: any, res: any) => {
   res.json([...migrations2RoutePatterns])
 }
 
-const enableCustomRoutes = async (app: Probot, getRouter: ApplicationFunctionOptions['getRouter']) => {
-  if (!getRouter || typeof getRouter !== 'function') {
-    return
-  }
-  const router = getRouter('/my-app')
+const createCustomRoutesHandler = (app: Probot): Handler => {
+  const server = express()
+  const router = express.Router()
 
-  router.use(bodyParser.json())
+  router.use(express.json())
   router.get('/hello-world', handleHelloWorld)
   router.get('/migrations/list', handleMigrationsList)
 
   const installationIdString = process.env.INSTALLATION_ID
-  if (!installationIdString) {
-    throw new Error('installation id not found')
-  }
-  const installationId = parseInt(installationIdString)
+  const installationId = installationIdString ? parseInt(installationIdString, 10) : undefined
 
   router.post(
     '/update-dependencies',
@@ -172,13 +167,34 @@ const enableCustomRoutes = async (app: Probot, getRouter: ApplicationFunctionOpt
   )
 
   // Migrations2 endpoints - dynamically registered
-  await registerMigrations2Endpoints(router, app, process.env.DEPENDENCIES_SECRET)
+  registerMigrations2Endpoints(router, app, process.env.DEPENDENCIES_SECRET)
+
+  server.use('/my-app', router)
+
+  return async (req, res) => {
+    const url = req.url || ''
+    if (url !== '/my-app' && !url.startsWith('/my-app/')) {
+      return false
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      server(req as any, res as any, (error?: unknown) => {
+        if (error) {
+          reject(error)
+          return
+        }
+        resolve()
+      })
+    })
+
+    return true
+  }
 }
 
-export default (app: Probot, { getRouter }: ApplicationFunctionOptions) => {
+export default (app: Probot, { addHandler }: ApplicationFunctionOptions) => {
   console.log('Application starting up...')
   console.log(`cpus: ${availableParallelism()}`)
-  enableCustomRoutes(app, getRouter)
+  addHandler(createCustomRoutesHandler(app))
   app.on('release', (context) => handleReleaseReleased(context, app))
   const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({ app })
   app.on('workflow_run.completed', ((context: Context<'workflow_run'>) => {

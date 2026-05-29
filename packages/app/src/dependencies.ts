@@ -199,9 +199,14 @@ const { addToQueue } = createQueue<QueueItem>(handleQueueItem)
  * @param {{ app: import('probot').Probot, secret: string, installationId:number }} params
  */
 export const handleDependencies =
-  ({ app, secret, installationId }: { app: Probot; secret: string; installationId: number }) =>
+  ({ app, secret, installationId }: { app: Probot; secret: string; installationId?: number }) =>
   async (req: Request, res: Response) => {
     if (!verifySecret(req, res, secret)) {
+      return
+    }
+
+    if (!installationId || Number.isNaN(installationId)) {
+      res.status(500).send('installation id not configured')
       return
     }
 
