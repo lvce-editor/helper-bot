@@ -1,5 +1,6 @@
 import './errorHandling.ts'
-import type { ApplicationFunctionOptions, Context, Handler, Probot } from 'probot'
+import type { ApplicationFunctionOptions, Context, Probot } from 'probot'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { handleDependencies } from './dependencies.ts'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
 import { updateDependencies } from './updateDependencies.ts'
@@ -80,7 +81,9 @@ const handleMigrationsList = async (req: any, res: any) => {
   res.json([...migrations2RoutePatterns])
 }
 
-const createCustomRoutesHandler = (app: Probot): Handler => {
+type CustomRouteHandler = (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>
+
+const createCustomRoutesHandler = (app: Probot): CustomRouteHandler => {
   const server = express()
   const router = express.Router()
 
@@ -171,7 +174,7 @@ const createCustomRoutesHandler = (app: Probot): Handler => {
 
   server.use('/my-app', router)
 
-  return async (req, res) => {
+  return async (req: IncomingMessage, res: ServerResponse) => {
     const url = req.url || ''
     if (url !== '/my-app' && !url.startsWith('/my-app/')) {
       return false
