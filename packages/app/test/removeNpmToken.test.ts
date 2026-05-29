@@ -100,6 +100,7 @@ jobs:
       repos: {
         // @ts-ignore
         getContent: jest.fn().mockResolvedValueOnce(releaseWorkflow as any),
+        createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
       },
       git: {
         // @ts-ignore
@@ -111,10 +112,6 @@ jobs:
         // @ts-ignore
         create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
-    },
-    repos: {
-      // @ts-ignore
-      createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
     // @ts-ignore
     graphql: jest.fn().mockResolvedValue({}),
@@ -147,7 +144,7 @@ jobs:
     sha: 'base-sha',
   })
 
-  expect(octokit.repos.createOrUpdateFileContents).toHaveBeenCalledWith({
+  expect(octokit.rest.repos.createOrUpdateFileContents).toHaveBeenCalledWith({
     owner: 'org',
     repo: 'repo',
     path: '.github/workflows/release.yml',
@@ -203,6 +200,7 @@ jobs:
       repos: {
         // @ts-ignore
         getContent: jest.fn().mockResolvedValueOnce(releaseWorkflow as any),
+        createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
       },
       git: {
         // @ts-ignore
@@ -214,10 +212,6 @@ jobs:
         // @ts-ignore
         create: jest.fn().mockResolvedValue({ data: { number: 1, node_id: 'test-node-id' } }),
       },
-    },
-    repos: {
-      // @ts-ignore
-      createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
     // @ts-ignore
     graphql: jest.fn().mockResolvedValue({}),
@@ -238,7 +232,7 @@ jobs:
   })
 
   // Verify the content was updated correctly
-  const updateCall = octokit.repos.createOrUpdateFileContents.mock.calls[0]
+  const updateCall = octokit.rest.repos.createOrUpdateFileContents.mock.calls[0]
   const updatedContent = Buffer.from(updateCall[0].content, 'base64').toString()
 
   expect(updatedContent).not.toContain('NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}')
