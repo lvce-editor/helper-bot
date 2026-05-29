@@ -55,6 +55,11 @@ interface DeletionEntry {
   readonly type: 'blob'
 }
 
+interface PullRequestData {
+  readonly node_id: string
+  readonly number: number
+}
+
 const isNotFoundError = (error: unknown): boolean => {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 404
 }
@@ -63,7 +68,7 @@ const isReferenceAlreadyExistsError = (error: unknown): boolean => {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 422
 }
 
-const findOpenPullRequest = async (octokit: Readonly<Octokit>, owner: string, repo: string, branchName: string): Promise<any | undefined> => {
+const findOpenPullRequest = async (octokit: Readonly<Octokit>, owner: string, repo: string, branchName: string): Promise<PullRequestData | undefined> => {
   const pullRequests = await octokit.rest.pulls.list({
     head: `${owner}:${branchName}`,
     owner,
@@ -80,7 +85,7 @@ const createPullRequest = async (
   branchName: string,
   baseBranch: string,
   pullRequestTitle: string,
-): Promise<any> => {
+): Promise<{ readonly data: PullRequestData }> => {
   try {
     return await octokit.rest.pulls.create({
       base: baseBranch,
