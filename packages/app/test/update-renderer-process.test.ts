@@ -42,7 +42,7 @@ const myProbotApp = await import('../src/index.ts')
 const execa = await import('execa')
 const fs = await import('node:fs/promises')
 
-beforeEach(async () => {
+beforeEach(() => {
   nock.disableNetConnect()
   probot = new Probot({
     appId: 123,
@@ -54,7 +54,7 @@ beforeEach(async () => {
     }),
   })
   // @ts-ignore
-  await probot.load(myProbotApp.default || myProbotApp)
+  probot.load(myProbotApp.default || myProbotApp)
 })
 
 afterEach(() => {

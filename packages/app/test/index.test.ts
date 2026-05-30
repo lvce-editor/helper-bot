@@ -32,7 +32,7 @@ cDIUGO9eluOat3V1vIlRyZ4BJsL/YbrVh8HfZ4+XD5vn37krunyR8HfY0GeWpFTH
 /ku7U7Z+BSQ9+D3Ifvt7jimPoGTWP7aoNRfFwwAg8muCZSEuTdMdVA==
 -----END RSA PRIVATE KEY-----`
 
-beforeEach(async () => {
+beforeEach(() => {
   nock.disableNetConnect()
   probot = new Probot({
     appId: 123,
@@ -44,7 +44,7 @@ beforeEach(async () => {
     }),
   })
   // @ts-ignore
-  await probot.load(myProbotApp.default || myProbotApp)
+  probot.load(myProbotApp.default || myProbotApp)
 })
 
 afterEach(() => {

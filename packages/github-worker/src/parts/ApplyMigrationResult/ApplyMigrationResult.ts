@@ -55,57 +55,8 @@ interface DeletionEntry {
   readonly type: 'blob'
 }
 
-interface PullRequestData {
-  readonly node_id: string
-  readonly number: number
-}
-
 const isNotFoundError = (error: unknown): boolean => {
   return typeof error === 'object' && error !== null && 'status' in error && error.status === 404
-}
-
-const isReferenceAlreadyExistsError = (error: unknown): boolean => {
-  return typeof error === 'object' && error !== null && 'status' in error && error.status === 422
-}
-
-const findOpenPullRequest = async (octokit: Readonly<Octokit>, owner: string, repo: string, branchName: string): Promise<PullRequestData | undefined> => {
-  const pullRequests = await octokit.rest.pulls.list({
-    head: `${owner}:${branchName}`,
-    owner,
-    repo,
-    state: 'open',
-  })
-  return pullRequests.data[0]
-}
-
-const createPullRequest = async (
-  octokit: Readonly<Octokit>,
-  owner: string,
-  repo: string,
-  branchName: string,
-  baseBranch: string,
-  pullRequestTitle: string,
-): Promise<{ readonly data: PullRequestData }> => {
-  try {
-    return await octokit.rest.pulls.create({
-      base: baseBranch,
-      head: branchName,
-      owner,
-      repo,
-      title: pullRequestTitle,
-    })
-  } catch (error) {
-    if (!isReferenceAlreadyExistsError(error)) {
-      throw error
-    }
-    const existingPullRequest = await findOpenPullRequest(octokit, owner, repo, branchName)
-    if (!existingPullRequest) {
-      throw error
-    }
-    return {
-      data: existingPullRequest,
-    }
-  }
 }
 
 const getExistingContent = async (octokit: Readonly<Octokit>, owner: string, repo: string, baseBranch: string, path: string): Promise<string | null> => {
@@ -254,18 +205,13 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
     return undefined
   }
 
-  try {
-    await octokit.rest.git.createRef({
-      owner,
-      ref: `refs/heads/${branchName}`,
-      repo,
-      sha: startingCommitSha,
-    })
-  } catch (error) {
-    if (!isReferenceAlreadyExistsError(error)) {
-      throw error
-    }
-  }
+  // Create new branch pointing to base commit
+  await octokit.rest.git.createRef({
+    owner,
+    ref: `refs/heads/${branchName}`,
+    repo,
+    sha: startingCommitSha,
+  })
 
   // Create tree with all changes
   // When using base_tree, files not specified remain unchanged
@@ -301,7 +247,13 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
   })
 
   // Create pull request
-  const pullRequestData = await createPullRequest(octokit, owner, repo, branchName, baseBranch, pullRequestTitle)
+  const pullRequestData = await octokit.rest.pulls.create({
+    base: baseBranch,
+    head: branchName,
+    owner,
+    repo,
+    title: pullRequestTitle,
+  })
 
   // Enable auto merge squash
   await enableAutoSquash(octokit, pullRequestData)

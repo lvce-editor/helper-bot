@@ -56,8 +56,7 @@ const getArtifactArchiveBuffer = async (data: unknown): Promise<Buffer> => {
     const arrayBuffer = await data.arrayBuffer()
     return Buffer.from(arrayBuffer)
   }
-  const dataType = data === null ? 'null' : Array.isArray(data) ? 'array' : typeof data
-  throw new Error(`Unsupported artifact archive payload (type: ${dataType})`)
+  throw new Error('Unsupported artifact archive payload')
 }
 
 const extractArtifactArchive = async (archivePath: string, outputDir: string): Promise<void> => {
@@ -131,22 +130,13 @@ export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrat
   if (!artifact) {
     return undefined
   }
-  let archiveBuffer: Buffer
-  try {
-    const archiveResponse = await options.octokit.rest.actions.downloadArtifact({
-      archive_format: 'zip',
-      artifact_id: artifact.id,
-      owner: options.owner,
-      repo: options.repo,
-    })
-    archiveBuffer = await getArtifactArchiveBuffer(archiveResponse.data)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    throw new Error(
-      `Failed to download artifact zip for workflow run ${options.runId} in ${options.owner}/${options.repo} (artifact ${artifact.name} #${artifact.id}): ${message}`,
-      { cause: error instanceof Error ? error : undefined },
-    )
-  }
+  const archiveResponse = await options.octokit.rest.actions.downloadArtifact({
+    archive_format: 'zip',
+    artifact_id: artifact.id,
+    owner: options.owner,
+    repo: options.repo,
+  })
+  const archiveBuffer = await getArtifactArchiveBuffer(archiveResponse.data)
   const tempDir = await mkdtemp(join(tmpdir(), 'migration-artifact-'))
   const archivePath = join(tempDir, 'artifact.zip')
   const extractDir = join(tempDir, 'artifact')

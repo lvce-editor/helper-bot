@@ -40,50 +40,6 @@ const enableAutoSquash = async (octokit: Context<'release'>['octokit'], pullRequ
   )
 }
 
-const isReferenceAlreadyExistsError = (error: unknown): boolean => {
-  return typeof error === 'object' && error !== null && 'status' in error && error.status === 422
-}
-
-const findOpenPullRequest = async (octokit: Context<'release'>['octokit'], owner: string, repo: string, branch: string): Promise<any | undefined> => {
-  const pullRequests = await octokit.rest.pulls.list({
-    owner,
-    repo,
-    head: `${owner}:${branch}`,
-    state: 'open',
-  })
-  return pullRequests.data[0]
-}
-
-const createPullRequest = async (
-  octokit: Context<'release'>['octokit'],
-  owner: string,
-  repo: string,
-  head: string,
-  base: string,
-  title: string,
-): Promise<any> => {
-  try {
-    return await octokit.rest.pulls.create({
-      owner,
-      repo,
-      head,
-      base,
-      title,
-    })
-  } catch (error) {
-    if (!isReferenceAlreadyExistsError(error)) {
-      throw error
-    }
-    const existingPullRequest = await findOpenPullRequest(octokit, owner, repo, head)
-    if (!existingPullRequest) {
-      throw error
-    }
-    return {
-      data: existingPullRequest,
-    }
-  }
-}
-
 export const updateBuiltinExtensions = async (context: Context<'release'>) => {
   const { payload, octokit } = context
   const tagName = payload.release.tag_name
@@ -127,66 +83,29 @@ export const updateBuiltinExtensions = async (context: Context<'release'>) => {
     ref: `heads/${baseBranch}`,
   })
 
-  let branchAlreadyExists = false
-  try {
-    await octokit.rest.git.createRef({
-      owner,
-      repo,
-      ref: `refs/heads/${newBranch}`,
-      sha: mainBranchRef.data.object.sha,
-    })
-  } catch (error) {
-    if (!isReferenceAlreadyExistsError(error)) {
-      throw error
-    }
-    branchAlreadyExists = true
-  }
+  await octokit.rest.git.createRef({
+    owner,
+    repo,
+    ref: `refs/heads/${newBranch}`,
+    sha: mainBranchRef.data.object.sha,
+  })
   console.log('created branch')
 
-  if (branchAlreadyExists) {
-    const existingPullRequest = await findOpenPullRequest(octokit, owner, repo, newBranch)
-    if (existingPullRequest) {
-      await enableAutoSquash(octokit, {
-        data: existingPullRequest,
-      })
-      return
-    }
-  }
-
-  let fileSha = filesJson.data.sha
-  let shouldUpdateFile = true
-  if (branchAlreadyExists) {
-    const branchFilesJson = await context.octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: filesPath,
-      ref: newBranch,
-    })
-    if (!('content' in branchFilesJson.data)) {
-      console.log('no content in branch files')
-      return
-    }
-    const branchFilesJsonDecoded = Buffer.from(branchFilesJson.data.content, 'base64').toString()
-    if (branchFilesJsonDecoded === filesJsonStringNew) {
-      console.log('no update necessary')
-      shouldUpdateFile = false
-    } else {
-      fileSha = branchFilesJson.data.sha
-    }
-  }
-
-  if (shouldUpdateFile) {
-    await context.octokit.rest.repos.createOrUpdateFileContents({
-      owner,
-      repo,
-      path: filesPath,
-      message: getCommitMessage(releasedRepo, tagName),
-      content: filesJsonBase64New,
-      branch: newBranch,
-      sha: fileSha,
-    })
-  }
-
-  const pullRequestData = await createPullRequest(octokit, owner, repo, newBranch, baseBranch, `feature: update ${releasedRepo} to version ${tagName}`)
+  await context.octokit.repos.createOrUpdateFileContents({
+    owner,
+    repo,
+    path: filesPath,
+    message: getCommitMessage(releasedRepo, tagName),
+    content: filesJsonBase64New,
+    branch: newBranch,
+    sha: filesJson.data.sha,
+  })
+  const pullRequestData = await octokit.rest.pulls.create({
+    owner,
+    repo,
+    head: newBranch,
+    base: baseBranch,
+    title: `feature: update ${releasedRepo} to version ${tagName}`,
+  })
   await enableAutoSquash(octokit, pullRequestData)
 }

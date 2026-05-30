@@ -93,7 +93,7 @@ export const removeNpmTokenMigration: Migration = {
       // Update the file
       const updatedContentBase64 = Buffer.from(updatedContent).toString('base64')
 
-      await octokit.rest.repos.createOrUpdateFileContents({
+      await octokit.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: `${WORKFLOWS_DIR}/release.yml`,

@@ -104,7 +104,6 @@ test('updates workflow files and opens PR', async () => {
       repos: {
         // @ts-ignore
         getContent: jest.fn().mockResolvedValueOnce(workflowsListing).mockResolvedValueOnce(ciContent).mockResolvedValueOnce(releaseContent),
-        createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
       },
       git: {
         // @ts-ignore
@@ -116,6 +115,10 @@ test('updates workflow files and opens PR', async () => {
         // @ts-ignore
         create: jest.fn().mockResolvedValue({ data: { number: 1 } }),
       },
+    },
+    repos: {
+      // @ts-ignore
+      createOrUpdateFileContents: jest.fn().mockResolvedValue({}),
     },
     // No ruleset updates in this scenario
     // @ts-ignore
@@ -143,7 +146,7 @@ test('updates workflow files and opens PR', async () => {
     ref: expect.stringMatching(/^refs\/heads\/update-gh-actions-/),
     sha: 'base-sha',
   })
-  expect(octokit.rest.repos.createOrUpdateFileContents).toHaveBeenCalledTimes(2)
+  expect(octokit.repos.createOrUpdateFileContents).toHaveBeenCalledTimes(2)
   expect(octokit.rest.pulls.create).toHaveBeenCalledWith({
     owner: 'org',
     repo: 'repo',
