@@ -59,13 +59,79 @@ test('downloads and extracts migration artifacts with unzip', async () => {
   })
 
   expect(result).toEqual({
-    changedFiles: [
-      {
-        content: '{\n  "version": "1.0.0"\n}\n',
-        path: 'packages/website/config.json',
+    type: 'success',
+    value: {
+      changedFiles: [
+        {
+          content: '{\n  "version": "1.0.0"\n}\n',
+          path: 'packages/website/config.json',
+        },
+      ],
+      manifest,
+    },
+  })
+})
+
+test('returns an explicit error when no migration artifact is found', async () => {
+  const octokit: any = {
+    rest: {
+      actions: {
+        listWorkflowRunArtifacts: async () => ({
+          data: {
+            artifacts: [],
+          },
+        }),
       },
-    ],
-    manifest,
+    },
+  }
+
+  const result = await downloadMigrationArtifact({
+    octokit,
+    owner: 'lvce-editor',
+    repo: 'helper-bot',
+    runId: 123,
+  })
+
+  expect(result).toEqual({
+    code: 'E_NO_ARTIFACT_FOUND',
+    message: 'No migration artifact found for workflow run 123',
+    type: 'error',
+  })
+})
+
+test('returns an explicit error when artifact download fails', async () => {
+  const octokit: any = {
+    rest: {
+      actions: {
+        downloadArtifact: async () => {
+          throw new Error('network timeout')
+        },
+        listWorkflowRunArtifacts: async () => ({
+          data: {
+            artifacts: [
+              {
+                expired: false,
+                id: 42,
+                name: 'migration-result-request-1',
+              },
+            ],
+          },
+        }),
+      },
+    },
+  }
+
+  const result = await downloadMigrationArtifact({
+    octokit,
+    owner: 'lvce-editor',
+    repo: 'helper-bot',
+    runId: 123,
+  })
+
+  expect(result).toEqual({
+    code: 'E_DOWNLOAD_ARTIFACT_FAILED',
+    message: 'network timeout',
+    type: 'error',
   })
 })
 

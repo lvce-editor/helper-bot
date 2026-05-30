@@ -1,7 +1,7 @@
 import type { Context, Probot } from 'probot'
 import { captureException } from '../../errorHandling.ts'
 import * as GithubWorker from '../../githubWorker.ts'
-import { downloadMigrationArtifact } from '../DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
+import { downloadMigrationArtifact, type DownloadMigrationArtifactErrorResult } from '../DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
 import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
 
 const HELPER_BOT_OWNER = 'lvce-editor'
@@ -27,6 +27,17 @@ interface Logger {
 
 const getMigrationLabel = (manifest: { migrationId: string; targetRepository: string }): string => {
   return `${manifest.targetRepository} ${manifest.migrationId}`
+}
+
+const getArtifactErrorMessage = (result: DownloadMigrationArtifactErrorResult): string => {
+  switch (result.code) {
+    case 'E_NO_ARTIFACT_FOUND':
+      return `${LOG_PREFIX} ${result.message}`
+    case 'E_DOWNLOAD_ARTIFACT_FAILED':
+      return `${LOG_PREFIX} failed to download migration artifact: ${result.code} ${result.message}`
+    default:
+      return `${LOG_PREFIX} failed to download migration artifact: ${result.message}`
+  }
 }
 
 const fallbackLogger: Logger = {
@@ -104,16 +115,22 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
     let migrationLabel = `workflow run ${workflowRun.id}`
     try {
-      const artifact = await downloadArtifact({
+      const artifactResult = await downloadArtifact({
         octokit: context.octokit,
         owner: repository.owner.login,
         repo: repository.name,
         runId: workflowRun.id,
       })
-      if (!artifact) {
-        logger.info(`${LOG_PREFIX} ${migrationLabel}: no migration artifact found`)
+      if (artifactResult.type === 'error') {
+        const logMessage = getArtifactErrorMessage(artifactResult)
+        if (artifactResult.code === 'E_NO_ARTIFACT_FOUND') {
+          logger.info(logMessage)
+          return
+        }
+        logger.error(logMessage)
         return
       }
+      const artifact = artifactResult.value
       migrationLabel = getMigrationLabel(artifact.manifest)
       logger.info(`${LOG_PREFIX} received webhook migration on demand for ${migrationLabel}`)
       if (artifact.manifest.status === 'error') {
