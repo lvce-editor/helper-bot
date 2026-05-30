@@ -695,7 +695,5 @@ test('logs artifact download failures with the error code', async () => {
   await handleMigrationWorkflowRun(context)
 
   expect(invokeGithubWorker).not.toHaveBeenCalled()
-  expect(errorSpy).toHaveBeenCalledWith(
-    '[HandleMigrationWorkflowRun] failed to download migration artifact: E_DOWNLOAD_ARTIFACT_FAILED network timeout',
-  )
+  expect(errorSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] failed to download migration artifact: E_DOWNLOAD_ARTIFACT_FAILED network timeout')
 })
