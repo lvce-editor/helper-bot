@@ -29,6 +29,7 @@ function updateDependencies {
                                                        updateDependencies             &&
 cd packages/app                                   && updateDependencies && cd ../.. &&
 cd packages/build                                   && updateDependencies && cd ../.. &&
+cd packages/exec-worker                                     && updateDependencies && cd ../.. &&
 cd packages/migrations                                     && updateDependencies && cd ../.. &&
 cd packages/github-worker                                     && updateDependencies && cd ../.. &&
 
