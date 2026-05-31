@@ -17,6 +17,7 @@ export interface CreateHandleMigrationWorkflowRunOptions {
   readonly app: Probot
   readonly downloadMigrationArtifact?: typeof downloadMigrationArtifact
   readonly invokeGithubWorker?: typeof GithubWorker.invoke
+  readonly processInBackground?: boolean
 }
 
 interface Logger {
@@ -86,24 +87,12 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
   const downloadArtifact = options.downloadMigrationArtifact || downloadMigrationArtifact
   const invokeGithubWorker = options.invokeGithubWorker || GithubWorker.invoke
 
-  return async (context: Context<'workflow_run'>): Promise<void> => {
+  const processWorkflowRun = async (context: Context<'workflow_run'>): Promise<void> => {
     const { repository, workflow_run: workflowRun } = context.payload
     const logger = getLogger(context)
-    if (repository.owner.login !== HELPER_BOT_OWNER || repository.name !== HELPER_BOT_REPO) {
-      console.info(`[workflow_completed] repo mismatch`)
-      return
-    }
-    if (workflowRun.path !== WORKFLOW_PATH) {
-      console.info(`[workflow_completed] workflow path mismatch: ${workflowRun.path} ${WORKFLOW_PATH}`)
-      return
-    }
-    if (workflowRun.event !== WORKFLOW_EVENT) {
-      console.info(`[workflow_completed] event mismatch`)
-      return
-    }
-    logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
     let migrationLabel = `workflow run ${workflowRun.id}`
     try {
+      logger.info(`${LOG_PREFIX} downloading migration artifact for run ${workflowRun.id}`)
       const artifact = await downloadArtifact({
         octokit: context.octokit,
         owner: repository.owner.login,
@@ -116,6 +105,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       }
       migrationLabel = getMigrationLabel(artifact.manifest)
       logger.info(`${LOG_PREFIX} received webhook migration on demand for ${migrationLabel}`)
+      logger.info(`${LOG_PREFIX} ${migrationLabel}: artifact contains ${artifact.changedFiles.length} changed files`)
       if (artifact.manifest.status === 'error') {
         logger.error(
           `${LOG_PREFIX} failed to make pr for ${migrationLabel}`,
@@ -151,5 +141,30 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       logger.error(`${LOG_PREFIX} failed to make pr for ${migrationLabel}`, error)
       captureException(error as Error)
     }
+  }
+
+  return async (context: Context<'workflow_run'>): Promise<void> => {
+    const { repository, workflow_run: workflowRun } = context.payload
+    const logger = getLogger(context)
+    if (repository.owner.login !== HELPER_BOT_OWNER || repository.name !== HELPER_BOT_REPO) {
+      console.info(`[workflow_completed] repo mismatch`)
+      return
+    }
+    if (workflowRun.path !== WORKFLOW_PATH) {
+      console.info(`[workflow_completed] workflow path mismatch: ${workflowRun.path} ${WORKFLOW_PATH}`)
+      return
+    }
+    if (workflowRun.event !== WORKFLOW_EVENT) {
+      console.info(`[workflow_completed] event mismatch`)
+      return
+    }
+    logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)
+    if (!options.processInBackground) {
+      await processWorkflowRun(context)
+      return
+    }
+    setImmediate(async () => {
+      await processWorkflowRun(context)
+    })
   }
 }
