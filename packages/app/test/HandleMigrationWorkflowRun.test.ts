@@ -590,8 +590,22 @@ test('logs failures from the github worker', async () => {
 test('acknowledges migration workflow webhooks before processing in the background', async () => {
   const downloadMigrationArtifact = jest.fn() as any
   const invokeGithubWorker = jest.fn() as any
+  const artifactOctokit = {}
+  const getRepoInstallation = (jest.fn() as any).mockResolvedValue({
+    data: {
+      id: 77,
+    },
+  })
   const app: any = {
-    auth: jest.fn(),
+    auth: (jest.fn() as any)
+      .mockResolvedValueOnce({
+        rest: {
+          apps: {
+            getRepoInstallation,
+          },
+        },
+      })
+      .mockResolvedValueOnce(artifactOctokit),
   }
   const context: any = {
     log: {
@@ -633,7 +647,7 @@ test('acknowledges migration workflow webhooks before processing in the backgrou
   })
   expect(downloadMigrationArtifact).toHaveBeenCalledWith({
     logger: context.log,
-    octokit: context.octokit,
+    octokit: artifactOctokit,
     owner: 'lvce-editor',
     repo: 'helper-bot',
     runId: 123,

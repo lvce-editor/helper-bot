@@ -71,16 +71,20 @@ const logGithubWorkerOutcome = (logger: Logger, migrationLabel: string, workerRe
 }
 
 const getInstallationToken = async (app: Probot, owner: string, repo: string): Promise<string> => {
+  const octokit = await getInstallationOctokit(app, owner, repo)
+  const authToken: any = await octokit.auth({
+    type: 'installation',
+  })
+  return typeof authToken === 'string' ? authToken : authToken.token
+}
+
+const getInstallationOctokit = async (app: Probot, owner: string, repo: string): Promise<any> => {
   const appOctokit = await app.auth()
   const installation = await appOctokit.rest.apps.getRepoInstallation({
     owner,
     repo,
   })
-  const octokit = await app.auth(installation.data.id)
-  const authToken: any = await octokit.auth({
-    type: 'installation',
-  })
-  return typeof authToken === 'string' ? authToken : authToken.token
+  return app.auth(installation.data.id)
 }
 
 export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleMigrationWorkflowRunOptions>) => {
@@ -93,9 +97,10 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     let migrationLabel = `workflow run ${workflowRun.id}`
     try {
       logger.info(`${LOG_PREFIX} downloading migration artifact for run ${workflowRun.id}`)
+      const artifactOctokit = options.processInBackground ? await getInstallationOctokit(options.app, repository.owner.login, repository.name) : context.octokit
       const artifact = await downloadArtifact({
         logger,
-        octokit: context.octokit,
+        octokit: artifactOctokit,
         owner: repository.owner.login,
         repo: repository.name,
         runId: workflowRun.id,
