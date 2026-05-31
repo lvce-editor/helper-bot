@@ -92,9 +92,9 @@ test('generates new package files with updated dependency', async () => {
   expect(mockExecFn).toHaveBeenCalledTimes(1)
   expect(mockExecFn).toHaveBeenCalledWith(
     'npm',
-    ['install', '--ignore-scripts', '--prefer-online', '--cache', expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp-cache/)],
+    ['install', '--ignore-scripts', '--prefer-online', '--cache', expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp-cache-/)],
     {
-      cwd: expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp$/),
+      cwd: expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp-/),
     },
   )
 })

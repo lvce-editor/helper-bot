@@ -1,5 +1,5 @@
 import extract from 'extract-zip'
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 
@@ -39,6 +39,14 @@ export interface DownloadMigrationArtifactOptions {
   readonly runId: number
 }
 
+interface ArtifactCandidate {
+  readonly created_at?: string
+  readonly expired?: boolean
+  readonly id: number
+  readonly name: string
+  readonly updated_at?: string
+}
+
 const getArtifactArchiveBuffer = async (data: unknown): Promise<Buffer> => {
   if (Buffer.isBuffer(data)) {
     return data
@@ -57,6 +65,16 @@ const getArtifactArchiveBuffer = async (data: unknown): Promise<Buffer> => {
     return Buffer.from(arrayBuffer)
   }
   throw new Error('Unsupported artifact archive payload')
+}
+
+const getArtifactTimestamp = (artifact: Readonly<ArtifactCandidate>): number => {
+  const timestamp = artifact.updated_at || artifact.created_at || ''
+  const parsed = Date.parse(timestamp)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const compareArtifactsNewestFirst = (a: Readonly<ArtifactCandidate>, b: Readonly<ArtifactCandidate>): number => {
+  return getArtifactTimestamp(b) - getArtifactTimestamp(a) || b.id - a.id
 }
 
 const extractArtifactArchive = async (archivePath: string, outputDir: string): Promise<void> => {
@@ -126,7 +144,9 @@ export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrat
     repo: options.repo,
     run_id: options.runId,
   })
-  const artifact = artifacts.data.artifacts.find((candidate: any) => !candidate.expired && String(candidate.name).startsWith('migration-result'))
+  const artifact = artifacts.data.artifacts
+    .filter((candidate: ArtifactCandidate) => !candidate.expired && String(candidate.name).startsWith('migration-result-'))
+    .sort(compareArtifactsNewestFirst)[0]
   if (!artifact) {
     return undefined
   }
@@ -137,10 +157,13 @@ export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrat
     repo: options.repo,
   })
   const archiveBuffer = await getArtifactArchiveBuffer(archiveResponse.data)
-  const tempDir = await mkdtemp(join(tmpdir(), 'migration-artifact-'))
-  const archivePath = join(tempDir, 'artifact.zip')
-  const extractDir = join(tempDir, 'artifact')
+  const tempDir = await mkdtemp(join(tmpdir(), `migration-artifact-run-${options.runId}-`))
+  const archiveDir = join(tempDir, `download-${artifact.id}`)
+  const extractDir = join(tempDir, `extract-${artifact.id}`)
+  const archivePath = join(archiveDir, 'artifact.zip')
   try {
+    await mkdir(archiveDir, { recursive: true })
+    await mkdir(extractDir, { recursive: true })
     await writeFile(archivePath, archiveBuffer)
     await extractArtifactArchive(archivePath, extractDir)
     const manifestPath = join(extractDir, 'manifest.json')
