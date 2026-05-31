@@ -113,6 +113,9 @@ test('downloads the newest migration artifact for the workflow run', async () =>
     artifact_id: 42,
     owner: 'lvce-editor',
     repo: 'helper-bot',
+    request: {
+      timeout: 20_000,
+    },
   })
 })
 

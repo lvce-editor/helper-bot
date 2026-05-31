@@ -33,10 +33,15 @@ export interface DownloadMigrationArtifactResult {
 }
 
 export interface DownloadMigrationArtifactOptions {
+  readonly logger?: Logger
   readonly octokit: any
   readonly owner: string
   readonly repo: string
   readonly runId: number
+}
+
+interface Logger {
+  readonly info: (...args: readonly unknown[]) => void
 }
 
 interface ArtifactCandidate {
@@ -45,6 +50,24 @@ interface ArtifactCandidate {
   readonly id: number
   readonly name: string
   readonly updated_at?: string
+}
+
+const ARTIFACT_API_TIMEOUT = 20_000
+
+const withTimeout = async <T>(promise: Promise<T>, timeout: number, message: string): Promise<T> => {
+  let timeoutId: NodeJS.Timeout | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(message))
+        }, timeout)
+      }),
+    ])
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
 
 const getArtifactArchiveBuffer = async (data: unknown): Promise<Buffer> => {
@@ -139,24 +162,44 @@ export const getChangedFiles = async (artifactRoot: string, manifest: ArtifactMa
 }
 
 export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrationArtifactOptions>): Promise<DownloadMigrationArtifactResult | undefined> => {
-  const artifacts = await options.octokit.rest.actions.listWorkflowRunArtifacts({
-    owner: options.owner,
-    repo: options.repo,
-    run_id: options.runId,
-  })
+  const logger = options.logger
+  logger?.info(`[DownloadMigrationArtifact] listing artifacts for run ${options.runId}`)
+  const artifacts: any = await withTimeout(
+    options.octokit.rest.actions.listWorkflowRunArtifacts({
+      owner: options.owner,
+      repo: options.repo,
+      request: {
+        timeout: ARTIFACT_API_TIMEOUT,
+      },
+      run_id: options.runId,
+    }),
+    ARTIFACT_API_TIMEOUT + 1_000,
+    `Timed out listing artifacts for workflow run ${options.runId}`,
+  )
+  logger?.info(`[DownloadMigrationArtifact] got ${artifacts.data.artifacts.length} artifacts for run ${options.runId}`)
   const artifact = artifacts.data.artifacts
     .filter((candidate: ArtifactCandidate) => !candidate.expired && String(candidate.name).startsWith('migration-result-'))
     .sort(compareArtifactsNewestFirst)[0]
   if (!artifact) {
     return undefined
   }
-  const archiveResponse = await options.octokit.rest.actions.downloadArtifact({
-    archive_format: 'zip',
-    artifact_id: artifact.id,
-    owner: options.owner,
-    repo: options.repo,
-  })
+  logger?.info(`[DownloadMigrationArtifact] downloading artifact ${artifact.id} (${artifact.name}) for run ${options.runId}`)
+  const archiveResponse: any = await withTimeout(
+    options.octokit.rest.actions.downloadArtifact({
+      archive_format: 'zip',
+      artifact_id: artifact.id,
+      owner: options.owner,
+      repo: options.repo,
+      request: {
+        timeout: ARTIFACT_API_TIMEOUT,
+      },
+    }),
+    ARTIFACT_API_TIMEOUT + 1_000,
+    `Timed out downloading artifact ${artifact.id} for workflow run ${options.runId}`,
+  )
+  logger?.info(`[DownloadMigrationArtifact] downloaded artifact ${artifact.id} zip response for run ${options.runId}`)
   const archiveBuffer = await getArtifactArchiveBuffer(archiveResponse.data)
+  logger?.info(`[DownloadMigrationArtifact] got archive buffer for artifact ${artifact.id}: ${archiveBuffer.byteLength} bytes`)
   const tempDir = await mkdtemp(join(tmpdir(), `migration-artifact-run-${options.runId}-`))
   const archiveDir = join(tempDir, `download-${artifact.id}`)
   const extractDir = join(tempDir, `extract-${artifact.id}`)
@@ -165,11 +208,15 @@ export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrat
     await mkdir(archiveDir, { recursive: true })
     await mkdir(extractDir, { recursive: true })
     await writeFile(archivePath, archiveBuffer)
+    logger?.info(`[DownloadMigrationArtifact] extracting artifact ${artifact.id} to ${extractDir}`)
     await extractArtifactArchive(archivePath, extractDir)
+    logger?.info(`[DownloadMigrationArtifact] extracted artifact ${artifact.id}`)
     const manifestPath = join(extractDir, 'manifest.json')
     const manifestContent = await readFile(manifestPath, 'utf8')
     const manifest: ArtifactManifest = JSON.parse(manifestContent)
+    logger?.info(`[DownloadMigrationArtifact] read manifest for ${manifest.targetRepository} ${manifest.migrationId}`)
     const changedFiles = await getChangedFiles(extractDir, manifest)
+    logger?.info(`[DownloadMigrationArtifact] read ${changedFiles.length} changed files from artifact ${artifact.id}`)
     return {
       changedFiles,
       manifest,

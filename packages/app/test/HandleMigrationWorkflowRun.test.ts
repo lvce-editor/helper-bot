@@ -96,6 +96,7 @@ test('applies an uploaded migration artifact when the workflow run completes', a
   await handleMigrationWorkflowRun(context)
 
   expect(downloadMigrationArtifact).toHaveBeenCalledWith({
+    logger: context.log,
     octokit: context.octokit,
     owner: 'lvce-editor',
     repo: 'helper-bot',
@@ -631,6 +632,7 @@ test('acknowledges migration workflow webhooks before processing in the backgrou
     setImmediate(resolve)
   })
   expect(downloadMigrationArtifact).toHaveBeenCalledWith({
+    logger: context.log,
     octokit: context.octokit,
     owner: 'lvce-editor',
     repo: 'helper-bot',
