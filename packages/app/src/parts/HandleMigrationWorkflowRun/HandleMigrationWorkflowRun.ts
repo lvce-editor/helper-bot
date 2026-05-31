@@ -94,6 +94,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     try {
       logger.info(`${LOG_PREFIX} downloading migration artifact for run ${workflowRun.id}`)
       const artifact = await downloadArtifact({
+        logger,
         octokit: context.octokit,
         owner: repository.owner.login,
         repo: repository.name,
