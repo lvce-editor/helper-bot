@@ -27,7 +27,11 @@ jest.unstable_mockModule('execa', () => ({
 
 // Mock fs operations
 const mockFs: any = {
+  access: jest.fn().mockResolvedValue(undefined),
+  chmod: jest.fn().mockResolvedValue(undefined),
+  mkdir: jest.fn().mockResolvedValue(undefined),
   mkdtemp: jest.fn().mockResolvedValue('/tmp/test-dir'),
+  readdir: jest.fn().mockResolvedValue([]),
   rm: jest.fn().mockResolvedValue(undefined),
   readFile: jest.fn().mockResolvedValue('v18.0.0'),
   writeFile: jest.fn().mockResolvedValue(undefined),
@@ -99,6 +103,8 @@ test('updateDependenciesMigration should return success when no dependencies fou
 })
 
 test('ensureLernaExcludedMigration should return success when no script found', async () => {
+  mockFs.readFile.mockRejectedValueOnce(new Error('Not found'))
+
   const mockOctokit: any = {
     rest: {
       repos: {
