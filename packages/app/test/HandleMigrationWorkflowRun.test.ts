@@ -585,3 +585,55 @@ test('logs failures from the github worker', async () => {
     expect.any(Error),
   )
 })
+
+test('acknowledges migration workflow webhooks before processing in the background', async () => {
+  const downloadMigrationArtifact = jest.fn() as any
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+    processInBackground: true,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(downloadMigrationArtifact).not.toHaveBeenCalled()
+  await new Promise((resolve) => {
+    setImmediate(resolve)
+  })
+  expect(downloadMigrationArtifact).toHaveBeenCalledWith({
+    octokit: context.octokit,
+    owner: 'lvce-editor',
+    repo: 'helper-bot',
+    runId: 123,
+  })
+})
