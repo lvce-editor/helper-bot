@@ -1,4 +1,4 @@
-FROM node:24.16.0 AS builder
+FROM node:24.15.0 AS builder
 WORKDIR /usr/src/app
 
 COPY package.json package-lock.json lerna.json ./
@@ -15,7 +15,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:24.16.0-slim
+FROM node:24.15.0-slim
 WORKDIR /usr/src/app
 
 COPY packages/app/package.json packages/app/package-lock.json packages/app/app.yml packages/app/dependencies.json ./packages/app/
