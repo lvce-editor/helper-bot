@@ -32,19 +32,6 @@ export interface DownloadMigrationArtifactResult {
   readonly manifest: ArtifactManifest
 }
 
-export interface DownloadMigrationArtifactSuccessResult {
-  readonly type: 'success'
-  readonly value: DownloadMigrationArtifactResult
-}
-
-export interface DownloadMigrationArtifactErrorResult {
-  readonly code: 'E_NO_ARTIFACT_FOUND' | 'E_DOWNLOAD_ARTIFACT_FAILED'
-  readonly message: string
-  readonly type: 'error'
-}
-
-export type DownloadMigrationArtifactOutcome = DownloadMigrationArtifactSuccessResult | DownloadMigrationArtifactErrorResult
-
 export interface DownloadMigrationArtifactOptions {
   readonly octokit: any
   readonly owner: string
@@ -133,7 +120,7 @@ export const getChangedFiles = async (artifactRoot: string, manifest: ArtifactMa
   return changedFiles
 }
 
-export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrationArtifactOptions>): Promise<DownloadMigrationArtifactOutcome> => {
+export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrationArtifactOptions>): Promise<DownloadMigrationArtifactResult | undefined> => {
   const artifacts = await options.octokit.rest.actions.listWorkflowRunArtifacts({
     owner: options.owner,
     repo: options.repo,
@@ -141,27 +128,14 @@ export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrat
   })
   const artifact = artifacts.data.artifacts.find((candidate: any) => !candidate.expired && String(candidate.name).startsWith('migration-result'))
   if (!artifact) {
-    return {
-      code: 'E_NO_ARTIFACT_FOUND',
-      message: `No migration artifact found for workflow run ${options.runId}`,
-      type: 'error',
-    }
+    return undefined
   }
-  let archiveResponse
-  try {
-    archiveResponse = await options.octokit.rest.actions.downloadArtifact({
-      archive_format: 'zip',
-      artifact_id: artifact.id,
-      owner: options.owner,
-      repo: options.repo,
-    })
-  } catch (error) {
-    return {
-      code: 'E_DOWNLOAD_ARTIFACT_FAILED',
-      message: error instanceof Error ? error.message : 'Failed to download migration artifact',
-      type: 'error',
-    }
-  }
+  const archiveResponse = await options.octokit.rest.actions.downloadArtifact({
+    archive_format: 'zip',
+    artifact_id: artifact.id,
+    owner: options.owner,
+    repo: options.repo,
+  })
   const archiveBuffer = await getArtifactArchiveBuffer(archiveResponse.data)
   const tempDir = await mkdtemp(join(tmpdir(), 'migration-artifact-'))
   const archivePath = join(tempDir, 'artifact.zip')
@@ -174,11 +148,8 @@ export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrat
     const manifest: ArtifactManifest = JSON.parse(manifestContent)
     const changedFiles = await getChangedFiles(extractDir, manifest)
     return {
-      type: 'success',
-      value: {
-        changedFiles,
-        manifest,
-      },
+      changedFiles,
+      manifest,
     }
   } finally {
     await rm(tempDir, { force: true, recursive: true })
