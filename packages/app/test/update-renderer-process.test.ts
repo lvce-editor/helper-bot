@@ -89,6 +89,8 @@ test('creates a pull request to update versions when a release is created', asyn
     })
   })
   // @ts-ignore
+  jest.spyOn(fs, 'mkdtemp').mockImplementation((prefix) => `${prefix}abc123`)
+  // @ts-ignore
   jest.spyOn(fs, 'rm').mockImplementation(() => {})
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
@@ -229,8 +231,8 @@ test('creates a pull request to update versions when a release is created', asyn
   })
   expect(mock.pendingMocks()).toEqual([])
   expect(fs.rm).toHaveBeenCalledTimes(2)
-  const testPath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp')
-  const testCachePath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp-cache')
+  const testPath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp-abc123')
+  const testCachePath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp-cache-abc123')
   expect(fs.rm).toHaveBeenNthCalledWith(1, testPath, {
     force: true,
     recursive: true,

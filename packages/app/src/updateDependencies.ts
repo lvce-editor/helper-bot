@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import * as fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from 'probot'
@@ -35,18 +35,18 @@ const enableAutoSquash = async (octokit: Context<'release'>['octokit'], pullRequ
 
 const getNewPackageFiles = async (oldPackageJson: any, dependencyName: string, dependencyKey: string, newVersion: string) => {
   const name = oldPackageJson.name
-  const tmpFolder = await mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-`))
-  const tmpCacheFolder = await mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache-`))
+  const tmpFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-`))
+  const tmpCacheFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache-`))
   const toRemove = [tmpFolder, tmpCacheFolder]
   try {
     oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] = `^${newVersion}`
     const oldPackageJsonStringified = JSON.stringify(oldPackageJson, null, 2) + '\n'
-    await writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
+    await fs.writeFile(join(tmpFolder, 'package.json'), oldPackageJsonStringified)
     const { execa } = await import('execa')
     await execa(`npm`, ['install', '--ignore-scripts', '--prefer-online', '--cache', tmpCacheFolder], {
       cwd: tmpFolder,
     })
-    const newPackageLockJsonString = await readFile(join(tmpFolder, 'package-lock.json'), 'utf8')
+    const newPackageLockJsonString = await fs.readFile(join(tmpFolder, 'package-lock.json'), 'utf8')
     return {
       newPackageJsonString: oldPackageJsonStringified,
       newPackageLockJsonString,
@@ -56,7 +56,7 @@ const getNewPackageFiles = async (oldPackageJson: any, dependencyName: string, d
     throw new Error(`Failed to update dependencies: ${error}`)
   } finally {
     for (const folder of toRemove) {
-      await rm(folder, {
+      await fs.rm(folder, {
         recursive: true,
         force: true,
       })

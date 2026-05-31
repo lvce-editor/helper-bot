@@ -1,5 +1,4 @@
 import { jest, test, expect } from '@jest/globals'
-import { updateNodeVersionMigration, updateDependenciesMigration, ensureLernaExcludedMigration, updateGithubActionsMigration } from '../src/migrations/index.ts'
 
 // Mock execa to prevent actual git operations
 jest.unstable_mockModule('execa', () => ({
@@ -45,6 +44,13 @@ jest.unstable_mockModule('node:os', () => ({
 jest.unstable_mockModule('node:path', () => ({
   join: jest.fn().mockImplementation((...args) => args.join('/')),
 }))
+
+jest.spyOn(globalThis, 'fetch').mockResolvedValue({
+  json: async () => [{ version: 'v18.0.0', lts: 'Hydrogen' }],
+} as Response)
+
+const { updateNodeVersionMigration, updateDependenciesMigration, ensureLernaExcludedMigration, updateGithubActionsMigration } =
+  await import('../src/migrations/index.ts')
 
 test('updateNodeVersionMigration should return success when no changes needed', async () => {
   const mockOctokit: any = {
