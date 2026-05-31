@@ -22,6 +22,10 @@ jest.unstable_mockModule('node:os', () => ({
   tmpdir: () => '/test',
 }))
 
+jest.spyOn(globalThis, 'fetch').mockResolvedValue({
+  json: async () => [{ version: 'v20.0.0', lts: 'Iron' }],
+} as Response)
+
 const { handleDependencies } = await import('../src/dependencies.ts')
 
 test('verifies secret correctly', async () => {

@@ -60,7 +60,7 @@ jobs:
         env:
           BASE_BRANCH: ${{ inputs.baseBranch }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MIGRATION_ARTIFACT_DIR: ${{ runner.temp }}/migration-result
+          MIGRATION_ARTIFACT_DIR: ${{ runner.temp }}/migration-result-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.requestId }}
           MIGRATION_ID: ${{ inputs.migrationId }}
           MIGRATION_OPTIONS_JSON: ${{ inputs.migrationOptionsJson }}
           REQUEST_ID: ${{ inputs.requestId }}
@@ -72,6 +72,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: migration-result-${{ inputs.requestId }}
-          path: ${{ runner.temp }}/migration-result
+          path: ${{ runner.temp }}/migration-result-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.requestId }}
           include-hidden-files: true
           if-no-files-found: error

@@ -20,8 +20,8 @@ const getNewPackageFilesCore = async (
   newPackageLockJsonString: string
 }> => {
   const { name } = oldPackageJson
-  const tmpFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp`)
-  const tmpCacheFolder = join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache`)
+  const tmpFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-`))
+  const tmpCacheFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache-`))
   const tmpFolderUri = pathToUri(tmpFolder)
   const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
   const toRemove = [tmpFolderUri, tmpCacheFolderUri]

@@ -1,4 +1,4 @@
-import { expect, test } from '@jest/globals'
+import { expect, jest, test } from '@jest/globals'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -66,6 +66,53 @@ test('downloads and extracts migration artifacts with unzip', async () => {
       },
     ],
     manifest,
+  })
+})
+
+test('downloads the newest migration artifact for the workflow run', async () => {
+  const downloadArtifact = jest.fn(async () => ({
+    data: migrationArtifactArchive,
+  }))
+  const octokit: any = {
+    rest: {
+      actions: {
+        downloadArtifact,
+        listWorkflowRunArtifacts: async () => ({
+          data: {
+            artifacts: [
+              {
+                created_at: '2026-05-31T10:00:00Z',
+                expired: false,
+                id: 41,
+                name: 'migration-result-old-request',
+                updated_at: '2026-05-31T10:00:00Z',
+              },
+              {
+                created_at: '2026-05-31T10:01:00Z',
+                expired: false,
+                id: 42,
+                name: 'migration-result-new-request',
+                updated_at: '2026-05-31T10:01:00Z',
+              },
+            ],
+          },
+        }),
+      },
+    },
+  }
+
+  await downloadMigrationArtifact({
+    octokit,
+    owner: 'lvce-editor',
+    repo: 'helper-bot',
+    runId: 123,
+  })
+
+  expect(downloadArtifact).toHaveBeenCalledWith({
+    archive_format: 'zip',
+    artifact_id: 42,
+    owner: 'lvce-editor',
+    repo: 'helper-bot',
   })
 })
 

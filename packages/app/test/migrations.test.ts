@@ -1,5 +1,4 @@
 import { jest, test, expect } from '@jest/globals'
-import { updateNodeVersionMigration, updateDependenciesMigration, ensureLernaExcludedMigration, updateGithubActionsMigration } from '../src/migrations/index.ts'
 
 // Mock execa to prevent actual git operations
 jest.unstable_mockModule('execa', () => ({
@@ -28,7 +27,11 @@ jest.unstable_mockModule('execa', () => ({
 
 // Mock fs operations
 const mockFs: any = {
+  access: jest.fn().mockResolvedValue(undefined),
+  chmod: jest.fn().mockResolvedValue(undefined),
+  mkdir: jest.fn().mockResolvedValue(undefined),
   mkdtemp: jest.fn().mockResolvedValue('/tmp/test-dir'),
+  readdir: jest.fn().mockResolvedValue([]),
   rm: jest.fn().mockResolvedValue(undefined),
   readFile: jest.fn().mockResolvedValue('v18.0.0'),
   writeFile: jest.fn().mockResolvedValue(undefined),
@@ -45,6 +48,13 @@ jest.unstable_mockModule('node:os', () => ({
 jest.unstable_mockModule('node:path', () => ({
   join: jest.fn().mockImplementation((...args) => args.join('/')),
 }))
+
+jest.spyOn(globalThis, 'fetch').mockResolvedValue({
+  json: async () => [{ version: 'v18.0.0', lts: 'Hydrogen' }],
+} as Response)
+
+const { updateNodeVersionMigration, updateDependenciesMigration, ensureLernaExcludedMigration, updateGithubActionsMigration } =
+  await import('../src/migrations/index.ts')
 
 test('updateNodeVersionMigration should return success when no changes needed', async () => {
   const mockOctokit: any = {
@@ -93,6 +103,8 @@ test('updateDependenciesMigration should return success when no dependencies fou
 })
 
 test('ensureLernaExcludedMigration should return success when no script found', async () => {
+  mockFs.readFile.mockRejectedValueOnce(new Error('Not found'))
+
   const mockOctokit: any = {
     rest: {
       repos: {
