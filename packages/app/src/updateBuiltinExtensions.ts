@@ -91,7 +91,7 @@ export const updateBuiltinExtensions = async (context: Context<'release'>) => {
   })
   console.log('created branch')
 
-  await context.octokit.repos.createOrUpdateFileContents({
+  await context.octokit.rest.repos.createOrUpdateFileContents({
     owner,
     repo,
     path: filesPath,

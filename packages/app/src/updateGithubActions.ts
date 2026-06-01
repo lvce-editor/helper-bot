@@ -341,7 +341,7 @@ export const updateGithubActions = async (params: UpdateGithubActionsParams): Pr
   // Commit updates file-by-file on the new branch
   for (const change of changed) {
     try {
-      await octokit.repos.createOrUpdateFileContents({
+      await octokit.rest.repos.createOrUpdateFileContents({
         owner,
         repo,
         path: change.path,
