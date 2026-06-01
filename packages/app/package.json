@@ -7,20 +7,20 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "start": "probot run ./dist/index.js",
-    "dev": "probot run ./src/index.ts",
+    "start": "node dist/main.js",
+    "dev": "node src/main.ts",
     "test": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
     "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
+    "@sentry/node": "^9.43.0",
     "@lvce-editor/rpc": "^6.4.0",
     "@lvce-editor/rpc-registry": "^9.24.0",
     "@lvce-editor/verror": "^1.7.0",
-    "body-parser": "^2.2.2",
-    "cookie-parser": "^1.4.7",
     "execa": "^9.6.1",
+    "express": "^5.1.0",
     "extract-zip": "^2.0.1",
-    "probot": "^13.4.5"
+    "probot": "^14.3.2"
   },
   "jest": {
     "injectGlobals": false,
@@ -44,6 +44,6 @@
     "testTimeout": 20000
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.10"
+    "@types/express": "^5.0.5"
   }
 }
