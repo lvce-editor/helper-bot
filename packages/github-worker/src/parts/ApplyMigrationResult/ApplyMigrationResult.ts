@@ -175,7 +175,7 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
     return {
       branchName: '',
       changedFiles: 0,
-      ...(appliedRepoCommands === 0 ? {} : { data: { appliedRepoCommands } }),
+      ...(appliedRepoCommands !== 0 && { data: { appliedRepoCommands } }),
       message: 'Migration completed successfully',
       status: 'success',
     }

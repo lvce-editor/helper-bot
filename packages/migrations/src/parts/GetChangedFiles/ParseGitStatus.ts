@@ -4,7 +4,7 @@ export interface ParsedGitStatusEntry {
 }
 
 /**
- * Parses git status --porcelain output into structured entries.
+ * Parses Git status --porcelain output into structured entries.
  *
  * Git status --porcelain format: XY PATH
  * - X = index status, Y = working tree status

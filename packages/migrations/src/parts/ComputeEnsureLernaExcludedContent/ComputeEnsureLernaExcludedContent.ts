@@ -49,7 +49,7 @@ export type ComputeEnsureLernaExcludedContentOptions = BaseMigrationOptions
 
 export const computeEnsureLernaExcludedContent = async (options: Readonly<ComputeEnsureLernaExcludedContentOptions>): Promise<MigrationResult> => {
   try {
-    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
+    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).href
 
     let currentContent: string
     try {
@@ -62,11 +62,11 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
     }
 
     const result = computeEnsureLernaExcludedContentCore(currentContent)
-    const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
-
     if (!result.hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
 
     return {
       branchName: 'feature/ensure-lerna-excluded',

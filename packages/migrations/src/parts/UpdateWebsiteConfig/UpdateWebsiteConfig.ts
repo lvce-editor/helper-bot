@@ -48,7 +48,7 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
 
     // Ensure clonedRepoUri ends with / for proper URL resolution
     const baseUri = options.clonedRepoUri.endsWith('/') ? options.clonedRepoUri : options.clonedRepoUri + '/'
-    const configPath = new URL(CONFIG_PATH, baseUri).toString()
+    const configPath = new URL(CONFIG_PATH, baseUri).href
 
     // Check if config file exists
     const configExists = await options.fs.exists(configPath)

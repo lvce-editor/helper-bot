@@ -7,8 +7,8 @@ export type RemoveGitpodymlOptions = BaseMigrationOptions
 
 export const removeGitpodyml = async (options: Readonly<RemoveGitpodymlOptions>): Promise<MigrationResult> => {
   try {
-    const gitpodYmlPath = new URL('.gitpod.yml', options.clonedRepoUri).toString()
-    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).toString()
+    const gitpodYmlPath = new URL('.gitpod.yml', options.clonedRepoUri).href
+    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).href
 
     const ymlExists = await options.fs.exists(gitpodYmlPath)
     const dockerfileExists = await options.fs.exists(gitpodDockerfilePath)

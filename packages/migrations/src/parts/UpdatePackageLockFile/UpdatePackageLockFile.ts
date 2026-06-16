@@ -7,7 +7,7 @@ export type UpdatePackageLockFileOptions = BaseMigrationOptions
 
 export const updatePackageLockFile = async (options: Readonly<UpdatePackageLockFileOptions>): Promise<MigrationResult> => {
   try {
-    const packageLockUri = new URL('package-lock.json', options.clonedRepoUri).toString()
+    const packageLockUri = new URL('package-lock.json', options.clonedRepoUri).href
     const hadPackageLockFile = await options.fs.exists(packageLockUri)
     const oldPackageLockContent = hadPackageLockFile ? await options.fs.readFile(packageLockUri, 'utf8') : ''
 

@@ -33,7 +33,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     const version = options.tagName.replace('v', '')
 
     // Read the builtinExtensions.json file from the cloned target repo
-    const filePath = new URL(options.targetFilePath, options.clonedRepoUri).toString()
+    const filePath = new URL(options.targetFilePath, options.clonedRepoUri).href
 
     let currentContent: string
     try {

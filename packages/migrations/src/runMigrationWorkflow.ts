@@ -10,10 +10,10 @@ const getRequiredEnv = (name: string): string => {
 
 const main = async (): Promise<void> => {
   const result = await runMigrationWorkflow({
-    ...(process.env.BASE_BRANCH ? { baseBranch: process.env.BASE_BRANCH } : {}),
-    ...(process.env.GITHUB_TOKEN ? { githubToken: process.env.GITHUB_TOKEN } : {}),
+    ...(process.env.BASE_BRANCH && { baseBranch: process.env.BASE_BRANCH }),
+    ...(process.env.GITHUB_TOKEN && { githubToken: process.env.GITHUB_TOKEN }),
     migrationId: getRequiredEnv('MIGRATION_ID'),
-    ...(process.env.MIGRATION_OPTIONS_JSON ? { migrationOptionsJson: process.env.MIGRATION_OPTIONS_JSON } : {}),
+    ...(process.env.MIGRATION_OPTIONS_JSON && { migrationOptionsJson: process.env.MIGRATION_OPTIONS_JSON }),
     outputDir: getRequiredEnv('MIGRATION_ARTIFACT_DIR'),
     requestId: getRequiredEnv('REQUEST_ID'),
     targetRepository: getRequiredEnv('TARGET_REPOSITORY'),

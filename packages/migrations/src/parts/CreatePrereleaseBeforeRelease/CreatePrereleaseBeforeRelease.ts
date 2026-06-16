@@ -25,7 +25,7 @@ const getIndentedSectionEnd = (lines: readonly string[], startIndex: number, ind
   return lines.length
 }
 
-const findDraftInsertion = (lines: readonly string[]): { hasDraft: boolean; indentation: string; insertIndex: number } | undefined => {
+const findDraftInsertion = (lines: readonly string[]): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim()
     if (!isCreateReleaseStep(trimmed)) {
@@ -61,7 +61,7 @@ const findDraftInsertion = (lines: readonly string[]): { hasDraft: boolean; inde
   return undefined
 }
 
-const findLastJobStep = (lines: readonly string[]): { lastStepIndex: number; stepsIndentation: string } | undefined => {
+const findLastJobStep = (lines: readonly string[]): undefined | { lastStepIndex: number; stepsIndentation: string } => {
   let lastJobIndex = -1
   let stepsIndentation = ''
   let lastStepIndex = -1
@@ -143,7 +143,7 @@ export type CreatePrereleaseBeforeReleaseOptions = BaseMigrationOptions
 
 export const createPrereleaseBeforeRelease = async (options: Readonly<CreatePrereleaseBeforeReleaseOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
+    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).href
 
     const fileExists = await options.fs.exists(workflowPath)
     if (!fileExists) {
@@ -153,11 +153,11 @@ export const createPrereleaseBeforeRelease = async (options: Readonly<CreatePrer
     const originalContent = await options.fs.readFile(workflowPath, 'utf8')
     const updatedContent = createPrereleaseBeforeReleaseContent(originalContent)
     const hasChanges = originalContent !== updatedContent
-    const pullRequestTitle = 'feature: create prerelease before final release'
-
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = 'feature: create prerelease before final release'
 
     return {
       branchName: 'feature/create-prerelease-before-release',

@@ -8,7 +8,7 @@ export type UpdateAllDependenciesOptions = BaseMigrationOptions
 
 export const updateAllDependencies = async (options: Readonly<UpdateAllDependenciesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
 
     // Check if package.json exists
     const packageJsonExists = await options.fs.exists(packageJsonPath)
@@ -17,7 +17,7 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
     }
 
     // Check if scripts/update-dependencies.sh exists
-    const updateDependenciesScriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
+    const updateDependenciesScriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).href
     const updateDependenciesScriptExists = await options.fs.exists(updateDependenciesScriptPath)
     if (!updateDependenciesScriptExists) {
       return {
@@ -45,7 +45,7 @@ export const updateAllDependencies = async (options: Readonly<UpdateAllDependenc
       throw new Error(`Failed to execute scripts/update-dependencies.sh: ${stringifyError(error)}`, { cause: error })
     }
 
-    // Check for changed files using git
+    // Check for changed files using Git
     const changedFiles = await getChangedFiles({
       clonedRepoUri: options.clonedRepoUri,
       exec: options.exec,

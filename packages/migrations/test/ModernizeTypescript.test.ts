@@ -36,7 +36,7 @@ test('skips when typescript is not in root package.json', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify({ name: 'test' }, null, 2) + '\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify({ name: 'test' }, null, 2) + '\n',
     },
   })
   const mockExecFn = jest.fn(async () => {
@@ -68,7 +68,7 @@ test('skips when typescript major version is already 6 or higher', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(
         {
           devDependencies: {
             typescript: '^6.0.0',
@@ -107,8 +107,8 @@ test('skips when typescript major version is already 6 or higher', async () => {
 
 test('updates typescript to version 6 when current major is lower', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
-  const packageJsonPath = new URL('package.json', clonedRepoUri).toString()
-  const packageLockPath = new URL('package-lock.json', clonedRepoUri).toString()
+  const packageJsonPath = new URL('package.json', clonedRepoUri).href
+  const packageLockPath = new URL('package-lock.json', clonedRepoUri).href
   const mockFs = createMockFs({
     files: {
       [packageJsonPath]: JSON.stringify(

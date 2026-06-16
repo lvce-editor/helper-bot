@@ -32,7 +32,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/release.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/release.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -93,7 +93,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/release.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/release.yml', clonedRepoUri).href]: content,
     },
   })
 

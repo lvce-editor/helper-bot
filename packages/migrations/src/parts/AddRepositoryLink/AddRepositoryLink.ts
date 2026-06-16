@@ -11,7 +11,7 @@ const processExtensionJson = async (
   options: Readonly<AddRepositoryLinkOptions>,
   extensionJsonPath: string,
   relativePath: string,
-): Promise<{ content: string; path: string } | null> => {
+): Promise<null | { content: string; path: string }> => {
   const exists = await options.fs.exists(extensionJsonPath)
   if (!exists) {
     return null
@@ -45,14 +45,14 @@ export const addRepositoryLink = async (options: Readonly<AddRepositoryLinkOptio
     const changedFiles: Array<{ content: string; path: string }> = []
 
     // Check root level extension.json
-    const rootExtensionJsonPath = new URL('extension.json', baseUri).toString()
+    const rootExtensionJsonPath = new URL('extension.json', baseUri).href
     const rootResult = await processExtensionJson(options, rootExtensionJsonPath, 'extension.json')
     if (rootResult) {
       changedFiles.push(rootResult)
     }
 
     // Check packages/extension/extension.json (monorepo)
-    const monorepoExtensionJsonPath = new URL('packages/extension/extension.json', baseUri).toString()
+    const monorepoExtensionJsonPath = new URL('packages/extension/extension.json', baseUri).href
     const monorepoResult = await processExtensionJson(options, monorepoExtensionJsonPath, 'packages/extension/extension.json')
     if (monorepoResult) {
       changedFiles.push(monorepoResult)

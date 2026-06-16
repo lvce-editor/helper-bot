@@ -14,10 +14,10 @@ test('runs update-dependencies.sh and detects changed files', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).toString()]: '{}',
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
-      [new URL('src/index.ts', clonedRepoUri).toString()]: 'export const x = 1\n',
+      [new URL('package-lock.json', clonedRepoUri).href]: '{}',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('src/index.ts', clonedRepoUri).href]: 'export const x = 1\n',
     },
   })
 
@@ -30,7 +30,7 @@ test('runs update-dependencies.sh and detects changed files', async () => {
     }
     if (file === 'bash' && args?.[0] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
       // Simulate script modifying package-lock.json
-      await mockFs.writeFile(new URL('package-lock.json', clonedRepoUri).toString(), '{"lockfileVersion": 3}\n')
+      await mockFs.writeFile(new URL('package-lock.json', clonedRepoUri).href, '{"lockfileVersion": 3}\n')
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -74,8 +74,8 @@ test('returns empty result when no files changed', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -153,7 +153,7 @@ test('handles missing update-dependencies.sh', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -194,8 +194,8 @@ test('runs update-dependencies.sh when it exists', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -208,7 +208,7 @@ test('runs update-dependencies.sh when it exists', async () => {
     }
     if (file === 'bash' && args?.[0] === 'scripts/update-dependencies.sh' && cwd === clonedRepoUri) {
       // Simulate script modifying a file
-      await mockFs.writeFile(new URL('updated.txt', clonedRepoUri).toString(), 'updated\n')
+      await mockFs.writeFile(new URL('updated.txt', clonedRepoUri).href, 'updated\n')
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -252,8 +252,8 @@ test('handles update-dependencies.sh failure', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\nexit 1\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\nexit 1\n',
     },
   })
 
@@ -299,10 +299,10 @@ test('handles multiple changed files', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('file1.ts', clonedRepoUri).toString()]: 'export const a = 1\n',
-      [new URL('file2.ts', clonedRepoUri).toString()]: 'export const b = 2\n',
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('file1.ts', clonedRepoUri).href]: 'export const a = 1\n',
+      [new URL('file2.ts', clonedRepoUri).href]: 'export const b = 2\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -347,9 +347,9 @@ test('skips deleted files', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('file1.ts', clonedRepoUri).toString()]: 'export const a = 1\n',
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('file1.ts', clonedRepoUri).href]: 'export const a = 1\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -394,9 +394,9 @@ test('handles added files', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('new-file.ts', clonedRepoUri).toString()]: 'export const new = true\n',
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('new-file.ts', clonedRepoUri).href]: 'export const new = true\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -442,9 +442,9 @@ test('handles untracked files', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
-      [new URL('untracked.ts', clonedRepoUri).toString()]: 'export const untracked = true\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('untracked.ts', clonedRepoUri).href]: 'export const untracked = true\n',
     },
   })
 
@@ -490,9 +490,9 @@ test('handles git status with empty lines', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('file.ts', clonedRepoUri).toString()]: 'export const x = 1\n',
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('file.ts', clonedRepoUri).href]: 'export const x = 1\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -537,8 +537,8 @@ test('handles git status with short lines', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 
@@ -582,8 +582,8 @@ test('handles file read error', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: '#!/bin/bash\necho "updating dependencies"\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(packageJson, null, 2) + '\n',
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: '#!/bin/bash\necho "updating dependencies"\n',
     },
   })
 

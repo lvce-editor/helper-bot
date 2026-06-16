@@ -51,7 +51,7 @@ const getDirectoryEntries = (files: Record<string, string>, dirPath: string): Ar
       continue
     }
 
-    const firstSegment = relativePath.split('/')[0]
+    const firstSegment = relativePath.split('/', 1)[0]
     if (seen.has(firstSegment)) {
       continue
     }

@@ -15,7 +15,7 @@ const getMajorVersion = (version: string): number | undefined => {
 
 export const modernizeTypescript = async (options: Readonly<ModernizeTypescriptOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
     const hasPackageJson = await options.fs.exists(packageJsonPath)
     if (!hasPackageJson) {
       return emptyMigrationResult
@@ -49,7 +49,7 @@ export const modernizeTypescript = async (options: Readonly<ModernizeTypescriptO
       },
     ]
 
-    const packageLockPath = new URL('package-lock.json', options.clonedRepoUri).toString()
+    const packageLockPath = new URL('package-lock.json', options.clonedRepoUri).href
     const hasPackageLock = await options.fs.exists(packageLockPath)
     if (hasPackageLock) {
       const packageLockContent = await options.fs.readFile(packageLockPath, 'utf8')

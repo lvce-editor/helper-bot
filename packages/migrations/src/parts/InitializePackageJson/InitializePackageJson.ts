@@ -7,7 +7,7 @@ export type InitializePackageJsonOptions = BaseMigrationOptions
 
 export const initializePackageJson = async (options: Readonly<InitializePackageJsonOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
 
     // Check if package.json already exists
     const exists = await options.fs.exists(packageJsonPath)

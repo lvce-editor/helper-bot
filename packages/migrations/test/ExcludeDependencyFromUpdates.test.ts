@@ -10,7 +10,7 @@ const createOptions = (content: string, dependencyName = '@babel/plugin-typescri
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).toString()]: content,
+      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: content,
     },
   })
 

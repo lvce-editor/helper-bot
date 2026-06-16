@@ -15,7 +15,7 @@ export type ComputeNewDockerfileContentOptions = BaseMigrationOptions
 export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDockerfileContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const dockerfilePath = new URL('Dockerfile', options.clonedRepoUri).toString()
+    const dockerfilePath = new URL('Dockerfile', options.clonedRepoUri).href
 
     let currentContent: string
     try {

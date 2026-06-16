@@ -41,7 +41,7 @@ test('skips if eslint.config.js already exists', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: 'existing config',
+      [new URL('eslint.config.js', clonedRepoUri).href]: 'existing config',
     },
   })
   const mockExec = createMockExec()

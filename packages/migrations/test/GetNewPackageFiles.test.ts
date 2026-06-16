@@ -31,7 +31,7 @@ test('generates new package files with updated dependency', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -42,7 +42,7 @@ test('generates new package files with updated dependency', async () => {
       // Write a mock package-lock.json after npm install
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).href, mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }

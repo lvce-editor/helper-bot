@@ -18,7 +18,7 @@ export type RemoveGitpodSectionOptions = BaseMigrationOptions
 export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionOptions>): Promise<MigrationResult> => {
   try {
     const readmePath = 'README.md'
-    const fullPath = new URL(readmePath, options.clonedRepoUri).toString()
+    const fullPath = new URL(readmePath, options.clonedRepoUri).href
 
     let originalContent: string
     try {

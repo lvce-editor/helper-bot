@@ -21,7 +21,7 @@ RUN nvm install 18.0.0 \\
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.gitpod.Dockerfile', clonedRepoUri).toString()]: content,
+      [new URL('.gitpod.Dockerfile', clonedRepoUri).href]: content,
     },
   })
 

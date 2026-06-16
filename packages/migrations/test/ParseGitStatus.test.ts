@@ -139,7 +139,7 @@ test('handles empty output', () => {
 })
 
 test('handles output with only newlines', () => {
-  const output = '\n\n\n'
+  const output = '\n'.repeat(3)
   const result = parseGitStatus(output)
 
   expect(result).toEqual([])

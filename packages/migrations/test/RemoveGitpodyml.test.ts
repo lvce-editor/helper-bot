@@ -17,7 +17,7 @@ vscode:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const gitpodYmlPath = new URL('.gitpod.yml', clonedRepoUri).toString()
+  const gitpodYmlPath = new URL('.gitpod.yml', clonedRepoUri).href
   const mockFs = createMockFs({
     files: {
       [gitpodYmlPath]: gitpodYmlContent,
@@ -63,8 +63,8 @@ RUN npm install -g pnpm
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const gitpodYmlPath = new URL('.gitpod.yml', clonedRepoUri).toString()
-  const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', clonedRepoUri).toString()
+  const gitpodYmlPath = new URL('.gitpod.yml', clonedRepoUri).href
+  const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', clonedRepoUri).href
   const mockFs = createMockFs({
     files: {
       [gitpodDockerfilePath]: dockerfileContent,
@@ -109,7 +109,7 @@ RUN npm install -g pnpm
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', clonedRepoUri).toString()
+  const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', clonedRepoUri).href
   const mockFs = createMockFs({
     files: {
       [gitpodDockerfilePath]: dockerfileContent,

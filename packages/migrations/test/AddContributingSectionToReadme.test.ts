@@ -14,7 +14,7 @@ Some project description.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [new URL('README.md', clonedRepoUri).href]: content,
     },
   })
 
@@ -64,7 +64,7 @@ Already here.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [new URL('README.md', clonedRepoUri).href]: content,
     },
   })
 

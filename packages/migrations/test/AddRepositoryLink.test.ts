@@ -15,7 +15,7 @@ test('adds repository link to root extension.json when missing', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -56,7 +56,7 @@ test('adds repository link to monorepo extension.json when missing', async () =>
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/extension/extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('packages/extension/extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -99,8 +99,8 @@ test('adds repository link to both root and monorepo extension.json when both ex
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
-      [new URL('packages/extension/extension.json', clonedRepoUri).toString()]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
+      [new URL('packages/extension/extension.json', clonedRepoUri).href]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
     },
   })
 
@@ -154,7 +154,7 @@ test('skips root extension.json when repository already exists', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -186,7 +186,7 @@ test('skips monorepo extension.json when repository already exists', async () =>
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/extension/extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('packages/extension/extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -222,8 +222,8 @@ test('adds repository to root when monorepo already has it', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
-      [new URL('packages/extension/extension.json', clonedRepoUri).toString()]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
+      [new URL('packages/extension/extension.json', clonedRepoUri).href]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
     },
   })
 
@@ -266,8 +266,8 @@ test('adds repository to monorepo when root already has it', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
-      [new URL('packages/extension/extension.json', clonedRepoUri).toString()]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
+      [new URL('packages/extension/extension.json', clonedRepoUri).href]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
     },
   })
 
@@ -332,8 +332,8 @@ test('returns empty result when both files exist and already have repository', a
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
-      [new URL('packages/extension/extension.json', clonedRepoUri).toString()]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(rootExtensionJson, null, 2) + '\n',
+      [new URL('packages/extension/extension.json', clonedRepoUri).href]: JSON.stringify(monorepoExtensionJson, null, 2) + '\n',
     },
   })
 
@@ -378,7 +378,7 @@ test('preserves all existing properties when adding repository', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -429,7 +429,7 @@ test('handles extension.json with empty object', async () => {
   const extensionJson: Record<string, unknown> = {}
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -467,7 +467,7 @@ test('handles extension.json with null repository property', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -505,7 +505,7 @@ test('handles extension.json with empty string repository property', async () =>
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -539,7 +539,7 @@ test('handles invalid JSON gracefully', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: 'invalid json{',
+      [new URL('extension.json', clonedRepoUri).href]: 'invalid json{',
     },
   })
 
@@ -569,7 +569,7 @@ test('handles repository owner and name with special characters', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -606,7 +606,7 @@ test('handles clonedRepoUri without trailing slash', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri + '/').toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri + '/').href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 
@@ -641,7 +641,7 @@ test('handles clonedRepoUri with trailing slash', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('extension.json', clonedRepoUri).toString()]: JSON.stringify(extensionJson, null, 2) + '\n',
+      [new URL('extension.json', clonedRepoUri).href]: JSON.stringify(extensionJson, null, 2) + '\n',
     },
   })
 

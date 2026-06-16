@@ -44,7 +44,7 @@ test('updates both version and currentYear when both are outdated', async () => 
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2) + '\n',
@@ -104,7 +104,7 @@ test('updates only version when year is already current', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2) + '\n',
@@ -164,7 +164,7 @@ test('updates only currentYear when version is already latest', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2) + '\n',
@@ -224,7 +224,7 @@ test('returns empty result when both version and year are already up to date', a
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(config, null, 2) + '\n',
@@ -327,7 +327,7 @@ test('fails when no releases or tags found', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(config, null, 2) + '\n',
@@ -391,7 +391,7 @@ test('handles tag fallback when no releases found', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2) + '\n',
@@ -443,7 +443,7 @@ test('handles GitHub API errors gracefully', async () => {
     throw error
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(config, null, 2) + '\n',
@@ -473,7 +473,7 @@ test('handles invalid JSON in config file', async () => {
     throw new Error('Should not be called')
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: 'invalid json content',
@@ -519,7 +519,7 @@ test('preserves other config fields when updating', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2) + '\n',
@@ -568,7 +568,7 @@ test('handles version tags with v prefix', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2) + '\n',
@@ -614,7 +614,7 @@ test('handles version tags without v prefix', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2) + '\n',
@@ -660,7 +660,7 @@ test('handles config file without trailing newline', async () => {
     throw new Error(`Unexpected route: ${route}`)
   })
 
-  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').toString()
+  const configPath = new URL('packages/website/config.json', clonedRepoUri + '/').href
   const mockFs = createMockFs({
     files: {
       [configPath]: JSON.stringify(oldConfig, null, 2), // No trailing newline

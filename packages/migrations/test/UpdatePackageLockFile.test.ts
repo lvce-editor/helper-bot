@@ -7,7 +7,7 @@ import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('updates top-level package-lock.json with npm install --package-lock-only --ignore-scripts', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
-  const packageLockUri = new URL('package-lock.json', clonedRepoUri).toString()
+  const packageLockUri = new URL('package-lock.json', clonedRepoUri).href
   let packageLockMissingWhenNpmRan = false
   const mockFs = createMockFs({
     files: {
@@ -56,7 +56,7 @@ test('updates top-level package-lock.json with npm install --package-lock-only -
 
 test('returns empty result when package-lock.json stays unchanged', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
-  const packageLockUri = new URL('package-lock.json', clonedRepoUri).toString()
+  const packageLockUri = new URL('package-lock.json', clonedRepoUri).href
   const packageLockContent = '{"lockfileVersion": 3}\n'
   let packageLockMissingWhenNpmRan = false
   const mockFs = createMockFs({
@@ -100,7 +100,7 @@ test('returns error result when npm install fails', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).toString()]: '{"lockfileVersion": 3}\n',
+      [new URL('package-lock.json', clonedRepoUri).href]: '{"lockfileVersion": 3}\n',
     },
   })
 

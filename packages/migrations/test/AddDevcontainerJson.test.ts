@@ -58,7 +58,7 @@ test('returns empty result when devcontainer.json already exists', async () => {
   })
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const devcontainerPath = new URL('.devcontainer/devcontainer.json', clonedRepoUri).toString()
+  const devcontainerPath = new URL('.devcontainer/devcontainer.json', clonedRepoUri).href
   const mockFs = createMockFs({
     files: {
       [devcontainerPath]: devcontainerContent,

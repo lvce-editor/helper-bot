@@ -22,9 +22,9 @@ const collectFiles = async (
   }
 
   for (const entry of entries) {
-    const entryPath = new URL(entry.name, dirUri + '/').toString()
+    const entryPath = new URL(entry.name, dirUri + '/').href
     if (entry.isDirectory()) {
-      // Skip node_modules and .git directories
+      // Skip node_modules and .Git directories
       if (entry.name === 'node_modules' || entry.name === '.git') {
         continue
       }

@@ -16,7 +16,7 @@ export default [...config.default, ...actions.default]
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [new URL('eslint.config.js', clonedRepoUri).href]: content,
     },
   })
 
@@ -57,7 +57,7 @@ export default [...config.default, { rules: { 'no-console': 'warn' } }]
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [new URL('eslint.config.js', clonedRepoUri).href]: content,
     },
   })
 
@@ -97,7 +97,7 @@ export default [...config.default, { rules: { '@cspell/spellchecker': 'off' } }]
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [new URL('eslint.config.js', clonedRepoUri).href]: content,
     },
   })
 
@@ -160,7 +160,7 @@ export default [
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [new URL('eslint.config.js', clonedRepoUri).href]: content,
     },
   })
 

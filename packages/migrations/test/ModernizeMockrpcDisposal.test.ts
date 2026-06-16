@@ -49,25 +49,25 @@ test('some test', () => {
   )
 
   // Pre-compute package-lock.json URIs for cross-platform compatibility
-  const rootPackageLockUri = new URL('package-lock.json', repoUriWithSlash).toString()
-  const appPackageLockUri = new URL('packages/app/package-lock.json', repoUriWithSlash).toString()
+  const rootPackageLockUri = new URL('package-lock.json', repoUriWithSlash).href
+  const appPackageLockUri = new URL('packages/app/package-lock.json', repoUriWithSlash).href
 
   const mockFs = createMockFs({
     files: {
       // Create directory entries - include the root directory
       [clonedRepoUri]: '[DIRECTORY]',
-      [new URL('package.json', repoUriWithSlash).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('packages/', repoUriWithSlash).toString()]: '[DIRECTORY]',
-      [new URL('packages/app/', repoUriWithSlash).toString()]: '[DIRECTORY]',
-      [new URL('packages/app/package.json', repoUriWithSlash).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('packages/app/test/', repoUriWithSlash).toString()]: '[DIRECTORY]',
-      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).toString()]: oldTestContent,
-      [new URL('packages/exec-worker/', repoUriWithSlash).toString()]: '[DIRECTORY]',
-      [new URL('packages/exec-worker/test/', repoUriWithSlash).toString()]: '[DIRECTORY]',
-      [new URL('packages/exec-worker/test/another.test.ts', repoUriWithSlash).toString()]: oldTestContent,
-      [new URL('packages/github-worker/', repoUriWithSlash).toString()]: '[DIRECTORY]',
-      [new URL('packages/github-worker/test/', repoUriWithSlash).toString()]: '[DIRECTORY]',
-      [new URL('packages/github-worker/test/third.test.ts', repoUriWithSlash).toString()]: oldTestContent,
+      [new URL('package.json', repoUriWithSlash).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/', repoUriWithSlash).href]: '[DIRECTORY]',
+      [new URL('packages/app/', repoUriWithSlash).href]: '[DIRECTORY]',
+      [new URL('packages/app/package.json', repoUriWithSlash).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/app/test/', repoUriWithSlash).href]: '[DIRECTORY]',
+      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).href]: oldTestContent,
+      [new URL('packages/exec-worker/', repoUriWithSlash).href]: '[DIRECTORY]',
+      [new URL('packages/exec-worker/test/', repoUriWithSlash).href]: '[DIRECTORY]',
+      [new URL('packages/exec-worker/test/another.test.ts', repoUriWithSlash).href]: oldTestContent,
+      [new URL('packages/github-worker/', repoUriWithSlash).href]: '[DIRECTORY]',
+      [new URL('packages/github-worker/test/', repoUriWithSlash).href]: '[DIRECTORY]',
+      [new URL('packages/github-worker/test/third.test.ts', repoUriWithSlash).href]: oldTestContent,
     },
   })
 
@@ -192,8 +192,8 @@ test('some test', () => {
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', repoUriWithSlash).toString()]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
-      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).toString()]: testContentWithoutMockRpc,
+      [new URL('package.json', repoUriWithSlash).href]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
+      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).href]: testContentWithoutMockRpc,
     },
   })
 
@@ -230,7 +230,7 @@ test('handles npm fetch failures gracefully', async () => {
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', repoUriWithSlash).toString()]:
+      [new URL('package.json', repoUriWithSlash).href]:
         JSON.stringify(
           {
             dependencies: {
@@ -284,7 +284,7 @@ test('handles network errors during npm fetch', async () => {
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', repoUriWithSlash).toString()]:
+      [new URL('package.json', repoUriWithSlash).href]:
         JSON.stringify(
           {
             dependencies: {

@@ -80,7 +80,7 @@ export const excludeDependencyFromUpdates = async (options: Readonly<ExcludeDepe
       return createValidationErrorMigrationResult('Invalid dependencyName parameter: only lowercase letters, hyphens, slash, and @ are allowed')
     }
 
-    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
+    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).href
 
     let currentContent: string
     try {

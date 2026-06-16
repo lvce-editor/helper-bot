@@ -17,7 +17,7 @@ export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
 
 export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmTokenFromWorkflowOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
+    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).href
 
     const fileExists = await options.fs.exists(workflowPath)
     if (!fileExists) {

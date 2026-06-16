@@ -25,7 +25,7 @@ const updateMultilineRules = (content: string, fullRulesObject: string, rulesCon
 
   const lastContentLine = lines[lastContentLineIndex]
   const match = lastContentLine.match(/^(\s+)/)
-  const indent = match ? match[1] : '      '
+  const indent = match ? match[1] : ' '.repeat(6)
   if (!lastContentLine.trimEnd().endsWith(',')) {
     lines[lastContentLineIndex] = `${lastContentLine},`
   }
@@ -90,7 +90,7 @@ export type ModernizeSpellcheckOptions = BaseMigrationOptions
 
 export const modernizeSpellcheck = async (options: Readonly<ModernizeSpellcheckOptions>): Promise<MigrationResult> => {
   try {
-    const eslintConfigPath = new URL('eslint.config.js', options.clonedRepoUri).toString()
+    const eslintConfigPath = new URL('eslint.config.js', options.clonedRepoUri).href
 
     // Check if eslint.config.js exists
     const exists = await options.fs.exists(eslintConfigPath)

@@ -8,7 +8,7 @@ export type AddGitattributesOptions = BaseMigrationOptions
 
 export const addGitattributes = async (options: Readonly<AddGitattributesOptions>): Promise<MigrationResult> => {
   try {
-    const gitattributesPath = new URL('.gitattributes', options.clonedRepoUri).toString()
+    const gitattributesPath = new URL('.gitattributes', options.clonedRepoUri).href
 
     // Check if .gitattributes already exists
     const exists = await options.fs.exists(gitattributesPath)

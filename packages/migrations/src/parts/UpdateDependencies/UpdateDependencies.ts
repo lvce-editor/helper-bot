@@ -13,7 +13,7 @@ export interface UpdateDependenciesOptions extends BaseMigrationOptions {
 
 export const updateDependencies = async (options: Readonly<UpdateDependenciesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL(options.packageJsonPath, options.clonedRepoUri).toString()
+    const packageJsonPath = new URL(options.packageJsonPath, options.clonedRepoUri).href
 
     // Read package.json to determine dependency key
     let oldPackageJson: any

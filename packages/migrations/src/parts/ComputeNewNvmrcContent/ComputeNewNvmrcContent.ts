@@ -40,7 +40,7 @@ export type ComputeNewNvmrcContentOptions = BaseMigrationOptions
 export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const nvmrcPath = new URL('.nvmrc', options.clonedRepoUri).toString()
+    const nvmrcPath = new URL('.nvmrc', options.clonedRepoUri).href
 
     let currentContent: string
     try {

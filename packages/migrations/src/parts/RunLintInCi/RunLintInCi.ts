@@ -55,7 +55,7 @@ export const runLintInCi = async (options: Readonly<RunLintInCiOptions>): Promis
     const errors: string[] = []
 
     for (const workflowFile of WORKFLOW_FILES) {
-      const workflowPath = new URL(`.github/workflows/${workflowFile}`, options.clonedRepoUri).toString()
+      const workflowPath = new URL(`.github/workflows/${workflowFile}`, options.clonedRepoUri).href
 
       const fileExists = await options.fs.exists(workflowPath)
       if (!fileExists) {

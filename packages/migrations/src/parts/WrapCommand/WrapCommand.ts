@@ -23,9 +23,7 @@ const launchExecWorker = async (): Promise<ExecWorkerRpc> => {
   })
 
   return {
-    invoke(method: string, ...params: readonly any[]): Promise<any> {
-      return rpc.invoke(method, ...params)
-    },
+    invoke: (method: string, ...params: readonly any[]): Promise<any> => rpc.invoke(method, ...params),
     async [Symbol.asyncDispose](): Promise<void> {
       await rpc.dispose()
     },

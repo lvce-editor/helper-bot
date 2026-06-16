@@ -40,14 +40,14 @@ const getChangedWorkflowFile = async (
   workflowsPath: string,
   entry: Readonly<{ name: string; isFile: () => boolean }>,
   osVersions: { ubuntu?: string; windows?: string; macos?: string },
-): Promise<{ content: string; path: string } | undefined> => {
+): Promise<undefined | { content: string; path: string }> => {
   if (!isWorkflowFile(entry)) {
     return undefined
   }
 
   const fileName = entry.name
-  const filePath = new URL(fileName, workflowsPath).toString()
-  const relativePath = normalizePath(new URL(fileName, WORKFLOWS_DIR).toString())
+  const filePath = new URL(fileName, workflowsPath).href
+  const relativePath = normalizePath(new URL(fileName, WORKFLOWS_DIR).href)
 
   try {
     const content = await options.fs.readFile(filePath, 'utf8')
@@ -69,7 +69,7 @@ const getChangedWorkflowFile = async (
 
 export const updateGithubActions = async (options: Readonly<UpdateGithubActionsOptions>): Promise<MigrationResult> => {
   try {
-    const workflowsPath = new URL(WORKFLOWS_DIR, options.clonedRepoUri).toString()
+    const workflowsPath = new URL(WORKFLOWS_DIR, options.clonedRepoUri).href
 
     // Check if workflows directory exists
     let entries: any[]
@@ -86,9 +86,9 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
     }
 
     const osVersions = {
-      ...(options.macos === undefined ? {} : { macos: options.macos }),
-      ...(options.ubuntu === undefined ? {} : { ubuntu: options.ubuntu }),
-      ...(options.windows === undefined ? {} : { windows: options.windows }),
+      ...(options.macos !== undefined && { macos: options.macos }),
+      ...(options.ubuntu !== undefined && { ubuntu: options.ubuntu }),
+      ...(options.windows !== undefined && { windows: options.windows }),
     }
 
     const changedFiles: Array<{ path: string; content: string }> = []

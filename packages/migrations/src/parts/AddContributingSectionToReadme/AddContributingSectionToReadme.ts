@@ -24,7 +24,7 @@ export type AddContributingSectionToReadmeOptions = BaseMigrationOptions
 export const addContributingSectionToReadme = async (options: Readonly<AddContributingSectionToReadmeOptions>): Promise<MigrationResult> => {
   try {
     const readmePath = 'README.md'
-    const fullPath = new URL(readmePath, options.clonedRepoUri).toString()
+    const fullPath = new URL(readmePath, options.clonedRepoUri).href
 
     let originalContent = ''
     try {

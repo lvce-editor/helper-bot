@@ -16,7 +16,7 @@ test('computes new nvmrc content when version should be updated', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.nvmrc', clonedRepoUri).toString()]: 'v18.0.0',
+      [new URL('.nvmrc', clonedRepoUri).href]: 'v18.0.0',
     },
   })
 
@@ -48,7 +48,7 @@ test('returns same content when existing version is newer', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.nvmrc', clonedRepoUri).toString()]: 'v22.0.0',
+      [new URL('.nvmrc', clonedRepoUri).href]: 'v22.0.0',
     },
   })
 

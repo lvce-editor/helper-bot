@@ -27,13 +27,13 @@ const getUpdatedWorkflowFile = async (
   options: Readonly<UpdateCiVersionsOptions>,
   workflowsPath: string,
   entry: Readonly<{ name: string; isFile: () => boolean }>,
-): Promise<{ content: string; path: string } | undefined> => {
+): Promise<undefined | { content: string; path: string }> => {
   if (!isTargetWorkflowFile(entry)) {
     return undefined
   }
 
   const fileName = entry.name
-  const filePath = new URL(fileName, workflowsPath).toString()
+  const filePath = new URL(fileName, workflowsPath).href
   const relativePath = normalizePath(`${WORKFLOWS_DIR}/${fileName}`)
 
   try {
@@ -71,7 +71,7 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
   try {
     // Ensure clonedRepoUri ends with / for proper URL resolution
     const baseUri = options.clonedRepoUri.endsWith('/') ? options.clonedRepoUri : options.clonedRepoUri + '/'
-    const workflowsPath = new URL(WORKFLOWS_DIR + '/', baseUri).toString()
+    const workflowsPath = new URL(WORKFLOWS_DIR + '/', baseUri).href
 
     // Check if workflows directory exists
     const workflowsExists = await options.fs.exists(workflowsPath)

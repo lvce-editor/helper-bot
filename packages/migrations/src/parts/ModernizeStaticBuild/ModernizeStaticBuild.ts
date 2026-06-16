@@ -43,7 +43,7 @@ export type ModernizeStaticBuildOptions = BaseMigrationOptions
 export const modernizeStaticBuild = async (options: Readonly<ModernizeStaticBuildOptions>): Promise<MigrationResult> => {
   try {
     const baseUri = options.clonedRepoUri.endsWith('/') ? options.clonedRepoUri : options.clonedRepoUri + '/'
-    const buildStaticPath = new URL('scripts/build-static.js', baseUri).toString()
+    const buildStaticPath = new URL('scripts/build-static.js', baseUri).href
 
     // Check if build-static.js exists
     const exists = await options.fs.exists(buildStaticPath)

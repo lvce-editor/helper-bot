@@ -42,7 +42,7 @@ export const upgradePackageJsonFiles = async (
 
           // Run npm install to update package-lock.json
           try {
-            const packageJsonDirUri = new URL('.', packageJsonUri).toString().replace(/\/$/, '')
+            const packageJsonDirUri = new URL('.', packageJsonUri).href.replace(/\/$/, '')
             const packageJsonDir = uriToPath(packageJsonDirUri)
             await exec('npm', ['install', '--ignore-scripts', '--prefer-online'], {
               cwd: packageJsonDir,

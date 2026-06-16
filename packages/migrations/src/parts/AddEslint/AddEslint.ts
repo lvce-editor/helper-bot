@@ -25,7 +25,7 @@ const addEslintCore = async (
   try {
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
-    await fs.writeFile(new URL('package.json', tmpFolderUri).toString(), oldPackageJsonStringified)
+    await fs.writeFile(new URL('package.json', tmpFolderUri).href, oldPackageJsonStringified)
     await exec(
       'npm',
       ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)],
@@ -33,8 +33,8 @@ const addEslintCore = async (
         cwd: tmpFolderUri,
       },
     )
-    const newPackageJsonString = await fs.readFile(new URL('package.json', tmpFolderUri).toString(), 'utf8')
-    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).toString(), 'utf8')
+    const newPackageJsonString = await fs.readFile(new URL('package.json', tmpFolderUri).href, 'utf8')
+    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).href, 'utf8')
     return {
       newPackageJsonString,
       newPackageLockJsonString,
@@ -55,7 +55,7 @@ export type AddEslintOptions = BaseMigrationOptions
 
 export const addEslint = async (options: Readonly<AddEslintOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
 
     // Check if package.json exists
     const exists = await options.fs.exists(packageJsonPath)
@@ -67,7 +67,7 @@ export const addEslint = async (options: Readonly<AddEslintOptions>): Promise<Mi
     const packageJsonContent = await options.fs.readFile(packageJsonPath, 'utf8')
     const oldPackageJson = JSON.parse(packageJsonContent)
 
-    // Check if eslint is already in devDependencies
+    // Check if ESLint is already in devDependencies
     if (oldPackageJson.devDependencies && oldPackageJson.devDependencies['eslint']) {
       return emptyMigrationResult
     }

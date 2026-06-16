@@ -7,7 +7,7 @@ export type CleanPackageJsonOptions = BaseMigrationOptions
 
 export const cleanPackageJson = async (options: Readonly<CleanPackageJsonOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
 
     // Check if package.json exists
     const exists = await options.fs.exists(packageJsonPath)

@@ -31,7 +31,7 @@ test('updates dependency successfully', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -41,7 +41,7 @@ test('updates dependency successfully', async () => {
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).href, mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -314,7 +314,7 @@ test('handles dependency not found in package.json', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
   const mockExecFn = jest.fn(async () => {
@@ -358,7 +358,7 @@ test('handles dependency already at target version', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
   const mockExecFn = jest.fn(async () => {
@@ -417,7 +417,7 @@ test('uses asName when provided', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/renderer-worker/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/renderer-worker/package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -427,7 +427,7 @@ test('uses asName when provided', async () => {
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).href, mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -495,7 +495,7 @@ test('handles devDependencies', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/e2e/package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [new URL('packages/e2e/package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -505,7 +505,7 @@ test('handles devDependencies', async () => {
     if (file === 'npm' && args?.[0] === 'install') {
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+        await mockFs.writeFile(new URL('package-lock.json', cwd).href, mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }

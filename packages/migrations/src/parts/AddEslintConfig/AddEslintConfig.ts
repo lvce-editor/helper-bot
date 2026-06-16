@@ -13,7 +13,7 @@ export type AddEslintConfigOptions = BaseMigrationOptions
 
 export const addEslintConfig = async (options: Readonly<AddEslintConfigOptions>): Promise<MigrationResult> => {
   try {
-    const eslintConfigPath = new URL('eslint.config.js', options.clonedRepoUri).toString()
+    const eslintConfigPath = new URL('eslint.config.js', options.clonedRepoUri).href
 
     // Check if eslint.config.js already exists
     const exists = await options.fs.exists(eslintConfigPath)

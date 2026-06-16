@@ -28,7 +28,7 @@ Here's how to use the project.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [new URL('README.md', clonedRepoUri).href]: content,
     },
   })
 
@@ -82,7 +82,7 @@ Here's how to use the project.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [new URL('README.md', clonedRepoUri).href]: content,
     },
   })
 
@@ -109,7 +109,7 @@ test('only processes README.md', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: `# My Project
+      [new URL('README.md', clonedRepoUri).href]: `# My Project
 
 ## Gitpod
 
@@ -118,7 +118,7 @@ This project is ready to be developed in Gitpod.
 ## Installation
 
 Follow these steps.`,
-      [new URL('readme.md', clonedRepoUri).toString()]: `# Another Project
+      [new URL('readme.md', clonedRepoUri).href]: `# Another Project
 
 ## Gitpod
 

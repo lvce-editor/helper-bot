@@ -21,7 +21,7 @@ RUN npm install`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('Dockerfile', clonedRepoUri).toString()]: content,
+      [new URL('Dockerfile', clonedRepoUri).href]: content,
     },
   })
 
@@ -60,7 +60,7 @@ COPY . .`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('Dockerfile', clonedRepoUri).toString()]: content,
+      [new URL('Dockerfile', clonedRepoUri).href]: content,
     },
   })
 

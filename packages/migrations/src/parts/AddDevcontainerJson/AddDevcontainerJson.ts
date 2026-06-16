@@ -7,7 +7,7 @@ export type AddDevcontainerJsonOptions = BaseMigrationOptions
 
 export const addDevcontainerJson = async (options: Readonly<AddDevcontainerJsonOptions>): Promise<MigrationResult> => {
   try {
-    const devcontainerPath = new URL('.devcontainer/devcontainer.json', options.clonedRepoUri).toString()
+    const devcontainerPath = new URL('.devcontainer/devcontainer.json', options.clonedRepoUri).href
 
     // Check if devcontainer.json already exists
     const exists = await options.fs.exists(devcontainerPath)

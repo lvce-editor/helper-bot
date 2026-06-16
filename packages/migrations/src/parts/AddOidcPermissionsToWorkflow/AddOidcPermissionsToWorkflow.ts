@@ -43,7 +43,7 @@ export type AddOidcPermissionsToWorkflowOptions = BaseMigrationOptions
 
 export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPermissionsToWorkflowOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
+    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).href
 
     const fileExists = await options.fs.exists(workflowPath)
     if (!fileExists) {
@@ -53,11 +53,11 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
     const originalContent = await options.fs.readFile(workflowPath, 'utf8')
     const updatedContent = addOidcPermissionsToWorkflowContent(originalContent)
     const hasChanges = originalContent !== updatedContent
-    const pullRequestTitle = 'feature: update permissions for open id connect publishing'
-
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = 'feature: update permissions for open id connect publishing'
 
     return {
       branchName: 'feature/add-oidc-permissions-to-workflow',

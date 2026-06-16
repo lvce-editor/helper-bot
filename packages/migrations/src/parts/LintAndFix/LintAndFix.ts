@@ -54,7 +54,7 @@ const upgradeEslintConfig = async (exec: BaseMigrationOptions['exec'], clonedRep
 }
 
 const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['exec'], clonedRepoUri: string): Promise<ChangedFile[]> => {
-  // Run eslint --fix
+  // Run ESLint --fix
   try {
     // eslint-disable-next-line no-console
     console.info('[lint-and-fix]: Running eslint')
@@ -66,7 +66,7 @@ const runEslintFix = async (fs: typeof FsPromises, exec: BaseMigrationOptions['e
       },
     })
   } catch (error) {
-    // eslint might exit with non-zero code if there are unfixable errors, that's ok
+    // ESLint might exit with non-zero code if there are unfixable errors, that's ok
     // eslint-disable-next-line no-console
     console.info(`[lint-and-fix] ESLint exited with an error: ${stringifyError(error)}`)
   }
@@ -165,14 +165,14 @@ export type LintAndFixOptions = BaseMigrationOptions & {
 
 export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
 
     const { allDependencies, exists } = await readPackageDependencies(options.fs, packageJsonPath)
     if (!exists) {
       return emptyMigrationResult
     }
 
-    // Check if eslint and @lvce-editor/eslint-config are installed
+    // Check if ESLint and @lvce-editor/eslint-config are installed
     const eslintVersion = allDependencies.eslint
     const eslintConfigVersion = allDependencies['@lvce-editor/eslint-config']
 
@@ -213,12 +213,12 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
 
     await ensureLatestEslintDependencies(options, latestEslintConfigVersion, eslintConfigVersion, eslintConfigUpToDate, eslintVersion)
 
-    // Run eslint --fix and get changed files
+    // Run ESLint --fix and get changed files
     await runEslintFix(options.fs, options.exec, options.clonedRepoUri)
 
     const pullRequestTitle = 'chore: lint and fix code'
 
-    // Use git to detect changed files (only modified files)
+    // Use Git to detect changed files (only modified files)
     const changedFiles = await getChangedFiles({
       clonedRepoUri: options.clonedRepoUri,
       exec: options.exec,

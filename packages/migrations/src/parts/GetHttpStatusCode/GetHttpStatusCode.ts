@@ -27,8 +27,8 @@ export const createMigrationResult = (result: MigrationResultWithoutStatusCode):
       changedFiles: [],
       status: 'error',
       statusCode,
-      ...(errorResult.errorCode === undefined ? {} : { errorCode: errorResult.errorCode }),
-      ...(errorResult.errorMessage === undefined ? {} : { errorMessage: errorResult.errorMessage }),
+      ...(errorResult.errorCode !== undefined && { errorCode: errorResult.errorCode }),
+      ...(errorResult.errorMessage !== undefined && { errorMessage: errorResult.errorMessage }),
     }
     return migrationErrorResult
   }
@@ -38,10 +38,10 @@ export const createMigrationResult = (result: MigrationResultWithoutStatusCode):
     pullRequestTitle: successResult.pullRequestTitle,
     status: 'success',
     statusCode,
-    ...(successResult.branchName === undefined ? {} : { branchName: successResult.branchName }),
-    ...(successResult.commitMessage === undefined ? {} : { commitMessage: successResult.commitMessage }),
-    ...(successResult.data === undefined ? {} : { data: successResult.data }),
-    ...(successResult.repoCommands === undefined ? {} : { repoCommands: successResult.repoCommands }),
+    ...(successResult.branchName !== undefined && { branchName: successResult.branchName }),
+    ...(successResult.commitMessage !== undefined && { commitMessage: successResult.commitMessage }),
+    ...(successResult.data !== undefined && { data: successResult.data }),
+    ...(successResult.repoCommands !== undefined && { repoCommands: successResult.repoCommands }),
   }
   return migrationSuccessResult
 }

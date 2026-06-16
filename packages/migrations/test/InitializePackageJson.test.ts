@@ -49,7 +49,7 @@ test('returns empty result when package.json already exists', async () => {
 `
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: existingPackageJson,
+      [new URL('package.json', clonedRepoUri).href]: existingPackageJson,
     },
   })
 

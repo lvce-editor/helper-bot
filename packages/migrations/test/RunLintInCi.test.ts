@@ -25,7 +25,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -85,7 +85,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/ci.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/ci.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -145,7 +145,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/release.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/release.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -204,7 +204,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -245,7 +245,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -323,8 +323,8 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/ci.yml', clonedRepoUri).toString()]: ciContent,
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: prContent,
+      [new URL('.github/workflows/ci.yml', clonedRepoUri).href]: ciContent,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: prContent,
     },
   })
 
@@ -401,7 +401,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -455,7 +455,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/ci.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/ci.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -521,8 +521,8 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/ci.yml', clonedRepoUri).toString()]: ciContent,
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: prContent,
+      [new URL('.github/workflows/ci.yml', clonedRepoUri).href]: ciContent,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: prContent,
     },
   })
 
@@ -566,9 +566,9 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/ci.yml', clonedRepoUri).toString()]: ciContent,
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: prContent,
-      [new URL('.github/workflows/release.yml', clonedRepoUri).toString()]: releaseContent,
+      [new URL('.github/workflows/ci.yml', clonedRepoUri).href]: ciContent,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: prContent,
+      [new URL('.github/workflows/release.yml', clonedRepoUri).href]: releaseContent,
     },
   })
 
@@ -629,7 +629,7 @@ steps:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/ci.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/ci.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -681,7 +681,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: content,
     },
   })
 
@@ -715,7 +715,7 @@ jobs:
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.github/workflows/pr.yml', clonedRepoUri).toString()]: content,
+      [new URL('.github/workflows/pr.yml', clonedRepoUri).href]: content,
     },
   })
 

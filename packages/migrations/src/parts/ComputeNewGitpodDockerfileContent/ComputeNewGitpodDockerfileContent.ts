@@ -15,7 +15,7 @@ export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
 export const computeNewGitpodDockerfileContent = async (options: Readonly<ComputeNewGitpodDockerfileContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).toString()
+    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).href
 
     let currentContent: string
     try {
