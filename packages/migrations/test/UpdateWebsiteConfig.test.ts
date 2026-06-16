@@ -9,6 +9,11 @@ import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 const mockExec = createMockExec()
 const clonedRepoUri = pathToUri('/test/repo')
 
+const getCurrentYear = (): number => {
+  const now = new Date()
+  return now.getFullYear()
+}
+
 const createMockOctokit = (requestHandler: (route: string, options: any) => Promise<any>): Octokit => {
   return {
     request: requestHandler,
@@ -24,7 +29,7 @@ const createMockOctokitConstructor = (mockOctokit: Octokit): any => {
 }
 
 test('updates both version and currentYear when both are outdated', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const oldConfig = {
     currentYear: currentYear - 1,
     releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
@@ -84,7 +89,7 @@ test('updates both version and currentYear when both are outdated', async () => 
 })
 
 test('updates only version when year is already current', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const oldConfig = {
     currentYear,
     releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
@@ -144,7 +149,7 @@ test('updates only version when year is already current', async () => {
 })
 
 test('updates only currentYear when version is already latest', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const latestVersion = '0.80.0'
   const oldConfig = {
     currentYear: currentYear - 1,
@@ -204,7 +209,7 @@ test('updates only currentYear when version is already latest', async () => {
 })
 
 test('returns empty result when both version and year are already up to date', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const latestVersion = '0.80.0'
   const config = {
     currentYear,
@@ -355,7 +360,7 @@ test('fails when no releases or tags found', async () => {
 })
 
 test('handles tag fallback when no releases found', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const oldConfig = {
     currentYear: currentYear - 1,
     releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
@@ -497,7 +502,7 @@ test('handles invalid JSON in config file', async () => {
 })
 
 test('preserves other config fields when updating', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const oldConfig = {
     currentYear: currentYear - 1,
     // Add extra field to ensure it's preserved
@@ -547,7 +552,7 @@ test('preserves other config fields when updating', async () => {
 })
 
 test('handles version tags with v prefix', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const oldConfig = {
     currentYear,
     releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
@@ -594,7 +599,7 @@ test('handles version tags with v prefix', async () => {
 })
 
 test('handles version tags without v prefix', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const oldConfig = {
     currentYear,
     releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
@@ -640,7 +645,7 @@ test('handles version tags without v prefix', async () => {
 })
 
 test('handles config file without trailing newline', async () => {
-  const currentYear = (new Date()).getFullYear()
+  const currentYear = getCurrentYear()
   const oldConfig = {
     currentYear: currentYear - 1,
     releaseUrlBase: 'https://github.com/lvce-editor/lvce-editor/releases/download',
