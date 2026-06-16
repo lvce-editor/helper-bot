@@ -13,10 +13,13 @@ const excludedDependencyRegex = /(?:^|\s)-x\s+(?<dependency>[^\s]+)/g
 const dependencyNameRegex = /^@?[a-z-]+(?:\/[a-z-]+)?$/
 
 const getExcludedDependencies = (ncuArgs: string): readonly string[] => {
-  return ncuArgs.matchAll(excludedDependencyRegex).flatMap((match) => {
-    const dependency = match.groups?.dependency
-    return dependency ? [dependency] : []
-  }).toArray()
+  return ncuArgs
+    .matchAll(excludedDependencyRegex)
+    .flatMap((match) => {
+      const dependency = match.groups?.dependency
+      return dependency ? [dependency] : []
+    })
+    .toArray()
 }
 
 const addDependencyExclusion = (ncuArgs: string, dependencyName: string): string => {

@@ -26,7 +26,10 @@ const getIndentedSectionEnd = (lines: readonly string[], startIndex: number, ind
   return lines.length
 }
 
-const findDraftInsertionInStep = (lines: readonly string[], startIndex: number): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
+const findDraftInsertionInStep = (
+  lines: readonly string[],
+  startIndex: number,
+): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
   for (let j = startIndex + 1; j < lines.length; j++) {
     const line = lines[j]
     const currentTrimmed = line.trim()
