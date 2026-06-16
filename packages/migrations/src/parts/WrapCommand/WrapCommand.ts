@@ -114,7 +114,8 @@ export const wrapResponseCommand = (
     try {
       const res = await fn()
       return {
-        headers: res.headers.entries().toArray(),
+        // eslint-disable-next-line unicorn/prefer-iterator-to-array -- Headers.entries() lacks Iterator#toArray() in TypeScript's DOM types.
+        headers: [...res.headers.entries()],
         text: await res.text(),
         type: 'success',
       }
