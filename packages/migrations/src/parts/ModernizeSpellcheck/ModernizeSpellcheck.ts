@@ -73,7 +73,9 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
   if (rulesObjectMatch) {
     const rulesContent = rulesObjectMatch[1]
     const fullRulesObject = rulesObjectMatch[0]
-    newContent = rulesContent.includes('\n') ? updateMultilineRules(content, fullRulesObject, rulesContent) : updateInlineRules(content, fullRulesObject, rulesContent)
+    newContent = rulesContent.includes('\n')
+      ? updateMultilineRules(content, fullRulesObject, rulesContent)
+      : updateInlineRules(content, fullRulesObject, rulesContent)
   } else {
     newContent = appendRulesObject(content)
   }

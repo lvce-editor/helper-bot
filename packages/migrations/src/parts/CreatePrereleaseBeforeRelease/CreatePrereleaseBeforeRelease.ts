@@ -26,25 +26,16 @@ const getIndentedSectionEnd = (lines: readonly string[], startIndex: number, ind
   return lines.length
 }
 
-const findDraftInsertion = (lines: readonly string[]): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
-  for (let i = 0; i < lines.length; i++) {
-    const trimmed = lines[i].trim()
-    if (!isCreateReleaseStep(trimmed)) {
-      continue
+const findDraftInsertionInStep = (lines: readonly string[], startIndex: number): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
+  for (let j = startIndex + 1; j < lines.length; j++) {
+    const line = lines[j]
+    const currentTrimmed = line.trim()
+
+    if (isStepLine(currentTrimmed) || (currentTrimmed.startsWith('jobs:') && j > 20)) {
+      return undefined
     }
 
-    for (let j = i + 1; j < lines.length; j++) {
-      const line = lines[j]
-      const currentTrimmed = line.trim()
-
-      if (isStepLine(currentTrimmed) || (currentTrimmed.startsWith('jobs:') && j > 20)) {
-        return undefined
-      }
-
-      if (!currentTrimmed.startsWith('with:')) {
-        continue
-      }
-
+    if (currentTrimmed.startsWith('with:')) {
       const indentation = line.slice(0, line.indexOf('with:'))
       const sectionIndentation = `${indentation}  `
       const endIndex = getIndentedSectionEnd(lines, j + 1, sectionIndentation)
@@ -58,6 +49,17 @@ const findDraftInsertion = (lines: readonly string[]): undefined | { hasDraft: b
         insertIndex: endIndex,
       }
     }
+  }
+  return undefined
+}
+
+const findDraftInsertion = (lines: readonly string[]): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim()
+    if (!isCreateReleaseStep(trimmed)) {
+      continue
+    }
+    return findDraftInsertionInStep(lines, i)
   }
   return undefined
 }
@@ -108,11 +110,11 @@ const addDraftToCreateRelease = (content: Readonly<string>): string => {
 }
 
 const addPublishReleaseStep = (content: Readonly<string>): string => {
-  const lines = content.split('\n')
   if (content.includes('Publish GitHub release')) {
     return content
   }
 
+  const lines = content.split('\n')
   const lastJobStep = findLastJobStep(lines)
   if (!lastJobStep) {
     return content

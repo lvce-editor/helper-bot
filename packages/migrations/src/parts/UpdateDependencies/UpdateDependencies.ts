@@ -12,6 +12,13 @@ export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   packageLockJsonPath: string
 }
 
+const getDependency = (dependencies: Record<string, string> | undefined, dependencyName: string): string | undefined => {
+  if (!dependencies || !Object.hasOwn(dependencies, dependencyName)) {
+    return undefined
+  }
+  return dependencies[dependencyName]
+}
+
 export const updateDependencies = async (options: Readonly<UpdateDependenciesOptions>): Promise<MigrationResult> => {
   try {
     const packageJsonPath = resolveUri(options.packageJsonPath, options.clonedRepoUri)
@@ -33,15 +40,18 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
     let oldDependency = ''
 
     // Auto-detect which dependency key to use
-    if (oldPackageJson.dependencies && Object.hasOwn(oldPackageJson.dependencies, dependencyName) && oldPackageJson.dependencies[dependencyName]) {
+    const dependency = getDependency(oldPackageJson.dependencies, dependencyName)
+    const devDependency = getDependency(oldPackageJson.devDependencies, dependencyName)
+    const optionalDependency = getDependency(oldPackageJson.optionalDependencies, dependencyName)
+    if (dependency) {
       dependencyKey = 'dependencies'
-      oldDependency = oldPackageJson.dependencies[dependencyName]
-    } else if (oldPackageJson.devDependencies && Object.hasOwn(oldPackageJson.devDependencies, dependencyName) && oldPackageJson.devDependencies[dependencyName]) {
+      oldDependency = dependency
+    } else if (devDependency) {
       dependencyKey = 'devDependencies'
-      oldDependency = oldPackageJson.devDependencies[dependencyName]
-    } else if (oldPackageJson.optionalDependencies && Object.hasOwn(oldPackageJson.optionalDependencies, dependencyName) && oldPackageJson.optionalDependencies[dependencyName]) {
+      oldDependency = devDependency
+    } else if (optionalDependency) {
       dependencyKey = 'optionalDependencies'
-      oldDependency = oldPackageJson.optionalDependencies[dependencyName]
+      oldDependency = optionalDependency
     } else {
       return emptyMigrationResult
     }
