@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { removeGitpodyml } from '../src/parts/RemoveGitpodyml/RemoveGitpodyml.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -17,7 +17,7 @@ vscode:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const gitpodYmlPath = new URL('.gitpod.yml', clonedRepoUri).href
+  const gitpodYmlPath = resolveUri('.gitpod.yml', clonedRepoUri)
   const mockFs = createMockFs({
     files: {
       [gitpodYmlPath]: gitpodYmlContent,
@@ -63,8 +63,8 @@ RUN npm install -g pnpm
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const gitpodYmlPath = new URL('.gitpod.yml', clonedRepoUri).href
-  const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', clonedRepoUri).href
+  const gitpodYmlPath = resolveUri('.gitpod.yml', clonedRepoUri)
+  const gitpodDockerfilePath = resolveUri('.gitpod.Dockerfile', clonedRepoUri)
   const mockFs = createMockFs({
     files: {
       [gitpodDockerfilePath]: dockerfileContent,
@@ -109,7 +109,7 @@ RUN npm install -g pnpm
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', clonedRepoUri).href
+  const gitpodDockerfilePath = resolveUri('.gitpod.Dockerfile', clonedRepoUri)
   const mockFs = createMockFs({
     files: {
       [gitpodDockerfilePath]: dockerfileContent,

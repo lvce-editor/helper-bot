@@ -3,7 +3,7 @@ import { computeNewDockerfileContent } from '../src/parts/ComputeNewDockerfileCo
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 const mockFetch = createMockFetch([
@@ -21,7 +21,7 @@ RUN npm install`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('Dockerfile', clonedRepoUri).href]: content,
+      [resolveUri('Dockerfile', clonedRepoUri)]: content,
     },
   })
 
@@ -60,7 +60,7 @@ COPY . .`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('Dockerfile', clonedRepoUri).href]: content,
+      [resolveUri('Dockerfile', clonedRepoUri)]: content,
     },
   })
 

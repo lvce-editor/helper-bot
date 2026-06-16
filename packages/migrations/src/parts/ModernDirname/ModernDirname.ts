@@ -3,6 +3,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const collectFiles = async (
   fs: Readonly<typeof FsPromises & { exists: (path: string | Buffer | URL) => Promise<boolean> }>,
@@ -22,7 +23,7 @@ const collectFiles = async (
   }
 
   for (const entry of entries) {
-    const entryPath = new URL(entry.name, dirUri + '/').href
+    const entryPath = resolveUri(entry.name, dirUri + '/')
     if (entry.isDirectory()) {
       // Skip node_modules and .Git directories
       if (entry.name === 'node_modules' || entry.name === '.git') {

@@ -3,6 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeNewGitpodDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
@@ -15,7 +16,7 @@ export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
 export const computeNewGitpodDockerfileContent = async (options: Readonly<ComputeNewGitpodDockerfileContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).href
+    const gitpodDockerfilePath = resolveUri('.gitpod.Dockerfile', options.clonedRepoUri)
 
     let currentContent: string
     try {

@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const processFile = (content: string): { newContent: string; changed: boolean } => {
   // Check if it's already been updated
@@ -43,7 +44,7 @@ export type ModernizeStaticBuildOptions = BaseMigrationOptions
 export const modernizeStaticBuild = async (options: Readonly<ModernizeStaticBuildOptions>): Promise<MigrationResult> => {
   try {
     const baseUri = options.clonedRepoUri.endsWith('/') ? options.clonedRepoUri : options.clonedRepoUri + '/'
-    const buildStaticPath = new URL('scripts/build-static.js', baseUri).href
+    const buildStaticPath = resolveUri('scripts/build-static.js', baseUri)
 
     // Check if build-static.js exists
     const exists = await options.fs.exists(buildStaticPath)

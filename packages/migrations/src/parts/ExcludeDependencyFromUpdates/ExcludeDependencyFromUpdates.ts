@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createValidationErrorMigrationResult, emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export interface ExcludeDependencyFromUpdatesOptions extends BaseMigrationOptions {
   dependencyName: string
@@ -80,7 +81,7 @@ export const excludeDependencyFromUpdates = async (options: Readonly<ExcludeDepe
       return createValidationErrorMigrationResult('Invalid dependencyName parameter: only lowercase letters, hyphens, slash, and @ are allowed')
     }
 
-    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).href
+    const scriptPath = resolveUri('scripts/update-dependencies.sh', options.clonedRepoUri)
 
     let currentContent: string
     try {

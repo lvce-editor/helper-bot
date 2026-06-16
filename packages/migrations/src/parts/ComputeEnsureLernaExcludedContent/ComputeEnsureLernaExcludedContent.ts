@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
@@ -49,7 +50,7 @@ export type ComputeEnsureLernaExcludedContentOptions = BaseMigrationOptions
 
 export const computeEnsureLernaExcludedContent = async (options: Readonly<ComputeEnsureLernaExcludedContentOptions>): Promise<MigrationResult> => {
   try {
-    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).href
+    const scriptPath = resolveUri('scripts/update-dependencies.sh', options.clonedRepoUri)
 
     let currentContent: string
     try {

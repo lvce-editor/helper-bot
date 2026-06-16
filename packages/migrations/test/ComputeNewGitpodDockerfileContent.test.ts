@@ -3,7 +3,7 @@ import { computeNewGitpodDockerfileContent } from '../src/parts/ComputeNewGitpod
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 const mockFetch = createMockFetch([
@@ -21,7 +21,7 @@ RUN nvm install 18.0.0 \\
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.gitpod.Dockerfile', clonedRepoUri).href]: content,
+      [resolveUri('.gitpod.Dockerfile', clonedRepoUri)]: content,
     },
   })
 

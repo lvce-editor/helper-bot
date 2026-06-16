@@ -3,12 +3,13 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type AddLintScriptOptions = BaseMigrationOptions
 
 export const addLintScript = async (options: Readonly<AddLintScriptOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
+    const packageJsonPath = resolveUri('package.json', options.clonedRepoUri)
 
     // Check if package.json exists
     const exists = await options.fs.exists(packageJsonPath)

@@ -3,7 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type AddRepositoryLinkOptions = BaseMigrationOptions
 
@@ -45,14 +45,14 @@ export const addRepositoryLink = async (options: Readonly<AddRepositoryLinkOptio
     const changedFiles: Array<{ content: string; path: string }> = []
 
     // Check root level extension.json
-    const rootExtensionJsonPath = new URL('extension.json', baseUri).href
+    const rootExtensionJsonPath = resolveUri('extension.json', baseUri)
     const rootResult = await processExtensionJson(options, rootExtensionJsonPath, 'extension.json')
     if (rootResult) {
       changedFiles.push(rootResult)
     }
 
     // Check packages/extension/extension.json (monorepo)
-    const monorepoExtensionJsonPath = new URL('packages/extension/extension.json', baseUri).href
+    const monorepoExtensionJsonPath = resolveUri('packages/extension/extension.json', baseUri)
     const monorepoResult = await processExtensionJson(options, monorepoExtensionJsonPath, 'packages/extension/extension.json')
     if (monorepoResult) {
       changedFiles.push(monorepoResult)

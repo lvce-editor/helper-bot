@@ -3,6 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   dependencyName: string
@@ -13,7 +14,7 @@ export interface UpdateDependenciesOptions extends BaseMigrationOptions {
 
 export const updateDependencies = async (options: Readonly<UpdateDependenciesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL(options.packageJsonPath, options.clonedRepoUri).href
+    const packageJsonPath = resolveUri(options.packageJsonPath, options.clonedRepoUri)
 
     // Read package.json to determine dependency key
     let oldPackageJson: any

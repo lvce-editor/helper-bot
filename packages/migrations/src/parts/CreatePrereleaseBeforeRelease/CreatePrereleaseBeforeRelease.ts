@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const isStepLine = (trimmed: string): boolean => {
   return trimmed.startsWith('- name:')
@@ -143,7 +144,7 @@ export type CreatePrereleaseBeforeReleaseOptions = BaseMigrationOptions
 
 export const createPrereleaseBeforeRelease = async (options: Readonly<CreatePrereleaseBeforeReleaseOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).href
+    const workflowPath = resolveUri('.github/workflows/release.yml', options.clonedRepoUri)
 
     const fileExists = await options.fs.exists(workflowPath)
     if (!fileExists) {

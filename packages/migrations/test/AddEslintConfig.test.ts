@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { addEslintConfig } from '../src/parts/AddEslintConfig/AddEslintConfig.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('creates eslint.config.js when it does not exist', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
@@ -41,7 +41,7 @@ test('skips if eslint.config.js already exists', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).href]: 'existing config',
+      [resolveUri('eslint.config.js', clonedRepoUri)]: 'existing config',
     },
   })
   const mockExec = createMockExec()

@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const hasSpellcheckerRule = (content: string): boolean => {
   return content.includes("'@cspell/spellchecker': 'off'") || content.includes('"@cspell/spellchecker": "off"')
@@ -90,7 +91,7 @@ export type ModernizeSpellcheckOptions = BaseMigrationOptions
 
 export const modernizeSpellcheck = async (options: Readonly<ModernizeSpellcheckOptions>): Promise<MigrationResult> => {
   try {
-    const eslintConfigPath = new URL('eslint.config.js', options.clonedRepoUri).href
+    const eslintConfigPath = resolveUri('eslint.config.js', options.clonedRepoUri)
 
     // Check if eslint.config.js exists
     const exists = await options.fs.exists(eslintConfigPath)

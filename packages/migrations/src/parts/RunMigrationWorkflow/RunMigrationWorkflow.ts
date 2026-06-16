@@ -83,7 +83,7 @@ const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Read
     ...(options.baseBranch && { baseBranch: options.baseBranch }),
     ...('branchName' in result && result.branchName && { branchName: result.branchName }),
     ...('commitMessage' in result && result.commitMessage && { commitMessage: result.commitMessage }),
-    ...((deletedFiles.length > 0) && { deletedFiles }),
+    ...(deletedFiles.length > 0 && { deletedFiles }),
     ...('errorCode' in result && result.errorCode && { errorCode: result.errorCode }),
     ...('errorMessage' in result && result.errorMessage && { errorMessage: result.errorMessage }),
     migrationId: options.migrationId,

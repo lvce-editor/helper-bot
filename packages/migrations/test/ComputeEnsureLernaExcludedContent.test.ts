@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { computeEnsureLernaExcludedContent } from '../src/parts/ComputeEnsureLernaExcludedContent/ComputeEnsureLernaExcludedContent.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -26,7 +26,7 @@ updateDependencies`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: content,
+      [resolveUri('scripts/update-dependencies.sh', clonedRepoUri)]: content,
     },
   })
 
@@ -88,7 +88,7 @@ updateDependencies`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/update-dependencies.sh', clonedRepoUri).href]: content,
+      [resolveUri('scripts/update-dependencies.sh', clonedRepoUri)]: content,
     },
   })
 

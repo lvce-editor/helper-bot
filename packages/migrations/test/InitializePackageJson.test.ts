@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { initializePackageJson } from '../src/parts/InitializePackageJson/InitializePackageJson.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -49,7 +49,7 @@ test('returns empty result when package.json already exists', async () => {
 `
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).href]: existingPackageJson,
+      [resolveUri('package.json', clonedRepoUri)]: existingPackageJson,
     },
   })
 

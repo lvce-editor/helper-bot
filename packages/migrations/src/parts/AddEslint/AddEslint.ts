@@ -6,7 +6,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
-import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
+import { pathToUri, uriToPath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const addEslintCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -25,7 +25,7 @@ const addEslintCore = async (
   try {
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
-    await fs.writeFile(new URL('package.json', tmpFolderUri).href, oldPackageJsonStringified)
+    await fs.writeFile(resolveUri('package.json', tmpFolderUri), oldPackageJsonStringified)
     await exec(
       'npm',
       ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)],
@@ -33,8 +33,8 @@ const addEslintCore = async (
         cwd: tmpFolderUri,
       },
     )
-    const newPackageJsonString = await fs.readFile(new URL('package.json', tmpFolderUri).href, 'utf8')
-    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).href, 'utf8')
+    const newPackageJsonString = await fs.readFile(resolveUri('package.json', tmpFolderUri), 'utf8')
+    const newPackageLockJsonString = await fs.readFile(resolveUri('package-lock.json', tmpFolderUri), 'utf8')
     return {
       newPackageJsonString,
       newPackageLockJsonString,
@@ -55,7 +55,7 @@ export type AddEslintOptions = BaseMigrationOptions
 
 export const addEslint = async (options: Readonly<AddEslintOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
+    const packageJsonPath = resolveUri('package.json', options.clonedRepoUri)
 
     // Check if package.json exists
     const exists = await options.fs.exists(packageJsonPath)

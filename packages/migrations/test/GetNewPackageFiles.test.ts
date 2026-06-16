@@ -2,7 +2,7 @@ import { test, expect, jest } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { getNewPackageFiles } from '../src/parts/GetNewPackageFiles/GetNewPackageFiles.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('generates new package files with updated dependency', async () => {
   const oldPackageJson = {
@@ -31,7 +31,7 @@ test('generates new package files with updated dependency', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -42,7 +42,7 @@ test('generates new package files with updated dependency', async () => {
       // Write a mock package-lock.json after npm install
       const cwd = options?.cwd
       if (cwd) {
-        await mockFs.writeFile(new URL('package-lock.json', cwd).href, mockPackageLockJson)
+        await mockFs.writeFile(resolveUri('package-lock.json', cwd), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }

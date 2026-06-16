@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const WORKFLOWS_DIR = '.github/workflows'
 
@@ -46,8 +46,8 @@ const getChangedWorkflowFile = async (
   }
 
   const fileName = entry.name
-  const filePath = new URL(fileName, workflowsPath).href
-  const relativePath = normalizePath(new URL(fileName, WORKFLOWS_DIR).href)
+  const filePath = resolveUri(fileName, workflowsPath)
+  const relativePath = normalizePath(resolveUri(fileName, WORKFLOWS_DIR))
 
   try {
     const content = await options.fs.readFile(filePath, 'utf8')
@@ -69,7 +69,7 @@ const getChangedWorkflowFile = async (
 
 export const updateGithubActions = async (options: Readonly<UpdateGithubActionsOptions>): Promise<MigrationResult> => {
   try {
-    const workflowsPath = new URL(WORKFLOWS_DIR, options.clonedRepoUri).href
+    const workflowsPath = resolveUri(WORKFLOWS_DIR, options.clonedRepoUri)
 
     // Check if workflows directory exists
     let entries: any[]

@@ -3,6 +3,7 @@ import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { createMockNpmFetch } from '../src/parts/CreateMockNpmFetch/CreateMockNpmFetch.ts'
 import { modernizeMockrpcDisposal } from '../src/parts/ModernizeMockrpcDisposal/ModernizeMockrpcDisposal.ts'
+import { resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('modernizes mockrpc-disposal successfully', async () => {
   const oldPackageJson = {
@@ -49,25 +50,25 @@ test('some test', () => {
   )
 
   // Pre-compute package-lock.json URIs for cross-platform compatibility
-  const rootPackageLockUri = new URL('package-lock.json', repoUriWithSlash).href
-  const appPackageLockUri = new URL('packages/app/package-lock.json', repoUriWithSlash).href
+  const rootPackageLockUri = resolveUri('package-lock.json', repoUriWithSlash)
+  const appPackageLockUri = resolveUri('packages/app/package-lock.json', repoUriWithSlash)
 
   const mockFs = createMockFs({
     files: {
       // Create directory entries - include the root directory
       [clonedRepoUri]: '[DIRECTORY]',
-      [new URL('package.json', repoUriWithSlash).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('packages/', repoUriWithSlash).href]: '[DIRECTORY]',
-      [new URL('packages/app/', repoUriWithSlash).href]: '[DIRECTORY]',
-      [new URL('packages/app/package.json', repoUriWithSlash).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('packages/app/test/', repoUriWithSlash).href]: '[DIRECTORY]',
-      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).href]: oldTestContent,
-      [new URL('packages/exec-worker/', repoUriWithSlash).href]: '[DIRECTORY]',
-      [new URL('packages/exec-worker/test/', repoUriWithSlash).href]: '[DIRECTORY]',
-      [new URL('packages/exec-worker/test/another.test.ts', repoUriWithSlash).href]: oldTestContent,
-      [new URL('packages/github-worker/', repoUriWithSlash).href]: '[DIRECTORY]',
-      [new URL('packages/github-worker/test/', repoUriWithSlash).href]: '[DIRECTORY]',
-      [new URL('packages/github-worker/test/third.test.ts', repoUriWithSlash).href]: oldTestContent,
+      [resolveUri('package.json', repoUriWithSlash)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('packages/', repoUriWithSlash)]: '[DIRECTORY]',
+      [resolveUri('packages/app/', repoUriWithSlash)]: '[DIRECTORY]',
+      [resolveUri('packages/app/package.json', repoUriWithSlash)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('packages/app/test/', repoUriWithSlash)]: '[DIRECTORY]',
+      [resolveUri('packages/app/test/some.test.ts', repoUriWithSlash)]: oldTestContent,
+      [resolveUri('packages/exec-worker/', repoUriWithSlash)]: '[DIRECTORY]',
+      [resolveUri('packages/exec-worker/test/', repoUriWithSlash)]: '[DIRECTORY]',
+      [resolveUri('packages/exec-worker/test/another.test.ts', repoUriWithSlash)]: oldTestContent,
+      [resolveUri('packages/github-worker/', repoUriWithSlash)]: '[DIRECTORY]',
+      [resolveUri('packages/github-worker/test/', repoUriWithSlash)]: '[DIRECTORY]',
+      [resolveUri('packages/github-worker/test/third.test.ts', repoUriWithSlash)]: oldTestContent,
     },
   })
 
@@ -192,8 +193,8 @@ test('some test', () => {
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', repoUriWithSlash).href]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
-      [new URL('packages/app/test/some.test.ts', repoUriWithSlash).href]: testContentWithoutMockRpc,
+      [resolveUri('package.json', repoUriWithSlash)]: JSON.stringify(packageJsonWithoutRpc, null, 2) + '\n',
+      [resolveUri('packages/app/test/some.test.ts', repoUriWithSlash)]: testContentWithoutMockRpc,
     },
   })
 
@@ -230,7 +231,7 @@ test('handles npm fetch failures gracefully', async () => {
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', repoUriWithSlash).href]:
+      [resolveUri('package.json', repoUriWithSlash)]:
         JSON.stringify(
           {
             dependencies: {
@@ -284,7 +285,7 @@ test('handles network errors during npm fetch', async () => {
   const repoUriWithSlash = clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', repoUriWithSlash).href]:
+      [resolveUri('package.json', repoUriWithSlash)]:
         JSON.stringify(
           {
             dependencies: {

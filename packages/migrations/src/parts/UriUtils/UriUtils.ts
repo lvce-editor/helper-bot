@@ -15,6 +15,11 @@ export const pathToUri = (path: string): string => {
   }
 }
 
+export const resolveUri = (path: string, base: string): string => {
+  const url = new URL(path, base)
+  return url.href
+}
+
 export const uriToPath = (uri: string): string => {
   if (uri.startsWith('file://')) {
     return fileURLToPath(uri)

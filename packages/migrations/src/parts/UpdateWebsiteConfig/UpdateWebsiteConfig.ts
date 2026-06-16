@@ -5,7 +5,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestRelease } from '../GetLatestRelease/GetLatestRelease.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const CONFIG_PATH = 'packages/website/config.json'
 const EXPECTED_REPO_NAME = 'lvce-editor.github.io'
@@ -48,7 +48,7 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
 
     // Ensure clonedRepoUri ends with / for proper URL resolution
     const baseUri = options.clonedRepoUri.endsWith('/') ? options.clonedRepoUri : options.clonedRepoUri + '/'
-    const configPath = new URL(CONFIG_PATH, baseUri).href
+    const configPath = resolveUri(CONFIG_PATH, baseUri)
 
     // Check if config file exists
     const configExists = await options.fs.exists(configPath)
@@ -87,7 +87,7 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
     const latestVersionTag = latestRelease.tag_name
     // Strip 'v' prefix if present to store plain version in config.json
     const latestVersion = latestVersionTag.startsWith('v') ? latestVersionTag.slice(1) : latestVersionTag
-    const currentYear = new Date().getFullYear()
+    const currentYear = (new Date()).getFullYear()
 
     // Check if updates are needed
     const needsVersionUpdate = config.version !== latestVersion

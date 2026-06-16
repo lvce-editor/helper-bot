@@ -1,6 +1,7 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const GITATTRIBUTES_CONTENT = '* text=auto eol=lf\n'
 
@@ -8,7 +9,7 @@ export type AddGitattributesOptions = BaseMigrationOptions
 
 export const addGitattributes = async (options: Readonly<AddGitattributesOptions>): Promise<MigrationResult> => {
   try {
-    const gitattributesPath = new URL('.gitattributes', options.clonedRepoUri).href
+    const gitattributesPath = resolveUri('.gitattributes', options.clonedRepoUri)
 
     // Check if .gitattributes already exists
     const exists = await options.fs.exists(gitattributesPath)

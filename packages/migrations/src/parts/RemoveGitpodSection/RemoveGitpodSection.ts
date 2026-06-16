@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const removeGitpodSectionContent = (content: Readonly<string>): string => {
   // Pattern to match Gitpod sections in README
@@ -18,7 +19,7 @@ export type RemoveGitpodSectionOptions = BaseMigrationOptions
 export const removeGitpodSection = async (options: Readonly<RemoveGitpodSectionOptions>): Promise<MigrationResult> => {
   try {
     const readmePath = 'README.md'
-    const fullPath = new URL(readmePath, options.clonedRepoUri).href
+    const fullPath = resolveUri(readmePath, options.clonedRepoUri)
 
     let originalContent: string
     try {

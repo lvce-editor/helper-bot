@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 import config from './config.json' with { type: 'json' }
 
 const WORKFLOWS_DIR = '.github/workflows'
@@ -33,7 +33,7 @@ const getUpdatedWorkflowFile = async (
   }
 
   const fileName = entry.name
-  const filePath = new URL(fileName, workflowsPath).href
+  const filePath = resolveUri(fileName, workflowsPath)
   const relativePath = normalizePath(`${WORKFLOWS_DIR}/${fileName}`)
 
   try {
@@ -71,7 +71,7 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
   try {
     // Ensure clonedRepoUri ends with / for proper URL resolution
     const baseUri = options.clonedRepoUri.endsWith('/') ? options.clonedRepoUri : options.clonedRepoUri + '/'
-    const workflowsPath = new URL(WORKFLOWS_DIR + '/', baseUri).href
+    const workflowsPath = resolveUri(WORKFLOWS_DIR + '/', baseUri)
 
     // Check if workflows directory exists
     const workflowsExists = await options.fs.exists(workflowsPath)

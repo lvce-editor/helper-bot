@@ -2,13 +2,14 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type RemoveGitpodymlOptions = BaseMigrationOptions
 
 export const removeGitpodyml = async (options: Readonly<RemoveGitpodymlOptions>): Promise<MigrationResult> => {
   try {
-    const gitpodYmlPath = new URL('.gitpod.yml', options.clonedRepoUri).href
-    const gitpodDockerfilePath = new URL('.gitpod.Dockerfile', options.clonedRepoUri).href
+    const gitpodYmlPath = resolveUri('.gitpod.yml', options.clonedRepoUri)
+    const gitpodDockerfilePath = resolveUri('.gitpod.Dockerfile', options.clonedRepoUri)
 
     const ymlExists = await options.fs.exists(gitpodYmlPath)
     const dockerfileExists = await options.fs.exists(gitpodDockerfilePath)

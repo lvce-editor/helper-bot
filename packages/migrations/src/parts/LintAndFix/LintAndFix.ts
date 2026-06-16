@@ -6,7 +6,7 @@ import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/Ge
 import { getLatestNpmVersion } from '../GetLatestNpmVersion/GetLatestNpmVersion.ts'
 import { npmCi } from '../NpmCi/NpmCi.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const normalizeVersion = (version: string): string => {
   // Remove range prefixes like ^, ~, >=, etc.
@@ -165,7 +165,7 @@ export type LintAndFixOptions = BaseMigrationOptions & {
 
 export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).href
+    const packageJsonPath = resolveUri('package.json', options.clonedRepoUri)
 
     const { allDependencies, exists } = await readPackageDependencies(options.fs, packageJsonPath)
     if (!exists) {

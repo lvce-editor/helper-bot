@@ -2,7 +2,7 @@ import { test, expect, jest } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { lintAndFix } from '../src/parts/LintAndFix/LintAndFix.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('installs eslint and runs eslint --fix', async () => {
   const oldPackageJson: any = {
@@ -34,8 +34,8 @@ test('installs eslint and runs eslint --fix', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: originalFileContent,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: originalFileContent,
     },
   })
 
@@ -52,8 +52,8 @@ test('installs eslint and runs eslint --fix', async () => {
           eslint: '^9.39.2',
         },
       }
-      await mockFs.writeFile(new URL('package.json', cwd).href, JSON.stringify(updatedPackageJson, null, 2) + '\n')
-      await mockFs.writeFile(new URL('package-lock.json', cwd).href, mockPackageLockJson)
+      await mockFs.writeFile(resolveUri('package.json', cwd), JSON.stringify(updatedPackageJson, null, 2) + '\n')
+      await mockFs.writeFile(resolveUri('package-lock.json', cwd), mockPackageLockJson)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'npm' && args?.[0] === 'ci' && cwd === clonedRepoUri) {
@@ -61,7 +61,7 @@ test('installs eslint and runs eslint --fix', async () => {
     }
     if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
       // Simulate ESLint --fix changing the file
-      await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).href, fixedFileContent)
+      await mockFs.writeFile(resolveUri('src/test.ts', clonedRepoUri), fixedFileContent)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -154,8 +154,8 @@ test('handles case when no files need fixing', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: fileContent,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: fileContent,
     },
   })
 
@@ -172,8 +172,8 @@ test('handles case when no files need fixing', async () => {
           eslint: '^9.39.2',
         },
       }
-      await mockFs.writeFile(new URL('package.json', cwd).href, JSON.stringify(updatedPackageJson, null, 2) + '\n')
-      await mockFs.writeFile(new URL('package-lock.json', cwd).href, mockPackageLockJson)
+      await mockFs.writeFile(resolveUri('package.json', cwd), JSON.stringify(updatedPackageJson, null, 2) + '\n')
+      await mockFs.writeFile(resolveUri('package-lock.json', cwd), mockPackageLockJson)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'npm' && args?.[0] === 'ci' && cwd === clonedRepoUri) {
@@ -244,9 +244,9 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).href]: mockPackageLockJson,
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: originalFileContent,
+      [resolveUri('package-lock.json', clonedRepoUri)]: mockPackageLockJson,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: originalFileContent,
     },
   })
 
@@ -312,8 +312,8 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: originalFileContent,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: originalFileContent,
     },
   })
 
@@ -397,9 +397,9 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).href]: mockPackageLockJson,
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: fileContent,
+      [resolveUri('package-lock.json', clonedRepoUri)]: mockPackageLockJson,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: fileContent,
     },
   })
 
@@ -484,9 +484,9 @@ test('runs eslint fix when force option is set even if eslint config is already 
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).href]: mockPackageLockJson,
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: originalFileContent,
+      [resolveUri('package-lock.json', clonedRepoUri)]: mockPackageLockJson,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: originalFileContent,
     },
   })
 
@@ -513,7 +513,7 @@ test('runs eslint fix when force option is set even if eslint config is already 
     }
     if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
       // Simulate ESLint --fix changing the file
-      await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).href, fixedFileContent)
+      await mockFs.writeFile(resolveUri('src/test.ts', clonedRepoUri), fixedFileContent)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -587,9 +587,9 @@ test('upgrades @lvce-editor/eslint-config to latest version when outdated', asyn
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).href]: mockPackageLockJson,
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: originalFileContent,
+      [resolveUri('package-lock.json', clonedRepoUri)]: mockPackageLockJson,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: originalFileContent,
     },
   })
 
@@ -620,12 +620,12 @@ test('upgrades @lvce-editor/eslint-config to latest version when outdated', asyn
           '@lvce-editor/eslint-config': '^4.3.0',
         },
       }
-      await mockFs.writeFile(new URL('package.json', cwd).href, JSON.stringify(updatedPackageJson, null, 2) + '\n')
+      await mockFs.writeFile(resolveUri('package.json', cwd), JSON.stringify(updatedPackageJson, null, 2) + '\n')
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
       // Simulate ESLint --fix changing the file
-      await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).href, fixedFileContent)
+      await mockFs.writeFile(resolveUri('src/test.ts', clonedRepoUri), fixedFileContent)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {
@@ -693,9 +693,9 @@ test('installs @lvce-editor/eslint-config at latest version when not installed',
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).href]: mockPackageLockJson,
-      [new URL('package.json', clonedRepoUri).href]: JSON.stringify(oldPackageJson, null, 2) + '\n',
-      [new URL('src/test.ts', clonedRepoUri).href]: originalFileContent,
+      [resolveUri('package-lock.json', clonedRepoUri)]: mockPackageLockJson,
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('src/test.ts', clonedRepoUri)]: originalFileContent,
     },
   })
 
@@ -726,12 +726,12 @@ test('installs @lvce-editor/eslint-config at latest version when not installed',
           '@lvce-editor/eslint-config': '^4.3.0',
         },
       }
-      await mockFs.writeFile(new URL('package.json', cwd).href, JSON.stringify(updatedPackageJson, null, 2) + '\n')
+      await mockFs.writeFile(resolveUri('package.json', cwd), JSON.stringify(updatedPackageJson, null, 2) + '\n')
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'npx' && args?.[0] === 'eslint' && cwd === clonedRepoUri) {
       // Simulate ESLint --fix changing the file
-      await mockFs.writeFile(new URL('src/test.ts', clonedRepoUri).href, fixedFileContent)
+      await mockFs.writeFile(resolveUri('src/test.ts', clonedRepoUri), fixedFileContent)
       return { exitCode: 0, stderr: '', stdout: '' }
     }
     if (file === 'git' && args?.[0] === 'status' && args?.[1] === '--porcelain' && cwd === clonedRepoUri) {

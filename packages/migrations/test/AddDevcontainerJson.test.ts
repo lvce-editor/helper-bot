@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { addDevcontainerJson } from '../src/parts/AddDevcontainerJson/AddDevcontainerJson.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -58,7 +58,7 @@ test('returns empty result when devcontainer.json already exists', async () => {
   })
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const devcontainerPath = new URL('.devcontainer/devcontainer.json', clonedRepoUri).href
+  const devcontainerPath = resolveUri('.devcontainer/devcontainer.json', clonedRepoUri)
   const mockFs = createMockFs({
     files: {
       [devcontainerPath]: devcontainerContent,

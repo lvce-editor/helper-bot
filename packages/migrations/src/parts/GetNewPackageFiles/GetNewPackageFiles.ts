@@ -6,7 +6,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
-import { pathToUri, uriToPath } from '../UriUtils/UriUtils.ts'
+import { pathToUri, uriToPath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const getNewPackageFilesCore = async (
   fs: Readonly<typeof FsPromises>,
@@ -29,15 +29,15 @@ const getNewPackageFilesCore = async (
     oldPackageJson[dependencyKey][`@lvce-editor/${dependencyName}`] = `^${newVersion}`
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
-    await fs.writeFile(new URL('package.json', tmpFolderUri).href, oldPackageJsonStringified)
+    await fs.writeFile(resolveUri('package.json', tmpFolderUri), oldPackageJsonStringified)
     await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)], {
       cwd: tmpFolderUri,
     })
 
     // Read the updated package.json and package-lock.json
-    const packageJsonUri = new URL('package.json', tmpFolderUri).href
+    const packageJsonUri = resolveUri('package.json', tmpFolderUri)
     const newPackageJsonString = await fs.readFile(packageJsonUri, 'utf8')
-    const newPackageLockJsonString = await fs.readFile(new URL('package-lock.json', tmpFolderUri).href, 'utf8')
+    const newPackageLockJsonString = await fs.readFile(resolveUri('package-lock.json', tmpFolderUri), 'utf8')
     return {
       newPackageJsonString,
       newPackageLockJsonString,
@@ -64,7 +64,7 @@ export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
 
 export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL(options.packageJsonPath, options.clonedRepoUri).href
+    const packageJsonPath = resolveUri(options.packageJsonPath, options.clonedRepoUri)
 
     let oldPackageJson: any
     try {

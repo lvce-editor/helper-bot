@@ -3,6 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const parseVersion = (content: string): number => {
   const trimmed = content.trim()
@@ -40,7 +41,7 @@ export type ComputeNewNvmrcContentOptions = BaseMigrationOptions
 export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const nvmrcPath = new URL('.nvmrc', options.clonedRepoUri).href
+    const nvmrcPath = resolveUri('.nvmrc', options.clonedRepoUri)
 
     let currentContent: string
     try {

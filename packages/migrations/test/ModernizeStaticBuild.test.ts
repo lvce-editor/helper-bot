@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { modernizeStaticBuild } from '../src/parts/ModernizeStaticBuild/ModernizeStaticBuild.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -16,7 +16,7 @@ await exportStatic()
   const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', baseUri).href]: content,
+      [resolveUri('scripts/build-static.js', baseUri)]: content,
     },
   })
 
@@ -59,7 +59,7 @@ await exportStatic()
   const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', baseUri).href]: content,
+      [resolveUri('scripts/build-static.js', baseUri)]: content,
     },
   })
 
@@ -102,7 +102,7 @@ await exportStatic({root: join(import.meta.dirname, '..')})
   const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', baseUri).href]: content,
+      [resolveUri('scripts/build-static.js', baseUri)]: content,
     },
   })
 
@@ -135,7 +135,7 @@ await something()
   const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', baseUri).href]: content,
+      [resolveUri('scripts/build-static.js', baseUri)]: content,
     },
   })
 
@@ -168,7 +168,7 @@ exportStatic()
   const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('scripts/build-static.js', baseUri).href]: content,
+      [resolveUri('scripts/build-static.js', baseUri)]: content,
     },
   })
 
