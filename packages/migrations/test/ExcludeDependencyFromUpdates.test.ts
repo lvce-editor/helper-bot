@@ -196,3 +196,43 @@ test('validates dependencyName parameter', async () => {
     statusCode: 400,
   })
 })
+
+test('rejects dependencyName with shell metacharacters', async () => {
+  const result = await excludeDependencyFromUpdates({
+    clonedRepoUri: pathToUri('/test/repo'),
+    dependencyName: '@babel/plugin-typescript\nrm -rf /',
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: createMockFs(),
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    changedFiles: [],
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid dependencyName parameter: only lowercase letters, hyphens, slash, and @ are allowed',
+    status: 'error',
+    statusCode: 400,
+  })
+})
+
+test('rejects dependencyName with unsupported characters', async () => {
+  const result = await excludeDependencyFromUpdates({
+    clonedRepoUri: pathToUri('/test/repo'),
+    dependencyName: '@babel/plugin_typescript',
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: createMockFs(),
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    changedFiles: [],
+    errorCode: 'VALIDATION_ERROR',
+    errorMessage: 'Invalid dependencyName parameter: only lowercase letters, hyphens, slash, and @ are allowed',
+    status: 'error',
+    statusCode: 400,
+  })
+})

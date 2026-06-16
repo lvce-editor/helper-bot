@@ -9,6 +9,7 @@ export interface ExcludeDependencyFromUpdatesOptions extends BaseMigrationOption
 
 const ncuCommandRegex = /OUTPUT=`ncu -u(?<args>.*?)`/g
 const excludedDependencyRegex = /(?:^|\s)-x\s+(?<dependency>[^\s]+)/g
+const dependencyNameRegex = /^@?[a-z-]+(?:\/[a-z-]+)?$/
 
 const getExcludedDependencies = (ncuArgs: string): readonly string[] => {
   return [...ncuArgs.matchAll(excludedDependencyRegex)].flatMap((match) => {
@@ -64,6 +65,10 @@ const toBranchSegment = (dependencyName: string): string => {
   return normalizedDependencyName.replaceAll(/[^a-zA-Z0-9]+/g, '-').replaceAll(/^-|-$/g, '')
 }
 
+const isValidDependencyName = (dependencyName: string): boolean => {
+  return dependencyNameRegex.test(dependencyName)
+}
+
 export const excludeDependencyFromUpdates = async (options: Readonly<ExcludeDependencyFromUpdatesOptions>): Promise<MigrationResult> => {
   try {
     if (!options.dependencyName || typeof options.dependencyName !== 'string' || options.dependencyName.trim() === '') {
@@ -71,6 +76,10 @@ export const excludeDependencyFromUpdates = async (options: Readonly<ExcludeDepe
     }
 
     const dependencyName = options.dependencyName.trim()
+    if (!isValidDependencyName(dependencyName)) {
+      return createValidationErrorMigrationResult('Invalid dependencyName parameter: only lowercase letters, hyphens, slash, and @ are allowed')
+    }
+
     const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
 
     let currentContent: string
