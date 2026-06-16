@@ -11,9 +11,9 @@ import { pathToUri, uriToPath, resolveUri } from '../UriUtils/UriUtils.ts'
 export type DependencyKey = 'dependencies' | 'devDependencies' | 'optionalDependencies'
 
 interface PackageJsonWithDependencies {
-  readonly name?: string
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
+  readonly name?: string
   optionalDependencies?: Record<string, string>
 }
 
@@ -39,7 +39,8 @@ const getNewPackageFilesCore = async (
     if (!dependencies) {
       throw new Error(`Missing dependency section: ${dependencyKey}`)
     }
-    dependencies[`@lvce-editor/${dependencyName}`] = `^${newVersion}`
+    const packageName = String(`@lvce-editor/${dependencyName}`)
+    dependencies[packageName] = `^${newVersion}`
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
     await fs.writeFile(resolveUri('package.json', tmpFolderUri), oldPackageJsonStringified)
