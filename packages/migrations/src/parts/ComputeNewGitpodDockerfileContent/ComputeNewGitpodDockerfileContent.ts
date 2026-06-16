@@ -1,13 +1,17 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
+import { compareNodeVersions, getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 
 const computeNewGitpodDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
-  // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v') ? newVersion.slice(1) : newVersion
-  return currentContent.replaceAll(/(nvm [\w\s]+) \d+\.\d+\.\d+/g, `$1 ${versionWithoutPrefix}`)
+  return currentContent.replaceAll(/(nvm [\w\s]+) (\d+\.\d+\.\d+)/g, (match, command: string, currentVersion: string) => {
+    if (compareNodeVersions(currentVersion, newVersion) >= 0) {
+      return match
+    }
+    return `${command} ${versionWithoutPrefix}`
+  })
 }
 
 export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
