@@ -83,6 +83,41 @@ COPY . .`
   })
 })
 
+test('does not downgrade node version in Dockerfile above max version', async () => {
+  const content = `FROM node:24.16.0
+WORKDIR /app
+COPY . .`
+  const cappedMockFetch = createMockFetch([
+    { lts: 'Krypton', version: 'v24.16.0' },
+    { lts: 'Krypton', version: 'v24.15.0' },
+  ])
+
+  const clonedRepoUri = pathToUri('/test/repo')
+  const mockFs = createMockFs({
+    files: {
+      [new URL('Dockerfile', clonedRepoUri).href]: content,
+    },
+  })
+
+  const result = await computeNewDockerfileContent({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: cappedMockFetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
+})
+
 test('handles missing Dockerfile', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()

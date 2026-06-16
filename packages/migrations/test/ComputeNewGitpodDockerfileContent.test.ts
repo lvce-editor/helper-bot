@@ -52,6 +52,42 @@ RUN nvm install 20.0.0 \\
   })
 })
 
+test('does not downgrade node version in gitpod dockerfile above max version', async () => {
+  const content = `FROM gitpod/workspace-full
+RUN nvm install 24.16.0 \\
+ && nvm use 24.16.0 \\
+ && nvm alias default 24.16.0`
+  const cappedMockFetch = createMockFetch([
+    { lts: 'Krypton', version: 'v24.16.0' },
+    { lts: 'Krypton', version: 'v24.15.0' },
+  ])
+
+  const clonedRepoUri = pathToUri('/test/repo')
+  const mockFs = createMockFs({
+    files: {
+      [new URL('.gitpod.Dockerfile', clonedRepoUri).href]: content,
+    },
+  })
+
+  const result = await computeNewGitpodDockerfileContent({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: cappedMockFetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
+})
+
 test('handles missing .gitpod.Dockerfile', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()

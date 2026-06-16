@@ -71,6 +71,37 @@ test('returns same content when existing version is newer', async () => {
   })
 })
 
+test('returns same content when existing minor version is newer', async () => {
+  const cappedMockFetch = createMockFetch([
+    { lts: 'Krypton', version: 'v24.16.0' },
+    { lts: 'Krypton', version: 'v24.15.0' },
+  ])
+  const clonedRepoUri = pathToUri('/test/repo')
+  const mockFs = createMockFs({
+    files: {
+      [new URL('.nvmrc', clonedRepoUri).href]: 'v24.16.0',
+    },
+  })
+
+  const result = await computeNewNvmrcContent({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: cappedMockFetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    status: 'success',
+    statusCode: 200,
+  })
+})
+
 test('handles missing .nvmrc file', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()

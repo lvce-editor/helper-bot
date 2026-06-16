@@ -16,6 +16,20 @@ test('returns latest LTS version', async () => {
   expect(version).toBe('v20.0.0')
 })
 
+test('returns latest LTS version at or below max version', async () => {
+  const mockVersions = [
+    { lts: 'Krypton' as const, version: 'v24.16.0' },
+    { lts: 'Krypton' as const, version: 'v24.15.0' },
+    { lts: 'Iron' as const, version: 'v20.0.0' },
+  ]
+
+  const mockFetch = createMockFetch(mockVersions)
+
+  const version = await getLatestNodeVersion(mockFetch)
+
+  expect(version).toBe('v24.15.0')
+})
+
 test('throws error when no LTS version found', async () => {
   const mockVersions = [
     { lts: false as const, version: 'v19.0.0' },
