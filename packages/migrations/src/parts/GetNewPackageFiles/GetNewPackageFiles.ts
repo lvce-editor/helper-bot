@@ -8,12 +8,14 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { pathToUri, uriToPath, resolveUri } from '../UriUtils/UriUtils.ts'
 
+export type DependencyKey = 'dependencies' | 'devDependencies' | 'optionalDependencies'
+
 const getNewPackageFilesCore = async (
   fs: Readonly<typeof FsPromises>,
   exec: BaseMigrationOptions['exec'],
   oldPackageJson: any,
   dependencyName: Readonly<string>,
-  dependencyKey: Readonly<string>,
+  dependencyKey: DependencyKey,
   newVersion: Readonly<string>,
 ): Promise<{
   newPackageJsonString: string
@@ -55,7 +57,7 @@ const getNewPackageFilesCore = async (
 }
 
 export interface GetNewPackageFilesOptions extends BaseMigrationOptions {
-  readonly dependencyKey: string
+  readonly dependencyKey: DependencyKey
   readonly dependencyName: string
   readonly newVersion: string
   readonly packageJsonPath: string

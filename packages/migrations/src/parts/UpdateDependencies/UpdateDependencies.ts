@@ -1,7 +1,7 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
+import { getNewPackageFiles, type DependencyKey } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { resolveUri } from '../UriUtils/UriUtils.ts'
 
@@ -29,17 +29,17 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
     }
 
     const dependencyName = `@lvce-editor/${options.dependencyName}`
-    let dependencyKey = ''
+    let dependencyKey: DependencyKey
     let oldDependency = ''
 
     // Auto-detect which dependency key to use
-    if (oldPackageJson.dependencies && oldPackageJson.dependencies[dependencyName]) {
+    if (oldPackageJson.dependencies && Object.hasOwn(oldPackageJson.dependencies, dependencyName) && oldPackageJson.dependencies[dependencyName]) {
       dependencyKey = 'dependencies'
       oldDependency = oldPackageJson.dependencies[dependencyName]
-    } else if (oldPackageJson.devDependencies && oldPackageJson.devDependencies[dependencyName]) {
+    } else if (oldPackageJson.devDependencies && Object.hasOwn(oldPackageJson.devDependencies, dependencyName) && oldPackageJson.devDependencies[dependencyName]) {
       dependencyKey = 'devDependencies'
       oldDependency = oldPackageJson.devDependencies[dependencyName]
-    } else if (oldPackageJson.optionalDependencies && oldPackageJson.optionalDependencies[dependencyName]) {
+    } else if (oldPackageJson.optionalDependencies && Object.hasOwn(oldPackageJson.optionalDependencies, dependencyName) && oldPackageJson.optionalDependencies[dependencyName]) {
       dependencyKey = 'optionalDependencies'
       oldDependency = oldPackageJson.optionalDependencies[dependencyName]
     } else {

@@ -2,6 +2,8 @@ import type { Octokit } from '@octokit/rest'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
 import { applyRepoCommands, type RepoCommand } from '../ApplyRepoCommands/ApplyRepoCommands.ts'
 
+const textDecoder = new TextDecoder()
+
 export interface ChangedFile {
   readonly content: string
   readonly path: string
@@ -68,7 +70,7 @@ const getExistingContent = async (octokit: Readonly<Octokit>, owner: string, rep
       repo,
     })
     if ('content' in fileContent.data && typeof fileContent.data.content === 'string') {
-      return Buffer.from(fileContent.data.content, 'base64').toString('utf8')
+      return textDecoder.decode(Uint8Array.fromBase64(fileContent.data.content))
     }
     return null
   } catch (error) {

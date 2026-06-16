@@ -13,7 +13,7 @@ const excludedDependencyRegex = /(?:^|\s)-x\s+(?<dependency>[^\s]+)/g
 const dependencyNameRegex = /^@?[a-z-]+(?:\/[a-z-]+)?$/
 
 const getExcludedDependencies = (ncuArgs: string): readonly string[] => {
-  return [...ncuArgs.matchAll(excludedDependencyRegex)].flatMap((match) => {
+  return ncuArgs.matchAll(excludedDependencyRegex).toArray().flatMap((match) => {
     const dependency = match.groups?.dependency
     return dependency ? [dependency] : []
   })
@@ -33,7 +33,7 @@ const computeExcludeDependencyFromUpdatesContent = (
   readonly hasChanges: boolean
   readonly newContent: string
 } => {
-  const matches = [...currentContent.matchAll(ncuCommandRegex)]
+  const matches = currentContent.matchAll(ncuCommandRegex).toArray()
   if (matches.length === 0) {
     return {
       hasChanges: false,
@@ -51,7 +51,7 @@ const computeExcludeDependencyFromUpdatesContent = (
       continue
     }
     const updatedArgs = addDependencyExclusion(ncuArgs, dependencyName)
-    newContent = newContent.replace(match[0], `OUTPUT=\`ncu -u${updatedArgs}\``)
+    newContent = newContent.replace(match[0], () => `OUTPUT=\`ncu -u${updatedArgs}\``)
     hasChanges = true
   }
 

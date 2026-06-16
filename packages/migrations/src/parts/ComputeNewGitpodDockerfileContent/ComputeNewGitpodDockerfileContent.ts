@@ -8,7 +8,7 @@ import { resolveUri } from '../UriUtils/UriUtils.ts'
 const computeNewGitpodDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v') ? newVersion.slice(1) : newVersion
-  return currentContent.replaceAll(/(nvm [\w\s]+) \d+\.\d+\.\d+/g, `$1 ${versionWithoutPrefix}`)
+  return currentContent.replaceAll(/(nvm [\w\s]+) \d+\.\d+\.\d+/g, (_match, command: string) => `${command} ${versionWithoutPrefix}`)
 }
 
 export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
@@ -30,11 +30,12 @@ export const computeNewGitpodDockerfileContent = async (options: Readonly<Comput
 
     const newContent = computeNewGitpodDockerfileContentCore(currentContent, newVersion)
     const hasChanges = currentContent !== newContent
-    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     return createMigrationResult({
       branchName: 'feature/update-node-version',

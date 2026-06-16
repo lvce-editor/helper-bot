@@ -54,7 +54,6 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     }
 
     const result = computeNewNvmrcContentCore(currentContent, newVersion)
-    const pullRequestTitle = `feature: update Node.js to version ${newVersion}`
 
     if (!result.shouldUpdate) {
       return emptyMigrationResult
@@ -65,6 +64,8 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = `feature: update Node.js to version ${newVersion}`
 
     return createMigrationResult({
       branchName: 'feature/update-node-version',

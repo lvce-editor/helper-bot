@@ -57,11 +57,11 @@ const getUpdatedWorkflowFile = async (
 const updateRunnerVersionsInYaml = (yamlContent: string, versions: CiVersionsConfig['latestVersions']): string => {
   let updated = yamlContent
   // Update Ubuntu versions to latest (e.g., ubuntu-22.04 -> ubuntu-24.04)
-  updated = updated.replaceAll(UBUNTU_VERSION_REGEX, `ubuntu-${versions.ubuntu}`)
+  updated = updated.replaceAll(UBUNTU_VERSION_REGEX, () => `ubuntu-${versions.ubuntu}`)
   // Update macOS versions to latest (e.g., macos-14 -> macos-15)
-  updated = updated.replaceAll(MACOS_VERSION_REGEX, `macos-${versions.macos}`)
+  updated = updated.replaceAll(MACOS_VERSION_REGEX, () => `macos-${versions.macos}`)
   // Update Windows versions to latest (e.g., windows-2022 -> windows-2025)
-  updated = updated.replaceAll(WINDOWS_VERSION_REGEX, `windows-${versions.windows}`)
+  updated = updated.replaceAll(WINDOWS_VERSION_REGEX, () => `windows-${versions.windows}`)
   return updated
 }
 

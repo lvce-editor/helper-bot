@@ -7,7 +7,7 @@ import { resolveUri } from '../UriUtils/UriUtils.ts'
 const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
   const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g
-  const matches = [...currentContent.matchAll(ncuRegex)]
+  const matches = currentContent.matchAll(ncuRegex).toArray()
 
   if (matches.length === 0) {
     return {
@@ -35,7 +35,7 @@ const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>)
         updatedCommand = ncuCommand.replace(/(-x [^-]+)+$/, (match) => `${match} -x lerna`)
       }
 
-      updatedContent = updatedContent.replace(match[0], `OUTPUT=\`ncu -u${updatedCommand}\``)
+      updatedContent = updatedContent.replace(match[0], () => `OUTPUT=\`ncu -u${updatedCommand}\``)
       hasChanges = true
     }
   }

@@ -12,6 +12,11 @@ const EXPECTED_REPO_NAME = 'lvce-editor.github.io'
 const TARGET_REPO_OWNER = 'lvce-editor'
 const TARGET_REPO_NAME = 'lvce-editor'
 
+const getCurrentYear = (): number => {
+  const now = new Date()
+  return now.getFullYear()
+}
+
 interface WebsiteConfig {
   readonly currentYear: number
   readonly releaseUrlBase: string
@@ -87,7 +92,7 @@ export const updateWebsiteConfig = async (options: Readonly<UpdateWebsiteConfigO
     const latestVersionTag = latestRelease.tag_name
     // Strip 'v' prefix if present to store plain version in config.json
     const latestVersion = latestVersionTag.startsWith('v') ? latestVersionTag.slice(1) : latestVersionTag
-    const currentYear = (new Date()).getFullYear()
+    const currentYear = getCurrentYear()
 
     // Check if updates are needed
     const needsVersionUpdate = config.version !== latestVersion

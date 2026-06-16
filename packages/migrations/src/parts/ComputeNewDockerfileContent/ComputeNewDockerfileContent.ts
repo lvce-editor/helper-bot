@@ -8,7 +8,7 @@ import { resolveUri } from '../UriUtils/UriUtils.ts'
 const computeNewDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v') ? newVersion.slice(1) : newVersion
-  return currentContent.replaceAll(/node:\d+\.\d+\.\d+/g, `node:${versionWithoutPrefix}`)
+  return currentContent.replaceAll(/node:\d+\.\d+\.\d+/g, () => `node:${versionWithoutPrefix}`)
 }
 
 export type ComputeNewDockerfileContentOptions = BaseMigrationOptions
@@ -30,11 +30,12 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
 
     const newContent = computeNewDockerfileContentCore(currentContent, newVersion)
     const hasChanges = currentContent !== newContent
-    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     return createMigrationResult({
       branchName: 'feature/update-node-version',

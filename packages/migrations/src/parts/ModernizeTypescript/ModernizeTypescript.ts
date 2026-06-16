@@ -11,7 +11,7 @@ const getMajorVersion = (version: string): number | undefined => {
   if (!match) {
     return undefined
   }
-  return Number.parseInt(match[0], 10)
+  return Number(match[0])
 }
 
 export const modernizeTypescript = async (options: Readonly<ModernizeTypescriptOptions>): Promise<MigrationResult> => {

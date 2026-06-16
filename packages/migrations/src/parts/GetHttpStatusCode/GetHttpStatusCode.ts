@@ -11,8 +11,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 export const getHttpStatusCode = (migrationResult: MigrationResultWithoutStatusCode): number => {
   if (migrationResult.status === 'error') {
     const errorResult: MigrationErrorResultWithoutStatusCode = migrationResult
-    const statusCode =
-      errorResult.errorCode === 'DEPENDENCY_NOT_FOUND' || errorResult.errorCode === 'FORBIDDEN' || errorResult.errorCode === 'VALIDATION_ERROR' ? 400 : 424
+    const statusCode = ['DEPENDENCY_NOT_FOUND', 'FORBIDDEN', 'VALIDATION_ERROR'].includes(errorResult.errorCode ?? '') ? 400 : 424
     return statusCode
   }
   const successResult: MigrationSuccessResultWithoutStatusCode = migrationResult

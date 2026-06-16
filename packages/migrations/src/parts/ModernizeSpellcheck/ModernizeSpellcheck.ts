@@ -33,8 +33,8 @@ const updateMultilineRules = (content: string, fullRulesObject: string, rulesCon
   lines.splice(lastContentLineIndex + 1, 0, `${indent}'@cspell/spellchecker': 'off'`)
 
   const newRulesContent = lines.join('\n')
-  const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
-  return content.replace(fullRulesObject, newRulesObject)
+  const newRulesObject = fullRulesObject.replace(rulesContent, () => newRulesContent)
+  return content.replace(fullRulesObject, () => newRulesObject)
 }
 
 const updateInlineRules = (content: string, fullRulesObject: string, rulesContent: string): string => {
@@ -43,8 +43,8 @@ const updateInlineRules = (content: string, fullRulesObject: string, rulesConten
   const leadingSpace = rulesContent.startsWith(' ') ? ' ' : ''
   const trailingSpace = rulesContent.endsWith(' ') ? ' ' : ''
   const newRulesContent = `${leadingSpace}${trimmedRulesContent}${separator}'@cspell/spellchecker': 'off'${trailingSpace}`
-  const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
-  return content.replace(fullRulesObject, newRulesObject)
+  const newRulesObject = fullRulesObject.replace(rulesContent, () => newRulesContent)
+  return content.replace(fullRulesObject, () => newRulesObject)
 }
 
 const appendRulesObject = (content: string): string => {
@@ -73,9 +73,7 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
   if (rulesObjectMatch) {
     const rulesContent = rulesObjectMatch[1]
     const fullRulesObject = rulesObjectMatch[0]
-    newContent = rulesContent.includes('\n')
-      ? updateMultilineRules(content, fullRulesObject, rulesContent)
-      : updateInlineRules(content, fullRulesObject, rulesContent)
+    newContent = rulesContent.includes('\n') ? updateMultilineRules(content, fullRulesObject, rulesContent) : updateInlineRules(content, fullRulesObject, rulesContent)
   } else {
     newContent = appendRulesObject(content)
   }

@@ -114,7 +114,7 @@ export const wrapResponseCommand = (
     try {
       const res = await fn()
       return {
-        headers: [...res.headers.entries()],
+        headers: res.headers.entries().toArray(),
         text: await res.text(),
         type: 'success',
       }
