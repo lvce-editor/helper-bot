@@ -26,6 +26,7 @@ import { modernizeStaticBuild } from '../ModernizeStaticBuild/ModernizeStaticBui
 import { modernizeTsconfig } from '../ModernizeTsconfig/ModernizeTsconfig.ts'
 import { modernizeTypescript } from '../ModernizeTypescript/ModernizeTypescript.ts'
 import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
+import { removeGitpod } from '../RemoveGitpod/RemoveGitpod.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
 import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
@@ -68,6 +69,7 @@ export const commandMap = {
   '/migrations2/modernize-static-build': wrapCommand(modernizeStaticBuild),
   '/migrations2/modernize-tsconfig': wrapCommand(modernizeTsconfig),
   '/migrations2/modernize-typescript': wrapCommand(modernizeTypescript),
+  '/migrations2/remove-gitpod': wrapCommand(removeGitpod),
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
   '/migrations2/remove-gitpod-yml': wrapCommand(removeGitpodyml),
   '/migrations2/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
