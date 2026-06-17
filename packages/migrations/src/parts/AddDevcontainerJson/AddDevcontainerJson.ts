@@ -2,12 +2,13 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type AddDevcontainerJsonOptions = BaseMigrationOptions
 
 export const addDevcontainerJson = async (options: Readonly<AddDevcontainerJsonOptions>): Promise<MigrationResult> => {
   try {
-    const devcontainerPath = new URL('.devcontainer/devcontainer.json', options.clonedRepoUri).toString()
+    const devcontainerPath = resolveUri('.devcontainer/devcontainer.json', options.clonedRepoUri)
 
     // Check if devcontainer.json already exists
     const exists = await options.fs.exists(devcontainerPath)

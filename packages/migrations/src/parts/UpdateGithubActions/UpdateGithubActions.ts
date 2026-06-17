@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const WORKFLOWS_DIR = '.github/workflows'
 
@@ -14,13 +14,13 @@ const updateOsVersionsInYaml = (
 ): string => {
   let updated = yamlContent
   if (osVersions.ubuntu) {
-    updated = updated.replaceAll(/ubuntu-\d{2}\.\d{2}/g, `ubuntu-${osVersions.ubuntu}`)
+    updated = updated.replaceAll(/ubuntu-\d{2}\.\d{2}/g, () => `ubuntu-${osVersions.ubuntu}`)
   }
   if (osVersions.windows) {
-    updated = updated.replaceAll(/windows-\d{4}/g, `windows-${osVersions.windows}`)
+    updated = updated.replaceAll(/windows-\d{4}/g, () => `windows-${osVersions.windows}`)
   }
   if (osVersions.macos) {
-    updated = updated.replaceAll(/macos-\d+/g, `macos-${osVersions.macos}`)
+    updated = updated.replaceAll(/macos-\d+/g, () => `macos-${osVersions.macos}`)
   }
   return updated
 }
@@ -40,14 +40,14 @@ const getChangedWorkflowFile = async (
   workflowsPath: string,
   entry: Readonly<{ name: string; isFile: () => boolean }>,
   osVersions: { ubuntu?: string; windows?: string; macos?: string },
-): Promise<{ content: string; path: string } | undefined> => {
+): Promise<undefined | { content: string; path: string }> => {
   if (!isWorkflowFile(entry)) {
     return undefined
   }
 
   const fileName = entry.name
-  const filePath = new URL(fileName, workflowsPath).toString()
-  const relativePath = normalizePath(new URL(fileName, WORKFLOWS_DIR).toString())
+  const filePath = resolveUri(fileName, workflowsPath)
+  const relativePath = normalizePath(resolveUri(fileName, WORKFLOWS_DIR))
 
   try {
     const content = await options.fs.readFile(filePath, 'utf8')
@@ -69,7 +69,7 @@ const getChangedWorkflowFile = async (
 
 export const updateGithubActions = async (options: Readonly<UpdateGithubActionsOptions>): Promise<MigrationResult> => {
   try {
-    const workflowsPath = new URL(WORKFLOWS_DIR, options.clonedRepoUri).toString()
+    const workflowsPath = resolveUri(WORKFLOWS_DIR, options.clonedRepoUri)
 
     // Check if workflows directory exists
     let entries: any[]
@@ -86,9 +86,9 @@ export const updateGithubActions = async (options: Readonly<UpdateGithubActionsO
     }
 
     const osVersions = {
-      ...(options.macos === undefined ? {} : { macos: options.macos }),
-      ...(options.ubuntu === undefined ? {} : { ubuntu: options.ubuntu }),
-      ...(options.windows === undefined ? {} : { windows: options.windows }),
+      ...(options.macos !== undefined && { macos: options.macos }),
+      ...(options.ubuntu !== undefined && { ubuntu: options.ubuntu }),
+      ...(options.windows !== undefined && { windows: options.windows }),
     }
 
     const changedFiles: Array<{ path: string; content: string }> = []

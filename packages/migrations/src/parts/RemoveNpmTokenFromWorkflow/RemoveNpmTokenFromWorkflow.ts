@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string => {
   // Pattern to match the env section with NODE_AUTH_TOKEN
@@ -17,7 +18,7 @@ export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
 
 export const removeNpmTokenFromWorkflow = async (options: Readonly<RemoveNpmTokenFromWorkflowOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
+    const workflowPath = resolveUri('.github/workflows/release.yml', options.clonedRepoUri)
 
     const fileExists = await options.fs.exists(workflowPath)
     if (!fileExists) {

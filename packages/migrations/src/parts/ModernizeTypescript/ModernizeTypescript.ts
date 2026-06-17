@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type ModernizeTypescriptOptions = BaseMigrationOptions
 
@@ -10,12 +11,12 @@ const getMajorVersion = (version: string): number | undefined => {
   if (!match) {
     return undefined
   }
-  return Number.parseInt(match[0], 10)
+  return Number(match[0])
 }
 
 export const modernizeTypescript = async (options: Readonly<ModernizeTypescriptOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = resolveUri('package.json', options.clonedRepoUri)
     const hasPackageJson = await options.fs.exists(packageJsonPath)
     if (!hasPackageJson) {
       return emptyMigrationResult
@@ -49,7 +50,7 @@ export const modernizeTypescript = async (options: Readonly<ModernizeTypescriptO
       },
     ]
 
-    const packageLockPath = new URL('package-lock.json', options.clonedRepoUri).toString()
+    const packageLockPath = resolveUri('package-lock.json', options.clonedRepoUri)
     const hasPackageLock = await options.fs.exists(packageLockPath)
     if (hasPackageLock) {
       const packageLockContent = await options.fs.readFile(packageLockPath, 'utf8')

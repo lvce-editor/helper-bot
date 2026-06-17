@@ -145,13 +145,13 @@ const updateContextOsVersions = (context: string, osVersions: UpdateBranchProtec
   }
   let updated = context
   if (osVersions.ubuntu) {
-    updated = updated.replaceAll(/ubuntu-\d{2}\.\d{2}/g, `ubuntu-${osVersions.ubuntu}`)
+    updated = updated.replaceAll(/ubuntu-\d{2}\.\d{2}/g, () => `ubuntu-${osVersions.ubuntu}`)
   }
   if (osVersions.windows) {
-    updated = updated.replaceAll(/windows-\d{4}/g, `windows-${osVersions.windows}`)
+    updated = updated.replaceAll(/windows-\d{4}/g, () => `windows-${osVersions.windows}`)
   }
   if (osVersions.macos) {
-    updated = updated.replaceAll(/macos-\d+/g, `macos-${osVersions.macos}`)
+    updated = updated.replaceAll(/macos-\d+/g, () => `macos-${osVersions.macos}`)
   }
   return updated
 }

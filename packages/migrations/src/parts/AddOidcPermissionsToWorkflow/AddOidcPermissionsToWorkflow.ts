@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const addOidcPermissionsToWorkflowContent = (content: Readonly<string>): string => {
   // Check if permissions section already exists
@@ -43,7 +44,7 @@ export type AddOidcPermissionsToWorkflowOptions = BaseMigrationOptions
 
 export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPermissionsToWorkflowOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
+    const workflowPath = resolveUri('.github/workflows/release.yml', options.clonedRepoUri)
 
     const fileExists = await options.fs.exists(workflowPath)
     if (!fileExists) {
@@ -53,11 +54,11 @@ export const addOidcPermissionsToWorkflow = async (options: Readonly<AddOidcPerm
     const originalContent = await options.fs.readFile(workflowPath, 'utf8')
     const updatedContent = addOidcPermissionsToWorkflowContent(originalContent)
     const hasChanges = originalContent !== updatedContent
-    const pullRequestTitle = 'feature: update permissions for open id connect publishing'
-
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = 'feature: update permissions for open id connect publishing'
 
     return {
       branchName: 'feature/add-oidc-permissions-to-workflow',

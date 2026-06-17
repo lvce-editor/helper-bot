@@ -2,6 +2,13 @@ import type { Octokit } from '@octokit/rest'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
 import { applyRepoCommands, type RepoCommand } from '../ApplyRepoCommands/ApplyRepoCommands.ts'
 
+const textDecoder = new TextDecoder()
+
+const decodeBase64 = (content: string): string => {
+  const bytes = Uint8Array.from(atob(content), (character) => character.codePointAt(0) ?? 0)
+  return textDecoder.decode(bytes)
+}
+
 export interface ChangedFile {
   readonly content: string
   readonly path: string
@@ -68,7 +75,7 @@ const getExistingContent = async (octokit: Readonly<Octokit>, owner: string, rep
       repo,
     })
     if ('content' in fileContent.data && typeof fileContent.data.content === 'string') {
-      return Buffer.from(fileContent.data.content, 'base64').toString('utf8')
+      return decodeBase64(fileContent.data.content)
     }
     return null
   } catch (error) {
@@ -175,7 +182,7 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
     return {
       branchName: '',
       changedFiles: 0,
-      ...(appliedRepoCommands === 0 ? {} : { data: { appliedRepoCommands } }),
+      ...(appliedRepoCommands !== 0 && { data: { appliedRepoCommands } }),
       message: 'Migration completed successfully',
       status: 'success',
     }

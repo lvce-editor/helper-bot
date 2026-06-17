@@ -216,7 +216,7 @@ const deleteClassicBranchProtection = async (octokit: Readonly<Octokit>, owner: 
 
 const applyModernizeBranchProtection = async (octokit: Readonly<Octokit>, owner: string, repo: string, branch: string): Promise<void> => {
   const rulesets = await getBranchRulesets(octokit, owner, repo)
-  const existingRuleset = rulesets.find((ruleset) => {
+  const existingRuleset = rulesets.some((ruleset) => {
     return ruleset.target === 'branch' && ruleset.name.toLowerCase().includes(branch.toLowerCase())
   })
   if (existingRuleset) {

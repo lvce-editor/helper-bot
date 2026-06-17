@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type ModernizeTsconfigOptions = BaseMigrationOptions
 
@@ -9,7 +10,7 @@ const TARGET_FILE_PATH = 'packages/e2e/tsconfig.json'
 
 export const modernizeTsconfig = async (options: Readonly<ModernizeTsconfigOptions>): Promise<MigrationResult> => {
   try {
-    const targetPath = new URL(TARGET_FILE_PATH, options.clonedRepoUri).toString()
+    const targetPath = resolveUri(TARGET_FILE_PATH, options.clonedRepoUri)
     const exists = await options.fs.exists(targetPath)
     if (!exists) {
       return emptyMigrationResult
@@ -39,7 +40,7 @@ export const modernizeTsconfig = async (options: Readonly<ModernizeTsconfigOptio
       cwd: options.clonedRepoUri,
     })
 
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = resolveUri('package.json', options.clonedRepoUri)
     const hasPackageJson = await options.fs.exists(packageJsonPath)
     if (hasPackageJson) {
       const packageJsonContent = await options.fs.readFile(packageJsonPath, 'utf8')

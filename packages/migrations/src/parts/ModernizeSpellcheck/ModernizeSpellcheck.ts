@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const hasSpellcheckerRule = (content: string): boolean => {
   return content.includes("'@cspell/spellchecker': 'off'") || content.includes('"@cspell/spellchecker": "off"')
@@ -25,15 +26,15 @@ const updateMultilineRules = (content: string, fullRulesObject: string, rulesCon
 
   const lastContentLine = lines[lastContentLineIndex]
   const match = lastContentLine.match(/^(\s+)/)
-  const indent = match ? match[1] : '      '
+  const indent = match ? match[1] : ' '.repeat(6)
   if (!lastContentLine.trimEnd().endsWith(',')) {
     lines[lastContentLineIndex] = `${lastContentLine},`
   }
   lines.splice(lastContentLineIndex + 1, 0, `${indent}'@cspell/spellchecker': 'off'`)
 
   const newRulesContent = lines.join('\n')
-  const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
-  return content.replace(fullRulesObject, newRulesObject)
+  const newRulesObject = fullRulesObject.replace(rulesContent, () => newRulesContent)
+  return content.replace(fullRulesObject, () => newRulesObject)
 }
 
 const updateInlineRules = (content: string, fullRulesObject: string, rulesContent: string): string => {
@@ -42,8 +43,8 @@ const updateInlineRules = (content: string, fullRulesObject: string, rulesConten
   const leadingSpace = rulesContent.startsWith(' ') ? ' ' : ''
   const trailingSpace = rulesContent.endsWith(' ') ? ' ' : ''
   const newRulesContent = `${leadingSpace}${trimmedRulesContent}${separator}'@cspell/spellchecker': 'off'${trailingSpace}`
-  const newRulesObject = fullRulesObject.replace(rulesContent, newRulesContent)
-  return content.replace(fullRulesObject, newRulesObject)
+  const newRulesObject = fullRulesObject.replace(rulesContent, () => newRulesContent)
+  return content.replace(fullRulesObject, () => newRulesObject)
 }
 
 const appendRulesObject = (content: string): string => {
@@ -72,9 +73,11 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
   if (rulesObjectMatch) {
     const rulesContent = rulesObjectMatch[1]
     const fullRulesObject = rulesObjectMatch[0]
-    newContent = rulesContent.includes('\n')
-      ? updateMultilineRules(content, fullRulesObject, rulesContent)
-      : updateInlineRules(content, fullRulesObject, rulesContent)
+    if (rulesContent.includes('\n')) {
+      newContent = updateMultilineRules(content, fullRulesObject, rulesContent)
+    } else {
+      newContent = updateInlineRules(content, fullRulesObject, rulesContent)
+    }
   } else {
     newContent = appendRulesObject(content)
   }
@@ -90,7 +93,7 @@ export type ModernizeSpellcheckOptions = BaseMigrationOptions
 
 export const modernizeSpellcheck = async (options: Readonly<ModernizeSpellcheckOptions>): Promise<MigrationResult> => {
   try {
-    const eslintConfigPath = new URL('eslint.config.js', options.clonedRepoUri).toString()
+    const eslintConfigPath = resolveUri('eslint.config.js', options.clonedRepoUri)
 
     // Check if eslint.config.js exists
     const exists = await options.fs.exists(eslintConfigPath)

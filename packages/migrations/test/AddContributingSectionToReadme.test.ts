@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { addContributingSectionToReadme } from '../src/parts/AddContributingSectionToReadme/AddContributingSectionToReadme.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -14,7 +14,7 @@ Some project description.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [resolveUri('README.md', clonedRepoUri)]: content,
     },
   })
 
@@ -64,7 +64,7 @@ Already here.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [resolveUri('README.md', clonedRepoUri)]: content,
     },
   })
 

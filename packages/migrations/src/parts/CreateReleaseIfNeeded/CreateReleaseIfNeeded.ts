@@ -67,7 +67,7 @@ export const createReleaseIfNeeded = async (options: Readonly<CreateReleaseIfNee
     // Increment minor version
     const newVersion = incrementMinorVersion(latestTagName)
 
-    // Create the git tag using GitHub REST API
+    // Create the Git tag using GitHub REST API
     await octokit.git.createRef({
       owner,
       ref: `refs/tags/${newVersion}`,

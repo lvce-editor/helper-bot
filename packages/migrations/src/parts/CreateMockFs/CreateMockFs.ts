@@ -21,8 +21,8 @@ const getRecursivePaths = (files: Record<string, string>, dirPath: string): stri
   const recursivePaths: string[] = []
   const seen = new Set<string>()
 
-  for (const filePath of Object.keys(files)) {
-    if (filePath === dirPath || files[filePath] === '[DIRECTORY]' || !filePath.startsWith(dirPath)) {
+  for (const [filePath, fileContent] of Object.entries(files)) {
+    if (filePath === dirPath || fileContent === '[DIRECTORY]' || !filePath.startsWith(dirPath)) {
       continue
     }
 
@@ -51,7 +51,7 @@ const getDirectoryEntries = (files: Record<string, string>, dirPath: string): Ar
       continue
     }
 
-    const firstSegment = relativePath.split('/')[0]
+    const firstSegment = relativePath.split('/', 1)[0]
     if (seen.has(firstSegment)) {
       continue
     }
@@ -95,7 +95,7 @@ class MockFs {
   async mkdir(path: MockPath, options?: any): Promise<void> {
     // Mock implementation - just track that directory exists
     const pathStr = validateUri(path, 'mkdir')
-    if (!this.files[pathStr]) {
+    if (!hasOwnFile(this.files, pathStr)) {
       this.files[pathStr] = '[DIRECTORY]'
     }
   }

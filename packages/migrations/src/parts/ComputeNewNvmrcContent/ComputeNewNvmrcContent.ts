@@ -3,6 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { compareNodeVersions, getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeNewNvmrcContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): { newContent: string; shouldUpdate: boolean } => {
   try {
@@ -30,7 +31,7 @@ export type ComputeNewNvmrcContentOptions = BaseMigrationOptions
 export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const nvmrcPath = new URL('.nvmrc', options.clonedRepoUri).toString()
+    const nvmrcPath = resolveUri('.nvmrc', options.clonedRepoUri)
 
     let currentContent: string
     try {
@@ -43,7 +44,6 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     }
 
     const result = computeNewNvmrcContentCore(currentContent, newVersion)
-    const pullRequestTitle = `feature: update Node.js to version ${newVersion}`
 
     if (!result.shouldUpdate) {
       return emptyMigrationResult
@@ -54,6 +54,8 @@ export const computeNewNvmrcContent = async (options: Readonly<ComputeNewNvmrcCo
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = `feature: update Node.js to version ${newVersion}`
 
     return createMigrationResult({
       branchName: 'feature/update-node-version',

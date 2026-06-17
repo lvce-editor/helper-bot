@@ -11,8 +11,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 export const getHttpStatusCode = (migrationResult: MigrationResultWithoutStatusCode): number => {
   if (migrationResult.status === 'error') {
     const errorResult: MigrationErrorResultWithoutStatusCode = migrationResult
-    const statusCode =
-      errorResult.errorCode === 'DEPENDENCY_NOT_FOUND' || errorResult.errorCode === 'FORBIDDEN' || errorResult.errorCode === 'VALIDATION_ERROR' ? 400 : 424
+    const statusCode = ['DEPENDENCY_NOT_FOUND', 'FORBIDDEN', 'VALIDATION_ERROR'].includes(errorResult.errorCode ?? '') ? 400 : 424
     return statusCode
   }
   const successResult: MigrationSuccessResultWithoutStatusCode = migrationResult
@@ -27,8 +26,8 @@ export const createMigrationResult = (result: MigrationResultWithoutStatusCode):
       changedFiles: [],
       status: 'error',
       statusCode,
-      ...(errorResult.errorCode === undefined ? {} : { errorCode: errorResult.errorCode }),
-      ...(errorResult.errorMessage === undefined ? {} : { errorMessage: errorResult.errorMessage }),
+      ...(errorResult.errorCode !== undefined && { errorCode: errorResult.errorCode }),
+      ...(errorResult.errorMessage !== undefined && { errorMessage: errorResult.errorMessage }),
     }
     return migrationErrorResult
   }
@@ -38,10 +37,10 @@ export const createMigrationResult = (result: MigrationResultWithoutStatusCode):
     pullRequestTitle: successResult.pullRequestTitle,
     status: 'success',
     statusCode,
-    ...(successResult.branchName === undefined ? {} : { branchName: successResult.branchName }),
-    ...(successResult.commitMessage === undefined ? {} : { commitMessage: successResult.commitMessage }),
-    ...(successResult.data === undefined ? {} : { data: successResult.data }),
-    ...(successResult.repoCommands === undefined ? {} : { repoCommands: successResult.repoCommands }),
+    ...(successResult.branchName !== undefined && { branchName: successResult.branchName }),
+    ...(successResult.commitMessage !== undefined && { commitMessage: successResult.commitMessage }),
+    ...(successResult.data !== undefined && { data: successResult.data }),
+    ...(successResult.repoCommands !== undefined && { repoCommands: successResult.repoCommands }),
   }
   return migrationSuccessResult
 }

@@ -2,12 +2,13 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type InitializePackageJsonOptions = BaseMigrationOptions
 
 export const initializePackageJson = async (options: Readonly<InitializePackageJsonOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL('package.json', options.clonedRepoUri).toString()
+    const packageJsonPath = resolveUri('package.json', options.clonedRepoUri)
 
     // Check if package.json already exists
     const exists = await options.fs.exists(packageJsonPath)

@@ -3,6 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { compareNodeVersions, getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeNewDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   const versionWithoutPrefix = newVersion.startsWith('v') ? newVersion.slice(1) : newVersion
@@ -19,7 +20,7 @@ export type ComputeNewDockerfileContentOptions = BaseMigrationOptions
 export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDockerfileContentOptions>): Promise<MigrationResult> => {
   try {
     const newVersion = await getLatestNodeVersion(options.fetch)
-    const dockerfilePath = new URL('Dockerfile', options.clonedRepoUri).toString()
+    const dockerfilePath = resolveUri('Dockerfile', options.clonedRepoUri)
 
     let currentContent: string
     try {
@@ -33,11 +34,12 @@ export const computeNewDockerfileContent = async (options: Readonly<ComputeNewDo
 
     const newContent = computeNewDockerfileContentCore(currentContent, newVersion)
     const hasChanges = currentContent !== newContent
-    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = `ci: update Node.js to version ${newVersion}`
 
     return createMigrationResult({
       branchName: 'feature/update-node-version',

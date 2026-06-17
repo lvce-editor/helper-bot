@@ -1,7 +1,7 @@
 import type * as FsPromises from 'node:fs/promises'
 import type { BaseMigrationOptions, ChangedFile } from '../Types/Types.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 import { parseGitStatus } from './ParseGitStatus.ts'
 
 export interface GetChangedFilesOptions {
@@ -15,7 +15,7 @@ export const getChangedFiles = async (options: Readonly<GetChangedFilesOptions>)
   const { clonedRepoUri, exec, filterStatus, fs } = options
   const baseUri = clonedRepoUri.endsWith('/') ? clonedRepoUri : clonedRepoUri + '/'
 
-  // Use git to detect changed files
+  // Use Git to detect changed files
   const gitResult = await exec('git', ['status', '--porcelain'], {
     cwd: clonedRepoUri,
   })
@@ -39,7 +39,7 @@ export const getChangedFiles = async (options: Readonly<GetChangedFilesOptions>)
     }
 
     // Handle modified, added, untracked, or renamed files
-    const fileUri = new URL(filePath, baseUri).toString()
+    const fileUri = resolveUri(filePath, baseUri)
     try {
       const content = await fs.readFile(fileUri, 'utf8')
       changedFiles.push({

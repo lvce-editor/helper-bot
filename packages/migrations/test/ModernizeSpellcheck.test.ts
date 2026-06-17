@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { modernizeSpellcheck } from '../src/parts/ModernizeSpellcheck/ModernizeSpellcheck.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -16,7 +16,7 @@ export default [...config.default, ...actions.default]
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [resolveUri('eslint.config.js', clonedRepoUri)]: content,
     },
   })
 
@@ -57,7 +57,7 @@ export default [...config.default, { rules: { 'no-console': 'warn' } }]
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [resolveUri('eslint.config.js', clonedRepoUri)]: content,
     },
   })
 
@@ -97,7 +97,7 @@ export default [...config.default, { rules: { '@cspell/spellchecker': 'off' } }]
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [resolveUri('eslint.config.js', clonedRepoUri)]: content,
     },
   })
 
@@ -160,7 +160,7 @@ export default [
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('eslint.config.js', clonedRepoUri).toString()]: content,
+      [resolveUri('eslint.config.js', clonedRepoUri)]: content,
     },
   })
 

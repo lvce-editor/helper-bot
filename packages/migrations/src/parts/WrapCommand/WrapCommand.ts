@@ -23,9 +23,7 @@ const launchExecWorker = async (): Promise<ExecWorkerRpc> => {
   })
 
   return {
-    invoke(method: string, ...params: readonly any[]): Promise<any> {
-      return rpc.invoke(method, ...params)
-    },
+    invoke: (method: string, ...params: readonly any[]): Promise<any> => rpc.invoke(method, ...params),
     async [Symbol.asyncDispose](): Promise<void> {
       await rpc.dispose()
     },
@@ -116,6 +114,7 @@ export const wrapResponseCommand = (
     try {
       const res = await fn()
       return {
+        // eslint-disable-next-line unicorn/prefer-iterator-to-array -- Headers.entries() lacks Iterator#toArray() in TypeScript's DOM types.
         headers: [...res.headers.entries()],
         text: await res.text(),
         type: 'success',

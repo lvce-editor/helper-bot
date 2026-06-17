@@ -20,7 +20,7 @@ export const exec = async (file: string, args: readonly string[], options: Reado
   }
   const result = await execa(file, args, {
     env,
-    ...(cwd === undefined ? {} : { cwd }),
+    ...(cwd !== undefined && { cwd }),
   })
   return {
     exitCode: result.exitCode ?? 129,

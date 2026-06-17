@@ -11,7 +11,7 @@ const parseNodeVersion = (version: string): readonly number[] => {
   if (parts.length !== 3) {
     throw new Error(`Invalid Node.js version: ${version}`)
   }
-  const parsed = parts.map((part) => Number.parseInt(part, 10))
+  const parsed = parts.map(Number)
   if (parsed.some((part) => Number.isNaN(part))) {
     throw new Error(`Invalid Node.js version: ${version}`)
   }

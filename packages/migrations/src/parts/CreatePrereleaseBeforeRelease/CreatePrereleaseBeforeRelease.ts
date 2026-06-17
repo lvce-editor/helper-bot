@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const isStepLine = (trimmed: string): boolean => {
   return trimmed.startsWith('- name:')
@@ -25,25 +26,19 @@ const getIndentedSectionEnd = (lines: readonly string[], startIndex: number, ind
   return lines.length
 }
 
-const findDraftInsertion = (lines: readonly string[]): { hasDraft: boolean; indentation: string; insertIndex: number } | undefined => {
-  for (let i = 0; i < lines.length; i++) {
-    const trimmed = lines[i].trim()
-    if (!isCreateReleaseStep(trimmed)) {
-      continue
+const findDraftInsertionInStep = (
+  lines: readonly string[],
+  startIndex: number,
+): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
+  for (let j = startIndex + 1; j < lines.length; j++) {
+    const line = lines[j]
+    const currentTrimmed = line.trim()
+
+    if (isStepLine(currentTrimmed) || (currentTrimmed.startsWith('jobs:') && j > 20)) {
+      return undefined
     }
 
-    for (let j = i + 1; j < lines.length; j++) {
-      const line = lines[j]
-      const currentTrimmed = line.trim()
-
-      if (isStepLine(currentTrimmed) || (currentTrimmed.startsWith('jobs:') && j > 20)) {
-        return undefined
-      }
-
-      if (!currentTrimmed.startsWith('with:')) {
-        continue
-      }
-
+    if (currentTrimmed.startsWith('with:')) {
       const indentation = line.slice(0, line.indexOf('with:'))
       const sectionIndentation = `${indentation}  `
       const endIndex = getIndentedSectionEnd(lines, j + 1, sectionIndentation)
@@ -61,7 +56,18 @@ const findDraftInsertion = (lines: readonly string[]): { hasDraft: boolean; inde
   return undefined
 }
 
-const findLastJobStep = (lines: readonly string[]): { lastStepIndex: number; stepsIndentation: string } | undefined => {
+const findDraftInsertion = (lines: readonly string[]): undefined | { hasDraft: boolean; indentation: string; insertIndex: number } => {
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim()
+    if (!isCreateReleaseStep(trimmed)) {
+      continue
+    }
+    return findDraftInsertionInStep(lines, i)
+  }
+  return undefined
+}
+
+const findLastJobStep = (lines: readonly string[]): undefined | { lastStepIndex: number; stepsIndentation: string } => {
   let lastJobIndex = -1
   let stepsIndentation = ''
   let lastStepIndex = -1
@@ -107,11 +113,11 @@ const addDraftToCreateRelease = (content: Readonly<string>): string => {
 }
 
 const addPublishReleaseStep = (content: Readonly<string>): string => {
-  const lines = content.split('\n')
   if (content.includes('Publish GitHub release')) {
     return content
   }
 
+  const lines = content.split('\n')
   const lastJobStep = findLastJobStep(lines)
   if (!lastJobStep) {
     return content
@@ -143,7 +149,7 @@ export type CreatePrereleaseBeforeReleaseOptions = BaseMigrationOptions
 
 export const createPrereleaseBeforeRelease = async (options: Readonly<CreatePrereleaseBeforeReleaseOptions>): Promise<MigrationResult> => {
   try {
-    const workflowPath = new URL('.github/workflows/release.yml', options.clonedRepoUri).toString()
+    const workflowPath = resolveUri('.github/workflows/release.yml', options.clonedRepoUri)
 
     const fileExists = await options.fs.exists(workflowPath)
     if (!fileExists) {
@@ -153,11 +159,11 @@ export const createPrereleaseBeforeRelease = async (options: Readonly<CreatePrer
     const originalContent = await options.fs.readFile(workflowPath, 'utf8')
     const updatedContent = createPrereleaseBeforeReleaseContent(originalContent)
     const hasChanges = originalContent !== updatedContent
-    const pullRequestTitle = 'feature: create prerelease before final release'
-
     if (!hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = 'feature: create prerelease before final release'
 
     return {
       branchName: 'feature/create-prerelease-before-release',

@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { removeGitpodSection } from '../src/parts/RemoveGitpodSection/RemoveGitpodSection.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -28,7 +28,7 @@ Here's how to use the project.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [resolveUri('README.md', clonedRepoUri)]: content,
     },
   })
 
@@ -82,7 +82,7 @@ Here's how to use the project.`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: content,
+      [resolveUri('README.md', clonedRepoUri)]: content,
     },
   })
 
@@ -109,7 +109,7 @@ test('only processes README.md', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('README.md', clonedRepoUri).toString()]: `# My Project
+      [resolveUri('README.md', clonedRepoUri)]: `# My Project
 
 ## Gitpod
 
@@ -118,7 +118,7 @@ This project is ready to be developed in Gitpod.
 ## Installation
 
 Follow these steps.`,
-      [new URL('readme.md', clonedRepoUri).toString()]: `# Another Project
+      [resolveUri('readme.md', clonedRepoUri)]: `# Another Project
 
 ## Gitpod
 

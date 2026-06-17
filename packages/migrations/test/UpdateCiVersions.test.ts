@@ -3,7 +3,7 @@ import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import config from '../src/parts/UpdateCiVersions/config.json' with { type: 'json' }
 import { updateCiVersions } from '../src/parts/UpdateCiVersions/UpdateCiVersions.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('updates Ubuntu, macOS, and Windows runner versions in ci.yml', async () => {
   const oldCiYml = `name: CI
@@ -55,10 +55,10 @@ jobs:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const workflowsUri = new URL('.github/workflows/', clonedRepoUri + '/').toString()
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
   const mockFs = createMockFs({
     files: {
-      [new URL('ci.yml', workflowsUri).toString()]: oldCiYml,
+      [resolveUri('ci.yml', workflowsUri)]: oldCiYml,
     },
   })
 
@@ -140,11 +140,11 @@ jobs:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const workflowsUri = new URL('.github/workflows/', clonedRepoUri + '/').toString()
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
   const mockFs = createMockFs({
     files: {
-      [new URL('pr.yml', workflowsUri).toString()]: oldPrYml,
-      [new URL('release.yml', workflowsUri).toString()]: oldReleaseYml,
+      [resolveUri('pr.yml', workflowsUri)]: oldPrYml,
+      [resolveUri('release.yml', workflowsUri)]: oldReleaseYml,
     },
   })
 
@@ -193,10 +193,10 @@ jobs:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const workflowsUri = new URL('.github/workflows/', clonedRepoUri + '/').toString()
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
   const mockFs = createMockFs({
     files: {
-      [new URL('other.yml', workflowsUri).toString()]: otherYml,
+      [resolveUri('other.yml', workflowsUri)]: otherYml,
     },
   })
 
@@ -263,10 +263,10 @@ jobs:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const workflowsUri = new URL('.github/workflows/', clonedRepoUri + '/').toString()
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
   const mockFs = createMockFs({
     files: {
-      [new URL('ci.yml', workflowsUri).toString()]: modernCiYml,
+      [resolveUri('ci.yml', workflowsUri)]: modernCiYml,
     },
   })
 
@@ -321,10 +321,10 @@ jobs:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const workflowsUri = new URL('.github/workflows/', clonedRepoUri + '/').toString()
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
   const mockFs = createMockFs({
     files: {
-      [new URL('ci.yml', workflowsUri).toString()]: oldCiYml,
+      [resolveUri('ci.yml', workflowsUri)]: oldCiYml,
     },
   })
 
@@ -376,10 +376,10 @@ jobs:
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const workflowsUri = new URL('.github/workflows/', clonedRepoUri + '/').toString()
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
   const mockFs = createMockFs({
     files: {
-      [new URL('ci.yml', workflowsUri).toString()]: oldCiYml,
+      [resolveUri('ci.yml', workflowsUri)]: oldCiYml,
     },
   })
 

@@ -2,11 +2,12 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>): { newContent: string; hasChanges: boolean } => {
   // Check if the script contains any ncu commands
   const ncuRegex = /OUTPUT=`ncu -u(.*?)`/g
-  const matches = [...currentContent.matchAll(ncuRegex)]
+  const matches = currentContent.matchAll(ncuRegex).toArray()
 
   if (matches.length === 0) {
     return {
@@ -34,7 +35,7 @@ const computeEnsureLernaExcludedContentCore = (currentContent: Readonly<string>)
         updatedCommand = ncuCommand.replace(/(-x [^-]+)+$/, (match) => `${match} -x lerna`)
       }
 
-      updatedContent = updatedContent.replace(match[0], `OUTPUT=\`ncu -u${updatedCommand}\``)
+      updatedContent = updatedContent.replace(match[0], () => `OUTPUT=\`ncu -u${updatedCommand}\``)
       hasChanges = true
     }
   }
@@ -49,7 +50,7 @@ export type ComputeEnsureLernaExcludedContentOptions = BaseMigrationOptions
 
 export const computeEnsureLernaExcludedContent = async (options: Readonly<ComputeEnsureLernaExcludedContentOptions>): Promise<MigrationResult> => {
   try {
-    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
+    const scriptPath = resolveUri('scripts/update-dependencies.sh', options.clonedRepoUri)
 
     let currentContent: string
     try {
@@ -62,11 +63,11 @@ export const computeEnsureLernaExcludedContent = async (options: Readonly<Comput
     }
 
     const result = computeEnsureLernaExcludedContentCore(currentContent)
-    const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
-
     if (!result.hasChanges) {
       return emptyMigrationResult
     }
+
+    const pullRequestTitle = 'ci: ensure lerna is excluded from ncu commands'
 
     return {
       branchName: 'feature/ensure-lerna-excluded',

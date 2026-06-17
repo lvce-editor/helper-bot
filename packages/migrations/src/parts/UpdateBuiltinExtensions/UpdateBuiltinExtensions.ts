@@ -3,7 +3,7 @@ import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const getNewValue = (value: readonly any[], repoName: string, version: string): any[] => {
   return value.map((item) => {
@@ -33,7 +33,7 @@ export const updateBuiltinExtensions = async (options: Readonly<UpdateBuiltinExt
     const version = options.tagName.replace('v', '')
 
     // Read the builtinExtensions.json file from the cloned target repo
-    const filePath = new URL(options.targetFilePath, options.clonedRepoUri).toString()
+    const filePath = resolveUri(options.targetFilePath, options.clonedRepoUri)
 
     let currentContent: string
     try {

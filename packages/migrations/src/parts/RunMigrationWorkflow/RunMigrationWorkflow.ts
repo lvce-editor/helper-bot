@@ -59,7 +59,7 @@ const getInvocationOptions = (targetRepository: string, migrationOptionsJson: st
   const parsedOptions = migrationOptionsJson ? JSON.parse(migrationOptionsJson) : {}
   return {
     ...parsedOptions,
-    ...(githubToken ? { githubToken } : {}),
+    ...(githubToken && { githubToken }),
     repositoryName,
     repositoryOwner,
   }
@@ -80,15 +80,15 @@ const invokeMigrationCommand = async (migrationId: string, options: Record<strin
 const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Readonly<MigrationResult>): ArtifactManifest => {
   const deletedFiles = result.changedFiles.filter((changedFile) => changedFile.type === 'deleted').map((changedFile) => changedFile.path)
   return {
-    ...(options.baseBranch ? { baseBranch: options.baseBranch } : {}),
-    ...('branchName' in result && result.branchName ? { branchName: result.branchName } : {}),
-    ...('commitMessage' in result && result.commitMessage ? { commitMessage: result.commitMessage } : {}),
-    ...(deletedFiles.length > 0 ? { deletedFiles } : {}),
-    ...('errorCode' in result && result.errorCode ? { errorCode: result.errorCode } : {}),
-    ...('errorMessage' in result && result.errorMessage ? { errorMessage: result.errorMessage } : {}),
+    ...(options.baseBranch && { baseBranch: options.baseBranch }),
+    ...('branchName' in result && result.branchName && { branchName: result.branchName }),
+    ...('commitMessage' in result && result.commitMessage && { commitMessage: result.commitMessage }),
+    ...(deletedFiles.length > 0 && { deletedFiles }),
+    ...('errorCode' in result && result.errorCode && { errorCode: result.errorCode }),
+    ...('errorMessage' in result && result.errorMessage && { errorMessage: result.errorMessage }),
     migrationId: options.migrationId,
-    ...('pullRequestTitle' in result && result.pullRequestTitle ? { pullRequestTitle: result.pullRequestTitle } : {}),
-    ...('repoCommands' in result && result.repoCommands ? { repoCommands: result.repoCommands } : {}),
+    ...('pullRequestTitle' in result && result.pullRequestTitle && { pullRequestTitle: result.pullRequestTitle }),
+    ...('repoCommands' in result && result.repoCommands && { repoCommands: result.repoCommands }),
     requestId: options.requestId,
     status: result.status,
     targetRepository: options.targetRepository,

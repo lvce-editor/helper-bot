@@ -3,7 +3,7 @@ import type { ExecFunction } from '../Types/Types.ts'
 import { findPackageJsonFiles } from '../FindPackageJsonFiles/FindPackageJsonFiles.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { updatePackageJsonDependencies } from '../UpdatePackageJsonDependencies/UpdatePackageJsonDependencies.ts'
-import { uriToPath } from '../UriUtils/UriUtils.ts'
+import { uriToPath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 export const upgradePackageJsonFiles = async (
   clonedRepoUri: string,
@@ -42,7 +42,7 @@ export const upgradePackageJsonFiles = async (
 
           // Run npm install to update package-lock.json
           try {
-            const packageJsonDirUri = new URL('.', packageJsonUri).toString().replace(/\/$/, '')
+            const packageJsonDirUri = resolveUri('.', packageJsonUri).replace(/\/$/, '')
             const packageJsonDir = uriToPath(packageJsonDirUri)
             await exec('npm', ['install', '--ignore-scripts', '--prefer-online'], {
               cwd: packageJsonDir,

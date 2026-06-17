@@ -2,12 +2,13 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export type UpdatePackageLockFileOptions = BaseMigrationOptions
 
 export const updatePackageLockFile = async (options: Readonly<UpdatePackageLockFileOptions>): Promise<MigrationResult> => {
   try {
-    const packageLockUri = new URL('package-lock.json', options.clonedRepoUri).toString()
+    const packageLockUri = resolveUri('package-lock.json', options.clonedRepoUri)
     const hadPackageLockFile = await options.fs.exists(packageLockUri)
     const oldPackageLockContent = hadPackageLockFile ? await options.fs.readFile(packageLockUri, 'utf8') : ''
 

@@ -1,8 +1,9 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { getNewPackageFiles } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
+import { getNewPackageFiles, type DependencyKey } from '../GetNewPackageFiles/GetNewPackageFiles.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   dependencyName: string
@@ -11,9 +12,16 @@ export interface UpdateDependenciesOptions extends BaseMigrationOptions {
   packageLockJsonPath: string
 }
 
+const getDependency = (dependencies: Record<string, string> | undefined, dependencyName: string): string | undefined => {
+  if (!dependencies || !Object.hasOwn(dependencies, dependencyName)) {
+    return undefined
+  }
+  return dependencies[dependencyName]
+}
+
 export const updateDependencies = async (options: Readonly<UpdateDependenciesOptions>): Promise<MigrationResult> => {
   try {
-    const packageJsonPath = new URL(options.packageJsonPath, options.clonedRepoUri).toString()
+    const packageJsonPath = resolveUri(options.packageJsonPath, options.clonedRepoUri)
 
     // Read package.json to determine dependency key
     let oldPackageJson: any
@@ -28,19 +36,22 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
     }
 
     const dependencyName = `@lvce-editor/${options.dependencyName}`
-    let dependencyKey = ''
+    let dependencyKey: DependencyKey
     let oldDependency = ''
 
     // Auto-detect which dependency key to use
-    if (oldPackageJson.dependencies && oldPackageJson.dependencies[dependencyName]) {
+    const dependency = getDependency(oldPackageJson.dependencies, dependencyName)
+    const devDependency = getDependency(oldPackageJson.devDependencies, dependencyName)
+    const optionalDependency = getDependency(oldPackageJson.optionalDependencies, dependencyName)
+    if (dependency) {
       dependencyKey = 'dependencies'
-      oldDependency = oldPackageJson.dependencies[dependencyName]
-    } else if (oldPackageJson.devDependencies && oldPackageJson.devDependencies[dependencyName]) {
+      oldDependency = dependency
+    } else if (devDependency) {
       dependencyKey = 'devDependencies'
-      oldDependency = oldPackageJson.devDependencies[dependencyName]
-    } else if (oldPackageJson.optionalDependencies && oldPackageJson.optionalDependencies[dependencyName]) {
+      oldDependency = devDependency
+    } else if (optionalDependency) {
       dependencyKey = 'optionalDependencies'
-      oldDependency = oldPackageJson.optionalDependencies[dependencyName]
+      oldDependency = optionalDependency
     } else {
       return emptyMigrationResult
     }

@@ -3,11 +3,11 @@ import type { MigrationErrorResult } from '../src/parts/Types/Types.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { updatePackageLockFile } from '../src/parts/UpdatePackageLockFile/UpdatePackageLockFile.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('updates top-level package-lock.json with npm install --package-lock-only --ignore-scripts', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
-  const packageLockUri = new URL('package-lock.json', clonedRepoUri).toString()
+  const packageLockUri = resolveUri('package-lock.json', clonedRepoUri)
   let packageLockMissingWhenNpmRan = false
   const mockFs = createMockFs({
     files: {
@@ -56,7 +56,7 @@ test('updates top-level package-lock.json with npm install --package-lock-only -
 
 test('returns empty result when package-lock.json stays unchanged', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
-  const packageLockUri = new URL('package-lock.json', clonedRepoUri).toString()
+  const packageLockUri = resolveUri('package-lock.json', clonedRepoUri)
   const packageLockContent = '{"lockfileVersion": 3}\n'
   let packageLockMissingWhenNpmRan = false
   const mockFs = createMockFs({
@@ -100,7 +100,7 @@ test('returns error result when npm install fails', async () => {
   const clonedRepoUri = pathToUri('/test/repo') + '/'
   const mockFs = createMockFs({
     files: {
-      [new URL('package-lock.json', clonedRepoUri).toString()]: '{"lockfileVersion": 3}\n',
+      [resolveUri('package-lock.json', clonedRepoUri)]: '{"lockfileVersion": 3}\n',
     },
   })
 

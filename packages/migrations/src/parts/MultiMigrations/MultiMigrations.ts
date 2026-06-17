@@ -68,7 +68,7 @@ const runMigrationRequest = async (
   repository: string,
 ): Promise<RepositoryResult> => {
   const url = new URL(`/my-app/migrations2/${migrationName}`, baseUrl)
-  const response = await fetchFn(url.toString(), {
+  const response = await fetchFn(url.href, {
     body: JSON.stringify({
       repository,
       ...migrationOptions,

@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createValidationErrorMigrationResult, emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 export interface ExcludeDependencyFromUpdatesOptions extends BaseMigrationOptions {
   dependencyName: string
@@ -12,10 +13,13 @@ const excludedDependencyRegex = /(?:^|\s)-x\s+(?<dependency>[^\s]+)/g
 const dependencyNameRegex = /^@?[a-z-]+(?:\/[a-z-]+)?$/
 
 const getExcludedDependencies = (ncuArgs: string): readonly string[] => {
-  return [...ncuArgs.matchAll(excludedDependencyRegex)].flatMap((match) => {
-    const dependency = match.groups?.dependency
-    return dependency ? [dependency] : []
-  })
+  return ncuArgs
+    .matchAll(excludedDependencyRegex)
+    .flatMap((match) => {
+      const dependency = match.groups?.dependency
+      return dependency ? [dependency] : []
+    })
+    .toArray()
 }
 
 const addDependencyExclusion = (ncuArgs: string, dependencyName: string): string => {
@@ -32,7 +36,7 @@ const computeExcludeDependencyFromUpdatesContent = (
   readonly hasChanges: boolean
   readonly newContent: string
 } => {
-  const matches = [...currentContent.matchAll(ncuCommandRegex)]
+  const matches = currentContent.matchAll(ncuCommandRegex).toArray()
   if (matches.length === 0) {
     return {
       hasChanges: false,
@@ -50,7 +54,7 @@ const computeExcludeDependencyFromUpdatesContent = (
       continue
     }
     const updatedArgs = addDependencyExclusion(ncuArgs, dependencyName)
-    newContent = newContent.replace(match[0], `OUTPUT=\`ncu -u${updatedArgs}\``)
+    newContent = newContent.replace(match[0], () => `OUTPUT=\`ncu -u${updatedArgs}\``)
     hasChanges = true
   }
 
@@ -80,7 +84,7 @@ export const excludeDependencyFromUpdates = async (options: Readonly<ExcludeDepe
       return createValidationErrorMigrationResult('Invalid dependencyName parameter: only lowercase letters, hyphens, slash, and @ are allowed')
     }
 
-    const scriptPath = new URL('scripts/update-dependencies.sh', options.clonedRepoUri).toString()
+    const scriptPath = resolveUri('scripts/update-dependencies.sh', options.clonedRepoUri)
 
     let currentContent: string
     try {

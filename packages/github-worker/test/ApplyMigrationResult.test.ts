@@ -4,6 +4,10 @@ import { applyMigrationResult } from '../src/parts/ApplyMigrationResult/ApplyMig
 
 let consoleErrorSpy: ReturnType<typeof jest.spyOn>
 
+const toBase64 = (content: string): string => {
+  return btoa(content)
+}
+
 beforeEach(() => {
   nock.disableNetConnect()
   consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
@@ -33,7 +37,7 @@ test('applies migration result successfully with file changes', async (): Promis
     .get('/repos/test-owner/test-repo/contents/file1.txt')
     .query({ ref: 'main' })
     .reply(200, {
-      content: Buffer.from('old content').toString('base64'),
+      content: toBase64('old content'),
       sha: 'old-sha',
     })
     .post('/repos/test-owner/test-repo/git/refs', {
@@ -276,7 +280,7 @@ test('handles file deletion', async (): Promise<void> => {
     .get('/repos/test-owner/test-repo/contents/file-to-delete.txt')
     .query({ ref: 'main' })
     .reply(200, {
-      content: Buffer.from('content').toString('base64'),
+      content: toBase64('content'),
       sha: 'file-sha',
     })
     .post('/repos/test-owner/test-repo/git/refs', {
@@ -376,7 +380,7 @@ test('skips unchanged files', async (): Promise<void> => {
     .get('/repos/test-owner/test-repo/contents/file1.txt')
     .query({ ref: 'main' })
     .reply(200, {
-      content: Buffer.from('same content').toString('base64'),
+      content: toBase64('same content'),
       sha: 'file-sha',
     })
 
@@ -419,7 +423,7 @@ test('handles multiple files', async (): Promise<void> => {
     .get('/repos/test-owner/test-repo/contents/file1.txt')
     .query({ ref: 'main' })
     .reply(200, {
-      content: Buffer.from('old content 1').toString('base64'),
+      content: toBase64('old content 1'),
       sha: 'sha1',
     })
     .get('/repos/test-owner/test-repo/contents/file2.txt')

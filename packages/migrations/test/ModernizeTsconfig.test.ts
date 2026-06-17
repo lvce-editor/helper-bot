@@ -2,7 +2,7 @@ import { test, expect, jest } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { modernizeTsconfig } from '../src/parts/ModernizeTsconfig/ModernizeTsconfig.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('updates moduleResolution and module in e2e tsconfig', async () => {
   const content = `{
@@ -15,10 +15,10 @@ test('updates moduleResolution and module in e2e tsconfig', async () => {
 `
 
   const clonedRepoUri = pathToUri('/test/repo')
-  const targetPath = new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()
+  const targetPath = resolveUri('packages/e2e/tsconfig.json', clonedRepoUri)
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: '{"scripts":{"format":"prettier --write ."}}',
+      [resolveUri('package.json', clonedRepoUri)]: '{"scripts":{"format":"prettier --write ."}}',
       [targetPath]: content,
     },
   })
@@ -87,8 +87,8 @@ test('creates compilerOptions when missing', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: '{"scripts":{"test":"npm test"}}',
-      [new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()]: content,
+      [resolveUri('package.json', clonedRepoUri)]: '{"scripts":{"test":"npm test"}}',
+      [resolveUri('packages/e2e/tsconfig.json', clonedRepoUri)]: content,
     },
   })
   const mockExecFn = jest.fn(async (file: string, args?: readonly string[], options?: { cwd?: string }) => {
@@ -144,7 +144,7 @@ test('skips when values are already modernized', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('packages/e2e/tsconfig.json', clonedRepoUri).toString()]: content,
+      [resolveUri('packages/e2e/tsconfig.json', clonedRepoUri)]: content,
     },
   })
   const mockExecFn = jest.fn(async () => {

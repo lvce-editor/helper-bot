@@ -1,6 +1,6 @@
 import type { Octokit } from '@octokit/rest'
 
-export const getLatestRelease = async (octokit: Octokit, owner: string, repo: string): Promise<{ tag_name: string; target_commitish: string } | null> => {
+export const getLatestRelease = async (octokit: Octokit, owner: string, repo: string): Promise<null | { tag_name: string; target_commitish: string }> => {
   try {
     const response = await octokit.request('GET /repos/{owner}/{repo}/releases/latest', {
       headers: {

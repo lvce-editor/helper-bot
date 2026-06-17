@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const WORKFLOW_FILES = ['pr.yml', 'ci.yml', 'release.yml'] as const
 
@@ -55,7 +56,7 @@ export const runLintInCi = async (options: Readonly<RunLintInCiOptions>): Promis
     const errors: string[] = []
 
     for (const workflowFile of WORKFLOW_FILES) {
-      const workflowPath = new URL(`.github/workflows/${workflowFile}`, options.clonedRepoUri).toString()
+      const workflowPath = resolveUri(`.github/workflows/${workflowFile}`, options.clonedRepoUri)
 
       const fileExists = await options.fs.exists(workflowPath)
       if (!fileExists) {

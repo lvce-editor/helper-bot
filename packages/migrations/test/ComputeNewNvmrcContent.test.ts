@@ -3,7 +3,7 @@ import { computeNewNvmrcContent } from '../src/parts/ComputeNewNvmrcContent/Comp
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFetch } from '../src/parts/CreateMockFetch/CreateMockFetch.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 const mockFetch = createMockFetch([
@@ -16,7 +16,7 @@ test('computes new nvmrc content when version should be updated', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.nvmrc', clonedRepoUri).toString()]: 'v18.0.0',
+      [resolveUri('.nvmrc', clonedRepoUri)]: 'v18.0.0',
     },
   })
 
@@ -48,7 +48,7 @@ test('returns same content when existing version is newer', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.nvmrc', clonedRepoUri).toString()]: 'v22.0.0',
+      [resolveUri('.nvmrc', clonedRepoUri)]: 'v22.0.0',
     },
   })
 
@@ -79,7 +79,7 @@ test('returns same content when existing minor version is newer', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.nvmrc', clonedRepoUri).href]: 'v24.16.0',
+      [resolveUri('.nvmrc', clonedRepoUri)]: 'v24.16.0',
     },
   })
 

@@ -1,6 +1,6 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { normalizePath } from '../UriUtils/UriUtils.ts'
+import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 import config from './config.json' with { type: 'json' }
 
 const WORKFLOWS_DIR = '.github/workflows'
@@ -27,13 +27,13 @@ const getUpdatedWorkflowFile = async (
   options: Readonly<UpdateCiVersionsOptions>,
   workflowsPath: string,
   entry: Readonly<{ name: string; isFile: () => boolean }>,
-): Promise<{ content: string; path: string } | undefined> => {
+): Promise<undefined | { content: string; path: string }> => {
   if (!isTargetWorkflowFile(entry)) {
     return undefined
   }
 
   const fileName = entry.name
-  const filePath = new URL(fileName, workflowsPath).toString()
+  const filePath = resolveUri(fileName, workflowsPath)
   const relativePath = normalizePath(`${WORKFLOWS_DIR}/${fileName}`)
 
   try {
@@ -57,11 +57,11 @@ const getUpdatedWorkflowFile = async (
 const updateRunnerVersionsInYaml = (yamlContent: string, versions: CiVersionsConfig['latestVersions']): string => {
   let updated = yamlContent
   // Update Ubuntu versions to latest (e.g., ubuntu-22.04 -> ubuntu-24.04)
-  updated = updated.replaceAll(UBUNTU_VERSION_REGEX, `ubuntu-${versions.ubuntu}`)
+  updated = updated.replaceAll(UBUNTU_VERSION_REGEX, () => `ubuntu-${versions.ubuntu}`)
   // Update macOS versions to latest (e.g., macos-14 -> macos-15)
-  updated = updated.replaceAll(MACOS_VERSION_REGEX, `macos-${versions.macos}`)
+  updated = updated.replaceAll(MACOS_VERSION_REGEX, () => `macos-${versions.macos}`)
   // Update Windows versions to latest (e.g., windows-2022 -> windows-2025)
-  updated = updated.replaceAll(WINDOWS_VERSION_REGEX, `windows-${versions.windows}`)
+  updated = updated.replaceAll(WINDOWS_VERSION_REGEX, () => `windows-${versions.windows}`)
   return updated
 }
 
@@ -71,7 +71,7 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
   try {
     // Ensure clonedRepoUri ends with / for proper URL resolution
     const baseUri = options.clonedRepoUri.endsWith('/') ? options.clonedRepoUri : options.clonedRepoUri + '/'
-    const workflowsPath = new URL(WORKFLOWS_DIR + '/', baseUri).toString()
+    const workflowsPath = resolveUri(WORKFLOWS_DIR + '/', baseUri)
 
     // Check if workflows directory exists
     const workflowsExists = await options.fs.exists(workflowsPath)

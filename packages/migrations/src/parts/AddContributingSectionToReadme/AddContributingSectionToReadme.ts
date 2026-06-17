@@ -2,6 +2,7 @@ import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
+import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const hasContributingSection = (content: string): boolean => {
   return /^#{1,6}\s+contributing\b/im.test(content)
@@ -24,7 +25,7 @@ export type AddContributingSectionToReadmeOptions = BaseMigrationOptions
 export const addContributingSectionToReadme = async (options: Readonly<AddContributingSectionToReadmeOptions>): Promise<MigrationResult> => {
   try {
     const readmePath = 'README.md'
-    const fullPath = new URL(readmePath, options.clonedRepoUri).toString()
+    const fullPath = resolveUri(readmePath, options.clonedRepoUri)
 
     let originalContent = ''
     try {

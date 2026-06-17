@@ -2,7 +2,7 @@ import { test, expect } from '@jest/globals'
 import { cleanPackageJson } from '../src/parts/CleanPackageJson/CleanPackageJson.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 const mockExec = createMockExec()
 
@@ -14,7 +14,7 @@ test('sets license to MIT when not set', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -55,7 +55,7 @@ test('removes empty keywords array', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -94,7 +94,7 @@ test('sets author to Lvce Editor when empty string', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -132,7 +132,7 @@ test('sets author to Lvce Editor when missing', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -161,7 +161,7 @@ test('applies all three changes together', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -192,7 +192,7 @@ test('returns empty result when no changes needed', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -247,7 +247,7 @@ test('preserves existing license when already set', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -276,7 +276,7 @@ test('preserves existing author when already set', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -305,7 +305,7 @@ test('preserves keywords array with items', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -333,7 +333,7 @@ test('preserves keywords when not an array', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -361,7 +361,7 @@ test('removes empty skip array', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -389,7 +389,7 @@ test('preserves skip array with items', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -417,7 +417,7 @@ test('preserves skip when not an array', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -447,7 +447,7 @@ test('removes empty skip array along with other changes', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -481,7 +481,7 @@ test('preserves author when it is an object', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -507,7 +507,7 @@ test('handles invalid JSON gracefully', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: 'invalid json{',
+      [resolveUri('package.json', clonedRepoUri)]: 'invalid json{',
     },
   })
 
@@ -535,7 +535,7 @@ test('only sets license when missing, not when null', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -571,7 +571,7 @@ test('handles complex package.json with all fields', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -606,7 +606,7 @@ test('returns correct branch name and commit message', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -637,7 +637,7 @@ test('removes empty test-tokenize.skip array', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -668,7 +668,7 @@ test('preserves test-tokenize.skip array with items', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -698,7 +698,7 @@ test('preserves test-tokenize.skip when not an array', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -728,7 +728,7 @@ test('preserves test-tokenize when skip does not exist', async () => {
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 
@@ -760,7 +760,7 @@ test('removes empty test-tokenize.skip array along with other changes', async ()
   }
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(packageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(packageJson, null, 2) + '\n',
     },
   })
 

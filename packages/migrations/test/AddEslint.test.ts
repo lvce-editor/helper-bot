@@ -2,7 +2,7 @@ import { test, expect, jest } from '@jest/globals'
 import { addEslint } from '../src/parts/AddEslint/AddEslint.ts'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () => {
   const oldPackageJson: any = {
@@ -31,7 +31,7 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -49,8 +49,8 @@ test('adds eslint and @lvce-editor/eslint-config to devDependencies', async () =
             eslint: '^9.39.2',
           },
         }
-        await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+        await mockFs.writeFile(resolveUri('package.json', cwd), JSON.stringify(updatedPackageJson, null, 2) + '\n')
+        await mockFs.writeFile(resolveUri('package-lock.json', cwd), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }
@@ -145,7 +145,7 @@ test('skips if eslint already exists in devDependencies', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -204,7 +204,7 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
     },
   })
 
@@ -222,8 +222,8 @@ test('adds eslint when devDependencies exists but eslint is not present', async 
             eslint: '^9.39.2',
           },
         }
-        await mockFs.writeFile(new URL('package.json', cwd).toString(), JSON.stringify(updatedPackageJson, null, 2) + '\n')
-        await mockFs.writeFile(new URL('package-lock.json', cwd).toString(), mockPackageLockJson)
+        await mockFs.writeFile(resolveUri('package.json', cwd), JSON.stringify(updatedPackageJson, null, 2) + '\n')
+        await mockFs.writeFile(resolveUri('package-lock.json', cwd), mockPackageLockJson)
       }
       return { exitCode: 0, stderr: '', stdout: '' }
     }

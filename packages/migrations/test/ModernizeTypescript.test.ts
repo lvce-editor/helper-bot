@@ -2,7 +2,7 @@ import { test, expect, jest } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { modernizeTypescript } from '../src/parts/ModernizeTypescript/ModernizeTypescript.ts'
-import { pathToUri } from '../src/parts/UriUtils/UriUtils.ts'
+import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
 test('skips when package.json does not exist', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
@@ -36,7 +36,7 @@ test('skips when typescript is not in root package.json', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify({ name: 'test' }, null, 2) + '\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify({ name: 'test' }, null, 2) + '\n',
     },
   })
   const mockExecFn = jest.fn(async () => {
@@ -68,7 +68,7 @@ test('skips when typescript major version is already 6 or higher', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('package.json', clonedRepoUri).toString()]: JSON.stringify(
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(
         {
           devDependencies: {
             typescript: '^6.0.0',
@@ -107,8 +107,8 @@ test('skips when typescript major version is already 6 or higher', async () => {
 
 test('updates typescript to version 6 when current major is lower', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
-  const packageJsonPath = new URL('package.json', clonedRepoUri).toString()
-  const packageLockPath = new URL('package-lock.json', clonedRepoUri).toString()
+  const packageJsonPath = resolveUri('package.json', clonedRepoUri)
+  const packageLockPath = resolveUri('package-lock.json', clonedRepoUri)
   const mockFs = createMockFs({
     files: {
       [packageJsonPath]: JSON.stringify(
