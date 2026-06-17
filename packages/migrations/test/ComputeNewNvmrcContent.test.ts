@@ -79,7 +79,7 @@ test('returns same content when existing minor version is newer', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.nvmrc', clonedRepoUri).href]: 'v24.16.0',
+      [resolveUri('.nvmrc', clonedRepoUri)]: 'v24.16.0',
     },
   })
 

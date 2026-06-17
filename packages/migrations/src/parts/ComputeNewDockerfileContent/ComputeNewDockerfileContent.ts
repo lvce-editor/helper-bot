@@ -7,16 +7,12 @@ import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeNewDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   const versionWithoutPrefix = newVersion.startsWith('v') ? newVersion.slice(1) : newVersion
-<<<<<<< HEAD
-  return currentContent.replaceAll(/node:\d+\.\d+\.\d+/g, () => `node:${versionWithoutPrefix}`)
-=======
   return currentContent.replaceAll(/node:(\d+\.\d+\.\d+)/g, (match, currentVersion: string) => {
     if (compareNodeVersions(currentVersion, newVersion) >= 0) {
       return match
     }
     return `node:${versionWithoutPrefix}`
   })
->>>>>>> origin/main
 }
 
 export type ComputeNewDockerfileContentOptions = BaseMigrationOptions

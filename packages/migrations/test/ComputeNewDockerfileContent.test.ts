@@ -95,7 +95,7 @@ COPY . .`
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('Dockerfile', clonedRepoUri).href]: content,
+      [resolveUri('Dockerfile', clonedRepoUri)]: content,
     },
   })
 

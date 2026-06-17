@@ -65,7 +65,7 @@ RUN nvm install 24.16.0 \\
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
     files: {
-      [new URL('.gitpod.Dockerfile', clonedRepoUri).href]: content,
+      [resolveUri('.gitpod.Dockerfile', clonedRepoUri)]: content,
     },
   })
 

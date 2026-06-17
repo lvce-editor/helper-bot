@@ -7,16 +7,12 @@ import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeNewGitpodDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
   const versionWithoutPrefix = newVersion.startsWith('v') ? newVersion.slice(1) : newVersion
-<<<<<<< HEAD
-  return currentContent.replaceAll(/(nvm [\w\s]+) \d+\.\d+\.\d+/g, (_match, command: string) => `${command} ${versionWithoutPrefix}`)
-=======
   return currentContent.replaceAll(/(nvm [\w\s]+) (\d+\.\d+\.\d+)/g, (match, command: string, currentVersion: string) => {
     if (compareNodeVersions(currentVersion, newVersion) >= 0) {
       return match
     }
     return `${command} ${versionWithoutPrefix}`
   })
->>>>>>> origin/main
 }
 
 export type ComputeNewGitpodDockerfileContentOptions = BaseMigrationOptions
