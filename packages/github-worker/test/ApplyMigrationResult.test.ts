@@ -5,7 +5,7 @@ import { applyMigrationResult } from '../src/parts/ApplyMigrationResult/ApplyMig
 let consoleErrorSpy: ReturnType<typeof jest.spyOn>
 
 const toBase64 = (content: string): string => {
-  return Buffer.from(content).toBase64()
+  return btoa(content)
 }
 
 beforeEach(() => {
