@@ -1,23 +1,13 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
+import { compareNodeVersions, getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { resolveUri } from '../UriUtils/UriUtils.ts'
 
-const parseVersion = (content: string): number => {
-  const trimmed = content.trim()
-  if (trimmed.startsWith('v')) {
-    return Number.parseInt(trimmed.slice(1))
-  }
-  return Number.parseInt(trimmed)
-}
-
 const computeNewNvmrcContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): { newContent: string; shouldUpdate: boolean } => {
   try {
-    const existingVersionNumber = parseVersion(currentContent)
-    const newVersionNumber = parseVersion(newVersion)
-    if (existingVersionNumber > newVersionNumber) {
+    if (compareNodeVersions(currentContent, newVersion) >= 0) {
       return {
         newContent: currentContent,
         shouldUpdate: false,

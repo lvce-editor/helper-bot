@@ -1,14 +1,22 @@
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { createMigrationResult, emptyMigrationResult } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
-import { getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
+import { compareNodeVersions, getLatestNodeVersion } from '../GetLatestNodeVersion/GetLatestNodeVersion.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const computeNewDockerfileContentCore = (currentContent: Readonly<string>, newVersion: Readonly<string>): string => {
-  // Remove 'v' prefix from version if present (e.g., 'v20.0.0' -> '20.0.0')
   const versionWithoutPrefix = newVersion.startsWith('v') ? newVersion.slice(1) : newVersion
+<<<<<<< HEAD
   return currentContent.replaceAll(/node:\d+\.\d+\.\d+/g, () => `node:${versionWithoutPrefix}`)
+=======
+  return currentContent.replaceAll(/node:(\d+\.\d+\.\d+)/g, (match, currentVersion: string) => {
+    if (compareNodeVersions(currentVersion, newVersion) >= 0) {
+      return match
+    }
+    return `node:${versionWithoutPrefix}`
+  })
+>>>>>>> origin/main
 }
 
 export type ComputeNewDockerfileContentOptions = BaseMigrationOptions
