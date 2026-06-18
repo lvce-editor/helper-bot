@@ -2,21 +2,19 @@ import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { applyMigrationResult } from '../src/parts/ApplyMigrationResult/ApplyMigrationResult.ts'
 
-let consoleErrorSpy: ReturnType<typeof jest.spyOn>
-
 const toBase64 = (content: string): string => {
   return btoa(content)
 }
 
 beforeEach(() => {
   nock.disableNetConnect()
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
-  consoleErrorSpy.mockRestore()
+  jest.restoreAllMocks()
 })
 
 test('applies migration result successfully with file changes', async (): Promise<void> => {

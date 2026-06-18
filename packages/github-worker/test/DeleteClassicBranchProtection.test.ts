@@ -2,17 +2,15 @@ import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { deleteClassicBranchProtection } from '../src/parts/DeleteClassicBranchProtection/DeleteClassicBranchProtection.ts'
 
-let consoleErrorSpy: ReturnType<typeof jest.spyOn>
-
 beforeEach(() => {
   nock.disableNetConnect()
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
-  consoleErrorSpy.mockRestore()
+  jest.restoreAllMocks()
 })
 
 test('deletes classic branch protection successfully', async (): Promise<void> => {

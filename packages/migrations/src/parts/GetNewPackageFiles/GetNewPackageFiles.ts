@@ -39,7 +39,7 @@ const getNewPackageFilesCore = async (
     if (!dependencies) {
       throw new Error(`Missing dependency section: ${dependencyKey}`)
     }
-    const packageName = String(`@lvce-editor/${dependencyName}`)
+    const packageName = `@lvce-editor/${dependencyName}`
     dependencies[packageName] = `^${newVersion}`
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })

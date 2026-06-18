@@ -2,17 +2,15 @@ import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { commitFiles } from '../src/parts/CommitFiles/CommitFiles.ts'
 
-let consoleErrorSpy: ReturnType<typeof jest.spyOn>
-
 beforeEach(() => {
   nock.disableNetConnect()
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
-  consoleErrorSpy.mockRestore()
+  jest.restoreAllMocks()
 })
 
 test('commits files successfully', async (): Promise<void> => {
