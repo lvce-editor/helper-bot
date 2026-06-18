@@ -2,17 +2,15 @@ import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { updateBranchProtection } from '../src/parts/UpdateBranchProtection/UpdateBranchProtection.ts'
 
-let consoleErrorSpy: ReturnType<typeof jest.spyOn>
-
 beforeEach(() => {
   nock.disableNetConnect()
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
-  consoleErrorSpy.mockRestore()
+  jest.restoreAllMocks()
 })
 
 test('returns undefined when no osVersions provided', async (): Promise<void> => {

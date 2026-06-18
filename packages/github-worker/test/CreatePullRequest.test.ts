@@ -2,17 +2,15 @@ import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 import nock from 'nock'
 import { createPullRequest } from '../src/parts/CreatePullRequest/CreatePullRequest.ts'
 
-let consoleErrorSpy: ReturnType<typeof jest.spyOn>
-
 beforeEach(() => {
   nock.disableNetConnect()
-  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterEach(() => {
   nock.cleanAll()
   nock.enableNetConnect()
-  consoleErrorSpy.mockRestore()
+  jest.restoreAllMocks()
 })
 
 test('creates pull request successfully', async (): Promise<void> => {
