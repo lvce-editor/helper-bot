@@ -7,7 +7,11 @@ import { resolveUri } from '../UriUtils/UriUtils.ts'
 const hasNamedImport = (content: string, importName: string, moduleName: string): boolean => {
   return content.split('\n').some((line) => {
     const trimmedLine = line.trimStart()
-    return trimmedLine.startsWith('import ') && trimmedLine.includes(importName) && (trimmedLine.includes(`from '${moduleName}'`) || trimmedLine.includes(`from "${moduleName}"`))
+    return (
+      trimmedLine.startsWith('import ') &&
+      trimmedLine.includes(importName) &&
+      (trimmedLine.includes(`from '${moduleName}'`) || trimmedLine.includes(`from "${moduleName}"`))
+    )
   })
 }
 

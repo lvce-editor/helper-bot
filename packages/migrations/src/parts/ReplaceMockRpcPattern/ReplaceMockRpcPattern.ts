@@ -11,12 +11,12 @@ export const replaceMockRpcPattern = (content: string): string => {
       if (equalsIndex === -1) {
         return line
       }
-      const indent = line.slice(0, line.length - trimmedLine.length)
       const variableName = assignment.slice(0, equalsIndex).trim()
-      const value = assignment.slice(equalsIndex + 1).trimStart()
       if (!/^\w+$/.test(variableName)) {
         return line
       }
+      const value = assignment.slice(equalsIndex + 1).trimStart()
+      const indent = line.slice(0, line.length - trimmedLine.length)
       return `${indent}using ${variableName} = ${value}`
     })
     .join('\n')
