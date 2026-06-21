@@ -19,6 +19,13 @@ const getDependency = (dependencies: Record<string, string> | undefined, depende
   return dependencies[dependencyName]
 }
 
+const getScopedDependencyName = (dependencyName: string): string => {
+  if (dependencyName.startsWith('@')) {
+    return dependencyName
+  }
+  return `@lvce-editor/${dependencyName}`
+}
+
 export const updateDependencies = async (options: Readonly<UpdateDependenciesOptions>): Promise<MigrationResult> => {
   try {
     const packageJsonPath = resolveUri(options.packageJsonPath, options.clonedRepoUri)
@@ -35,7 +42,7 @@ export const updateDependencies = async (options: Readonly<UpdateDependenciesOpt
       throw error
     }
 
-    const dependencyName = `@lvce-editor/${options.dependencyName}`
+    const dependencyName = getScopedDependencyName(options.dependencyName)
     let dependencyKey: DependencyKey
     let oldDependency = ''
 

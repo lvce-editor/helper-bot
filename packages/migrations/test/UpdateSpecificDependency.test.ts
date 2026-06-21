@@ -81,6 +81,84 @@ test('updates dependency successfully', async () => {
   })
 })
 
+test('updates scoped asName dependency successfully', async () => {
+  const oldPackageJson = {
+    dependencies: {
+      '@lvce-editor/server': '^1.0.0',
+    },
+    name: 'test-package',
+    version: '1.0.0',
+  }
+
+  const mockPackageLockJson = JSON.stringify(
+    {
+      dependencies: {
+        '@lvce-editor/server': {
+          version: '2.0.0',
+        },
+      },
+      lockfileVersion: 3,
+      name: 'test-package',
+      version: '1.0.0',
+    },
+    null,
+    2,
+  )
+
+  const clonedRepoUri = pathToUri('/test/repo')
+  const mockFs = createMockFs({
+    files: {
+      [resolveUri('packages/server/package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+    },
+  })
+
+  const mockExecFn = jest.fn<
+    (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
+  >(async (file, args, options) => {
+    if (file === 'npm' && args?.[0] === 'install') {
+      const cwd = options?.cwd
+      if (cwd) {
+        await mockFs.writeFile(resolveUri('package-lock.json', cwd), mockPackageLockJson)
+      }
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
+  })
+  const mockExec = createMockExec(mockExecFn)
+
+  const result = await updateSpecificDependency({
+    asName: '@lvce-editor/server',
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fromRepo: 'lvce-editor',
+    fs: mockFs,
+    repositoryName: 'editor-worker',
+    repositoryOwner: 'lvce-editor',
+    tagName: 'v2.0.0',
+    toFolder: 'packages/server',
+    toRepo: 'editor-worker',
+  })
+
+  expect(result).toEqual({
+    branchName: 'feature/update-lvce-editor-server-to-2.0.0',
+    changedFiles: [
+      {
+        content: expect.stringContaining('"@lvce-editor/server": "^2.0.0"'),
+        path: 'packages/server/package.json',
+      },
+      {
+        content: mockPackageLockJson,
+        path: 'packages/server/package-lock.json',
+      },
+    ],
+    commitMessage: 'feature: update @lvce-editor/server to version 2.0.0',
+    pullRequestTitle: 'feature: update @lvce-editor/server to version 2.0.0',
+    status: 'success',
+    statusCode: 201,
+  })
+})
+
 test('validates missing fromRepo parameter', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs()

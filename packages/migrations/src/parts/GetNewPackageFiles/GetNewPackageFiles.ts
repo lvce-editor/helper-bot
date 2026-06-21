@@ -17,6 +17,17 @@ interface PackageJsonWithDependencies {
   optionalDependencies?: Record<string, string>
 }
 
+const getScopedDependencyName = (dependencyName: string): string => {
+  if (dependencyName.startsWith('@')) {
+    return dependencyName
+  }
+  return `@lvce-editor/${dependencyName}`
+}
+
+const getSafeDependencyName = (dependencyName: string): string => {
+  return dependencyName.replaceAll('@', '').replaceAll('/', '-')
+}
+
 const getNewPackageFilesCore = async (
   fs: Readonly<typeof FsPromises>,
   exec: BaseMigrationOptions['exec'],
@@ -29,8 +40,9 @@ const getNewPackageFilesCore = async (
   newPackageLockJsonString: string
 }> => {
   const { name } = oldPackageJson
-  const tmpFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-`))
-  const tmpCacheFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${dependencyName}-${newVersion}-tmp-cache-`))
+  const safeDependencyName = getSafeDependencyName(dependencyName)
+  const tmpFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${safeDependencyName}-${newVersion}-tmp-`))
+  const tmpCacheFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${safeDependencyName}-${newVersion}-tmp-cache-`))
   const tmpFolderUri = pathToUri(tmpFolder)
   const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
   const toRemove = [tmpFolderUri, tmpCacheFolderUri]
@@ -39,7 +51,7 @@ const getNewPackageFilesCore = async (
     if (!dependencies) {
       throw new Error(`Missing dependency section: ${dependencyKey}`)
     }
-    const packageName = `@lvce-editor/${dependencyName}`
+    const packageName = getScopedDependencyName(dependencyName)
     dependencies[packageName] = `^${newVersion}`
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
@@ -93,6 +105,7 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
 
     const result = await getNewPackageFilesCore(options.fs, options.exec, oldPackageJson, options.dependencyName, options.dependencyKey, options.newVersion)
 
+    const safeDependencyName = getSafeDependencyName(options.dependencyName)
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
     // Normalize paths in changedFiles to use forward slashes
@@ -100,7 +113,7 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
     const normalizedPackageLockJsonPath = options.packageLockJsonPath.replaceAll('\\', '/')
 
     return {
-      branchName: `feature/update-${options.dependencyName}-to-${options.newVersion}`,
+      branchName: `feature/update-${safeDependencyName}-to-${options.newVersion}`,
       changedFiles: [
         {
           content: result.newPackageJsonString,

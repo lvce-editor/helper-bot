@@ -3,7 +3,6 @@ import type { ApplicationFunctionOptions, Context, Probot } from 'probot'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { handleDependencies } from './dependencies.ts'
 import { updateBuiltinExtensions } from './updateBuiltinExtensions.ts'
-import { updateDependencies } from './updateDependencies.ts'
 import { captureException } from './errorHandling.ts'
 import { availableParallelism } from 'node:os'
 import { handleUpdateGithubActions } from './updateGithubActionsEndpoint.ts'
@@ -24,14 +23,35 @@ import { getDependenciesConfig } from './getDependenciesConfig.ts'
 
 const dependencies = getDependenciesConfig().dependencies
 
-const updateRepositoryDependencies = async (context: Context<'release'>) => {
-  for (const dependency of dependencies) {
-    try {
-      await updateDependencies(context, dependency)
-    } catch (error) {
-      captureException(error as Error)
-    }
+const updateRepositoryDependencies = async (context: Context<'release'>, app?: Probot) => {
+  if (!app) {
+    return
   }
+  const { payload } = context
+  const owner = payload.repository.owner.login
+  const releasedRepo = payload.repository.name
+  const tagName = payload.release.tag_name
+  const matchingDependencies = dependencies.filter((dependency) => dependency.fromRepo === releasedRepo)
+  await Promise.all(
+    matchingDependencies.map(async (dependency) => {
+      try {
+        await dispatchMigrationWorkflow({
+          app,
+          migrationId: '/migrations2/update-specific-dependency',
+          migrationOptions: {
+            ...(dependency.asName && { asName: dependency.asName }),
+            fromRepo: dependency.fromRepo,
+            tagName,
+            toFolder: dependency.toFolder,
+            toRepo: dependency.toRepo,
+          },
+          targetRepository: `${owner}/${dependency.toRepo}`,
+        })
+      } catch (error) {
+        captureException(error as Error)
+      }
+    }),
+  )
 }
 
 const updateWebsiteConfig = async (context: Context<'release'>, app?: Probot) => {
@@ -70,7 +90,7 @@ export const handleReleaseReleased = async (context: Context<'release'>, app?: P
   if (!shouldHandleRelease(context)) {
     return
   }
-  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context), updateWebsiteConfig(context, app)])
+  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context, app), updateWebsiteConfig(context, app)])
 }
 
 const handleHelloWorld = async (req: any, res: any) => {

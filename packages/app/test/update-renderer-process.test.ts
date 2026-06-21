@@ -1,52 +1,43 @@
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
-import { join } from 'path'
-import { jest, beforeEach, test, expect, afterEach } from '@jest/globals'
+import { beforeEach, test, expect, afterEach } from '@jest/globals'
 
 let probot: Probot | undefined
 
-jest.unstable_mockModule('execa', () => {
-  return {
-    execa: jest.fn(),
-  }
-})
-
-jest.unstable_mockModule('node:fs/promises', () => {
-  return {
-    access: jest.fn(),
-    mkdtemp: jest.fn(),
-    readFile: jest.fn(),
-    writeFile: jest.fn(),
-    mkdir: jest.fn(),
-    rm: jest.fn(),
-    readdir: jest.fn(),
-    chmod: jest.fn(),
-  }
-})
-
-jest.unstable_mockModule('node:os', () => {
-  return {
-    tmpdir() {
-      return '/test'
-    },
-    hostname() {
-      return 'localhost'
-    },
-    availableParallelism() {
-      return 1
-    },
-  }
-})
-
 const myProbotApp = await import('../src/index.ts')
-const execa = await import('execa')
-const fs = await import('node:fs/promises')
+const privateKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAu5amcvGOpDUVJmkyX4UtcOQPydBlSl8a/SV4QpUq+8CY7xaf
+IzJ0b+1PfT4WgvQo8ouFE1OCIVK7v2DuB6FRkZRJ3U8m/LX8GgMp0c2VmeFdaguv
+sPQe8ra+fcpZETNkZKnt1YgmX3NsvqjYtDAgKt8Bd6q9yRuGRpYLrMrkPd6zv7UK
+eiDiBQBHZxtJaMDWP/pRAsN5PHBzJ+YdfwOWTtWH7Zks98Tiq3oQHVriGPPH9Vlk
+s9S2RPgWdpYvHnsIdzTZXL2/MDWFukUVBWfT1Rk8RIx33C3ov63qwSs0LIFzoEcf
++P7/79j/c9+tqywBZNCiFHjJZ9oP0EBoZ7sLFQIDAQABAoIBABBS6MMh4B7L+74u
+81I6nZywS+ts9hOFuSyEQTXSEz57IRPVLR37+wPua7djWsQkiReqKndnEfDiaTIb
+Njt1v0pi1BatF6BwGbMNyWrXcAhHA0ECKVTFuZe3bVY28I89oKPd4bNuOKCfw7vH
+p6vucC4q387RDdjdS08DKZrswPXdMBLZIACr9I63xTxEoukBL7qsvKOokx96A7cH
+Aan/56p11MpD7S4GjdkYFwN2mtkAoucApjtg5HV+woKsLqakDliCXOzCxVTzHwqt
+42+nVEjWCI+QfkiJyNQYtSxyTFtyDnwiQ4WaEcC0giWtRyIpHcwDVwy7WGxnCkys
+lAWScpUCgYEA7l3XG8mYhZDomiVUGUmp2SlLd+N3QnBxks8DK5KxYoA1AUDnXdmT
+s+B0tWIPzyAvvnsj40y/o6Qz4Ah3HDyJRiKNJ+GBPewLmjR/npyoPJywkFadiMbs
+ai/eq7xZyAjIDE/MYecumbJMWVDyfUJ90OA+Ir0SZbal6O8SWlQORXcCgYEAyXcu
+HDc+0r/wiTWp9Rvl+28XvSONcnOaiqcj0q4rbv+2gqFZt7Aulb0QNm/Ow3JY79y2
+/6xXBYDLwO/ohP9cDljAxD1CPxzpJWSaDM6Fge+KUf2Y2CS9R+SJBzcd92VJuUXD
+Kc7yxKbBtsgkgByJvelL1wF3IDxh86EsllohBtMCgYEAoYG5v10v18ggolkKi3vK
+9pYxSVE5PC4d9gAHwN1LDVebEndcjM1gc69wxHlmBsxjLSgYX+lfq8wVTgXOVrZ5
+uKiuhcgYntEx51EM63Zv02nDhHj7knJeO3Cl6izblFrG2Pi0nd1bSM5zRs0/EDoe
+L4nQ8A61yW8hKRvbjpKHfO8CgYBqBliz7LcZPn4eF6ncHtSH4E1D8sPr6b75HUET
+DSo6fkTUtol6zDOYBinUHD9aSIFZqnR8VXxunvucDCX4aFNQEZFRNVP51wMz9J/G
+AaHtYd0PjUC075DVlwYuT+lrW1jTMk2lYQ4ORBxKT0Y2Tc6HrZGGE3VX968tAjNu
+5PvglQKBgQDtR4eIdMJ60FfQoX/9MrxEV7Fkru3DBfr48ZC5HKksj7MytOD23ouc
+cDIUGO9eluOat3V1vIlRyZ4BJsL/YbrVh8HfZ4+XD5vn37krunyR8HfY0GeWpFTH
+/ku7U7Z+BSQ9+D3Ifvt7jimPoGTWP7aoNRfFwwAg8muCZSEuTdMdVA==
+-----END RSA PRIVATE KEY-----`
 
 beforeEach(async () => {
   nock.disableNetConnect()
   probot = new Probot({
     appId: 123,
-    privateKey: '123',
+    privateKey,
     // disable request throttling and retries for testing
     Octokit: ProbotOctokit.defaults({
       retry: { enabled: false },
@@ -64,153 +55,24 @@ afterEach(() => {
 })
 
 test('creates a pull request to update versions when a release is created', async () => {
-  let packageLockContent = ''
-  // @ts-ignore
-  jest.spyOn(fs, 'readFile').mockImplementation((path) => {
-    if (typeof path === 'string' && path.endsWith('package-lock.json')) {
-      return packageLockContent
-    }
-    return ''
-  })
-  // @ts-ignore
-  jest.spyOn(fs, 'writeFile').mockImplementation((path, content) => {
-    if (typeof path === 'string' && path.endsWith('package-lock.json') && typeof content === 'string') {
-      packageLockContent = content
-    }
-  })
-  // @ts-ignore
-  jest.spyOn(execa, 'execa').mockImplementation(() => {
-    packageLockContent = JSON.stringify({
-      name: '@lvce-editor/renderer-worker',
-      version: '0.0.0-dev',
-      lockfileVersion: 3,
-      requires: true,
-      updated: true,
-    })
-  })
-  // @ts-ignore
-  jest.spyOn(fs, 'mkdtemp').mockImplementation((prefix) => `${prefix}abc123`)
-  // @ts-ignore
-  jest.spyOn(fs, 'rm').mockImplementation(() => {})
+  const workflowDispatchBodies: any[] = []
   const mock = nock('https://api.github.com')
-    .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
+    .get('/repos/lvce-editor/helper-bot/installation')
     .reply(200, {
-      object: {
-        sha: 'main-sha',
-      },
+      id: 44,
     })
-    .get('/repos/lvce-editor/lvce-editor/git/commits/main-sha')
+    .post('/app/installations/44/access_tokens')
     .reply(200, {
-      sha: 'starting-commit-sha',
+      expires_at: '2026-05-20T00:00:00Z',
+      permissions: {},
+      repository_selection: 'selected',
+      token: 'installation-token',
     })
-    .get('/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage.json')
-    .reply(200, {
-      content: Buffer.from(
-        JSON.stringify({
-          name: 'renderer-worker',
-          dependencies: {
-            '@lvce-editor/renderer-process': '^2.3.0',
-          },
-        }),
-      ),
-    })
-    .get('/repos/lvce-editor/lvce-editor/contents/packages%2Frenderer-worker%2Fpackage-lock.json')
-    .reply(200, {
-      content: Buffer.from(
-        JSON.stringify({
-          name: '@lvce-editor/renderer-worker',
-          version: '0.0.0-dev',
-          lockfileVersion: 3,
-          requires: true,
-        }),
-      ),
-    })
-    .post('/repos/lvce-editor/lvce-editor/git/trees', (body) => {
-      expect(body).toEqual({
-        base_tree: 'starting-commit-sha',
-        tree: [
-          {
-            content:
-              JSON.stringify(
-                {
-                  name: 'renderer-worker',
-                  dependencies: {
-                    '@lvce-editor/renderer-process': '^2.4.0',
-                  },
-                },
-                null,
-                2,
-              ) + '\n',
-            mode: '100644',
-            path: 'packages/renderer-worker/package.json',
-            type: 'blob',
-          },
-          {
-            content: JSON.stringify({
-              name: '@lvce-editor/renderer-worker',
-              version: '0.0.0-dev',
-              lockfileVersion: 3,
-              requires: true,
-              updated: true,
-            }),
-            mode: '100644',
-            path: 'packages/renderer-worker/package-lock.json',
-            type: 'blob',
-          },
-        ],
-      })
+    .post('/repos/lvce-editor/helper-bot/actions/workflows/run-migration-on-demand.yml/dispatches', (body) => {
+      workflowDispatchBodies.push(body)
       return true
     })
-    .reply(201, {
-      object: {
-        sha: 'new-commit-sha',
-      },
-    })
-    .post('/repos/lvce-editor/lvce-editor/git/commits', (body) => {
-      expect(body).toEqual({
-        message: 'feature: update renderer-process to version v2.4.0',
-        parents: ['starting-commit-sha'],
-      })
-      return true
-    })
-    .reply(201, {
-      sha: 'new-commit-sha',
-    })
-    .post('/repos/lvce-editor/lvce-editor/git/refs', (body) => {
-      expect(body).toEqual({
-        ref: 'refs/heads/update-version/renderer-process-v2.4.0',
-        sha: 'new-commit-sha',
-      })
-      return true
-    })
-    .reply(201, {
-      object: {
-        sha: 'new-commit-sha',
-      },
-    })
-    .post(`/repos/lvce-editor/lvce-editor/pulls`, (body) => {
-      expect(body).toEqual({
-        base: 'main',
-        head: 'update-version/renderer-process-v2.4.0',
-        title: 'feature: update renderer-process to version v2.4.0',
-      })
-      return true
-    })
-    .reply(200, {
-      node_id: 'test-node-id',
-    })
-    .post('/graphql', (body) => {
-      expect(body).toEqual({
-        query: `mutation MyMutation {
-  enablePullRequestAutoMerge(input: { pullRequestId: \"test-node-id\", mergeMethod: SQUASH }) {
-    clientMutationId
-  }
-}
-`,
-      })
-      return true
-    })
-    .reply(200)
+    .reply(204)
 
   // Receive a webhook event
   await probot.receive({
@@ -229,16 +91,18 @@ test('creates a pull request to update versions when a release is created', asyn
       },
     },
   })
+  expect(workflowDispatchBodies).toEqual([
+    {
+      inputs: {
+        baseBranch: 'main',
+        migrationId: '/migrations2/update-specific-dependency',
+        migrationOptionsJson: '{"fromRepo":"renderer-process","tagName":"v2.4.0","toFolder":"packages/renderer-worker","toRepo":"lvce-editor"}',
+        requestId: expect.any(String),
+        runName: 'migration-on-demand/lvce-editor/update-specific-dependency',
+        targetRepository: 'lvce-editor/lvce-editor',
+      },
+      ref: 'main',
+    },
+  ])
   expect(mock.pendingMocks()).toEqual([])
-  expect(fs.rm).toHaveBeenCalledTimes(2)
-  const testPath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp-abc123')
-  const testCachePath = join('/test', 'update-dependencies-renderer-worker-renderer-process-2.4.0-tmp-cache-abc123')
-  expect(fs.rm).toHaveBeenNthCalledWith(1, testPath, {
-    force: true,
-    recursive: true,
-  })
-  expect(fs.rm).toHaveBeenNthCalledWith(2, testCachePath, {
-    force: true,
-    recursive: true,
-  })
 })
