@@ -5,13 +5,18 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const removeNpmTokenFromWorkflowContent = (content: Readonly<string>): string => {
-  // Pattern to match the env section with NODE_AUTH_TOKEN
-  // This matches: env: followed by newline, NODE_AUTH_TOKEN line, and the newline after it
-  // We need to match the entire block including proper newlines
-  const npmTokenPattern = /(\s*)env:\s*\n(\s*)NODE_AUTH_TOKEN:\s*\${{secrets\.NPM_TOKEN}}\s*\n/gm
-
-  // Replace with a newline to maintain proper YAML structure
-  return content.replaceAll(npmTokenPattern, '\n')
+  const lines = content.split('\n')
+  const newLines: string[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const nextLine = lines[i + 1]
+    if (line.trim() === 'env:' && nextLine?.trim() === 'NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}') {
+      i++
+      continue
+    }
+    newLines.push(line)
+  }
+  return newLines.join('\n')
 }
 
 export type RemoveNpmTokenFromWorkflowOptions = BaseMigrationOptions
