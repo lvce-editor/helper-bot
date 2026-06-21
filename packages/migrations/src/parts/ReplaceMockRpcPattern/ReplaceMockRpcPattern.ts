@@ -1,5 +1,23 @@
-const RE_RPC = /const\s+(\w+)\s*=\s*(.*)\.registerMockRpc/g
-
 export const replaceMockRpcPattern = (content: string): string => {
-  return content.replaceAll(RE_RPC, 'using $1 = $2.registerMockRpc')
+  return content
+    .split('\n')
+    .map((line) => {
+      const trimmedLine = line.trimStart()
+      if (!trimmedLine.startsWith('const ') || !trimmedLine.includes('.registerMockRpc')) {
+        return line
+      }
+      const assignment = trimmedLine.slice('const '.length)
+      const equalsIndex = assignment.indexOf('=')
+      if (equalsIndex === -1) {
+        return line
+      }
+      const indent = line.slice(0, line.length - trimmedLine.length)
+      const variableName = assignment.slice(0, equalsIndex).trim()
+      const value = assignment.slice(equalsIndex + 1).trimStart()
+      if (!/^\w+$/.test(variableName)) {
+        return line
+      }
+      return `${indent}using ${variableName} = ${value}`
+    })
+    .join('\n')
 }

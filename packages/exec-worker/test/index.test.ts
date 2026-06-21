@@ -1,5 +1,6 @@
 import { expect, test } from '@jest/globals'
+import { commandMap } from '../src/parts/CommandMap/CommandMap.ts'
 
 test('creates a pull request to update versions when a release is created', async () => {
-  expect(1).toBe(1)
+  expect(Object.keys(commandMap)).toEqual(['Exec.exec'])
 })

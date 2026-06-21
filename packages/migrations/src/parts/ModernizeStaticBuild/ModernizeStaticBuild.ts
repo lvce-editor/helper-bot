@@ -4,6 +4,13 @@ import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/Ge
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { resolveUri } from '../UriUtils/UriUtils.ts'
 
+const hasNamedImport = (content: string, importName: string, moduleName: string): boolean => {
+  return content.split('\n').some((line) => {
+    const trimmedLine = line.trimStart()
+    return trimmedLine.startsWith('import ') && trimmedLine.includes(importName) && (trimmedLine.includes(`from '${moduleName}'`) || trimmedLine.includes(`from "${moduleName}"`))
+  })
+}
+
 const processFile = (content: string): { newContent: string; changed: boolean } => {
   // Check if it's already been updated
   if (content.includes('exportStatic({root:')) {
@@ -23,7 +30,7 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
   let newContent = content
 
   // First, ensure join is imported from node:path
-  const hasJoinImport = /import\s+.*join.*\s+from\s+['"]node:path['"]/.test(newContent)
+  const hasJoinImport = hasNamedImport(newContent, 'join', 'node:path')
   if (!hasJoinImport) {
     // Add import after the exportStatic import
     newContent = newContent.replace(/(import\s+{\s*exportStatic\s*}\s+from\s+['"]@lvce-editor\/shared-process['"])/, "$1\nimport { join } from 'node:path'")

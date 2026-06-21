@@ -68,6 +68,7 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
 
   let newContent: string
   const arrayContent = exportDefaultMatch[1]
+  // eslint-disable-next-line sonarjs/super-linear-regex -- This migration scans small eslint config files and preserves their formatting.
   const rulesObjectMatch = arrayContent.match(/{[\s\S]*?rules:\s*{([^}]*)}[\s\S]*?}/)
 
   if (rulesObjectMatch) {

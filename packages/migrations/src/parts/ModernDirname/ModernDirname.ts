@@ -38,6 +38,34 @@ const collectFiles = async (
   return fileList
 }
 
+const removeNamedImport = (content: string, moduleName: string, importName: string): string => {
+  const lines = content.split('\n')
+  const newLines = lines.map((line) => {
+    if (!line.includes(`from '${moduleName}'`) && !line.includes(`from "${moduleName}"`)) {
+      return line
+    }
+    const braceStart = line.indexOf('{')
+    const braceEnd = line.indexOf('}', braceStart)
+    if (braceStart === -1 || braceEnd === -1) {
+      return line
+    }
+    const importList = line
+      .slice(braceStart + 1, braceEnd)
+      .split(',')
+      .map((importItem) => importItem.trim())
+      .filter(Boolean)
+    const filtered = importList.filter((importItem) => importItem !== importName)
+    if (filtered.length === importList.length) {
+      return line
+    }
+    if (filtered.length === 0) {
+      return ''
+    }
+    return `${line.slice(0, braceStart + 1)} ${filtered.join(', ')} ${line.slice(braceEnd)}`
+  })
+  return newLines.join('\n')
+}
+
 const processFile = (content: string): { newContent: string; changed: boolean } => {
   // Pattern to match: const __dirname = dirname(fileURLToPath(import.meta.url))
   const dirnamePattern = /const\s+__dirname\s*=\s*dirname\s*\(\s*fileURLToPath\s*\(\s*import\.meta\.url\s*\)\s*\)/g
@@ -69,36 +97,12 @@ const processFile = (content: string): { newContent: string; changed: boolean } 
   // Remove unused imports
   // Remove fileURLToPath from imports if not used elsewhere
   if (!fileURLToPathUsedElsewhere) {
-    // Match import statements that include fileURLToPath
-    // Handle: import { fileURLToPath } from 'node:url'
-    // Handle: import { fileURLToPath, other } from 'node:url'
-    // Handle: import { other, fileURLToPath } from 'node:url'
-    // Handle: import { other, fileURLToPath, other2 } from 'node:url'
-    newContent = newContent.replaceAll(/import\s*{\s*([^}]*)\s*}\s*from\s*['"]node:url['"]/g, (match, imports) => {
-      const importList = imports.split(',').map((imp: string) => imp.trim())
-      const filtered = importList.filter((imp: string) => imp !== 'fileURLToPath')
-      if (filtered.length === 0) {
-        return '' // Remove entire import if nothing left
-      }
-      return `import { ${filtered.join(', ')} } from 'node:url'`
-    })
+    newContent = removeNamedImport(newContent, 'node:url', 'fileURLToPath')
   }
 
   // Remove dirname from imports if not used elsewhere
   if (!dirnameUsedElsewhere) {
-    // Match import statements that include dirname
-    // Handle: import { dirname } from 'node:path'
-    // Handle: import { dirname, other } from 'node:path'
-    // Handle: import { other, dirname } from 'node:path'
-    // Handle: import { other, dirname, other2 } from 'node:path'
-    newContent = newContent.replaceAll(/import\s*{\s*([^}]*)\s*}\s*from\s*['"]node:path['"]/g, (match, imports) => {
-      const importList = imports.split(',').map((imp: string) => imp.trim())
-      const filtered = importList.filter((imp: string) => imp !== 'dirname')
-      if (filtered.length === 0) {
-        return '' // Remove entire import if nothing left
-      }
-      return `import { ${filtered.join(', ')} } from 'node:path'`
-    })
+    newContent = removeNamedImport(newContent, 'node:path', 'dirname')
   }
 
   // Clean up empty lines that might result from removed imports

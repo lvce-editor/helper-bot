@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-nonstandard-builtin-properties -- Symbol.asyncDispose is supported by the Node version in .nvmrc. */
 import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
 import { cloneRepositoryTmp } from '../CloneRepositoryTmp/CloneRepositoryTmp.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
