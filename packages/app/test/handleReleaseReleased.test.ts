@@ -15,7 +15,10 @@ jest.unstable_mockModule('../src/updateDependencies.ts', () => ({
 
 jest.unstable_mockModule('../src/getDependenciesConfig.ts', () => ({
   getDependenciesConfig: () => ({
-    dependencies: [{ fromRepo: 'lvce-editor', toRepo: 'editor-worker', toFolder: 'packages/server' }],
+    dependencies: [
+      { fromRepo: 'lvce-editor', toRepo: 'editor-worker', toFolder: 'packages/server' },
+      { fromRepo: 'test-worker', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
+    ],
   }),
 }))
 
@@ -108,4 +111,23 @@ test('does not call update-website-config migration for other repositories', asy
   await handleReleaseReleased(context)
 
   expect(mockDispatchMigrationWorkflow).not.toHaveBeenCalled()
+})
+
+test('dispatches update-specific-dependency migrations for matching release dependencies', async () => {
+  const context = createContext('published', 'test-worker')
+  const app = {} as any
+
+  await handleReleaseReleased(context, app)
+
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-specific-dependency',
+    migrationOptions: {
+      fromRepo: 'test-worker',
+      tagName: 'v1.0.0',
+      toFolder: 'packages/renderer-worker',
+      toRepo: 'lvce-editor',
+    },
+    targetRepository: 'lvce-editor/lvce-editor',
+  })
 })

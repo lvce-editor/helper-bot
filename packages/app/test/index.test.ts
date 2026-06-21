@@ -140,15 +140,18 @@ test('calls update-website-config migration when lvce-editor is published', asyn
   if (!probot) {
     throw new Error('probot not initialized')
   }
+  const workflowDispatchBodies: any[] = []
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json')
     .reply(200, {
       content: Buffer.from(JSON.stringify([], null, 2) + '\n').toString('base64'),
     })
     .get('/repos/lvce-editor/helper-bot/installation')
+    .times(3)
     .reply(200, {
       id: 44,
     })
+    .persist()
     .post('/app/installations/44/access_tokens')
     .reply(200, {
       expires_at: '2026-05-20T00:00:00Z',
@@ -157,19 +160,10 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       token: 'installation-token',
     })
     .post('/repos/lvce-editor/helper-bot/actions/workflows/run-migration-on-demand.yml/dispatches', (body) => {
-      expect(body).toEqual({
-        inputs: {
-          baseBranch: 'main',
-          migrationId: '/migrations2/update-website-config',
-          migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
-          requestId: expect.any(String),
-          runName: 'migration-on-demand/lvce-editor.github.io/update-website-config',
-          targetRepository: 'lvce-editor/lvce-editor.github.io',
-        },
-        ref: 'main',
-      })
+      workflowDispatchBodies.push(body)
       return true
     })
+    .times(3)
     .reply(204)
 
   await probot?.receive({
@@ -190,6 +184,45 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       },
     },
   })
+  expect(workflowDispatchBodies).toEqual(
+    expect.arrayContaining([
+      {
+        inputs: {
+          baseBranch: 'main',
+          migrationId: '/migrations2/update-specific-dependency',
+          migrationOptionsJson:
+            '{"asName":"@lvce-editor/server","fromRepo":"lvce-editor","tagName":"v1.0.0","toFolder":"packages/server","toRepo":"editor-worker"}',
+          requestId: expect.any(String),
+          runName: 'migration-on-demand/editor-worker/update-specific-dependency',
+          targetRepository: 'lvce-editor/editor-worker',
+        },
+        ref: 'main',
+      },
+      {
+        inputs: {
+          baseBranch: 'main',
+          migrationId: '/migrations2/update-specific-dependency',
+          migrationOptionsJson:
+            '{"asName":"@lvce-editor/server","fromRepo":"lvce-editor","tagName":"v1.0.0","toFolder":"packages/server","toRepo":"main-area-worker"}',
+          requestId: expect.any(String),
+          runName: 'migration-on-demand/main-area-worker/update-specific-dependency',
+          targetRepository: 'lvce-editor/main-area-worker',
+        },
+        ref: 'main',
+      },
+      {
+        inputs: {
+          baseBranch: 'main',
+          migrationId: '/migrations2/update-website-config',
+          migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
+          requestId: expect.any(String),
+          runName: 'migration-on-demand/lvce-editor.github.io/update-website-config',
+          targetRepository: 'lvce-editor/lvce-editor.github.io',
+        },
+        ref: 'main',
+      },
+    ]),
+  )
   expect(mock.pendingMocks()).toEqual([])
 })
 
