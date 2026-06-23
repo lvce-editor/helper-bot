@@ -24,8 +24,8 @@ const getScopedDependencyName = (dependencyName: string): string => {
   return `@lvce-editor/${dependencyName}`
 }
 
-const getSafeDependencyName = (dependencyName: string): string => {
-  return dependencyName.replaceAll('@', '').replaceAll('/', '-')
+const getSafeFileNamePart = (value: string): string => {
+  return value.replaceAll('@', '').replaceAll('/', '-')
 }
 
 const getNewPackageFilesCore = async (
@@ -40,9 +40,10 @@ const getNewPackageFilesCore = async (
   newPackageLockJsonString: string
 }> => {
   const { name } = oldPackageJson
-  const safeDependencyName = getSafeDependencyName(dependencyName)
-  const tmpFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${safeDependencyName}-${newVersion}-tmp-`))
-  const tmpCacheFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${name}-${safeDependencyName}-${newVersion}-tmp-cache-`))
+  const safePackageName = name ? getSafeFileNamePart(name) : 'package'
+  const safeDependencyName = getSafeFileNamePart(dependencyName)
+  const tmpFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${safePackageName}-${safeDependencyName}-${newVersion}-tmp-`))
+  const tmpCacheFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${safePackageName}-${safeDependencyName}-${newVersion}-tmp-cache-`))
   const tmpFolderUri = pathToUri(tmpFolder)
   const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
   const toRemove = [tmpFolderUri, tmpCacheFolderUri]
@@ -105,7 +106,7 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
 
     const result = await getNewPackageFilesCore(options.fs, options.exec, oldPackageJson, options.dependencyName, options.dependencyKey, options.newVersion)
 
-    const safeDependencyName = getSafeDependencyName(options.dependencyName)
+    const safeDependencyName = getSafeFileNamePart(options.dependencyName)
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
     // Normalize paths in changedFiles to use forward slashes
