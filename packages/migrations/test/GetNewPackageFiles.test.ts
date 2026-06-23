@@ -9,7 +9,7 @@ test('generates new package files with updated dependency', async () => {
     dependencies: {
       '@lvce-editor/shared': '^1.0.0',
     },
-    name: 'test-package',
+    name: '@lvce-editor/renderer-worker',
     version: '1.0.0',
   }
 
@@ -21,7 +21,7 @@ test('generates new package files with updated dependency', async () => {
         },
       },
       lockfileVersion: 3,
-      name: 'test-package',
+      name: '@lvce-editor/renderer-worker',
       version: '1.0.0',
     },
     null,
@@ -72,7 +72,7 @@ test('generates new package files with updated dependency', async () => {
   "dependencies": {
     "@lvce-editor/shared": "^2.0.0"
   },
-  "name": "test-package",
+  "name": "@lvce-editor/renderer-worker",
   "version": "1.0.0"
 }
 `,
@@ -92,9 +92,15 @@ test('generates new package files with updated dependency', async () => {
   expect(mockExecFn).toHaveBeenCalledTimes(1)
   expect(mockExecFn).toHaveBeenCalledWith(
     'npm',
-    ['install', '--ignore-scripts', '--prefer-online', '--cache', expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp-cache-/)],
+    [
+      'install',
+      '--ignore-scripts',
+      '--prefer-online',
+      '--cache',
+      expect.stringMatching(/update-dependencies-lvce-editor-renderer-worker-shared-2\.0\.0-tmp-cache-/),
+    ],
     {
-      cwd: expect.stringMatching(/update-dependencies-test-package-shared-2\.0\.0-tmp-/),
+      cwd: expect.stringMatching(/update-dependencies-lvce-editor-renderer-worker-shared-2\.0\.0-tmp-/),
     },
   )
 })
