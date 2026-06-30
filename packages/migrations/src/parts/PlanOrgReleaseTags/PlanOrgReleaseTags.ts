@@ -342,7 +342,8 @@ export const planOrgReleaseTags = async (options: Readonly<PlanOrgReleaseTagsOpt
   const since = new Date(Date.parse(generatedAt) - lookbackHours * 60 * 60 * 1000).toISOString()
   const octokit = createOctokit(options)
   const excludedRepos = new Set(options.excludedRepos || [])
-  const repos = (await listPublicRepositories(octokit, owner)).filter((repo) => !excludedRepos.has(repo.name))
+  const publicRepos = await listPublicRepositories(octokit, owner)
+  const repos = publicRepos.filter((repo) => !excludedRepos.has(repo.name))
   const entries = await Promise.all(repos.map((repo) => planRepository(octokit, owner, repo, since)))
   const upgrade = entries.filter((entry) => entry.upgrade).length
   return {
