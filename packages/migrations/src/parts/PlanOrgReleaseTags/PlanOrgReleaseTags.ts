@@ -65,7 +65,7 @@ interface SemverTag {
 
 const DEFAULT_OWNER = 'lvce-editor'
 const DEFAULT_LOOKBACK_HOURS = 24
-const defaultReleaseExcludedRepos = ['accounting', 'test-worker'] as const
+const defaultReleaseExcludedRepos: readonly string[] = []
 const dependenciesConfigUrl = new URL('../../../../app/dependencies.json', import.meta.url)
 const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml'
 const FAILED_RELEASE_CONCLUSIONS = new Set(['action_required', 'cancelled', 'failure', 'startup_failure', 'timed_out'])
