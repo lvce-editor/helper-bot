@@ -19,6 +19,8 @@ export interface ArtifactManifest {
     readonly branch: string
     readonly type: 'modernize-branch-protection'
   }[]
+  readonly repositoriesNotToUpgrade?: readonly string[]
+  readonly repositoriesToUpgrade?: readonly string[]
   readonly requestId: string
   readonly status: 'error' | 'success'
   readonly targetRepository?: string
