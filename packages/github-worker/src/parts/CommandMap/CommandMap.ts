@@ -2,6 +2,7 @@ import { applyMigrationResult } from '../ApplyMigrationResult/ApplyMigrationResu
 import { commitFiles } from '../CommitFiles/CommitFiles.ts'
 import { createBranch } from '../CreateBranch/CreateBranch.ts'
 import { createPullRequest } from '../CreatePullRequest/CreatePullRequest.ts'
+import { createTagRef } from '../CreateTagRef/CreateTagRef.ts'
 import { deleteClassicBranchProtection } from '../DeleteClassicBranchProtection/DeleteClassicBranchProtection.ts'
 import { updateBranchProtection } from '../UpdateBranchProtection/UpdateBranchProtection.ts'
 import { wrapFunction } from '../WrapFunction/WrapFunction.ts'
@@ -11,6 +12,7 @@ export const commandMap = {
   '/github/commit-files': wrapFunction(commitFiles),
   '/github/create-branch': wrapFunction(createBranch),
   '/github/create-pull-request': wrapFunction(createPullRequest),
+  '/github/create-tag-ref': wrapFunction(createTagRef),
   '/github/delete-classic-branch-protection': wrapFunction(deleteClassicBranchProtection),
   '/github/update-branch-protection': wrapFunction(updateBranchProtection),
 }

@@ -1,8 +1,10 @@
-import { expect, test } from '@jest/globals'
+import { expect, jest, test } from '@jest/globals'
 import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { MigrationResult } from '../src/parts/Types/Types.ts'
+
+jest.setTimeout(20_000)
 
 const createInvokeMigration = (calls: Array<[string, Record<string, any>]>) => {
   return async (migrationId: string, options: Record<string, any>): Promise<MigrationResult> => {

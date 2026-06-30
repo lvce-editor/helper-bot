@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 
 export interface ArtifactManifest {
+  readonly artifactKind?: 'migration-result' | 'org-release-plan'
   readonly baseBranch?: string
   readonly branchName?: string
   readonly commitMessage?: string
@@ -18,7 +19,34 @@ export interface ArtifactManifest {
   }[]
   readonly requestId: string
   readonly status: 'error' | 'success'
-  readonly targetRepository: string
+  readonly targetRepository?: string
+}
+
+export interface ReleasePlanEntry {
+  readonly commitCountSinceLatestTag?: number
+  readonly defaultBranch?: string
+  readonly defaultBranchSha?: string
+  readonly latestTag?: string
+  readonly latestTagSha?: string
+  readonly newTag?: string
+  readonly nonUpgradeReason?: string
+  readonly recentCommitCount?: number
+  readonly repository: string
+  readonly targetSha?: string
+  readonly upgrade: boolean
+}
+
+export interface ReleasePlan {
+  readonly entries: readonly ReleasePlanEntry[]
+  readonly generatedAt: string
+  readonly lookbackHours: number
+  readonly owner: string
+  readonly schemaVersion: 1
+  readonly summary: {
+    readonly scanned: number
+    readonly skipped: number
+    readonly upgrade: number
+  }
 }
 
 export interface ChangedFile {
@@ -30,6 +58,7 @@ export interface ChangedFile {
 export interface DownloadMigrationArtifactResult {
   readonly changedFiles: readonly ChangedFile[]
   readonly manifest: ArtifactManifest
+  readonly releasePlan?: ReleasePlan
 }
 
 export interface DownloadMigrationArtifactOptions {
@@ -214,12 +243,23 @@ export const downloadMigrationArtifact = async (options: Readonly<DownloadMigrat
     const manifestPath = join(extractDir, 'manifest.json')
     const manifestContent = await readFile(manifestPath, 'utf8')
     const manifest: ArtifactManifest = JSON.parse(manifestContent)
-    logger?.info(`[DownloadMigrationArtifact] read manifest for ${manifest.targetRepository} ${manifest.migrationId}`)
+    logger?.info(`[DownloadMigrationArtifact] read manifest for ${manifest.targetRepository || manifest.artifactKind || 'unknown'} ${manifest.migrationId}`)
     const changedFiles = await getChangedFiles(extractDir, manifest)
+    let releasePlan: ReleasePlan | undefined
+    try {
+      const releasePlanContent = await readFile(join(extractDir, 'release-plan.json'), 'utf8')
+      releasePlan = JSON.parse(releasePlanContent)
+      logger?.info(`[DownloadMigrationArtifact] read release plan with ${releasePlan.entries.length} entries from artifact ${artifact.id}`)
+    } catch (error: any) {
+      if (!error || error.code !== 'ENOENT') {
+        throw error
+      }
+    }
     logger?.info(`[DownloadMigrationArtifact] read ${changedFiles.length} changed files from artifact ${artifact.id}`)
     return {
       changedFiles,
       manifest,
+      ...(releasePlan && { releasePlan }),
     }
   } finally {
     await rm(tempDir, { force: true, recursive: true })

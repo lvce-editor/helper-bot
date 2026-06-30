@@ -11,6 +11,7 @@ const WORKFLOW_EVENT = 'workflow_dispatch'
 // @ts-ignore
 const WORKFLOW_BRANCH = 'main'
 const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
+const ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
@@ -26,8 +27,8 @@ interface Logger {
   readonly warn: (...args: readonly unknown[]) => void
 }
 
-const getMigrationLabel = (manifest: { migrationId: string; targetRepository: string }): string => {
-  return `${manifest.targetRepository} ${manifest.migrationId}`
+const getMigrationLabel = (manifest: { artifactKind?: string; migrationId: string; targetRepository?: string }): string => {
+  return `${manifest.targetRepository || manifest.artifactKind || 'unknown'} ${manifest.migrationId}`
 }
 
 const fallbackLogger: Logger = {
@@ -83,6 +84,16 @@ const getInstallationToken = async (app: Probot, owner: string, repo: string): P
   return typeof authToken === 'string' ? authToken : authToken.token
 }
 
+const isAllowedWorkflowRun = (workflowRun: Readonly<{ event: string; path: string }>): boolean => {
+  if (workflowRun.path === WORKFLOW_PATH) {
+    return workflowRun.event === WORKFLOW_EVENT
+  }
+  if (workflowRun.path === ORG_RELEASE_PLAN_WORKFLOW_PATH) {
+    return workflowRun.event === 'schedule' || workflowRun.event === WORKFLOW_EVENT
+  }
+  return false
+}
+
 export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleMigrationWorkflowRunOptions>) => {
   const downloadArtifact = options.downloadMigrationArtifact || downloadMigrationArtifact
   const invokeGithubWorker = options.invokeGithubWorker || GithubWorker.invoke
@@ -115,8 +126,46 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         )
         return
       }
+      if (artifact.manifest.artifactKind === 'org-release-plan') {
+        if (!artifact.releasePlan) {
+          logger.warn(`${LOG_PREFIX} ${migrationLabel}: org release plan artifact is missing release-plan.json`)
+          return
+        }
+        const upgradeEntries = artifact.releasePlan.entries.filter((entry) => entry.upgrade)
+        logger.info(`${LOG_PREFIX} ${migrationLabel}: release plan contains ${upgradeEntries.length} tag upgrades`)
+        for (const entry of upgradeEntries) {
+          try {
+            if (!entry.newTag || !entry.targetSha) {
+              logger.warn(`${LOG_PREFIX} ${entry.repository}: skipping incomplete release plan entry`)
+              continue
+            }
+            const { owner, repo } = assertAllowedTargetRepository(entry.repository)
+            const githubToken = await getInstallationToken(options.app, owner, repo)
+            const workerResult = await invokeGithubWorker('/github/create-tag-ref', {
+              githubToken,
+              owner,
+              repo,
+              sha: entry.targetSha,
+              tag: entry.newTag,
+            })
+            if (workerResult?.type === 'error') {
+              throw new Error(workerResult.error || 'GitHub worker failed to create tag ref')
+            }
+            const workerData = getGithubWorkerData(workerResult)
+            logger.info(`${LOG_PREFIX} ${entry.repository}: ${workerData?.message || `processed tag ${entry.newTag}`}`)
+          } catch (error) {
+            logger.error(`${LOG_PREFIX} failed to create release tag for ${entry.repository}`, error)
+            captureException(error as Error)
+          }
+        }
+        return
+      }
       if (artifact.changedFiles.length === 0 && (!artifact.manifest.repoCommands || artifact.manifest.repoCommands.length === 0)) {
         logger.info(`${LOG_PREFIX} ${migrationLabel}: workflow run produced no changes`)
+        return
+      }
+      if (!artifact.manifest.targetRepository) {
+        logger.warn(`${LOG_PREFIX} ${migrationLabel}: migration artifact is missing targetRepository`)
         return
       }
       const { owner, repo } = assertAllowedTargetRepository(artifact.manifest.targetRepository)
@@ -151,12 +200,8 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       console.info(`[workflow_completed] repo mismatch`)
       return
     }
-    if (workflowRun.path !== WORKFLOW_PATH) {
-      console.info(`[workflow_completed] workflow path mismatch: ${workflowRun.path} ${WORKFLOW_PATH}`)
-      return
-    }
-    if (workflowRun.event !== WORKFLOW_EVENT) {
-      console.info(`[workflow_completed] event mismatch`)
+    if (!isAllowedWorkflowRun(workflowRun)) {
+      console.info(`[workflow_completed] workflow mismatch: ${workflowRun.path} ${workflowRun.event}`)
       return
     }
     logger.info(`${LOG_PREFIX} received completed migration workflow webhook for run ${workflowRun.id}`)

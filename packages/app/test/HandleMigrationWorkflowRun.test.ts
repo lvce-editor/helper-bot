@@ -11,6 +11,7 @@ beforeEach(() => {
 })
 
 const MIGRATION_WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
+const ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
 
 afterEach(() => {
   jest.restoreAllMocks()
@@ -425,6 +426,118 @@ test('applies repo commands even when the artifact has no changed files', async 
     ],
   })
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] made pr for lvce-editor/explorer-view /migrations2/modernize-branch-protection')
+})
+
+test('creates tag refs for upgrade entries in a scheduled org release plan artifact', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      artifactKind: 'org-release-plan',
+      generatedAt: '2026-06-30T01:00:00.000Z',
+      migrationId: '/migrations2/plan-org-release-tags',
+      requestId: 'nightly-1',
+      status: 'success',
+    },
+    releasePlan: {
+      entries: [
+        {
+          newTag: 'v1.3.0',
+          repository: 'lvce-editor/example',
+          targetSha: 'main-sha',
+          upgrade: true,
+        },
+        {
+          nonUpgradeReason: 'no recent commits',
+          repository: 'lvce-editor/skipped',
+          upgrade: false,
+        },
+      ],
+      generatedAt: '2026-06-30T01:00:00.000Z',
+      lookbackHours: 24,
+      owner: 'lvce-editor',
+      schemaVersion: 1,
+      summary: {
+        scanned: 2,
+        skipped: 1,
+        upgrade: 1,
+      },
+    },
+  })
+  const invokeGithubWorker = (jest.fn() as any).mockResolvedValue({
+    data: {
+      message: 'Created tag v1.3.0',
+      status: 'created',
+    },
+    type: 'success',
+  })
+  const getRepoInstallation = (jest.fn() as any).mockResolvedValue({
+    data: {
+      id: 77,
+    },
+  })
+  const auth = (jest.fn() as any).mockResolvedValue({
+    token: 'installation-token',
+  })
+  const app: any = {
+    auth: (jest.fn() as any)
+      .mockResolvedValueOnce({
+        rest: {
+          apps: {
+            getRepoInstallation,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        auth,
+      }) as any,
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'schedule',
+        head_branch: 'main',
+        id: 123,
+        path: ORG_RELEASE_PLAN_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(getRepoInstallation).toHaveBeenCalledWith({
+    owner: 'lvce-editor',
+    repo: 'example',
+  })
+  expect(invokeGithubWorker).toHaveBeenCalledWith('/github/create-tag-ref', {
+    githubToken: 'installation-token',
+    owner: 'lvce-editor',
+    repo: 'example',
+    sha: 'main-sha',
+    tag: 'v1.3.0',
+  })
+  expect(invokeGithubWorker).toHaveBeenCalledTimes(1)
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] org-release-plan /migrations2/plan-org-release-tags: release plan contains 1 tag upgrades')
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/example: Created tag v1.3.0')
 })
 
 test('logs when the github worker reports no effective changes', async () => {
