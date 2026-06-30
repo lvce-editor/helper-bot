@@ -428,7 +428,7 @@ test('applies repo commands even when the artifact has no changed files', async 
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] made pr for lvce-editor/explorer-view /migrations2/modernize-branch-protection')
 })
 
-test('creates tag refs for upgrade entries in a scheduled org release plan artifact', async () => {
+test('creates tag refs for upgrade entries in a manually dispatched org release plan artifact', async () => {
   const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
     changedFiles: [],
     manifest: {
@@ -507,7 +507,7 @@ test('creates tag refs for upgrade entries in a scheduled org release plan artif
         },
       },
       workflow_run: {
-        event: 'schedule',
+        event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
         path: ORG_RELEASE_PLAN_WORKFLOW_PATH,
@@ -538,6 +538,49 @@ test('creates tag refs for upgrade entries in a scheduled org release plan artif
   expect(invokeGithubWorker).toHaveBeenCalledTimes(1)
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] org-release-plan /migrations2/plan-org-release-tags: release plan contains 1 tag upgrades')
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/example: Created tag v1.3.0')
+})
+
+test('ignores scheduled org release plan workflow runs', async () => {
+  const downloadMigrationArtifact = jest.fn() as any
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'schedule',
+        head_branch: 'main',
+        id: 123,
+        path: ORG_RELEASE_PLAN_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(downloadMigrationArtifact).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
 })
 
 test('logs when the github worker reports no effective changes', async () => {

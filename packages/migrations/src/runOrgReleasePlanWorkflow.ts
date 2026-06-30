@@ -1,8 +1,11 @@
+import { readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { planOrgReleaseTags } from './parts/PlanOrgReleaseTags/PlanOrgReleaseTags.ts'
 
 const MIGRATION_ID = '/migrations2/plan-org-release-tags'
+const defaultReleaseExcludedRepos = ['accounting', 'test-worker'] as const
+const dependenciesConfigUrl = new URL('../../app/dependencies.json', import.meta.url)
 
 const getRequiredEnv = (name: string): string => {
   const value = process.env[name]
@@ -17,15 +20,21 @@ const writeJson = async (outputDir: string, fileName: string, value: unknown): P
   await writeFile(join(outputDir, fileName), JSON.stringify(value, null, 2) + '\n')
 }
 
+const getReleaseExcludedRepos = (): readonly string[] => {
+  const content = readFileSync(dependenciesConfigUrl, 'utf8')
+  const config = JSON.parse(content)
+  return config.releaseExcludedRepos || defaultReleaseExcludedRepos
+}
+
 const outputDir = getRequiredEnv('MIGRATION_ARTIFACT_DIR')
 const requestId = getRequiredEnv('REQUEST_ID')
 const generatedAt = new Date().toISOString()
 
 try {
   const releasePlan = await planOrgReleaseTags({
+    excludedRepos: getReleaseExcludedRepos(),
     ...(process.env.GITHUB_TOKEN && { githubToken: process.env.GITHUB_TOKEN }),
     now: generatedAt,
-    owner: process.env.ORG_OWNER || 'lvce-editor',
   })
   await writeJson(outputDir, 'manifest.json', {
     artifactKind: 'org-release-plan',

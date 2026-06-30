@@ -89,7 +89,7 @@ const isAllowedWorkflowRun = (workflowRun: Readonly<{ event: string; path: strin
     return workflowRun.event === WORKFLOW_EVENT
   }
   if (workflowRun.path === ORG_RELEASE_PLAN_WORKFLOW_PATH) {
-    return workflowRun.event === 'schedule' || workflowRun.event === WORKFLOW_EVENT
+    return workflowRun.event === WORKFLOW_EVENT
   }
   return false
 }

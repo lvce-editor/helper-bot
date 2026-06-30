@@ -4,6 +4,7 @@ import type { MigrationResult } from '../Types/Types.ts'
 import { incrementMinorVersion } from '../IncrementMinorVersion/IncrementMinorVersion.ts'
 
 export interface PlanOrgReleaseTagsOptions {
+  readonly excludedRepos?: readonly string[]
   readonly githubToken?: string
   readonly lookbackHours?: number
   readonly now?: string
@@ -340,7 +341,8 @@ export const planOrgReleaseTags = async (options: Readonly<PlanOrgReleaseTagsOpt
   const generatedAt = options.now || new Date().toISOString()
   const since = new Date(Date.parse(generatedAt) - lookbackHours * 60 * 60 * 1000).toISOString()
   const octokit = createOctokit(options)
-  const repos = await listPublicRepositories(octokit, owner)
+  const excludedRepos = new Set(options.excludedRepos || [])
+  const repos = (await listPublicRepositories(octokit, owner)).filter((repo) => !excludedRepos.has(repo.name))
   const entries = await Promise.all(repos.map((repo) => planRepository(octokit, owner, repo, since)))
   const upgrade = entries.filter((entry) => entry.upgrade).length
   return {
