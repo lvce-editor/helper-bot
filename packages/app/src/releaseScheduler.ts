@@ -1,11 +1,10 @@
 import type { Probot } from 'probot'
 import { CronJob } from 'cron'
 import { captureException } from './errorHandling.ts'
+import { dispatchMigrationWorkflow } from './parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 
-const HELPER_BOT_OWNER = 'lvce-editor'
-const HELPER_BOT_REPO = 'helper-bot'
-const RELEASE_WORKFLOW_FILE_NAME = 'nightly-org-release-plan.yml'
-const WORKFLOW_REF = 'main'
+const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
+const ORG_RELEASE_PLAN_TARGET_REPOSITORY = 'lvce-editor/helper-bot'
 
 interface ReleaseCronConfig {
   readonly expression: string
@@ -37,17 +36,11 @@ export interface StartReleaseSchedulerOptions {
 }
 
 export const dispatchNightlyReleaseWorkflow = async (app: Probot): Promise<void> => {
-  const appOctokit = await app.auth()
-  const installation = await appOctokit.rest.apps.getRepoInstallation({
-    owner: HELPER_BOT_OWNER,
-    repo: HELPER_BOT_REPO,
-  })
-  const octokit = await app.auth(installation.data.id)
-  await octokit.rest.actions.createWorkflowDispatch({
-    owner: HELPER_BOT_OWNER,
-    ref: WORKFLOW_REF,
-    repo: HELPER_BOT_REPO,
-    workflow_id: RELEASE_WORKFLOW_FILE_NAME,
+  await dispatchMigrationWorkflow({
+    app,
+    migrationId: ORG_RELEASE_PLAN_MIGRATION_ID,
+    migrationOptions: {},
+    targetRepository: ORG_RELEASE_PLAN_TARGET_REPOSITORY,
   })
 }
 

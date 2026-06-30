@@ -8,6 +8,7 @@ export interface ArtifactManifest {
   readonly baseBranch?: string
   readonly branchName?: string
   readonly commitMessage?: string
+  readonly data?: any
   readonly deletedFiles?: readonly string[]
   readonly errorCode?: string
   readonly errorMessage?: string
@@ -83,6 +84,7 @@ const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Read
     ...(options.baseBranch && { baseBranch: options.baseBranch }),
     ...('branchName' in result && result.branchName && { branchName: result.branchName }),
     ...('commitMessage' in result && result.commitMessage && { commitMessage: result.commitMessage }),
+    ...('data' in result && result.data && { data: result.data }),
     ...(deletedFiles.length > 0 && { deletedFiles }),
     ...('errorCode' in result && result.errorCode && { errorCode: result.errorCode }),
     ...('errorMessage' in result && result.errorMessage && { errorMessage: result.errorMessage }),

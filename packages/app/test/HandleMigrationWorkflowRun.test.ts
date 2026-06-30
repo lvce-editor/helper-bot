@@ -11,7 +11,7 @@ beforeEach(() => {
 })
 
 const MIGRATION_WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
-const ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
+const OLD_ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
 
 afterEach(() => {
   jest.restoreAllMocks()
@@ -432,35 +432,40 @@ test('creates tag refs for upgrade entries in a manually dispatched org release 
   const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
     changedFiles: [],
     manifest: {
-      artifactKind: 'org-release-plan',
-      generatedAt: '2026-06-30T01:00:00.000Z',
+      data: {
+        releasePlan: {
+          entries: [
+            {
+              newTag: 'v1.3.0',
+              repository: 'lvce-editor/example',
+              targetSha: 'main-sha',
+              upgrade: true,
+            },
+            {
+              nonUpgradeReason: 'no recent commits',
+              repository: 'lvce-editor/skipped',
+              upgrade: false,
+            },
+            {
+              repository: 'lvce-editor/incomplete',
+              upgrade: true,
+            },
+          ],
+          generatedAt: '2026-06-30T01:00:00.000Z',
+          lookbackHours: 24,
+          owner: 'lvce-editor',
+          schemaVersion: 1,
+          summary: {
+            scanned: 3,
+            skipped: 1,
+            upgrade: 2,
+          },
+        },
+      },
       migrationId: '/migrations2/plan-org-release-tags',
       requestId: 'nightly-1',
       status: 'success',
-    },
-    releasePlan: {
-      entries: [
-        {
-          newTag: 'v1.3.0',
-          repository: 'lvce-editor/example',
-          targetSha: 'main-sha',
-          upgrade: true,
-        },
-        {
-          nonUpgradeReason: 'no recent commits',
-          repository: 'lvce-editor/skipped',
-          upgrade: false,
-        },
-      ],
-      generatedAt: '2026-06-30T01:00:00.000Z',
-      lookbackHours: 24,
-      owner: 'lvce-editor',
-      schemaVersion: 1,
-      summary: {
-        scanned: 2,
-        skipped: 1,
-        upgrade: 1,
-      },
+      targetRepository: 'lvce-editor/helper-bot',
     },
   })
   const invokeGithubWorker = (jest.fn() as any).mockResolvedValue({
@@ -510,7 +515,7 @@ test('creates tag refs for upgrade entries in a manually dispatched org release 
         event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        path: ORG_RELEASE_PLAN_WORKFLOW_PATH,
+        path: MIGRATION_WORKFLOW_PATH,
       },
     },
   }
@@ -536,11 +541,14 @@ test('creates tag refs for upgrade entries in a manually dispatched org release 
     tag: 'v1.3.0',
   })
   expect(invokeGithubWorker).toHaveBeenCalledTimes(1)
-  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] org-release-plan /migrations2/plan-org-release-tags: release plan contains 1 tag upgrades')
+  expect(infoSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/helper-bot /migrations2/plan-org-release-tags: release plan contains 2 tag upgrades',
+  )
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/example: Created tag v1.3.0')
+  expect(warnSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/incomplete: skipping incomplete release plan entry')
 })
 
-test('ignores scheduled org release plan workflow runs', async () => {
+test('ignores the old dedicated org release plan workflow', async () => {
   const downloadMigrationArtifact = jest.fn() as any
   const invokeGithubWorker = jest.fn() as any
   const app: any = {
@@ -562,10 +570,10 @@ test('ignores scheduled org release plan workflow runs', async () => {
         },
       },
       workflow_run: {
-        event: 'schedule',
+        event: 'workflow_dispatch',
         head_branch: 'main',
         id: 123,
-        path: ORG_RELEASE_PLAN_WORKFLOW_PATH,
+        path: OLD_ORG_RELEASE_PLAN_WORKFLOW_PATH,
       },
     },
   }

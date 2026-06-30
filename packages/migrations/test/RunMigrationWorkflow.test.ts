@@ -142,6 +142,10 @@ test('writes repo commands to the manifest', async () => {
   const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
 
   expect(JSON.parse(manifestContent)).toEqual({
+    data: {
+      branch: 'main',
+      message: 'Queued branch protection modernization',
+    },
     migrationId: '/migrations2/modernize-branch-protection',
     repoCommands: [
       {

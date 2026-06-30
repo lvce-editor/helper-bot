@@ -72,10 +72,18 @@ test('starts configured release cron in production and dispatches the nightly wo
   })
   expect(app.auth).toHaveBeenCalledWith(77)
   expect(createWorkflowDispatch).toHaveBeenCalledWith({
+    inputs: {
+      baseBranch: 'main',
+      migrationId: '/migrations2/plan-org-release-tags',
+      migrationOptionsJson: '{}',
+      requestId: expect.any(String),
+      runName: 'migration-on-demand/helper-bot/plan-org-release-tags',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
     owner: 'lvce-editor',
     ref: 'main',
     repo: 'helper-bot',
-    workflow_id: 'nightly-org-release-plan.yml',
+    workflow_id: 'run-migration-on-demand.yml',
   })
   expect(logger.error).not.toHaveBeenCalled()
 })

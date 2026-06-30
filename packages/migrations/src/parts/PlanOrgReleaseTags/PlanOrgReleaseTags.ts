@@ -1,5 +1,6 @@
 import type { Octokit } from '@octokit/rest'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
+import { readFileSync } from 'node:fs'
 import type { MigrationResult } from '../Types/Types.ts'
 import { incrementMinorVersion } from '../IncrementMinorVersion/IncrementMinorVersion.ts'
 
@@ -64,6 +65,8 @@ interface SemverTag {
 
 const DEFAULT_OWNER = 'lvce-editor'
 const DEFAULT_LOOKBACK_HOURS = 24
+const defaultReleaseExcludedRepos = ['accounting', 'test-worker'] as const
+const dependenciesConfigUrl = new URL('../../../../app/dependencies.json', import.meta.url)
 const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml'
 const FAILED_RELEASE_CONCLUSIONS = new Set(['action_required', 'cancelled', 'failure', 'startup_failure', 'timed_out'])
 
@@ -74,6 +77,16 @@ const createOctokit = (options: Readonly<PlanOrgReleaseTagsOptions>): Octokit =>
   return new OctokitCtor({
     ...(options.githubToken && { auth: options.githubToken }),
   })
+}
+
+const getReleaseExcludedRepos = (): readonly string[] => {
+  try {
+    const content = readFileSync(dependenciesConfigUrl, 'utf8')
+    const config = JSON.parse(content)
+    return config.releaseExcludedRepos || defaultReleaseExcludedRepos
+  } catch {
+    return defaultReleaseExcludedRepos
+  }
 }
 
 const getErrorMessage = (error: unknown): string => {
@@ -341,7 +354,7 @@ export const planOrgReleaseTags = async (options: Readonly<PlanOrgReleaseTagsOpt
   const generatedAt = options.now || new Date().toISOString()
   const since = new Date(Date.parse(generatedAt) - lookbackHours * 60 * 60 * 1000).toISOString()
   const octokit = createOctokit(options)
-  const excludedRepos = new Set(options.excludedRepos || [])
+  const excludedRepos = new Set(options.excludedRepos || getReleaseExcludedRepos())
   const publicRepos = await listPublicRepositories(octokit, owner)
   const repos = publicRepos.filter((repo) => !excludedRepos.has(repo.name))
   const entries = await Promise.all(repos.map((repo) => planRepository(octokit, owner, repo, since)))

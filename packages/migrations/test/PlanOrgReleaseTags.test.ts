@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals'
-import { planOrgReleaseTags, type ReleasePlan } from '../src/parts/PlanOrgReleaseTags/PlanOrgReleaseTags.ts'
+import { planOrgReleaseTags, planOrgReleaseTagsMigration, type ReleasePlan } from '../src/parts/PlanOrgReleaseTags/PlanOrgReleaseTags.ts'
 
 const createMockOctokitConstructor = (request: (route: string, options: any) => Promise<any>): any => {
   return class {
@@ -324,4 +324,38 @@ test('skips archived, disabled, and fork repositories', async () => {
       upgrade: false,
     },
   ])
+})
+
+test('returns the release plan as migration result data', async () => {
+  const repo = createRepo('example')
+  const request = createPlannerRequest(repo)
+  const OctokitConstructor = createMockOctokitConstructor(request)
+
+  const result = await planOrgReleaseTagsMigration({
+    now: '2026-06-30T01:00:00.000Z',
+    OctokitConstructor,
+  })
+
+  expect(result).toMatchObject({
+    changedFiles: [],
+    data: {
+      releasePlan: {
+        entries: [
+          {
+            newTag: 'v1.3.0',
+            repository: 'lvce-editor/example',
+            targetSha: 'main-sha',
+            upgrade: true,
+          },
+        ],
+        generatedAt: '2026-06-30T01:00:00.000Z',
+        summary: {
+          scanned: 1,
+          skipped: 0,
+          upgrade: 1,
+        },
+      },
+    },
+    status: 'success',
+  })
 })
