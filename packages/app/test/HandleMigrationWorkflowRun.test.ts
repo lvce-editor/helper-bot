@@ -667,6 +667,70 @@ test('ignores the old dedicated org release plan workflow', async () => {
   expect(invokeGithubWorker).not.toHaveBeenCalled()
 })
 
+test('ignores dry run migration artifacts without applying migration results', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [
+      {
+        content: 'new content',
+        path: 'file.txt',
+      },
+    ],
+    manifest: {
+      baseBranch: 'main',
+      branchName: 'feature/update-dependencies',
+      commitMessage: 'chore: update dependencies',
+      dryRun: true,
+      migrationId: '/migrations2/update-dependencies',
+      pullRequestTitle: 'chore: update dependencies',
+      requestId: 'request-dry-run',
+      status: 'success',
+      targetRepository: 'lvce-editor/explorer-view',
+    },
+  })
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(app.auth).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
+  expect(infoSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/explorer-view /migrations2/update-dependencies: dry run requested; ignoring migration result',
+  )
+})
+
 test('logs when the github worker reports no effective changes', async () => {
   const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
     changedFiles: [

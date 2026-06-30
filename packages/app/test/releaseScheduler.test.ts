@@ -74,6 +74,7 @@ test('starts configured release cron in production and dispatches the nightly wo
   expect(createWorkflowDispatch).toHaveBeenCalledWith({
     inputs: {
       baseBranch: 'main',
+      dryRun: 'false',
       migrationId: '/migrations2/plan-org-release-tags',
       migrationOptionsJson: '{}',
       requestId: expect.any(String),
