@@ -3,7 +3,7 @@
     "expression": "0 3 * * *",
     "timezone": "Europe/Berlin"
   },
-  "releaseExcludedRepos": ["accounting", "test-worker"],
+  "releaseExcludedRepos": ["test-worker", "lvce-editor.github.io", "lvce-editor"],
   "dependencies": [
     {
       "fromRepo": "test-worker",
