@@ -11,7 +11,7 @@ const WORKFLOW_EVENT = 'workflow_dispatch'
 // @ts-ignore
 const WORKFLOW_BRANCH = 'main'
 const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
-const ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
+const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
@@ -85,13 +85,7 @@ const getInstallationToken = async (app: Probot, owner: string, repo: string): P
 }
 
 const isAllowedWorkflowRun = (workflowRun: Readonly<{ event: string; path: string }>): boolean => {
-  if (workflowRun.path === WORKFLOW_PATH) {
-    return workflowRun.event === WORKFLOW_EVENT
-  }
-  if (workflowRun.path === ORG_RELEASE_PLAN_WORKFLOW_PATH) {
-    return workflowRun.event === WORKFLOW_EVENT
-  }
-  return false
+  return workflowRun.path === WORKFLOW_PATH && workflowRun.event === WORKFLOW_EVENT
 }
 
 export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleMigrationWorkflowRunOptions>) => {
@@ -126,12 +120,17 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         )
         return
       }
-      if (artifact.manifest.artifactKind === 'org-release-plan') {
-        if (!artifact.releasePlan) {
-          logger.warn(`${LOG_PREFIX} ${migrationLabel}: org release plan artifact is missing release-plan.json`)
+      if (artifact.manifest.dryRun) {
+        logger.info(`${LOG_PREFIX} ${migrationLabel}: dry run requested; ignoring migration result`)
+        return
+      }
+      if (artifact.manifest.migrationId === ORG_RELEASE_PLAN_MIGRATION_ID) {
+        const releasePlan = artifact.manifest.data?.releasePlan
+        if (!releasePlan) {
+          logger.warn(`${LOG_PREFIX} ${migrationLabel}: org release plan artifact is missing data.releasePlan`)
           return
         }
-        const upgradeEntries = artifact.releasePlan.entries.filter((entry) => entry.upgrade)
+        const upgradeEntries = releasePlan.entries.filter((entry: any) => entry.upgrade)
         logger.info(`${LOG_PREFIX} ${migrationLabel}: release plan contains ${upgradeEntries.length} tag upgrades`)
         for (const entry of upgradeEntries) {
           try {

@@ -21,7 +21,6 @@ const locations: string[] = [
   '.github/workflows/pr.yml',
   '.github/workflows/ci.yml',
   '.github/workflows/release.yml',
-  '.github/workflows/nightly-org-release-plan.yml',
   'packages/build/src/computeNodeModulesCacheKey.ts',
 ]
 

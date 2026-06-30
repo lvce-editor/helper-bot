@@ -10,6 +10,7 @@ const getRequiredEnv = (name: string): string => {
 
 const result = await runMigrationWorkflow({
   ...(process.env.BASE_BRANCH && { baseBranch: process.env.BASE_BRANCH }),
+  dryRun: process.env.DRY_RUN === 'true',
   ...(process.env.GITHUB_TOKEN && { githubToken: process.env.GITHUB_TOKEN }),
   migrationId: getRequiredEnv('MIGRATION_ID'),
   ...(process.env.MIGRATION_OPTIONS_JSON && { migrationOptionsJson: process.env.MIGRATION_OPTIONS_JSON }),

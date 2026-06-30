@@ -110,6 +110,70 @@ test('does not log the raw request body', async () => {
   consoleLog.mockRestore()
 })
 
+test('passes dry run as dispatch metadata instead of a migration option', async () => {
+  const response = createResponse()
+  const handler = createMigrations2Handler({
+    app: {} as any,
+    secret: 'top-secret',
+  })
+
+  await handler(
+    {
+      body: {
+        dryRun: true,
+        releasedTag: 'v1.0.0',
+        repository: 'lvce-editor/example-repo',
+      },
+      headers: {
+        authorization: 'Bearer top-secret',
+      },
+      path: '/migrations2/update-website-config',
+    } as any,
+    response,
+  )
+
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app: {},
+    baseBranch: 'main',
+    dryRun: true,
+    migrationId: '/migrations2/update-website-config',
+    migrationOptions: {
+      releasedTag: 'v1.0.0',
+    },
+    targetRepository: 'lvce-editor/example-repo',
+  })
+  expect(response.status).toHaveBeenCalledWith(202)
+})
+
+test('rejects non-boolean dry run values', async () => {
+  const response = createResponse()
+  const handler = createMigrations2Handler({
+    app: {} as any,
+    secret: 'top-secret',
+  })
+
+  await handler(
+    {
+      body: {
+        dryRun: 'true',
+        repository: 'lvce-editor/example-repo',
+      },
+      headers: {
+        authorization: 'Bearer top-secret',
+      },
+      path: '/migrations2/update-website-config',
+    } as any,
+    response,
+  )
+
+  expect(response.status).toHaveBeenCalledWith(400)
+  expect(response.json).toHaveBeenCalledWith({
+    code: 'INVALID_DRY_RUN',
+    error: 'Invalid dryRun parameter',
+  })
+  expect(mockDispatchMigrationWorkflow).not.toHaveBeenCalled()
+})
+
 test('returns a dedicated error when GitHub Actions is unavailable', async () => {
   const response = createResponse()
   const handler = createMigrations2Handler({

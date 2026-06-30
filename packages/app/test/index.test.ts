@@ -189,6 +189,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       {
         inputs: {
           baseBranch: 'main',
+          dryRun: 'false',
           migrationId: '/migrations2/update-specific-dependency',
           migrationOptionsJson:
             '{"asName":"@lvce-editor/server","fromRepo":"lvce-editor","tagName":"v1.0.0","toFolder":"packages/server","toRepo":"editor-worker"}',
@@ -201,6 +202,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       {
         inputs: {
           baseBranch: 'main',
+          dryRun: 'false',
           migrationId: '/migrations2/update-specific-dependency',
           migrationOptionsJson:
             '{"asName":"@lvce-editor/server","fromRepo":"lvce-editor","tagName":"v1.0.0","toFolder":"packages/server","toRepo":"main-area-worker"}',
@@ -213,6 +215,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       {
         inputs: {
           baseBranch: 'main',
+          dryRun: 'false',
           migrationId: '/migrations2/update-website-config',
           migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
           requestId: expect.any(String),

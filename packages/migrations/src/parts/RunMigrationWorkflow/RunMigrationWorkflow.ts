@@ -8,7 +8,9 @@ export interface ArtifactManifest {
   readonly baseBranch?: string
   readonly branchName?: string
   readonly commitMessage?: string
+  readonly data?: any
   readonly deletedFiles?: readonly string[]
+  readonly dryRun?: boolean
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly migrationId: string
@@ -21,6 +23,7 @@ export interface ArtifactManifest {
 
 export interface RunMigrationWorkflowOptions {
   readonly baseBranch?: string
+  readonly dryRun?: boolean
   readonly githubToken?: string
   readonly invokeMigration?: (migrationId: string, options: Record<string, any>) => Promise<MigrationResult>
   readonly migrationId: string
@@ -83,7 +86,9 @@ const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Read
     ...(options.baseBranch && { baseBranch: options.baseBranch }),
     ...('branchName' in result && result.branchName && { branchName: result.branchName }),
     ...('commitMessage' in result && result.commitMessage && { commitMessage: result.commitMessage }),
+    ...('data' in result && result.data && { data: result.data }),
     ...(deletedFiles.length > 0 && { deletedFiles }),
+    ...(options.dryRun && { dryRun: true }),
     ...('errorCode' in result && result.errorCode && { errorCode: result.errorCode }),
     ...('errorMessage' in result && result.errorMessage && { errorMessage: result.errorMessage }),
     migrationId: options.migrationId,
