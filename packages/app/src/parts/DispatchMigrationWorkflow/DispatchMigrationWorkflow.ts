@@ -24,6 +24,7 @@ const getRunName = (targetRepository: string, migrationId: string): string => {
 export interface DispatchMigrationWorkflowOptions {
   readonly app: Probot
   readonly baseBranch?: string
+  readonly dryRun?: boolean
   readonly migrationId: string
   readonly migrationOptions: Record<string, any>
   readonly requestId?: string
@@ -51,6 +52,7 @@ export const dispatchMigrationWorkflow = async (options: Readonly<DispatchMigrat
   await octokit.rest.actions.createWorkflowDispatch({
     inputs: {
       baseBranch: options.baseBranch || 'main',
+      dryRun: options.dryRun ? 'true' : 'false',
       migrationId: options.migrationId,
       migrationOptionsJson: JSON.stringify(options.migrationOptions),
       requestId,

@@ -159,6 +159,32 @@ test('writes repo commands to the manifest', async () => {
   })
 })
 
+test('writes dry run metadata to the manifest', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+  const calls: Array<[string, Record<string, any>]> = []
+  const invokeMigration = createInvokeMigration(calls)
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    dryRun: true,
+    invokeMigration,
+    migrationId: '/migrations2/update-website-config',
+    outputDir,
+    requestId: 'request-dry-run',
+    targetRepository: 'lvce-editor/lvce-editor.github.io',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+
+  expect(JSON.parse(manifestContent)).toMatchObject({
+    dryRun: true,
+    migrationId: '/migrations2/update-website-config',
+    requestId: 'request-dry-run',
+    status: 'success',
+    targetRepository: 'lvce-editor/lvce-editor.github.io',
+  })
+})
+
 test('writes an error manifest when the target repository is outside lvce-editor', async () => {
   const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
 

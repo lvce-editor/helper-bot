@@ -45,6 +45,7 @@ test('dispatches the on-demand migration workflow in the helper-bot repository',
   expect(createWorkflowDispatch).toHaveBeenCalledWith({
     inputs: {
       baseBranch: 'main',
+      dryRun: 'false',
       migrationId: '/migrations2/update-website-config',
       migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
       requestId: 'request-1',
@@ -58,6 +59,59 @@ test('dispatches the on-demand migration workflow in the helper-bot repository',
   })
   expect(result).toEqual({
     requestId: 'request-1',
+  })
+})
+
+test('dispatches the on-demand migration workflow as a dry run', async () => {
+  const getRepoInstallation = jest.fn().mockResolvedValue({
+    data: {
+      id: 42,
+    },
+  })
+  const createWorkflowDispatch = jest.fn().mockResolvedValue({})
+  const app: any = {
+    auth: jest
+      .fn()
+      .mockResolvedValueOnce({
+        rest: {
+          apps: {
+            getRepoInstallation,
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        rest: {
+          actions: {
+            createWorkflowDispatch,
+          },
+        },
+      }),
+  }
+
+  const { dispatchMigrationWorkflow } = await import('../src/parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts')
+  await dispatchMigrationWorkflow({
+    app,
+    dryRun: true,
+    migrationId: '/migrations2/plan-org-release-tags',
+    migrationOptions: {},
+    requestId: 'request-dry-run',
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+
+  expect(createWorkflowDispatch).toHaveBeenCalledWith({
+    inputs: {
+      baseBranch: 'main',
+      dryRun: 'true',
+      migrationId: '/migrations2/plan-org-release-tags',
+      migrationOptionsJson: '{}',
+      requestId: 'request-dry-run',
+      runName: 'migration-on-demand/helper-bot/plan-org-release-tags',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
+    owner: 'lvce-editor',
+    ref: 'main',
+    repo: 'helper-bot',
+    workflow_id: 'run-migration-on-demand.yml',
   })
 })
 

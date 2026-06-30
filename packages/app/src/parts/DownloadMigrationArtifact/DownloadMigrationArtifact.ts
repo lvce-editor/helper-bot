@@ -10,6 +10,7 @@ export interface ArtifactManifest {
   readonly commitMessage?: string
   readonly data?: any
   readonly deletedFiles?: readonly string[]
+  readonly dryRun?: boolean
   readonly errorCode?: string
   readonly errorMessage?: string
   readonly migrationId: string

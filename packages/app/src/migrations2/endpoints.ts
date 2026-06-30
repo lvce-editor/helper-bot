@@ -85,8 +85,8 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
 
     try {
       const commandKey = req.path
-      const { baseBranch } = body
-      const migrationOptions = Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'baseBranch' && key !== 'repository'))
+      const { baseBranch, dryRun } = body
+      const migrationOptions = Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'baseBranch' && key !== 'dryRun' && key !== 'repository'))
       if (baseBranch !== undefined && (typeof baseBranch !== 'string' || !isValidBaseBranch(baseBranch))) {
         res.status(400).json({
           code: 'INVALID_BASE_BRANCH',
@@ -94,10 +94,18 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
         })
         return
       }
+      if (dryRun !== undefined && typeof dryRun !== 'boolean') {
+        res.status(400).json({
+          code: 'INVALID_DRY_RUN',
+          error: 'Invalid dryRun parameter',
+        })
+        return
+      }
       assertSafeMigrationOptions(migrationOptions)
       const dispatchResult = await dispatchMigrationWorkflow({
         app,
         baseBranch: baseBranch || 'main',
+        dryRun: dryRun || false,
         migrationId: commandKey,
         migrationOptions,
         targetRepository: repository,

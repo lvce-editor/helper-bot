@@ -120,6 +120,10 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         )
         return
       }
+      if (artifact.manifest.dryRun) {
+        logger.info(`${LOG_PREFIX} ${migrationLabel}: dry run requested; ignoring migration result`)
+        return
+      }
       if (artifact.manifest.migrationId === ORG_RELEASE_PLAN_MIGRATION_ID) {
         const releasePlan = artifact.manifest.data?.releasePlan
         if (!releasePlan) {

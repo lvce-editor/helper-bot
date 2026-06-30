@@ -27,6 +27,11 @@ on:
         required: false
         default: main
         type: string
+      dryRun:
+        description: Whether to ignore the migration result after the workflow completes
+        required: false
+        default: false
+        type: boolean
       migrationOptionsJson:
         description: JSON string with migration options
         required: false
@@ -59,6 +64,7 @@ jobs:
       - name: Run migration
         env:
           BASE_BRANCH: ${{ inputs.baseBranch }}
+          DRY_RUN: ${{ inputs.dryRun }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MIGRATION_ARTIFACT_DIR: ${{ runner.temp }}/migration-result-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.requestId }}
           MIGRATION_ID: ${{ inputs.migrationId }}
