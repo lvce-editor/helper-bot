@@ -16,6 +16,8 @@ export interface ArtifactManifest {
   readonly migrationId: string
   readonly pullRequestTitle?: string
   readonly repoCommands?: readonly RepoCommand[]
+  readonly repositoriesNotToUpgrade?: readonly string[]
+  readonly repositoriesToUpgrade?: readonly string[]
   readonly requestId: string
   readonly status: 'error' | 'success'
   readonly targetRepository: string
@@ -80,13 +82,27 @@ const invokeMigrationCommand = async (migrationId: string, options: Record<strin
   return result as MigrationResult
 }
 
+const getReleasePlanRepositoryGroups = (data: any): Pick<ArtifactManifest, 'repositoriesNotToUpgrade' | 'repositoriesToUpgrade'> => {
+  const entries = data?.releasePlan?.entries
+  if (!Array.isArray(entries)) {
+    return {}
+  }
+  return {
+    repositoriesNotToUpgrade: entries.filter((entry: any) => entry.upgrade !== true).map((entry: any) => entry.repository),
+    repositoriesToUpgrade: entries.filter((entry: any) => entry.upgrade === true).map((entry: any) => entry.repository),
+  }
+}
+
 const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Readonly<MigrationResult>): ArtifactManifest => {
   const deletedFiles = result.changedFiles.filter((changedFile) => changedFile.type === 'deleted').map((changedFile) => changedFile.path)
+  const data = 'data' in result && result.data ? result.data : undefined
+  const releasePlanRepositoryGroups = getReleasePlanRepositoryGroups(data)
   return {
+    ...('repositoriesToUpgrade' in releasePlanRepositoryGroups && { repositoriesToUpgrade: releasePlanRepositoryGroups.repositoriesToUpgrade }),
     ...(options.baseBranch && { baseBranch: options.baseBranch }),
     ...('branchName' in result && result.branchName && { branchName: result.branchName }),
     ...('commitMessage' in result && result.commitMessage && { commitMessage: result.commitMessage }),
-    ...('data' in result && result.data && { data: result.data }),
+    ...(data && { data }),
     ...(deletedFiles.length > 0 && { deletedFiles }),
     ...(options.dryRun && { dryRun: true }),
     ...('errorCode' in result && result.errorCode && { errorCode: result.errorCode }),
@@ -97,6 +113,7 @@ const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Read
     requestId: options.requestId,
     status: result.status,
     targetRepository: options.targetRepository,
+    ...('repositoriesNotToUpgrade' in releasePlanRepositoryGroups && { repositoriesNotToUpgrade: releasePlanRepositoryGroups.repositoriesNotToUpgrade }),
   }
 }
 

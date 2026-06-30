@@ -185,6 +185,68 @@ test('writes dry run metadata to the manifest', async () => {
   })
 })
 
+test('writes release plan repository summary arrays to the manifest', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    invokeMigration: async (): Promise<MigrationResult> => {
+      return {
+        changedFiles: [],
+        data: {
+          releasePlan: {
+            entries: [
+              {
+                repository: 'lvce-editor/prettier',
+                upgrade: true,
+              },
+              {
+                nonUpgradeReason: 'no recent commits',
+                repository: 'lvce-editor/theme-ayu',
+                upgrade: false,
+              },
+              {
+                repository: 'lvce-editor/git',
+                upgrade: true,
+              },
+            ],
+            generatedAt: '2026-06-30T01:00:00.000Z',
+            lookbackHours: 24,
+            owner: 'lvce-editor',
+            schemaVersion: 1,
+            summary: {
+              scanned: 3,
+              skipped: 1,
+              upgrade: 2,
+            },
+          },
+        },
+        pullRequestTitle: 'plan-org-release-tags',
+        status: 'success',
+        statusCode: 200,
+      }
+    },
+    migrationId: '/migrations2/plan-org-release-tags',
+    outputDir,
+    requestId: 'request-release-plan',
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+  const manifest = JSON.parse(manifestContent)
+
+  expect(Object.keys(manifest).at(0)).toBe('repositoriesToUpgrade')
+  expect(Object.keys(manifest).at(-1)).toBe('repositoriesNotToUpgrade')
+  expect(manifest.repositoriesToUpgrade).toEqual(['lvce-editor/prettier', 'lvce-editor/git'])
+  expect(manifest.repositoriesNotToUpgrade).toEqual(['lvce-editor/theme-ayu'])
+  expect(manifest.repositoriesToUpgrade).toEqual(
+    manifest.data.releasePlan.entries.filter((entry: any) => entry.upgrade === true).map((entry: any) => entry.repository),
+  )
+  expect(manifest.repositoriesNotToUpgrade).toEqual(
+    manifest.data.releasePlan.entries.filter((entry: any) => entry.upgrade !== true).map((entry: any) => entry.repository),
+  )
+})
+
 test('writes an error manifest when the target repository is outside lvce-editor', async () => {
   const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
 
