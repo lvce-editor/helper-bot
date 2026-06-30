@@ -95,6 +95,7 @@ test('creates a pull request to update versions when a release is created', asyn
     {
       inputs: {
         baseBranch: 'main',
+        dryRun: 'false',
         migrationId: '/migrations2/update-specific-dependency',
         migrationOptionsJson: '{"fromRepo":"renderer-process","tagName":"v2.4.0","toFolder":"packages/renderer-worker","toRepo":"lvce-editor"}',
         requestId: expect.any(String),
