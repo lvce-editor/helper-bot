@@ -1,4 +1,9 @@
 {
+  "releaseCron": {
+    "expression": "0 3 * * *",
+    "timezone": "Europe/Berlin"
+  },
+  "releaseExcludedRepos": ["accounting", "test-worker"],
   "dependencies": [
     {
       "fromRepo": "test-worker",

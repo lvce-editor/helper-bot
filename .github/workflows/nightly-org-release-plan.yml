@@ -3,10 +3,8 @@ name: nightly-org-release-plan
 run-name: nightly-org-release-plan
 
 on:
-  schedule:
-    - cron: '0 3 * * *'
-      timezone: Europe/Berlin
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs: {}
 
 permissions:
   actions: read

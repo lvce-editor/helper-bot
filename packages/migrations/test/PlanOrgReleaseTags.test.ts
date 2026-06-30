@@ -23,10 +23,14 @@ const createRepo = (name: string, options: Record<string, any> = {}): any => {
 }
 
 const createPlannerRequest = (repo: any, options: Record<string, any> = {}) => {
-  return async (route: string): Promise<any> => {
+  return async (route: string, requestOptions: any = {}): Promise<any> => {
     if (route === 'GET /orgs/{org}/repos') {
+      expect(requestOptions).toMatchObject({
+        org: 'lvce-editor',
+        type: 'public',
+      })
       return {
-        data: [repo],
+        data: options.repos || [repo],
       }
     }
     if (route === 'GET /repos/{owner}/{repo}/branches/{branch}') {
@@ -140,6 +144,53 @@ test('plans a minor tag upgrade for a repo with recent commits since latest semv
       skipped: 0,
       upgrade: 1,
     },
+  })
+})
+
+test('lists public lvce-editor repositories', async () => {
+  let listOptions: any
+  const request = async (route: string, options: any): Promise<any> => {
+    if (route === 'GET /orgs/{org}/repos') {
+      listOptions = options
+      return {
+        data: [],
+      }
+    }
+    throw new Error(`Unexpected route: ${route}`)
+  }
+  const OctokitConstructor = createMockOctokitConstructor(request)
+
+  const plan = await planOrgReleaseTags({
+    now: '2026-06-30T01:00:00.000Z',
+    OctokitConstructor,
+  })
+
+  expect(listOptions).toMatchObject({
+    org: 'lvce-editor',
+    type: 'public',
+  })
+  expect(plan.summary.scanned).toBe(0)
+})
+
+test('filters configured excluded repositories before planning', async () => {
+  const repo = createRepo('example')
+  const request = createPlannerRequest(repo, {
+    repos: [createRepo('accounting'), repo, createRepo('test-worker')],
+  })
+  const OctokitConstructor = createMockOctokitConstructor(request)
+
+  const plan = await planOrgReleaseTags({
+    excludedRepos: ['accounting', 'test-worker'],
+    now: '2026-06-30T01:00:00.000Z',
+    OctokitConstructor,
+  })
+
+  expect(plan.entries).toHaveLength(1)
+  expect(plan.entries[0].repository).toBe('lvce-editor/example')
+  expect(plan.summary).toEqual({
+    scanned: 1,
+    skipped: 0,
+    upgrade: 1,
   })
 })
 
