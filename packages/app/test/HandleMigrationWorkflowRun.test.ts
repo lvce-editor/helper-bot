@@ -548,6 +548,82 @@ test('creates tag refs for upgrade entries in a manually dispatched org release 
   expect(warnSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/incomplete: skipping incomplete release plan entry')
 })
 
+test('ignores dry run org release plan artifacts without creating tag refs', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      data: {
+        releasePlan: {
+          entries: [
+            {
+              newTag: 'v1.3.0',
+              repository: 'lvce-editor/example',
+              targetSha: 'main-sha',
+              upgrade: true,
+            },
+          ],
+          generatedAt: '2026-06-30T01:00:00.000Z',
+          lookbackHours: 24,
+          owner: 'lvce-editor',
+          schemaVersion: 1,
+          summary: {
+            scanned: 1,
+            skipped: 0,
+            upgrade: 1,
+          },
+        },
+      },
+      dryRun: true,
+      migrationId: '/migrations2/plan-org-release-tags',
+      requestId: 'nightly-dry-run',
+      status: 'success',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
+  })
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(app.auth).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
+  expect(infoSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/helper-bot /migrations2/plan-org-release-tags: dry run requested; ignoring migration result',
+  )
+})
+
 test('ignores the old dedicated org release plan workflow', async () => {
   const downloadMigrationArtifact = jest.fn() as any
   const invokeGithubWorker = jest.fn() as any
