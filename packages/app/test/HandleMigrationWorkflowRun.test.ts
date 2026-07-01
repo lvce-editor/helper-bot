@@ -11,6 +11,7 @@ beforeEach(() => {
 })
 
 const MIGRATION_WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
+const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
 const OLD_ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
 
 afterEach(() => {
@@ -172,6 +173,109 @@ test('ignores unrelated workflow runs', async () => {
 
   await handleMigrationWorkflowRun(context)
 
+  expect(downloadMigrationArtifact).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
+})
+
+test('dispatches org release plan migration when the request workflow completes successfully', async () => {
+  const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({
+    requestId: 'request-release-plan',
+  })
+  const downloadMigrationArtifact = jest.fn() as any
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        conclusion: 'success',
+        event: 'schedule',
+        head_branch: 'main',
+        id: 123,
+        path: ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/plan-org-release-tags',
+    migrationOptions: {},
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+  expect(downloadMigrationArtifact).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] received completed org release plan request workflow webhook for run 123')
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] dispatched org release plan migration workflow')
+})
+
+test('ignores unsuccessful org release plan request workflow runs', async () => {
+  const dispatchMigrationWorkflow = jest.fn() as any
+  const downloadMigrationArtifact = jest.fn() as any
+  const invokeGithubWorker = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        conclusion: 'failure',
+        event: 'schedule',
+        head_branch: 'main',
+        id: 123,
+        path: ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).not.toHaveBeenCalled()
   expect(downloadMigrationArtifact).not.toHaveBeenCalled()
   expect(invokeGithubWorker).not.toHaveBeenCalled()
 })

@@ -1,0 +1,21 @@
+# eslint-disable github-actions/on
+name: request-org-release-plan
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 1 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: request-org-release-plan
+  cancel-in-progress: false
+
+jobs:
+  request:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - run: echo "Requesting org release plan migration"
