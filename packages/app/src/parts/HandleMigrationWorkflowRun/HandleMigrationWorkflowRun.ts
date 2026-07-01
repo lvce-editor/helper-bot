@@ -1,6 +1,7 @@
 import type { Context, Probot } from 'probot'
 import { captureException } from '../../errorHandling.ts'
 import * as GithubWorker from '../../githubWorker.ts'
+import { dispatchMigrationWorkflow } from '../DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 import { downloadMigrationArtifact } from '../DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
 import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
 
@@ -12,10 +13,13 @@ const WORKFLOW_EVENT = 'workflow_dispatch'
 const WORKFLOW_BRANCH = 'main'
 const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
 const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
+const UPDATE_ALL_DEPENDENCIES_MIGRATION_ID = '/migrations2/update-all-dependencies'
+const UPDATE_RECENT_MIGRATION_ID = '/migrations2/update-recent'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
   readonly app: Probot
+  readonly dispatchMigrationWorkflow?: typeof dispatchMigrationWorkflow
   readonly downloadMigrationArtifact?: typeof downloadMigrationArtifact
   readonly invokeGithubWorker?: typeof GithubWorker.invoke
   readonly processInBackground?: boolean
@@ -89,6 +93,7 @@ const isAllowedWorkflowRun = (workflowRun: Readonly<{ event: string; path: strin
 }
 
 export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleMigrationWorkflowRunOptions>) => {
+  const dispatchWorkflow = options.dispatchMigrationWorkflow || dispatchMigrationWorkflow
   const downloadArtifact = options.downloadMigrationArtifact || downloadMigrationArtifact
   const invokeGithubWorker = options.invokeGithubWorker || GithubWorker.invoke
 
@@ -154,6 +159,35 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
             logger.info(`${LOG_PREFIX} ${entry.repository}: ${workerData?.message || `processed tag ${entry.newTag}`}`)
           } catch (error) {
             logger.error(`${LOG_PREFIX} failed to create release tag for ${entry.repository}`, error)
+            captureException(error as Error)
+          }
+        }
+        return
+      }
+      if (artifact.manifest.migrationId === UPDATE_RECENT_MIGRATION_ID) {
+        const updateRecent = artifact.manifest.data?.updateRecent
+        const repositories = updateRecent?.repositories
+        if (!Array.isArray(repositories)) {
+          logger.warn(`${LOG_PREFIX} ${migrationLabel}: update-recent artifact is missing data.updateRecent.repositories`)
+          return
+        }
+        logger.info(`${LOG_PREFIX} ${migrationLabel}: update-recent contains ${repositories.length} repositories`)
+        for (const repository of repositories) {
+          try {
+            if (typeof repository !== 'string') {
+              logger.warn(`${LOG_PREFIX} ${migrationLabel}: skipping invalid update-recent repository`)
+              continue
+            }
+            assertAllowedTargetRepository(repository)
+            await dispatchWorkflow({
+              app: options.app,
+              migrationId: UPDATE_ALL_DEPENDENCIES_MIGRATION_ID,
+              migrationOptions: {},
+              targetRepository: repository,
+            })
+            logger.info(`${LOG_PREFIX} ${repository}: dispatched update-all-dependencies`)
+          } catch (error) {
+            logger.error(`${LOG_PREFIX} failed to dispatch update-all-dependencies for ${repository}`, error)
             captureException(error as Error)
           }
         }

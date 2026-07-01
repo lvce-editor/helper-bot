@@ -247,6 +247,64 @@ test('writes release plan repository summary arrays to the manifest', async () =
   )
 })
 
+test('writes update-recent data to the manifest', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    invokeMigration: async (): Promise<MigrationResult> => {
+      return {
+        changedFiles: [],
+        data: {
+          updateRecent: {
+            generatedAt: '2026-07-01T12:00:00.000Z',
+            lookbackHours: 48,
+            owner: 'lvce-editor',
+            repositories: ['lvce-editor/recent'],
+            schemaVersion: 1,
+            summary: {
+              recent: 1,
+              scanned: 2,
+              skipped: 0,
+            },
+          },
+        },
+        pullRequestTitle: 'update-recent',
+        status: 'success',
+        statusCode: 200,
+      }
+    },
+    migrationId: '/migrations2/update-recent',
+    outputDir,
+    requestId: 'request-update-recent',
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+
+  expect(JSON.parse(manifestContent)).toEqual({
+    data: {
+      updateRecent: {
+        generatedAt: '2026-07-01T12:00:00.000Z',
+        lookbackHours: 48,
+        owner: 'lvce-editor',
+        repositories: ['lvce-editor/recent'],
+        schemaVersion: 1,
+        summary: {
+          recent: 1,
+          scanned: 2,
+          skipped: 0,
+        },
+      },
+    },
+    migrationId: '/migrations2/update-recent',
+    pullRequestTitle: 'update-recent',
+    requestId: 'request-update-recent',
+    status: 'success',
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+})
+
 test('writes an error manifest when the target repository is outside lvce-editor', async () => {
   const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
 

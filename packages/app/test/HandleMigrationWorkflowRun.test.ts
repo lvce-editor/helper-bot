@@ -624,6 +624,260 @@ test('ignores dry run org release plan artifacts without creating tag refs', asy
   )
 })
 
+test('dispatches update-all-dependencies for repositories in an update-recent artifact', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      data: {
+        updateRecent: {
+          generatedAt: '2026-07-01T12:00:00.000Z',
+          lookbackHours: 48,
+          owner: 'lvce-editor',
+          repositories: ['lvce-editor/recent', 'lvce-editor/another-recent'],
+          schemaVersion: 1,
+          summary: {
+            recent: 2,
+            scanned: 3,
+            skipped: 0,
+          },
+        },
+      },
+      migrationId: '/migrations2/update-recent',
+      requestId: 'update-recent-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
+  })
+  const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({
+    requestId: 'child-request',
+  })
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-all-dependencies',
+    migrationOptions: {},
+    targetRepository: 'lvce-editor/recent',
+  })
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-all-dependencies',
+    migrationOptions: {},
+    targetRepository: 'lvce-editor/another-recent',
+  })
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledTimes(2)
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/helper-bot /migrations2/update-recent: update-recent contains 2 repositories')
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/recent: dispatched update-all-dependencies')
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/another-recent: dispatched update-all-dependencies')
+})
+
+test('continues dispatching update-recent repositories when one child dispatch fails', async () => {
+  const dispatchError = new Error('dispatch failed')
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      data: {
+        updateRecent: {
+          repositories: ['lvce-editor/fails', 'lvce-editor/succeeds'],
+        },
+      },
+      migrationId: '/migrations2/update-recent',
+      requestId: 'update-recent-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
+  })
+  const dispatchMigrationWorkflow = (jest.fn() as any).mockRejectedValueOnce(dispatchError).mockResolvedValueOnce({
+    requestId: 'child-request',
+  })
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledTimes(2)
+  expect(errorSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] failed to dispatch update-all-dependencies for lvce-editor/fails', dispatchError)
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/succeeds: dispatched update-all-dependencies')
+})
+
+test('ignores dry run update-recent artifacts without dispatching child migrations', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      data: {
+        updateRecent: {
+          repositories: ['lvce-editor/recent'],
+        },
+      },
+      dryRun: true,
+      migrationId: '/migrations2/update-recent',
+      requestId: 'update-recent-dry-run',
+      status: 'success',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
+  })
+  const dispatchMigrationWorkflow = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).not.toHaveBeenCalled()
+  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/helper-bot /migrations2/update-recent: dry run requested; ignoring migration result')
+})
+
+test('warns when an update-recent artifact is missing repository data', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      data: {
+        updateRecent: {},
+      },
+      migrationId: '/migrations2/update-recent',
+      requestId: 'update-recent-malformed',
+      status: 'success',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
+  })
+  const dispatchMigrationWorkflow = jest.fn() as any
+  const app: any = {
+    auth: jest.fn(),
+  }
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      action: 'completed',
+      repository: {
+        name: 'helper-bot',
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).not.toHaveBeenCalled()
+  expect(warnSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/helper-bot /migrations2/update-recent: update-recent artifact is missing data.updateRecent.repositories',
+  )
+})
+
 test('ignores the old dedicated org release plan workflow', async () => {
   const downloadMigrationArtifact = jest.fn() as any
   const invokeGithubWorker = jest.fn() as any
