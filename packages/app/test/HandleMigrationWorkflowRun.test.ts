@@ -819,7 +819,9 @@ test('ignores dry run update-recent artifacts without dispatching child migratio
   await handleMigrationWorkflowRun(context)
 
   expect(dispatchMigrationWorkflow).not.toHaveBeenCalled()
-  expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/helper-bot /migrations2/update-recent: dry run requested; ignoring migration result')
+  expect(infoSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/helper-bot /migrations2/update-recent: dry run requested; ignoring migration result',
+  )
 })
 
 test('warns when an update-recent artifact is missing repository data', async () => {
