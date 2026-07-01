@@ -1,8 +1,4 @@
 {
-  "releaseCron": {
-    "expression": "0 3 * * *",
-    "timezone": "Europe/Berlin"
-  },
   "releaseExcludedRepos": ["test-worker", "lvce-editor.github.io", "lvce-editor"],
   "dependencies": [
     {

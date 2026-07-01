@@ -1,5 +1,6 @@
 import type { Context, Probot } from 'probot'
 import { captureException } from '../../errorHandling.ts'
+import { dispatchMigrationWorkflow } from '../DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 import * as GithubWorker from '../../githubWorker.ts'
 import { downloadMigrationArtifact } from '../DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
 import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
@@ -8,14 +9,16 @@ const HELPER_BOT_OWNER = 'lvce-editor'
 const HELPER_BOT_REPO = 'helper-bot'
 // const WORKFLOW_NAME = 'run-migration-on-demand'
 const WORKFLOW_EVENT = 'workflow_dispatch'
-// @ts-ignore
 const WORKFLOW_BRANCH = 'main'
 const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
+const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
 const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
+const ORG_RELEASE_PLAN_TARGET_REPOSITORY = 'lvce-editor/helper-bot'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
   readonly app: Probot
+  readonly dispatchMigrationWorkflow?: typeof dispatchMigrationWorkflow
   readonly downloadMigrationArtifact?: typeof downloadMigrationArtifact
   readonly invokeGithubWorker?: typeof GithubWorker.invoke
   readonly processInBackground?: boolean
@@ -84,13 +87,41 @@ const getInstallationToken = async (app: Probot, owner: string, repo: string): P
   return typeof authToken === 'string' ? authToken : authToken.token
 }
 
-const isAllowedWorkflowRun = (workflowRun: Readonly<{ event: string; path: string }>): boolean => {
-  return workflowRun.path === WORKFLOW_PATH && workflowRun.event === WORKFLOW_EVENT
+const isAllowedMigrationWorkflowRun = (workflowRun: Readonly<{ event: string; head_branch?: string; path: string }>): boolean => {
+  return workflowRun.path === WORKFLOW_PATH && workflowRun.event === WORKFLOW_EVENT && workflowRun.head_branch === WORKFLOW_BRANCH
+}
+
+const isAllowedOrgReleasePlanRequestWorkflowRun = (
+  workflowRun: Readonly<{ conclusion?: string | null; event: string; head_branch?: string; path: string }>,
+): boolean => {
+  return (
+    workflowRun.path === ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH &&
+    workflowRun.head_branch === WORKFLOW_BRANCH &&
+    workflowRun.conclusion === 'success' &&
+    (workflowRun.event === 'schedule' || workflowRun.event === WORKFLOW_EVENT)
+  )
 }
 
 export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleMigrationWorkflowRunOptions>) => {
+  const dispatchWorkflow = options.dispatchMigrationWorkflow || dispatchMigrationWorkflow
   const downloadArtifact = options.downloadMigrationArtifact || downloadMigrationArtifact
   const invokeGithubWorker = options.invokeGithubWorker || GithubWorker.invoke
+
+  const requestOrgReleasePlanMigration = async (logger: Logger): Promise<void> => {
+    try {
+      logger.info(`${LOG_PREFIX} dispatching org release plan migration workflow`)
+      await dispatchWorkflow({
+        app: options.app,
+        migrationId: ORG_RELEASE_PLAN_MIGRATION_ID,
+        migrationOptions: {},
+        targetRepository: ORG_RELEASE_PLAN_TARGET_REPOSITORY,
+      })
+      logger.info(`${LOG_PREFIX} dispatched org release plan migration workflow`)
+    } catch (error) {
+      logger.error(`${LOG_PREFIX} failed to dispatch org release plan migration workflow`, error)
+      captureException(error as Error)
+    }
+  }
 
   const processWorkflowRun = async (context: Context<'workflow_run'>): Promise<void> => {
     const { repository, workflow_run: workflowRun } = context.payload
@@ -199,7 +230,18 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       console.info(`[workflow_completed] repo mismatch`)
       return
     }
-    if (!isAllowedWorkflowRun(workflowRun)) {
+    if (isAllowedOrgReleasePlanRequestWorkflowRun(workflowRun)) {
+      logger.info(`${LOG_PREFIX} received completed org release plan request workflow webhook for run ${workflowRun.id}`)
+      if (!options.processInBackground) {
+        await requestOrgReleasePlanMigration(logger)
+        return
+      }
+      setImmediate(async () => {
+        await requestOrgReleasePlanMigration(logger)
+      })
+      return
+    }
+    if (!isAllowedMigrationWorkflowRun(workflowRun)) {
       console.info(`[workflow_completed] workflow mismatch: ${workflowRun.path} ${workflowRun.event}`)
       return
     }

@@ -20,7 +20,6 @@ import { dispatchMigrationWorkflow } from './parts/DispatchMigrationWorkflow/Dis
 import { createHandleMigrationWorkflowRun } from './parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts'
 import express from 'express'
 import { getDependenciesConfig } from './getDependenciesConfig.ts'
-import { startReleaseScheduler } from './releaseScheduler.ts'
 
 const dependenciesConfig = getDependenciesConfig()
 const dependencies = dependenciesConfig.dependencies
@@ -228,6 +227,5 @@ export default (app: Probot, { addHandler }: ApplicationFunctionOptions) => {
   }
   app.on('release', (context) => handleReleaseReleased(context, app))
   app.on('workflow_run.completed', createHandleMigrationWorkflowRun({ app, processInBackground: true }) as any)
-  startReleaseScheduler({ app, releaseCron: dependenciesConfig.releaseCron })
   console.log('Event handlers registered')
 }
