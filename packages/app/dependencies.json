@@ -32,6 +32,17 @@
       "toFolder": "packages/shared-process"
     },
     {
+      "fromRepo": "process-explorer",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/shared-process"
+    },
+    {
+      "fromRepo": "process-explorer",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker",
+      "asName": "process-explorer-worker"
+    },
+    {
       "fromRepo": "preview-sandbox-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
