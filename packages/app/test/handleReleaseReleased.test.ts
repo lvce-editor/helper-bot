@@ -32,7 +32,7 @@ jest.unstable_mockModule('../src/errorHandling.ts', () => ({
   captureException: mockCaptureException,
 }))
 
-const { handleReleaseReleased, shouldHandleRelease } = await import('../src/index.ts')
+const { handleReleaseReleased, resetHandledReleases, shouldHandleRelease } = await import('../src/index.ts')
 const PlannedReleaseBatch = await import('../src/parts/PlannedReleaseBatch/PlannedReleaseBatch.ts')
 
 beforeEach(() => {
@@ -46,6 +46,7 @@ beforeEach(() => {
   mockUpdateDependencies.mockClear()
   mockDispatchMigrationWorkflow.mockClear()
   PlannedReleaseBatch.resetPlannedReleaseBatch()
+  resetHandledReleases()
 })
 
 const createContext = (action: string, repositoryName: string, release: Record<string, unknown> = {}) => {
@@ -163,6 +164,43 @@ test('collects matching planned release dependency updates instead of dispatchin
       ],
     },
   ])
+})
+
+test('dispatches non-lvce-editor target dependency updates immediately during planned release batches', async () => {
+  PlannedReleaseBatch.startPlannedReleaseBatch([
+    {
+      repository: 'lvce-editor/lvce-editor',
+      tagName: 'v1.0.0',
+    },
+  ])
+  const context = createContext('published', 'lvce-editor')
+  const app = {} as any
+
+  await handleReleaseReleased(context, app)
+
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-specific-dependency',
+    migrationOptions: {
+      fromRepo: 'lvce-editor',
+      tagName: 'v1.0.0',
+      toFolder: 'packages/server',
+      toRepo: 'editor-worker',
+    },
+    targetRepository: 'lvce-editor/editor-worker',
+  })
+})
+
+test('ignores duplicate release webhooks for the same release', async () => {
+  const app = {} as any
+  const context = createContext('created', 'test-worker', { id: 123 })
+  const duplicateContext = createContext('published', 'test-worker', { id: 123 })
+
+  await handleReleaseReleased(context, app)
+  await handleReleaseReleased(duplicateContext, app)
+
+  expect(mockUpdateBuiltinExtensions).toHaveBeenCalledTimes(1)
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(1)
 })
 
 test('dispatches process-explorer updates for shared-process and renderer-worker packages', async () => {

@@ -24,6 +24,55 @@ import { getDependenciesConfig } from './getDependenciesConfig.ts'
 
 const dependenciesConfig = getDependenciesConfig()
 const dependencies = dependenciesConfig.dependencies
+const handledReleases = new Set<string>()
+const handledReleaseTtl = 10 * 60 * 1000
+const handledReleaseTimeouts = new Map<string, NodeJS.Timeout>()
+
+const getReleaseKey = (context: Context<'release'>): string => {
+  const { payload } = context
+  return `${payload.repository.full_name || `${payload.repository.owner.login}/${payload.repository.name}`}@${payload.release.id || payload.release.tag_name}`
+}
+
+const markReleaseHandled = (context: Context<'release'>): boolean => {
+  const key = getReleaseKey(context)
+  if (handledReleases.has(key)) {
+    return false
+  }
+  handledReleases.add(key)
+  const timeout = setTimeout(() => {
+    handledReleases.delete(key)
+    handledReleaseTimeouts.delete(key)
+  }, handledReleaseTtl).unref()
+  handledReleaseTimeouts.set(key, timeout)
+  return true
+}
+
+export const resetHandledReleases = (): void => {
+  for (const timeout of handledReleaseTimeouts.values()) {
+    clearTimeout(timeout)
+  }
+  handledReleaseTimeouts.clear()
+  handledReleases.clear()
+}
+
+const dispatchDependencyUpdate = async (app: Probot, dependency: any, owner: string, tagName: string): Promise<void> => {
+  try {
+    await dispatchMigrationWorkflow({
+      app,
+      migrationId: '/migrations2/update-specific-dependency',
+      migrationOptions: {
+        ...(dependency.asName && { asName: dependency.asName }),
+        fromRepo: dependency.fromRepo,
+        tagName,
+        toFolder: dependency.toFolder,
+        toRepo: dependency.toRepo,
+      },
+      targetRepository: `${owner}/${dependency.toRepo}`,
+    })
+  } catch (error) {
+    captureException(error as Error)
+  }
+}
 
 const updateRepositoryDependencies = async (context: Context<'release'>, app?: Probot) => {
   if (!app) {
@@ -36,8 +85,10 @@ const updateRepositoryDependencies = async (context: Context<'release'>, app?: P
   const matchingDependencies = dependencies.filter((dependency) => dependency.fromRepo === releasedRepo)
   const repository = `${owner}/${releasedRepo}`
   if (PlannedReleaseBatch.isPlannedReleasePending(repository, tagName)) {
+    const pendingDependencies = matchingDependencies.filter((dependency) => dependency.toRepo === 'lvce-editor')
+    const immediateDependencies = matchingDependencies.filter((dependency) => dependency.toRepo !== 'lvce-editor')
     PlannedReleaseBatch.addPendingDependencyUpdates(
-      matchingDependencies.map((dependency) => ({
+      pendingDependencies.map((dependency) => ({
         ...(dependency.asName && { asName: dependency.asName }),
         fromRepo: dependency.fromRepo,
         tagName,
@@ -45,28 +96,10 @@ const updateRepositoryDependencies = async (context: Context<'release'>, app?: P
         toRepo: dependency.toRepo,
       })),
     )
+    await Promise.all(immediateDependencies.map((dependency) => dispatchDependencyUpdate(app, dependency, owner, tagName)))
     return
   }
-  await Promise.all(
-    matchingDependencies.map(async (dependency) => {
-      try {
-        await dispatchMigrationWorkflow({
-          app,
-          migrationId: '/migrations2/update-specific-dependency',
-          migrationOptions: {
-            ...(dependency.asName && { asName: dependency.asName }),
-            fromRepo: dependency.fromRepo,
-            tagName,
-            toFolder: dependency.toFolder,
-            toRepo: dependency.toRepo,
-          },
-          targetRepository: `${owner}/${dependency.toRepo}`,
-        })
-      } catch (error) {
-        captureException(error as Error)
-      }
-    }),
-  )
+  await Promise.all(matchingDependencies.map((dependency) => dispatchDependencyUpdate(app, dependency, owner, tagName)))
 }
 
 const updateWebsiteConfig = async (context: Context<'release'>, app?: Probot) => {
@@ -103,6 +136,9 @@ export const shouldHandleRelease = (context: Context<'release'>): boolean => {
 
 export const handleReleaseReleased = async (context: Context<'release'>, app?: Probot) => {
   if (!shouldHandleRelease(context)) {
+    return
+  }
+  if (!markReleaseHandled(context)) {
     return
   }
   await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context, app), updateWebsiteConfig(context, app)])

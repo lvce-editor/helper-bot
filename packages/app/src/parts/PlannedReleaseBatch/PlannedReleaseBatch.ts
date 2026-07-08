@@ -17,13 +17,18 @@ export interface PendingDependencyUpdateBatch {
   readonly updates: readonly PendingDependencyUpdate[]
 }
 
+export type PlannedReleaseBatchTimeoutHandler = (batches: readonly PendingDependencyUpdateBatch[]) => void | Promise<void>
+
 interface PlannedReleaseBatchState {
   readonly completedPlannedReleases: Set<string>
   readonly pendingDependencyUpdates: PendingDependencyUpdate[]
   readonly pendingPlannedReleases: Map<string, PlannedRelease>
+  readonly timeout?: NodeJS.Timeout
 }
 
 let state: PlannedReleaseBatchState | undefined
+
+export const PlannedReleaseBatchTimeout = 5 * 60 * 1000
 
 const getReleaseKey = (repository: string, tagName: string): string => {
   return `${repository}@${tagName}`
@@ -35,18 +40,36 @@ const getRepoName = (repository: string): string => {
 }
 
 export const resetPlannedReleaseBatch = (): void => {
+  if (state?.timeout) {
+    clearTimeout(state.timeout)
+  }
   state = undefined
 }
 
-export const startPlannedReleaseBatch = (releases: readonly PlannedRelease[]): void => {
+export const startPlannedReleaseBatch = (
+  releases: readonly PlannedRelease[],
+  onTimeout?: PlannedReleaseBatchTimeoutHandler,
+  timeout = PlannedReleaseBatchTimeout,
+): void => {
+  resetPlannedReleaseBatch()
   const pendingPlannedReleases = new Map<string, PlannedRelease>()
   for (const release of releases) {
     pendingPlannedReleases.set(getReleaseKey(release.repository, release.tagName), release)
   }
+  const timeoutHandle =
+    onTimeout && pendingPlannedReleases.size > 0
+      ? setTimeout(() => {
+          const batches = flushPendingDependencyUpdateBatches()
+          if (batches.length > 0) {
+            void onTimeout(batches)
+          }
+        }, timeout)
+      : undefined
   state = {
     completedPlannedReleases: new Set(),
     pendingDependencyUpdates: [],
     pendingPlannedReleases,
+    ...(timeoutHandle && { timeout: timeoutHandle }),
   }
 }
 
@@ -61,6 +84,15 @@ export const addPendingDependencyUpdates = (updates: readonly PendingDependencyU
   state.pendingDependencyUpdates.push(...updates)
 }
 
+export const flushPendingDependencyUpdateBatches = (): readonly PendingDependencyUpdateBatch[] => {
+  if (!state) {
+    return []
+  }
+  const batches = getPendingDependencyUpdateBatches()
+  resetPlannedReleaseBatch()
+  return batches
+}
+
 export const markPlannedReleaseCompleted = (repository: string, tagName: string): readonly PendingDependencyUpdateBatch[] => {
   if (!state) {
     return []
@@ -73,9 +105,7 @@ export const markPlannedReleaseCompleted = (repository: string, tagName: string)
   if (state.completedPlannedReleases.size !== state.pendingPlannedReleases.size) {
     return []
   }
-  const batches = getPendingDependencyUpdateBatches()
-  resetPlannedReleaseBatch()
-  return batches
+  return flushPendingDependencyUpdateBatches()
 }
 
 const getPendingDependencyUpdateBatches = (): readonly PendingDependencyUpdateBatch[] => {
