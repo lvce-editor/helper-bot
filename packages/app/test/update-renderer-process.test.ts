@@ -99,7 +99,7 @@ test('creates a pull request to update versions when a release is created', asyn
         migrationId: '/migrations2/update-specific-dependency',
         migrationOptionsJson: '{"fromRepo":"renderer-process","tagName":"v2.4.0","toFolder":"packages/renderer-worker","toRepo":"lvce-editor"}',
         requestId: expect.any(String),
-        runName: 'migration-on-demand/lvce-editor/update-specific-dependency',
+        runName: expect.stringMatching(/^migration-on-demand\/lvce-editor\/update-specific-dependency\/.+$/),
         targetRepository: 'lvce-editor/lvce-editor',
       },
       ref: 'main',

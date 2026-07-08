@@ -194,7 +194,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
           migrationOptionsJson:
             '{"asName":"@lvce-editor/server","fromRepo":"lvce-editor","tagName":"v1.0.0","toFolder":"packages/server","toRepo":"editor-worker"}',
           requestId: expect.any(String),
-          runName: 'migration-on-demand/editor-worker/update-specific-dependency',
+          runName: expect.stringMatching(/^migration-on-demand\/editor-worker\/update-specific-dependency\/.+$/),
           targetRepository: 'lvce-editor/editor-worker',
         },
         ref: 'main',
@@ -207,7 +207,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
           migrationOptionsJson:
             '{"asName":"@lvce-editor/server","fromRepo":"lvce-editor","tagName":"v1.0.0","toFolder":"packages/server","toRepo":"main-area-worker"}',
           requestId: expect.any(String),
-          runName: 'migration-on-demand/main-area-worker/update-specific-dependency',
+          runName: expect.stringMatching(/^migration-on-demand\/main-area-worker\/update-specific-dependency\/.+$/),
           targetRepository: 'lvce-editor/main-area-worker',
         },
         ref: 'main',
@@ -219,7 +219,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
           migrationId: '/migrations2/update-website-config',
           migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
           requestId: expect.any(String),
-          runName: 'migration-on-demand/lvce-editor.github.io/update-website-config',
+          runName: expect.stringMatching(/^migration-on-demand\/lvce-editor\.github\.io\/update-website-config\/.+$/),
           targetRepository: 'lvce-editor/lvce-editor.github.io',
         },
         ref: 'main',

@@ -3,6 +3,7 @@ import type { Probot } from 'probot'
 import { timingSafeEqual } from 'node:crypto'
 import { captureException } from '../errorHandling.ts'
 import { dispatchMigrationWorkflow } from '../parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
+import { getMigrationRequestStatus } from '../parts/GetMigrationRequestStatus/GetMigrationRequestStatus.ts'
 import {
   assertAllowedTargetRepository,
   assertSafeMigrationOptions,
@@ -41,6 +42,15 @@ const verifySecret = (req: Request, res: Response, secret: string | undefined): 
     return false
   }
   return true
+}
+
+const getRequestIdFromPath = (path: string): string => {
+  const parts = path.split('/').filter(Boolean)
+  return parts.at(-1) || ''
+}
+
+const isValidRequestId = (requestId: string): boolean => {
+  return /^[a-zA-Z0-9._-]+$/.test(requestId)
 }
 
 export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret: string | undefined }) => {
@@ -113,7 +123,9 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
       res.status(202).json({
         message: 'Migration workflow dispatched successfully',
         requestId: dispatchResult.requestId,
+        runName: dispatchResult.runName,
         status: 'queued',
+        statusUrl: `/my-app/migrations2/requests/${dispatchResult.requestId}`,
       })
     } catch (error) {
       if (error instanceof Error && error.message.includes('looks like a secret')) {
@@ -140,11 +152,48 @@ export const createMigrations2Handler = ({ app, secret }: { app: Probot; secret:
   }
 }
 
+export const createMigrationRequestStatusHandler = ({ app, secret }: { app: Probot; secret: string | undefined }) => {
+  return async (req: Request, res: Response): Promise<void> => {
+    if (!verifySecret(req, res, secret)) {
+      return
+    }
+
+    const requestId = getRequestIdFromPath(req.path)
+    if (!requestId || !isValidRequestId(requestId)) {
+      res.status(400).json({
+        code: 'INVALID_REQUEST_ID',
+        error: 'Invalid request id',
+      })
+      return
+    }
+
+    try {
+      const result = await getMigrationRequestStatus({
+        app,
+        requestId,
+      })
+      res.status(200).json(result)
+    } catch (error) {
+      console.error(error)
+      captureException(error as Error)
+      res.status(500).json({
+        code: 'MIGRATION_REQUEST_STATUS_ERROR',
+        error: getErrorMessage(error),
+      })
+    }
+  }
+}
+
 export const registerMigrations2Endpoints = (router: any, app: Probot, secret: string | undefined): void => {
   const handler = createMigrations2Handler({
     app,
     secret,
   })
+  const statusHandler = createMigrationRequestStatusHandler({
+    app,
+    secret,
+  })
+  router.get(/^\/migrations2\/requests\/[^/]+$/, statusHandler)
   router.post(/^\/migrations2\/.+$/, handler)
   router.post(/^\/multi-migrations\/.+$/, handler)
 }

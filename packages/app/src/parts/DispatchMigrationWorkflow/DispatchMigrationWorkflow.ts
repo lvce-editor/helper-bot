@@ -17,8 +17,8 @@ const getMigrationName = (migrationId: string): string => {
   return parts.at(-1) || migrationId
 }
 
-const getRunName = (targetRepository: string, migrationId: string): string => {
-  return `migration-on-demand/${getTargetRepositoryName(targetRepository)}/${getMigrationName(migrationId)}`
+const getRunName = (targetRepository: string, migrationId: string, requestId: string): string => {
+  return `migration-on-demand/${getTargetRepositoryName(targetRepository)}/${getMigrationName(migrationId)}/${requestId}`
 }
 
 export interface DispatchMigrationWorkflowOptions {
@@ -33,6 +33,7 @@ export interface DispatchMigrationWorkflowOptions {
 
 export interface DispatchMigrationWorkflowResult {
   readonly requestId: string
+  readonly runName: string
 }
 
 export const dispatchMigrationWorkflow = async (options: Readonly<DispatchMigrationWorkflowOptions>): Promise<DispatchMigrationWorkflowResult> => {
@@ -42,7 +43,7 @@ export const dispatchMigrationWorkflow = async (options: Readonly<DispatchMigrat
     throw new Error('Invalid base branch')
   }
   const requestId = options.requestId || randomUUID()
-  const runName = getRunName(options.targetRepository, options.migrationId)
+  const runName = getRunName(options.targetRepository, options.migrationId, requestId)
   const appOctokit = await options.app.auth()
   const installation = await appOctokit.rest.apps.getRepoInstallation({
     owner: HELPER_BOT_OWNER,
@@ -66,5 +67,6 @@ export const dispatchMigrationWorkflow = async (options: Readonly<DispatchMigrat
   })
   return {
     requestId,
+    runName,
   }
 }

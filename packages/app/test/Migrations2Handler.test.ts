@@ -1,23 +1,30 @@
 import { beforeEach, expect, jest, test } from '@jest/globals'
 
 const mockDispatchMigrationWorkflow = jest.fn()
+const mockGetMigrationRequestStatus = jest.fn()
 const mockCaptureException = jest.fn()
 
 jest.unstable_mockModule('../src/parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts', () => ({
   dispatchMigrationWorkflow: mockDispatchMigrationWorkflow,
 }))
 
+jest.unstable_mockModule('../src/parts/GetMigrationRequestStatus/GetMigrationRequestStatus.ts', () => ({
+  getMigrationRequestStatus: mockGetMigrationRequestStatus,
+}))
+
 jest.unstable_mockModule('../src/errorHandling.ts', () => ({
   captureException: mockCaptureException,
 }))
 
-const { createMigrations2Handler } = await import('../src/migrations2/endpoints.ts')
+const { createMigrationRequestStatusHandler, createMigrations2Handler } = await import('../src/migrations2/endpoints.ts')
 
 beforeEach(() => {
   mockDispatchMigrationWorkflow.mockReset()
   mockDispatchMigrationWorkflow.mockResolvedValue({
     requestId: 'request-1',
+    runName: 'migration-on-demand/example-repo/update-website-config/request-1',
   })
+  mockGetMigrationRequestStatus.mockReset()
   mockCaptureException.mockReset()
 })
 
@@ -143,6 +150,13 @@ test('passes dry run as dispatch metadata instead of a migration option', async 
     targetRepository: 'lvce-editor/example-repo',
   })
   expect(response.status).toHaveBeenCalledWith(202)
+  expect(response.json).toHaveBeenCalledWith({
+    message: 'Migration workflow dispatched successfully',
+    requestId: 'request-1',
+    runName: 'migration-on-demand/example-repo/update-website-config/request-1',
+    status: 'queued',
+    statusUrl: '/my-app/migrations2/requests/request-1',
+  })
 })
 
 test('rejects non-boolean dry run values', async () => {
@@ -203,4 +217,61 @@ test('returns a dedicated error when GitHub Actions is unavailable', async () =>
     error: 'Migration failed because Github Actions is currently unavailble',
   })
   expect(mockCaptureException).toHaveBeenCalledWith(error)
+})
+
+test('returns migration request status', async () => {
+  const response = createResponse()
+  mockGetMigrationRequestStatus.mockResolvedValue({
+    requestId: 'request-1',
+    status: 'running',
+  })
+  const handler = createMigrationRequestStatusHandler({
+    app: {} as any,
+    secret: 'top-secret',
+  })
+
+  await handler(
+    {
+      headers: {
+        authorization: 'Bearer top-secret',
+      },
+      path: '/migrations2/requests/request-1',
+    } as any,
+    response,
+  )
+
+  expect(mockGetMigrationRequestStatus).toHaveBeenCalledWith({
+    app: {},
+    requestId: 'request-1',
+  })
+  expect(response.status).toHaveBeenCalledWith(200)
+  expect(response.json).toHaveBeenCalledWith({
+    requestId: 'request-1',
+    status: 'running',
+  })
+})
+
+test('rejects invalid migration request ids', async () => {
+  const response = createResponse()
+  const handler = createMigrationRequestStatusHandler({
+    app: {} as any,
+    secret: 'top-secret',
+  })
+
+  await handler(
+    {
+      headers: {
+        authorization: 'Bearer top-secret',
+      },
+      path: '/migrations2/requests/request:1',
+    } as any,
+    response,
+  )
+
+  expect(response.status).toHaveBeenCalledWith(400)
+  expect(response.json).toHaveBeenCalledWith({
+    code: 'INVALID_REQUEST_ID',
+    error: 'Invalid request id',
+  })
+  expect(mockGetMigrationRequestStatus).not.toHaveBeenCalled()
 })

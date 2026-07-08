@@ -49,7 +49,7 @@ test('dispatches the on-demand migration workflow in the helper-bot repository',
       migrationId: '/migrations2/update-website-config',
       migrationOptionsJson: '{"releasedTag":"v1.0.0"}',
       requestId: 'request-1',
-      runName: 'migration-on-demand/lvce-editor.github.io/update-website-config',
+      runName: 'migration-on-demand/lvce-editor.github.io/update-website-config/request-1',
       targetRepository: 'lvce-editor/lvce-editor.github.io',
     },
     owner: 'lvce-editor',
@@ -59,6 +59,7 @@ test('dispatches the on-demand migration workflow in the helper-bot repository',
   })
   expect(result).toEqual({
     requestId: 'request-1',
+    runName: 'migration-on-demand/lvce-editor.github.io/update-website-config/request-1',
   })
 })
 
@@ -105,7 +106,7 @@ test('dispatches the on-demand migration workflow as a dry run', async () => {
       migrationId: '/migrations2/plan-org-release-tags',
       migrationOptionsJson: '{}',
       requestId: 'request-dry-run',
-      runName: 'migration-on-demand/helper-bot/plan-org-release-tags',
+      runName: 'migration-on-demand/helper-bot/plan-org-release-tags/request-dry-run',
       targetRepository: 'lvce-editor/helper-bot',
     },
     owner: 'lvce-editor',
