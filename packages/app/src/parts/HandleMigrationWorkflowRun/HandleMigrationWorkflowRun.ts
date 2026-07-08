@@ -4,6 +4,7 @@ import { dispatchMigrationWorkflow } from '../DispatchMigrationWorkflow/Dispatch
 import * as GithubWorker from '../../githubWorker.ts'
 import { downloadMigrationArtifact } from '../DownloadMigrationArtifact/DownloadMigrationArtifact.ts'
 import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
+import * as PlannedReleaseBatch from '../PlannedReleaseBatch/PlannedReleaseBatch.ts'
 
 const HELPER_BOT_OWNER = 'lvce-editor'
 const HELPER_BOT_REPO = 'helper-bot'
@@ -11,8 +12,10 @@ const HELPER_BOT_REPO = 'helper-bot'
 const WORKFLOW_EVENT = 'workflow_dispatch'
 const WORKFLOW_BRANCH = 'main'
 const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
+const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml'
 const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
 const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
+const UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID = '/migrations2/update-specific-dependencies'
 const ORG_RELEASE_PLAN_TARGET_REPOSITORY = 'lvce-editor/helper-bot'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
@@ -123,6 +126,44 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     }
   }
 
+  const dispatchPendingDependencyUpdateBatches = async (
+    logger: Logger,
+    batches: readonly PlannedReleaseBatch.PendingDependencyUpdateBatch[],
+  ): Promise<void> => {
+    for (const batch of batches) {
+      try {
+        logger.info(`${LOG_PREFIX} dispatching ${batch.updates.length} pending dependency updates for ${batch.targetRepository}`)
+        await dispatchWorkflow({
+          app: options.app,
+          migrationId: UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID,
+          migrationOptions: {
+            toRepo: batch.toRepo,
+            updates: batch.updates,
+          },
+          targetRepository: batch.targetRepository,
+        })
+      } catch (error) {
+        logger.error(`${LOG_PREFIX} failed to dispatch pending dependency updates for ${batch.targetRepository}`, error)
+        captureException(error as Error)
+      }
+    }
+  }
+
+  const handlePlannedReleaseWorkflowCompleted = async (context: Context<'workflow_run'>): Promise<boolean> => {
+    const { repository, workflow_run: workflowRun } = context.payload
+    const tagName = workflowRun.head_branch
+    if (!tagName || workflowRun.path !== RELEASE_WORKFLOW_PATH) {
+      return false
+    }
+    const repositoryName = `${repository.owner.login}/${repository.name}`
+    const batches = PlannedReleaseBatch.markPlannedReleaseCompleted(repositoryName, tagName)
+    if (batches.length === 0) {
+      return false
+    }
+    await dispatchPendingDependencyUpdateBatches(getLogger(context), batches)
+    return true
+  }
+
   const processWorkflowRun = async (context: Context<'workflow_run'>): Promise<void> => {
     const { repository, workflow_run: workflowRun } = context.payload
     const logger = getLogger(context)
@@ -163,6 +204,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         }
         const upgradeEntries = releasePlan.entries.filter((entry: any) => entry.upgrade)
         logger.info(`${LOG_PREFIX} ${migrationLabel}: release plan contains ${upgradeEntries.length} tag upgrades`)
+        const plannedReleases: PlannedReleaseBatch.PlannedRelease[] = []
         for (const entry of upgradeEntries) {
           try {
             if (!entry.newTag || !entry.targetSha) {
@@ -181,6 +223,10 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
             if (workerResult?.type === 'error') {
               throw new Error(workerResult.error || 'GitHub worker failed to create tag ref')
             }
+            plannedReleases.push({
+              repository: entry.repository,
+              tagName: entry.newTag,
+            })
             const workerData = getGithubWorkerData(workerResult)
             logger.info(`${LOG_PREFIX} ${entry.repository}: ${workerData?.message || `processed tag ${entry.newTag}`}`)
           } catch (error) {
@@ -188,6 +234,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
             captureException(error as Error)
           }
         }
+        PlannedReleaseBatch.startPlannedReleaseBatch(plannedReleases)
         return
       }
       if (artifact.changedFiles.length === 0 && (!artifact.manifest.repoCommands || artifact.manifest.repoCommands.length === 0)) {
@@ -226,6 +273,9 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
   return async (context: Context<'workflow_run'>): Promise<void> => {
     const { repository, workflow_run: workflowRun } = context.payload
     const logger = getLogger(context)
+    if (await handlePlannedReleaseWorkflowCompleted(context)) {
+      return
+    }
     if (repository.owner.login !== HELPER_BOT_OWNER || repository.name !== HELPER_BOT_REPO) {
       console.info(`[workflow_completed] repo mismatch`)
       return

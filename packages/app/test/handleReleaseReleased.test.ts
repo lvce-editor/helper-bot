@@ -33,6 +33,7 @@ jest.unstable_mockModule('../src/errorHandling.ts', () => ({
 }))
 
 const { handleReleaseReleased, shouldHandleRelease } = await import('../src/index.ts')
+const PlannedReleaseBatch = await import('../src/parts/PlannedReleaseBatch/PlannedReleaseBatch.ts')
 
 beforeEach(() => {
   mockUpdateBuiltinExtensions.mockResolvedValue(undefined)
@@ -44,6 +45,7 @@ beforeEach(() => {
   mockUpdateBuiltinExtensions.mockClear()
   mockUpdateDependencies.mockClear()
   mockDispatchMigrationWorkflow.mockClear()
+  PlannedReleaseBatch.resetPlannedReleaseBatch()
 })
 
 const createContext = (action: string, repositoryName: string, release: Record<string, unknown> = {}) => {
@@ -132,6 +134,35 @@ test('dispatches update-specific-dependency migrations for matching release depe
     },
     targetRepository: 'lvce-editor/lvce-editor',
   })
+})
+
+test('collects matching planned release dependency updates instead of dispatching immediately', async () => {
+  PlannedReleaseBatch.startPlannedReleaseBatch([
+    {
+      repository: 'lvce-editor/test-worker',
+      tagName: 'v1.0.0',
+    },
+  ])
+  const context = createContext('published', 'test-worker')
+  const app = {} as any
+
+  await handleReleaseReleased(context, app)
+
+  expect(mockDispatchMigrationWorkflow).not.toHaveBeenCalled()
+  expect(PlannedReleaseBatch.markPlannedReleaseCompleted('lvce-editor/test-worker', 'v1.0.0')).toEqual([
+    {
+      targetRepository: 'lvce-editor/lvce-editor',
+      toRepo: 'lvce-editor',
+      updates: [
+        {
+          fromRepo: 'test-worker',
+          tagName: 'v1.0.0',
+          toFolder: 'packages/renderer-worker',
+          toRepo: 'lvce-editor',
+        },
+      ],
+    },
+  ])
 })
 
 test('dispatches process-explorer updates for shared-process and renderer-worker packages', async () => {
