@@ -1,10 +1,9 @@
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import type { BaseMigrationOptions, MigrationResult, RepoCommand } from '../Types/Types.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 import config from './config.json' with { type: 'json' }
 
 const WORKFLOWS_DIR = '.github/workflows'
-const TARGET_FILES = ['pr.yml', 'ci.yml', 'release.yml']
 
 // Regex patterns for matching runner versions
 const UBUNTU_VERSION_REGEX = /ubuntu-\d+\.\d+/g
@@ -19,8 +18,8 @@ interface CiVersionsConfig {
   }
 }
 
-const isTargetWorkflowFile = (entry: Readonly<{ isFile: () => boolean; name: string }>): boolean => {
-  return entry.isFile() && TARGET_FILES.includes(entry.name)
+const isWorkflowFile = (entry: Readonly<{ isFile: () => boolean; name: string }>): boolean => {
+  return entry.isFile() && (entry.name.endsWith('.yml') || entry.name.endsWith('.yaml'))
 }
 
 const getUpdatedWorkflowFile = async (
@@ -28,7 +27,7 @@ const getUpdatedWorkflowFile = async (
   workflowsPath: string,
   entry: Readonly<{ name: string; isFile: () => boolean }>,
 ): Promise<undefined | { content: string; path: string }> => {
-  if (!isTargetWorkflowFile(entry)) {
+  if (!isWorkflowFile(entry)) {
     return undefined
   }
 
@@ -65,7 +64,19 @@ const updateRunnerVersionsInYaml = (yamlContent: string, versions: CiVersionsCon
   return updated
 }
 
-export type UpdateCiVersionsOptions = BaseMigrationOptions
+export interface UpdateCiVersionsOptions extends BaseMigrationOptions {
+  readonly branch?: string
+}
+
+const getRepoCommands = (branch: string): readonly RepoCommand[] => {
+  return [
+    {
+      branch,
+      osVersions: config.latestVersions,
+      type: 'update-branch-protection-checks',
+    },
+  ]
+}
 
 export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions>): Promise<MigrationResult> => {
   try {
@@ -75,8 +86,13 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
 
     // Check if workflows directory exists
     const workflowsExists = await options.fs.exists(workflowsPath)
+    const branch = options.branch || 'main'
+    const repoCommands = getRepoCommands(branch)
     if (!workflowsExists) {
-      return emptyMigrationResult
+      return {
+        ...emptyMigrationResult,
+        repoCommands,
+      }
     }
 
     const entries = await options.fs.readdir(workflowsPath, {
@@ -92,17 +108,14 @@ export const updateCiVersions = async (options: Readonly<UpdateCiVersionsOptions
       }
     }
 
-    if (changedFiles.length === 0) {
-      return emptyMigrationResult
-    }
-
     return {
-      branchName: 'feature/update-ci-versions',
+      branchName: changedFiles.length > 0 ? 'feature/update-ci-versions' : '',
       changedFiles,
-      commitMessage: 'feature: update runner versions',
-      pullRequestTitle: 'feature: update runner versions',
+      commitMessage: changedFiles.length > 0 ? 'feature: update runner versions' : '',
+      pullRequestTitle: changedFiles.length > 0 ? 'feature: update runner versions' : '',
+      repoCommands,
       status: 'success',
-      statusCode: 201,
+      statusCode: changedFiles.length > 0 ? 201 : 200,
     }
   } catch (error: any) {
     const errorResult = {

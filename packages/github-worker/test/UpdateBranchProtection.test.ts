@@ -382,7 +382,7 @@ test('handles classic protection without required_status_checks', async (): Prom
   expect(scope.pendingMocks()).toEqual([])
 })
 
-test('updates macos versions', async (): Promise<void> => {
+test('updates macos required check contexts from 15 to 26', async (): Promise<void> => {
   const scope = nock('https://api.github.com')
     .get('/repos/test-owner/test-repo/rulesets')
     .query({ includes_parents: true })
@@ -397,7 +397,7 @@ test('updates macos versions', async (): Promise<void> => {
           rules: [
             {
               parameters: {
-                checks: ['ci/test-macos-14'],
+                checks: ['pr-macos-15'],
               },
               type: 'required_status_checks',
             },
@@ -406,7 +406,10 @@ test('updates macos versions', async (): Promise<void> => {
         },
       ],
     })
-    .patch('/repos/test-owner/test-repo/rulesets/4')
+    .patch('/repos/test-owner/test-repo/rulesets/4', (body) => {
+      expect(body.rules[0].parameters.checks).toEqual(['pr-macos-26'])
+      return true
+    })
     .reply(200, {
       id: 4,
     })
@@ -419,7 +422,7 @@ test('updates macos versions', async (): Promise<void> => {
     branch: 'main',
     githubToken: 'test-token',
     osVersions: {
-      macos: '15',
+      macos: '26',
     },
     owner: 'test-owner',
     repo: 'test-repo',

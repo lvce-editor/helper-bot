@@ -17,7 +17,12 @@ export interface ArtifactManifest {
   readonly pullRequestTitle?: string
   readonly repoCommands?: readonly {
     readonly branch: string
-    readonly type: 'modernize-branch-protection'
+    readonly osVersions?: {
+      readonly macos?: string
+      readonly ubuntu?: string
+      readonly windows?: string
+    }
+    readonly type: 'modernize-branch-protection' | 'update-branch-protection-checks'
   }[]
   readonly repositoriesNotToUpgrade?: readonly string[]
   readonly repositoriesToUpgrade?: readonly string[]

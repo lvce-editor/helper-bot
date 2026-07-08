@@ -176,9 +176,8 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
     auth: githubToken,
   })
 
-  const appliedRepoCommands = await applyRepoCommands(octokit, owner, repo, repoCommands)
-
   if (changedFiles.length === 0) {
+    const appliedRepoCommands = await applyRepoCommands(octokit, owner, repo, repoCommands)
     return {
       branchName: '',
       changedFiles: 0,
@@ -209,6 +208,16 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
 
   // If there are no actual changes (all files unchanged), return undefined
   if (treeEntries.length === 0 && filesToDelete.length === 0) {
+    if (repoCommands.length > 0) {
+      const appliedRepoCommands = await applyRepoCommands(octokit, owner, repo, repoCommands)
+      return {
+        branchName: '',
+        changedFiles: 0,
+        ...(appliedRepoCommands !== 0 && { data: { appliedRepoCommands } }),
+        message: 'Migration completed successfully',
+        status: 'success',
+      }
+    }
     return undefined
   }
 
@@ -262,12 +271,15 @@ export const applyMigrationResult = async (options: Readonly<ApplyMigrationResul
     title: pullRequestTitle,
   })
 
+  const appliedRepoCommands = await applyRepoCommands(octokit, owner, repo, repoCommands)
+
   // Enable auto merge squash
   await enableAutoSquash(octokit, pullRequestData)
 
   return {
     branchName,
     changedFiles: treeEntries.length + filesToDelete.length,
+    ...(appliedRepoCommands !== 0 && { data: { appliedRepoCommands } }),
     message: 'Migration completed successfully',
     pullRequestNumber: pullRequestData.data.number,
     status: 'success',

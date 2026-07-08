@@ -5,6 +5,14 @@ import config from '../src/parts/UpdateCiVersions/config.json' with { type: 'jso
 import { updateCiVersions } from '../src/parts/UpdateCiVersions/UpdateCiVersions.ts'
 import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
+const defaultRepoCommands = [
+  {
+    branch: 'main',
+    osVersions: config.latestVersions,
+    type: 'update-branch-protection-checks',
+  },
+]
+
 test('updates Ubuntu, macOS, and Windows runner versions in ci.yml', async () => {
   const oldCiYml = `name: CI
 
@@ -85,6 +93,7 @@ jobs:
     ],
     commitMessage: 'feature: update runner versions',
     pullRequestTitle: 'feature: update runner versions',
+    repoCommands: defaultRepoCommands,
     status: 'success',
     statusCode: 201,
   })
@@ -115,6 +124,19 @@ jobs:
       - run: npm publish
 `
 
+  const oldNightlyYaml = `name: Nightly
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - run: npm test
+`
+
   const expectedPrYml = `name: PR
 
 on: pull_request
@@ -139,10 +161,24 @@ jobs:
       - run: npm publish
 `
 
+  const expectedNightlyYaml = `name: Nightly
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - run: npm test
+`
+
   const clonedRepoUri = pathToUri('/test/repo')
   const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
   const mockFs = createMockFs({
     files: {
+      [resolveUri('nightly.yaml', workflowsUri)]: oldNightlyYaml,
       [resolveUri('pr.yml', workflowsUri)]: oldPrYml,
       [resolveUri('release.yml', workflowsUri)]: oldReleaseYml,
     },
@@ -165,6 +201,10 @@ jobs:
     branchName: 'feature/update-ci-versions',
     changedFiles: [
       {
+        content: expectedNightlyYaml,
+        path: '.github/workflows/nightly.yaml',
+      },
+      {
         content: expectedPrYml,
         path: '.github/workflows/pr.yml',
       },
@@ -175,12 +215,13 @@ jobs:
     ],
     commitMessage: 'feature: update runner versions',
     pullRequestTitle: 'feature: update runner versions',
+    repoCommands: defaultRepoCommands,
     status: 'success',
     statusCode: 201,
   })
 })
 
-test('skips non-target workflow files', async () => {
+test('updates any workflow yml file', async () => {
   const otherYml = `name: Other
 
 on: push
@@ -188,6 +229,17 @@ on: push
 jobs:
   test:
     runs-on: ubuntu-22.04
+    steps:
+      - run: npm test
+`
+
+  const expectedOtherYml = `name: Other
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
     steps:
       - run: npm test
 `
@@ -214,10 +266,52 @@ jobs:
   })
 
   expect(result).toEqual({
+    branchName: 'feature/update-ci-versions',
+    changedFiles: [
+      {
+        content: expectedOtherYml,
+        path: '.github/workflows/other.yml',
+      },
+    ],
+    commitMessage: 'feature: update runner versions',
+    pullRequestTitle: 'feature: update runner versions',
+    repoCommands: defaultRepoCommands,
+    status: 'success',
+    statusCode: 201,
+  })
+})
+
+test('skips non-workflow files', async () => {
+  const txtContent = `runs-on: ubuntu-22.04
+`
+
+  const clonedRepoUri = pathToUri('/test/repo')
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
+  const mockFs = createMockFs({
+    files: {
+      [resolveUri('notes.txt', workflowsUri)]: txtContent,
+    },
+  })
+
+  const mockExec = createMockExec(async () => {
+    throw new Error('Should not be called')
+  })
+
+  const result = await updateCiVersions({
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
     branchName: '',
     changedFiles: [],
     commitMessage: '',
     pullRequestTitle: '',
+    repoCommands: defaultRepoCommands,
     status: 'success',
     statusCode: 200,
   })
@@ -245,6 +339,7 @@ test('returns empty result when no workflows directory exists', async () => {
     changedFiles: [],
     commitMessage: '',
     pullRequestTitle: '',
+    repoCommands: defaultRepoCommands,
     status: 'success',
     statusCode: 200,
   })
@@ -288,6 +383,7 @@ jobs:
     changedFiles: [],
     commitMessage: '',
     pullRequestTitle: '',
+    repoCommands: defaultRepoCommands,
     status: 'success',
     statusCode: 200,
   })
@@ -351,6 +447,7 @@ jobs:
     ],
     commitMessage: 'feature: update runner versions',
     pullRequestTitle: 'feature: update runner versions',
+    repoCommands: defaultRepoCommands,
     status: 'success',
     statusCode: 201,
   })
@@ -406,6 +503,7 @@ jobs:
     ],
     commitMessage: 'feature: update runner versions',
     pullRequestTitle: 'feature: update runner versions',
+    repoCommands: defaultRepoCommands,
     status: 'success',
     statusCode: 201,
   })
@@ -415,4 +513,53 @@ jobs:
   expect(config.latestVersions.macos).toBeDefined()
   expect(config.latestVersions.windows).toBeDefined()
   expect(result.changedFiles[0].content).toContain(`ubuntu-${config.latestVersions.ubuntu}`)
+})
+
+test('uses branch option for branch protection repo command', async () => {
+  const modernCiYml = `name: CI
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+`
+
+  const clonedRepoUri = pathToUri('/test/repo')
+  const workflowsUri = resolveUri('.github/workflows/', clonedRepoUri + '/')
+  const mockFs = createMockFs({
+    files: {
+      [resolveUri('ci.yml', workflowsUri)]: modernCiYml,
+    },
+  })
+
+  const mockExec = createMockExec(async () => {
+    throw new Error('Should not be called')
+  })
+
+  const result = await updateCiVersions({
+    branch: 'develop',
+    clonedRepoUri,
+    exec: mockExec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(result).toEqual({
+    branchName: '',
+    changedFiles: [],
+    commitMessage: '',
+    pullRequestTitle: '',
+    repoCommands: [
+      {
+        branch: 'develop',
+        osVersions: config.latestVersions,
+        type: 'update-branch-protection-checks',
+      },
+    ],
+    status: 'success',
+    statusCode: 200,
+  })
 })
