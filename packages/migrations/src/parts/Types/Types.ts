@@ -25,7 +25,17 @@ export interface ModernizeBranchProtectionCommand {
   readonly type: 'modernize-branch-protection'
 }
 
-export type RepoCommand = ModernizeBranchProtectionCommand
+export interface UpdateBranchProtectionChecksCommand {
+  readonly branch: string
+  readonly osVersions: {
+    readonly macos?: string
+    readonly ubuntu?: string
+    readonly windows?: string
+  }
+  readonly type: 'update-branch-protection-checks'
+}
+
+export type RepoCommand = ModernizeBranchProtectionCommand | UpdateBranchProtectionChecksCommand
 
 export interface MigrationSuccessResult {
   readonly branchName?: string

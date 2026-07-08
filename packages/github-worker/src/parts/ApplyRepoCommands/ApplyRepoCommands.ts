@@ -1,5 +1,6 @@
 import type { components } from '@octokit/openapi-types'
 import type { Octokit } from '@octokit/rest'
+import { updateBranchProtectionWithOctokit } from '../UpdateBranchProtection/UpdateBranchProtection.ts'
 
 const GITHUB_ACTIONS_INTEGRATION_ID = 15_368
 
@@ -8,7 +9,17 @@ export interface ModernizeBranchProtectionCommand {
   readonly type: 'modernize-branch-protection'
 }
 
-export type RepoCommand = ModernizeBranchProtectionCommand
+export interface UpdateBranchProtectionChecksCommand {
+  readonly branch: string
+  readonly osVersions: {
+    readonly macos?: string
+    readonly ubuntu?: string
+    readonly windows?: string
+  }
+  readonly type: 'update-branch-protection-checks'
+}
+
+export type RepoCommand = ModernizeBranchProtectionCommand | UpdateBranchProtectionChecksCommand
 
 interface ClassicBranchProtection {
   readonly allow_deletions?: {
@@ -235,6 +246,16 @@ export const applyRepoCommands = async (octokit: Readonly<Octokit>, owner: strin
   for (const repoCommand of repoCommands) {
     if (repoCommand.type === 'modernize-branch-protection') {
       await applyModernizeBranchProtection(octokit, owner, repo, repoCommand.branch)
+      continue
+    }
+    if (repoCommand.type === 'update-branch-protection-checks') {
+      await updateBranchProtectionWithOctokit({
+        branch: repoCommand.branch,
+        octokit,
+        osVersions: repoCommand.osVersions,
+        owner,
+        repo,
+      })
     }
   }
   return repoCommands.length

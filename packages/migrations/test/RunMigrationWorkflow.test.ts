@@ -159,6 +159,65 @@ test('writes repo commands to the manifest', async () => {
   })
 })
 
+test('writes update branch protection checks commands to the manifest', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    invokeMigration: async (): Promise<MigrationResult> => {
+      return {
+        changedFiles: [
+          {
+            content: 'runs-on: macos-26\n',
+            path: '.github/workflows/pr.yml',
+          },
+        ],
+        commitMessage: 'feature: update runner versions',
+        pullRequestTitle: 'feature: update runner versions',
+        repoCommands: [
+          {
+            branch: 'main',
+            osVersions: {
+              macos: '26',
+              ubuntu: '24.04',
+              windows: '2025',
+            },
+            type: 'update-branch-protection-checks',
+          },
+        ],
+        status: 'success',
+        statusCode: 201,
+      }
+    },
+    migrationId: '/migrations2/update-ci-versions',
+    outputDir,
+    requestId: 'request-ci-versions',
+    targetRepository: 'lvce-editor/example-repo',
+  })
+
+  const manifestContent = await readFile(join(outputDir, 'manifest.json'), 'utf8')
+
+  expect(JSON.parse(manifestContent)).toEqual({
+    commitMessage: 'feature: update runner versions',
+    migrationId: '/migrations2/update-ci-versions',
+    pullRequestTitle: 'feature: update runner versions',
+    repoCommands: [
+      {
+        branch: 'main',
+        osVersions: {
+          macos: '26',
+          ubuntu: '24.04',
+          windows: '2025',
+        },
+        type: 'update-branch-protection-checks',
+      },
+    ],
+    requestId: 'request-ci-versions',
+    status: 'success',
+    targetRepository: 'lvce-editor/example-repo',
+  })
+})
+
 test('writes dry run metadata to the manifest', async () => {
   const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
   const calls: Array<[string, Record<string, any>]> = []

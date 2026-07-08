@@ -19,6 +19,18 @@ export interface UpdateBranchProtectionResult {
   readonly updatedRulesets: number
 }
 
+export interface UpdateBranchProtectionWithOctokitOptions {
+  readonly branch: string
+  readonly octokit: Readonly<Octokit>
+  readonly osVersions?: {
+    readonly macos?: string
+    readonly ubuntu?: string
+    readonly windows?: string
+  }
+  readonly owner: string
+  readonly repo: string
+}
+
 const candidatePropNames = ['checks', 'required_checks']
 
 const isNotFoundError = (error: unknown): boolean => {
@@ -279,6 +291,24 @@ export const updateBranchProtection = async (options: UpdateBranchProtectionOpti
   const octokit: Octokit = new OctokitConstructor({
     auth: githubToken,
   })
+
+  return updateBranchProtectionWithOctokit({
+    branch,
+    octokit,
+    osVersions,
+    owner,
+    repo,
+  })
+}
+
+export const updateBranchProtectionWithOctokit = async (
+  options: UpdateBranchProtectionWithOctokitOptions,
+): Promise<UpdateBranchProtectionResult | undefined> => {
+  const { branch, octokit, osVersions, owner, repo } = options
+
+  if (!osVersions) {
+    return undefined
+  }
 
   try {
     const updatedRulesets = await updateBranchRulesetsRequiredChecks(octokit, owner, repo, osVersions)
