@@ -16,7 +16,7 @@
     "@lvce-editor/rpc": "^6.4.0",
     "@lvce-editor/rpc-registry": "^9.31.0",
     "@lvce-editor/verror": "^1.7.0",
-    "@sentry/node": "^10.63.0",
+    "@sentry/node": "^10.64.0",
     "execa": "^9.6.1",
     "express": "^5.2.1",
     "extract-zip": "^2.0.1",
