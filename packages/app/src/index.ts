@@ -18,6 +18,7 @@ import {
 import { migrations2RoutePatterns, registerMigrations2Endpoints } from './migrations2/endpoints.ts'
 import { dispatchMigrationWorkflow } from './parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 import { createHandleMigrationWorkflowRun } from './parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts'
+import * as PlannedReleaseBatch from './parts/PlannedReleaseBatch/PlannedReleaseBatch.ts'
 import express from 'express'
 import { getDependenciesConfig } from './getDependenciesConfig.ts'
 
@@ -33,6 +34,19 @@ const updateRepositoryDependencies = async (context: Context<'release'>, app?: P
   const releasedRepo = payload.repository.name
   const tagName = payload.release.tag_name
   const matchingDependencies = dependencies.filter((dependency) => dependency.fromRepo === releasedRepo)
+  const repository = `${owner}/${releasedRepo}`
+  if (PlannedReleaseBatch.isPlannedReleasePending(repository, tagName)) {
+    PlannedReleaseBatch.addPendingDependencyUpdates(
+      matchingDependencies.map((dependency) => ({
+        ...(dependency.asName && { asName: dependency.asName }),
+        fromRepo: dependency.fromRepo,
+        tagName,
+        toFolder: dependency.toFolder,
+        toRepo: dependency.toRepo,
+      })),
+    )
+    return
+  }
   await Promise.all(
     matchingDependencies.map(async (dependency) => {
       try {

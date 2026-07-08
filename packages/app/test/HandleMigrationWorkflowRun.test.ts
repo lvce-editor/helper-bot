@@ -3,11 +3,13 @@ import { afterEach, beforeEach, expect, jest, test } from '@jest/globals'
 let errorSpy: jest.MockedFunction<(...args: readonly unknown[]) => void>
 let infoSpy: jest.MockedFunction<(...args: readonly unknown[]) => void>
 let warnSpy: jest.MockedFunction<(...args: readonly unknown[]) => void>
+const PlannedReleaseBatch = await import('../src/parts/PlannedReleaseBatch/PlannedReleaseBatch.ts')
 
 beforeEach(() => {
   errorSpy = jest.fn()
   infoSpy = jest.fn()
   warnSpy = jest.fn()
+  PlannedReleaseBatch.resetPlannedReleaseBatch()
 })
 
 const MIGRATION_WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
@@ -15,6 +17,7 @@ const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-re
 const OLD_ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
 
 afterEach(() => {
+  PlannedReleaseBatch.resetPlannedReleaseBatch()
   jest.restoreAllMocks()
 })
 
@@ -650,6 +653,93 @@ test('creates tag refs for upgrade entries in a manually dispatched org release 
   )
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/example: Created tag v1.3.0')
   expect(warnSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/incomplete: skipping incomplete release plan entry')
+  expect(PlannedReleaseBatch.isPlannedReleasePending('lvce-editor/example', 'v1.3.0')).toBe(true)
+})
+
+test('dispatches pending dependency updates after all planned release workflows complete', async () => {
+  PlannedReleaseBatch.startPlannedReleaseBatch([
+    {
+      repository: 'lvce-editor/activity-bar-worker',
+      tagName: 'v1.1.0',
+    },
+    {
+      repository: 'lvce-editor/status-bar-worker',
+      tagName: 'v2.1.0',
+    },
+  ])
+  PlannedReleaseBatch.addPendingDependencyUpdates([
+    {
+      fromRepo: 'activity-bar-worker',
+      tagName: 'v1.1.0',
+      toFolder: 'packages/renderer-worker',
+      toRepo: 'lvce-editor',
+    },
+    {
+      fromRepo: 'status-bar-worker',
+      tagName: 'v2.1.0',
+      toFolder: 'packages/renderer-worker',
+      toRepo: 'lvce-editor',
+    },
+  ])
+  const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({
+    requestId: 'request-dependencies',
+  })
+  const app = {} as any
+  const createContext = (repo: string, tag: string): any => ({
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    payload: {
+      action: 'completed',
+      repository: {
+        name: repo,
+        owner: {
+          login: 'lvce-editor',
+        },
+      },
+      workflow_run: {
+        event: 'push',
+        head_branch: tag,
+        id: 123,
+        path: '.github/workflows/release.yml',
+      },
+    },
+  })
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+  })
+
+  await handleMigrationWorkflowRun(createContext('activity-bar-worker', 'v1.1.0'))
+  expect(dispatchMigrationWorkflow).not.toHaveBeenCalled()
+
+  await handleMigrationWorkflowRun(createContext('status-bar-worker', 'v2.1.0'))
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-specific-dependencies',
+    migrationOptions: {
+      toRepo: 'lvce-editor',
+      updates: [
+        {
+          fromRepo: 'activity-bar-worker',
+          tagName: 'v1.1.0',
+          toFolder: 'packages/renderer-worker',
+          toRepo: 'lvce-editor',
+        },
+        {
+          fromRepo: 'status-bar-worker',
+          tagName: 'v2.1.0',
+          toFolder: 'packages/renderer-worker',
+          toRepo: 'lvce-editor',
+        },
+      ],
+    },
+    targetRepository: 'lvce-editor/lvce-editor',
+  })
 })
 
 test('ignores dry run org release plan artifacts without creating tag refs', async () => {
