@@ -34,6 +34,7 @@ cDIUGO9eluOat3V1vIlRyZ4BJsL/YbrVh8HfZ4+XD5vn37krunyR8HfY0GeWpFTH
 
 beforeEach(async () => {
   nock.disableNetConnect()
+  myProbotApp.resetHandledReleases()
   probot = new Probot({
     appId: 123,
     privateKey,

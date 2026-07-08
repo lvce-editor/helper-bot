@@ -742,6 +742,142 @@ test('dispatches pending dependency updates after all planned release workflows 
   })
 })
 
+test('dispatches pending dependency updates when planned release batch times out', async () => {
+  jest.useFakeTimers()
+  try {
+    const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+      changedFiles: [],
+      manifest: {
+        data: {
+          releasePlan: {
+            entries: [
+              {
+                newTag: 'v1.1.0',
+                repository: 'lvce-editor/activity-bar-worker',
+                targetSha: 'main-sha',
+                upgrade: true,
+              },
+              {
+                newTag: 'v2.1.0',
+                repository: 'lvce-editor/status-bar-worker',
+                targetSha: 'main-sha',
+                upgrade: true,
+              },
+            ],
+          },
+        },
+        migrationId: '/migrations2/plan-org-release-tags',
+        requestId: 'nightly-1',
+        status: 'success',
+        targetRepository: 'lvce-editor/helper-bot',
+      },
+    })
+    const invokeGithubWorker = (jest.fn() as any).mockResolvedValue({
+      data: {
+        message: 'Created tag',
+        status: 'created',
+      },
+      type: 'success',
+    })
+    const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({
+      requestId: 'request-dependencies',
+    })
+    const getRepoInstallation = (jest.fn() as any).mockResolvedValue({
+      data: {
+        id: 77,
+      },
+    })
+    const auth = (jest.fn() as any).mockResolvedValue({
+      token: 'installation-token',
+    })
+    const app: any = {
+      auth: (jest.fn() as any)
+        .mockResolvedValueOnce({
+          rest: {
+            apps: {
+              getRepoInstallation,
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          auth,
+        })
+        .mockResolvedValueOnce({
+          rest: {
+            apps: {
+              getRepoInstallation,
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          auth,
+        }) as any,
+    }
+    const context: any = {
+      log: {
+        error: errorSpy,
+        info: infoSpy,
+        warn: warnSpy,
+      },
+      octokit: {},
+      payload: {
+        action: 'completed',
+        repository: {
+          name: 'helper-bot',
+          owner: {
+            login: 'lvce-editor',
+          },
+        },
+        workflow_run: {
+          event: 'workflow_dispatch',
+          head_branch: 'main',
+          id: 123,
+          path: MIGRATION_WORKFLOW_PATH,
+        },
+      },
+    }
+
+    const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+    const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+      app,
+      dispatchMigrationWorkflow,
+      downloadMigrationArtifact,
+      invokeGithubWorker,
+    })
+
+    await handleMigrationWorkflowRun(context)
+    PlannedReleaseBatch.addPendingDependencyUpdates([
+      {
+        fromRepo: 'activity-bar-worker',
+        tagName: 'v1.1.0',
+        toFolder: 'packages/renderer-worker',
+        toRepo: 'lvce-editor',
+      },
+    ])
+
+    await jest.advanceTimersByTimeAsync(PlannedReleaseBatch.PlannedReleaseBatchTimeout)
+
+    expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+      app,
+      migrationId: '/migrations2/update-specific-dependencies',
+      migrationOptions: {
+        toRepo: 'lvce-editor',
+        updates: [
+          {
+            fromRepo: 'activity-bar-worker',
+            tagName: 'v1.1.0',
+            toFolder: 'packages/renderer-worker',
+            toRepo: 'lvce-editor',
+          },
+        ],
+      },
+      targetRepository: 'lvce-editor/lvce-editor',
+    })
+  } finally {
+    jest.useRealTimers()
+  }
+})
+
 test('ignores dry run org release plan artifacts without creating tag refs', async () => {
   const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
     changedFiles: [],

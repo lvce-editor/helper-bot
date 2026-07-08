@@ -234,7 +234,9 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
             captureException(error as Error)
           }
         }
-        PlannedReleaseBatch.startPlannedReleaseBatch(plannedReleases)
+        PlannedReleaseBatch.startPlannedReleaseBatch(plannedReleases, async (batches) => {
+          await dispatchPendingDependencyUpdateBatches(logger, batches)
+        })
         return
       }
       if (artifact.changedFiles.length === 0 && (!artifact.manifest.repoCommands || artifact.manifest.repoCommands.length === 0)) {
