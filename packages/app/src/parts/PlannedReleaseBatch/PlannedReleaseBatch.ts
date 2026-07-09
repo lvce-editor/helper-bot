@@ -28,7 +28,7 @@ interface PlannedReleaseBatchState {
 
 let state: PlannedReleaseBatchState | undefined
 
-export const PlannedReleaseBatchTimeout = 5 * 60 * 1000
+export const PlannedReleaseBatchTimeout = 25 * 60 * 1000
 
 const getReleaseKey = (repository: string, tagName: string): string => {
   return `${repository}@${tagName}`
