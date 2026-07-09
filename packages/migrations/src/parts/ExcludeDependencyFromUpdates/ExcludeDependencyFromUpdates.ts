@@ -8,7 +8,7 @@ export interface ExcludeDependencyFromUpdatesOptions extends BaseMigrationOption
   dependencyName: string
 }
 
-const ncuCommandRegex = /OUTPUT=`ncu -u(?<args>.*?)`/g
+const ncuCommandRegex = /OUTPUT=(?<quote>`|\$\()ncu -u(?<args>.*?)(?<end>[`)])/g
 const excludedDependencyRegex = /(?:^|\s)-x\s+(?<dependency>[^\s]+)/g
 const dependencyNameRegex = /^@?[a-z-]+(?:\/[a-z-]+)?$/
 
@@ -27,6 +27,12 @@ const addDependencyExclusion = (ncuArgs: string, dependencyName: string): string
     return ` -x ${dependencyName}`
   }
   return `${ncuArgs} -x ${dependencyName}`
+}
+
+const getUpdatedOutputCommand = (match: RegExpMatchArray, updatedArgs: string): string => {
+  const quote = match.groups?.quote || '`'
+  const end = quote === '$(' ? ')' : '`'
+  return `OUTPUT=${quote}ncu -u${updatedArgs}${end}`
 }
 
 const computeExcludeDependencyFromUpdatesContent = (
@@ -54,7 +60,7 @@ const computeExcludeDependencyFromUpdatesContent = (
       continue
     }
     const updatedArgs = addDependencyExclusion(ncuArgs, dependencyName)
-    newContent = newContent.replace(match[0], () => `OUTPUT=\`ncu -u${updatedArgs}\``)
+    newContent = newContent.replace(match[0], () => getUpdatedOutputCommand(match, updatedArgs))
     hasChanges = true
   }
 
