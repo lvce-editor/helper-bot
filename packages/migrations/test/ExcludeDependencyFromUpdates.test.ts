@@ -103,6 +103,36 @@ function updateDependencies {
   })
 })
 
+test('adds dependency exclusion to ncu command with dollar paren command substitution', async () => {
+  const content = `#!/bin/bash
+
+function updateDependencies {
+  OUTPUT=$(ncu -u -x @types/node -x lerna -x @babel/preset-typescript)
+}
+`
+
+  const result = await excludeDependencyFromUpdates(createOptions(content, 'typescript'))
+
+  expect(result).toEqual({
+    branchName: 'feature/exclude-typescript-from-updates',
+    changedFiles: [
+      {
+        content: `#!/bin/bash
+
+function updateDependencies {
+  OUTPUT=$(ncu -u -x @types/node -x lerna -x @babel/preset-typescript -x typescript)
+}
+`,
+        path: 'scripts/update-dependencies.sh',
+      },
+    ],
+    commitMessage: 'ci: exclude typescript from dependency updates',
+    pullRequestTitle: 'ci: exclude typescript from dependency updates',
+    status: 'success',
+    statusCode: 201,
+  })
+})
+
 test('returns empty result when dependency is already excluded', async () => {
   const content = `#!/bin/bash
 
