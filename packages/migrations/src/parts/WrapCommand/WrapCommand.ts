@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-nonstandard-builtin-properties -- Symbol.asyncDispose is supported by the Node version in .nvmrc. */
 import { NodeWorkerRpcParent } from '@lvce-editor/rpc'
 import { constants } from 'node:fs'
 import * as FsPromises from 'node:fs/promises'

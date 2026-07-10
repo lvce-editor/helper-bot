@@ -10,6 +10,12 @@ export default [
     ignores: ['packages/app'],
   },
   {
+    files: ['.github/**/*.yml', '.github/**/*.yaml'],
+    rules: {
+      'github-actions/action-versions': 'off',
+    },
+  },
+  {
     files: ['**/*.ts'],
     rules: {
       '@typescript-eslint/prefer-readonly-parameter-types': 'off',
