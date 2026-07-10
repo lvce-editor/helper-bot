@@ -74,7 +74,6 @@ jobs:
         run: node packages/migrations/dist/runMigrationWorkflow.js
       - name: Upload migration artifact
         if: always()
-        # eslint-disable-next-line github-actions/action-versions
         uses: actions/upload-artifact@v4
         with:
           name: migration-result-${{ inputs.requestId }}
