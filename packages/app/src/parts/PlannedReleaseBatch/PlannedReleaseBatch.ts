@@ -12,15 +12,30 @@ export interface PendingDependencyUpdate {
 }
 
 export interface PendingDependencyUpdateBatch {
+  readonly type: 'dependencies'
   readonly targetRepository: string
   readonly toRepo: string
   readonly updates: readonly PendingDependencyUpdate[]
 }
 
-export type PlannedReleaseBatchTimeoutHandler = (batches: readonly PendingDependencyUpdateBatch[]) => void | Promise<void>
+export interface PendingBuiltinExtensionUpdate {
+  readonly repositoryName: string
+  readonly tagName: string
+}
+
+export interface PendingBuiltinExtensionUpdateBatch {
+  readonly type: 'builtinExtensions'
+  readonly targetRepository: string
+  readonly updates: readonly PendingBuiltinExtensionUpdate[]
+}
+
+export type PendingUpdateBatch = PendingDependencyUpdateBatch | PendingBuiltinExtensionUpdateBatch
+
+export type PlannedReleaseBatchTimeoutHandler = (batches: readonly PendingUpdateBatch[]) => void | Promise<void>
 
 interface PlannedReleaseBatchState {
   readonly completedPlannedReleases: Set<string>
+  readonly pendingBuiltinExtensionUpdates: PendingBuiltinExtensionUpdate[]
   readonly pendingDependencyUpdates: PendingDependencyUpdate[]
   readonly pendingPlannedReleases: Map<string, PlannedRelease>
   readonly timeout?: NodeJS.Timeout
@@ -59,7 +74,7 @@ export const startPlannedReleaseBatch = (
   const timeoutHandle =
     onTimeout && pendingPlannedReleases.size > 0
       ? setTimeout(() => {
-          const batches = flushPendingDependencyUpdateBatches()
+          const batches = flushPendingUpdateBatches()
           if (batches.length > 0) {
             void onTimeout(batches)
           }
@@ -67,6 +82,7 @@ export const startPlannedReleaseBatch = (
       : undefined
   state = {
     completedPlannedReleases: new Set(),
+    pendingBuiltinExtensionUpdates: [],
     pendingDependencyUpdates: [],
     pendingPlannedReleases,
     ...(timeoutHandle && { timeout: timeoutHandle }),
@@ -84,16 +100,23 @@ export const addPendingDependencyUpdates = (updates: readonly PendingDependencyU
   state.pendingDependencyUpdates.push(...updates)
 }
 
-export const flushPendingDependencyUpdateBatches = (): readonly PendingDependencyUpdateBatch[] => {
+export const addPendingBuiltinExtensionUpdate = (update: Readonly<PendingBuiltinExtensionUpdate>): void => {
+  if (!state) {
+    return
+  }
+  state.pendingBuiltinExtensionUpdates.push(update)
+}
+
+export const flushPendingUpdateBatches = (): readonly PendingUpdateBatch[] => {
   if (!state) {
     return []
   }
-  const batches = getPendingDependencyUpdateBatches()
+  const batches = getPendingUpdateBatches()
   resetPlannedReleaseBatch()
   return batches
 }
 
-export const markPlannedReleaseCompleted = (repository: string, tagName: string): readonly PendingDependencyUpdateBatch[] => {
+export const markPlannedReleaseCompleted = (repository: string, tagName: string): readonly PendingUpdateBatch[] => {
   if (!state) {
     return []
   }
@@ -105,10 +128,10 @@ export const markPlannedReleaseCompleted = (repository: string, tagName: string)
   if (state.completedPlannedReleases.size !== state.pendingPlannedReleases.size) {
     return []
   }
-  return flushPendingDependencyUpdateBatches()
+  return flushPendingUpdateBatches()
 }
 
-const getPendingDependencyUpdateBatches = (): readonly PendingDependencyUpdateBatch[] => {
+const getPendingUpdateBatches = (): readonly PendingUpdateBatch[] => {
   if (!state) {
     return []
   }
@@ -119,9 +142,21 @@ const getPendingDependencyUpdateBatches = (): readonly PendingDependencyUpdateBa
     updates.push(update)
     batches.set(targetRepository, updates)
   }
-  return [...batches].map(([targetRepository, updates]) => ({
+  const dependencyBatches: PendingDependencyUpdateBatch[] = [...batches].map(([targetRepository, updates]) => ({
     targetRepository,
+    type: 'dependencies',
     toRepo: getRepoName(targetRepository),
     updates,
   }))
+  if (state.pendingBuiltinExtensionUpdates.length === 0) {
+    return dependencyBatches
+  }
+  return [
+    ...dependencyBatches,
+    {
+      targetRepository: 'lvce-editor/lvce-editor',
+      type: 'builtinExtensions',
+      updates: state.pendingBuiltinExtensionUpdates,
+    },
+  ]
 }
