@@ -102,6 +102,18 @@ const updateRepositoryDependencies = async (context: Context<'release'>, app?: P
   await Promise.all(matchingDependencies.map((dependency) => dispatchDependencyUpdate(app, dependency, owner, tagName)))
 }
 
+const updateBuiltinExtensionsForRelease = async (context: Context<'release'>): Promise<void> => {
+  const { payload } = context
+  const repositoryName = payload.repository.name
+  const tagName = payload.release.tag_name
+  const repository = `${payload.repository.owner.login}/${repositoryName}`
+  if (repositoryName !== 'renderer-process' && PlannedReleaseBatch.isPlannedReleasePending(repository, tagName)) {
+    PlannedReleaseBatch.addPendingBuiltinExtensionUpdate({ repositoryName, tagName })
+    return
+  }
+  await updateBuiltinExtensions(context)
+}
+
 const updateWebsiteConfig = async (context: Context<'release'>, app?: Probot) => {
   const { payload } = context
   const releasedRepo = payload.repository.name
@@ -141,7 +153,7 @@ export const handleReleaseReleased = async (context: Context<'release'>, app?: P
   if (!markReleaseHandled(context)) {
     return
   }
-  await Promise.all([updateBuiltinExtensions(context), updateRepositoryDependencies(context, app), updateWebsiteConfig(context, app)])
+  await Promise.all([updateBuiltinExtensionsForRelease(context), updateRepositoryDependencies(context, app), updateWebsiteConfig(context, app)])
 }
 
 const handleHelloWorld = async (req: any, res: any) => {

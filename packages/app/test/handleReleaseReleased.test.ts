@@ -137,7 +137,7 @@ test('dispatches update-specific-dependency migrations for matching release depe
   })
 })
 
-test('collects matching planned release dependency updates instead of dispatching immediately', async () => {
+test('collects matching planned release updates instead of dispatching immediately', async () => {
   PlannedReleaseBatch.startPlannedReleaseBatch([
     {
       repository: 'lvce-editor/test-worker',
@@ -149,10 +149,12 @@ test('collects matching planned release dependency updates instead of dispatchin
 
   await handleReleaseReleased(context, app)
 
+  expect(mockUpdateBuiltinExtensions).not.toHaveBeenCalled()
   expect(mockDispatchMigrationWorkflow).not.toHaveBeenCalled()
   expect(PlannedReleaseBatch.markPlannedReleaseCompleted('lvce-editor/test-worker', 'v1.0.0')).toEqual([
     {
       targetRepository: 'lvce-editor/lvce-editor',
+      type: 'dependencies',
       toRepo: 'lvce-editor',
       updates: [
         {
@@ -160,6 +162,16 @@ test('collects matching planned release dependency updates instead of dispatchin
           tagName: 'v1.0.0',
           toFolder: 'packages/renderer-worker',
           toRepo: 'lvce-editor',
+        },
+      ],
+    },
+    {
+      targetRepository: 'lvce-editor/lvce-editor',
+      type: 'builtinExtensions',
+      updates: [
+        {
+          repositoryName: 'test-worker',
+          tagName: 'v1.0.0',
         },
       ],
     },

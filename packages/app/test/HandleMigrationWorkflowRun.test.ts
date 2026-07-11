@@ -656,7 +656,7 @@ test('creates tag refs for upgrade entries in a manually dispatched org release 
   expect(PlannedReleaseBatch.isPlannedReleasePending('lvce-editor/example', 'v1.3.0')).toBe(true)
 })
 
-test('dispatches pending dependency updates after all planned release workflows complete', async () => {
+test('dispatches pending dependency and builtin extension updates after all planned release workflows complete', async () => {
   PlannedReleaseBatch.startPlannedReleaseBatch([
     {
       repository: 'lvce-editor/activity-bar-worker',
@@ -681,6 +681,8 @@ test('dispatches pending dependency updates after all planned release workflows 
       toRepo: 'lvce-editor',
     },
   ])
+  PlannedReleaseBatch.addPendingBuiltinExtensionUpdate({ repositoryName: 'activity-bar-worker', tagName: 'v1.1.0' })
+  PlannedReleaseBatch.addPendingBuiltinExtensionUpdate({ repositoryName: 'status-bar-worker', tagName: 'v2.1.0' })
   const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({
     requestId: 'request-dependencies',
   })
@@ -735,6 +737,23 @@ test('dispatches pending dependency updates after all planned release workflows 
           tagName: 'v2.1.0',
           toFolder: 'packages/renderer-worker',
           toRepo: 'lvce-editor',
+        },
+      ],
+    },
+    targetRepository: 'lvce-editor/lvce-editor',
+  })
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-builtin-extensions',
+    migrationOptions: {
+      updates: [
+        {
+          repositoryName: 'activity-bar-worker',
+          tagName: 'v1.1.0',
+        },
+        {
+          repositoryName: 'status-bar-worker',
+          tagName: 'v2.1.0',
         },
       ],
     },

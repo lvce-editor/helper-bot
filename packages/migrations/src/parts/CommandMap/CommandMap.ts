@@ -33,6 +33,7 @@ import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
 import { removeNpmTokenFromWorkflow } from '../RemoveNpmTokenFromWorkflow/RemoveNpmTokenFromWorkflow.ts'
 import { runLintInCi } from '../RunLintInCi/RunLintInCi.ts'
 import { updateAllDependencies } from '../UpdateAllDependencies/UpdateAllDependencies.ts'
+import { updateBuiltinExtensionsBatch } from '../UpdateBuiltinExtensionsBatch/UpdateBuiltinExtensionsBatch.ts'
 import { updateCiVersions } from '../UpdateCiVersions/UpdateCiVersions.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
@@ -78,6 +79,7 @@ export const commandMap = {
   '/migrations2/remove-npm-token': wrapCommand(removeNpmTokenFromWorkflow),
   '/migrations2/run-lint-in-ci': wrapCommand(runLintInCi),
   '/migrations2/update-all-dependencies': wrapCommand(updateAllDependencies),
+  '/migrations2/update-builtin-extensions': wrapCommand(updateBuiltinExtensionsBatch),
   '/migrations2/update-ci-versions': wrapCommand(updateCiVersions),
   '/migrations2/update-dependencies': wrapCommand(updateDependencies),
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
