@@ -16,6 +16,7 @@ const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml'
 const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
 const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
 const UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID = '/migrations2/update-specific-dependencies'
+const UPDATE_BUILTIN_EXTENSIONS_MIGRATION_ID = '/migrations2/update-builtin-extensions'
 const ORG_RELEASE_PLAN_TARGET_REPOSITORY = 'lvce-editor/helper-bot'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
@@ -126,24 +127,19 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     }
   }
 
-  const dispatchPendingDependencyUpdateBatches = async (
-    logger: Logger,
-    batches: readonly PlannedReleaseBatch.PendingDependencyUpdateBatch[],
-  ): Promise<void> => {
+  const dispatchPendingUpdateBatches = async (logger: Logger, batches: readonly PlannedReleaseBatch.PendingUpdateBatch[]): Promise<void> => {
     for (const batch of batches) {
       try {
-        logger.info(`${LOG_PREFIX} dispatching ${batch.updates.length} pending dependency updates for ${batch.targetRepository}`)
+        const updateLabel = batch.type === 'dependencies' ? 'dependency' : 'builtin extension'
+        logger.info(`${LOG_PREFIX} dispatching ${batch.updates.length} pending ${updateLabel} updates for ${batch.targetRepository}`)
         await dispatchWorkflow({
           app: options.app,
-          migrationId: UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID,
-          migrationOptions: {
-            toRepo: batch.toRepo,
-            updates: batch.updates,
-          },
+          migrationId: batch.type === 'dependencies' ? UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID : UPDATE_BUILTIN_EXTENSIONS_MIGRATION_ID,
+          migrationOptions: batch.type === 'dependencies' ? { toRepo: batch.toRepo, updates: batch.updates } : { updates: batch.updates },
           targetRepository: batch.targetRepository,
         })
       } catch (error) {
-        logger.error(`${LOG_PREFIX} failed to dispatch pending dependency updates for ${batch.targetRepository}`, error)
+        logger.error(`${LOG_PREFIX} failed to dispatch pending updates for ${batch.targetRepository}`, error)
         captureException(error as Error)
       }
     }
@@ -160,7 +156,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     if (batches.length === 0) {
       return false
     }
-    await dispatchPendingDependencyUpdateBatches(getLogger(context), batches)
+    await dispatchPendingUpdateBatches(getLogger(context), batches)
     return true
   }
 
@@ -235,7 +231,7 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
           }
         }
         PlannedReleaseBatch.startPlannedReleaseBatch(plannedReleases, async (batches) => {
-          await dispatchPendingDependencyUpdateBatches(logger, batches)
+          await dispatchPendingUpdateBatches(logger, batches)
         })
         return
       }
