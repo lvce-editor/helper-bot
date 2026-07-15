@@ -107,6 +107,19 @@ export const wrapCommand = <T extends BaseMigrationOptions>(command: (options: T
   }
 }
 
+type MigrationEnvironment = Pick<BaseMigrationOptions, 'exec' | 'fetch' | 'fs'>
+
+export const wrapCommandWithoutClone = <T extends MigrationEnvironment>(command: (options: T) => Promise<MigrationResult>) => {
+  return async (options: Omit<T, keyof MigrationEnvironment>): Promise<MigrationResult> => {
+    return await command({
+      ...options,
+      exec: wrapExeca(),
+      fetch: globalThis.fetch,
+      fs: wrapFs(),
+    } as unknown as T)
+  }
+}
+
 export const wrapResponseCommand = (
   fn: () => Promise<Response>,
 ): (() => Promise<{ error?: string; headers?: Array<[string, string]>; text?: string; type: string }>) => {

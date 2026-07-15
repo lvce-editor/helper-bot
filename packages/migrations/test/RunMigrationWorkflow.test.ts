@@ -306,6 +306,40 @@ test('writes release plan repository summary arrays to the manifest', async () =
   )
 })
 
+test('writes eslint update plan repository summary arrays to the manifest', async () => {
+  const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
+
+  const { runMigrationWorkflow } = await import('../src/parts/RunMigrationWorkflow/RunMigrationWorkflow.ts')
+  await runMigrationWorkflow({
+    invokeMigration: async (): Promise<MigrationResult> => ({
+      changedFiles: [],
+      data: {
+        eslintUpdatePlan: {
+          entries: [
+            { repository: 'lvce-editor/outdated', upgrade: true },
+            { repository: 'lvce-editor/current', upgrade: false },
+          ],
+          latestVersions: {
+            eslintConfigVersion: '16.4.0',
+            eslintVersion: '10.7.0',
+          },
+        },
+      },
+      pullRequestTitle: 'plan-org-eslint-updates',
+      status: 'success',
+      statusCode: 200,
+    }),
+    migrationId: '/migrations2/plan-org-eslint-updates',
+    outputDir,
+    requestId: 'request-eslint-plan',
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+
+  const manifest = JSON.parse(await readFile(join(outputDir, 'manifest.json'), 'utf8'))
+  expect(manifest.repositoriesToUpgrade).toEqual(['lvce-editor/outdated'])
+  expect(manifest.repositoriesNotToUpgrade).toEqual(['lvce-editor/current'])
+})
+
 test('writes an error manifest when the target repository is outside lvce-editor', async () => {
   const outputDir = await mkdtemp(join(tmpdir(), 'run-migration-workflow-'))
 

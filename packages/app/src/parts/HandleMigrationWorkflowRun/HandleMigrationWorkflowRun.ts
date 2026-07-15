@@ -13,8 +13,11 @@ const WORKFLOW_EVENT = 'workflow_dispatch'
 const WORKFLOW_BRANCH = 'main'
 const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
 const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml'
+const ORG_ESLINT_UPDATE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-eslint-update-plan.yml'
 const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
+const ORG_ESLINT_UPDATE_PLAN_MIGRATION_ID = '/migrations2/plan-org-eslint-updates'
 const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
+const UPDATE_ESLINT_DEPENDENCIES_MIGRATION_ID = '/migrations2/update-eslint-dependencies'
 const UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID = '/migrations2/update-specific-dependencies'
 const UPDATE_BUILTIN_EXTENSIONS_MIGRATION_ID = '/migrations2/update-builtin-extensions'
 const ORG_RELEASE_PLAN_TARGET_REPOSITORY = 'lvce-editor/helper-bot'
@@ -106,6 +109,17 @@ const isAllowedOrgReleasePlanRequestWorkflowRun = (
   )
 }
 
+const isAllowedOrgEslintUpdatePlanRequestWorkflowRun = (
+  workflowRun: Readonly<{ conclusion?: string | null; event: string; head_branch?: string; path: string }>,
+): boolean => {
+  return (
+    workflowRun.path === ORG_ESLINT_UPDATE_PLAN_REQUEST_WORKFLOW_PATH &&
+    workflowRun.head_branch === WORKFLOW_BRANCH &&
+    workflowRun.conclusion === 'success' &&
+    workflowRun.event === WORKFLOW_EVENT
+  )
+}
+
 export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleMigrationWorkflowRunOptions>) => {
   const dispatchWorkflow = options.dispatchMigrationWorkflow || dispatchMigrationWorkflow
   const downloadArtifact = options.downloadMigrationArtifact || downloadMigrationArtifact
@@ -124,6 +138,47 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     } catch (error) {
       logger.error(`${LOG_PREFIX} failed to dispatch org release plan migration workflow`, error)
       captureException(error as Error)
+    }
+  }
+
+  const requestOrgEslintUpdatePlanMigration = async (logger: Logger): Promise<void> => {
+    try {
+      logger.info(`${LOG_PREFIX} dispatching org eslint update plan migration workflow`)
+      await dispatchWorkflow({
+        app: options.app,
+        migrationId: ORG_ESLINT_UPDATE_PLAN_MIGRATION_ID,
+        migrationOptions: {},
+        targetRepository: ORG_RELEASE_PLAN_TARGET_REPOSITORY,
+      })
+      logger.info(`${LOG_PREFIX} dispatched org eslint update plan migration workflow`)
+    } catch (error) {
+      logger.error(`${LOG_PREFIX} failed to dispatch org eslint update plan migration workflow`, error)
+      captureException(error as Error)
+    }
+  }
+
+  const dispatchPlannedEslintUpdates = async (logger: Logger, eslintUpdatePlan: any): Promise<void> => {
+    const entries = Array.isArray(eslintUpdatePlan?.entries) ? eslintUpdatePlan.entries.filter((entry: any) => entry.upgrade === true) : []
+    const latestVersions = eslintUpdatePlan?.latestVersions
+    if (!latestVersions?.eslintVersion || !latestVersions?.eslintConfigVersion) {
+      logger.warn(`${LOG_PREFIX} eslint update plan is missing latestVersions`)
+      return
+    }
+    logger.info(`${LOG_PREFIX} eslint update plan contains ${entries.length} repository updates`)
+    for (const entry of entries) {
+      try {
+        assertAllowedTargetRepository(entry.repository)
+        await dispatchWorkflow({
+          app: options.app,
+          migrationId: UPDATE_ESLINT_DEPENDENCIES_MIGRATION_ID,
+          migrationOptions: latestVersions,
+          targetRepository: entry.repository,
+        })
+        logger.info(`${LOG_PREFIX} dispatched eslint dependency update for ${entry.repository}`)
+      } catch (error) {
+        logger.error(`${LOG_PREFIX} failed to dispatch eslint dependency update for ${entry.repository}`, error)
+        captureException(error as Error)
+      }
     }
   }
 
@@ -190,6 +245,15 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       }
       if (artifact.manifest.dryRun) {
         logger.info(`${LOG_PREFIX} ${migrationLabel}: dry run requested; ignoring migration result`)
+        return
+      }
+      if (artifact.manifest.migrationId === ORG_ESLINT_UPDATE_PLAN_MIGRATION_ID) {
+        const eslintUpdatePlan = artifact.manifest.data?.eslintUpdatePlan
+        if (!eslintUpdatePlan) {
+          logger.warn(`${LOG_PREFIX} ${migrationLabel}: eslint update plan artifact is missing data.eslintUpdatePlan`)
+          return
+        }
+        await dispatchPlannedEslintUpdates(logger, eslintUpdatePlan)
         return
       }
       if (artifact.manifest.migrationId === ORG_RELEASE_PLAN_MIGRATION_ID) {
@@ -276,6 +340,17 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
     }
     if (repository.owner.login !== HELPER_BOT_OWNER || repository.name !== HELPER_BOT_REPO) {
       console.info(`[workflow_completed] repo mismatch`)
+      return
+    }
+    if (isAllowedOrgEslintUpdatePlanRequestWorkflowRun(workflowRun)) {
+      logger.info(`${LOG_PREFIX} received completed org eslint update plan request workflow webhook for run ${workflowRun.id}`)
+      if (!options.processInBackground) {
+        await requestOrgEslintUpdatePlanMigration(logger)
+        return
+      }
+      setImmediate(async () => {
+        await requestOrgEslintUpdatePlanMigration(logger)
+      })
       return
     }
     if (isAllowedOrgReleasePlanRequestWorkflowRun(workflowRun)) {

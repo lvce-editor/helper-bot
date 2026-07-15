@@ -82,8 +82,8 @@ const invokeMigrationCommand = async (migrationId: string, options: Record<strin
   return result as MigrationResult
 }
 
-const getReleasePlanRepositoryGroups = (data: any): Pick<ArtifactManifest, 'repositoriesNotToUpgrade' | 'repositoriesToUpgrade'> => {
-  const entries = data?.releasePlan?.entries
+const getPlanRepositoryGroups = (data: any): Pick<ArtifactManifest, 'repositoriesNotToUpgrade' | 'repositoriesToUpgrade'> => {
+  const entries = data?.releasePlan?.entries || data?.eslintUpdatePlan?.entries
   if (!Array.isArray(entries)) {
     return {}
   }
@@ -96,9 +96,9 @@ const getReleasePlanRepositoryGroups = (data: any): Pick<ArtifactManifest, 'repo
 const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Readonly<MigrationResult>): ArtifactManifest => {
   const deletedFiles = result.changedFiles.filter((changedFile) => changedFile.type === 'deleted').map((changedFile) => changedFile.path)
   const data = 'data' in result && result.data ? result.data : undefined
-  const releasePlanRepositoryGroups = getReleasePlanRepositoryGroups(data)
+  const planRepositoryGroups = getPlanRepositoryGroups(data)
   return {
-    ...('repositoriesToUpgrade' in releasePlanRepositoryGroups && { repositoriesToUpgrade: releasePlanRepositoryGroups.repositoriesToUpgrade }),
+    ...('repositoriesToUpgrade' in planRepositoryGroups && { repositoriesToUpgrade: planRepositoryGroups.repositoriesToUpgrade }),
     ...(options.baseBranch && { baseBranch: options.baseBranch }),
     ...('branchName' in result && result.branchName && { branchName: result.branchName }),
     ...('commitMessage' in result && result.commitMessage && { commitMessage: result.commitMessage }),
@@ -113,7 +113,7 @@ const toManifest = (options: Readonly<RunMigrationWorkflowOptions>, result: Read
     requestId: options.requestId,
     status: result.status,
     targetRepository: options.targetRepository,
-    ...('repositoriesNotToUpgrade' in releasePlanRepositoryGroups && { repositoriesNotToUpgrade: releasePlanRepositoryGroups.repositoriesNotToUpgrade }),
+    ...('repositoriesNotToUpgrade' in planRepositoryGroups && { repositoriesNotToUpgrade: planRepositoryGroups.repositoriesNotToUpgrade }),
   }
 }
 

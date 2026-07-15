@@ -4,6 +4,34 @@ import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { lintAndFix } from '../src/parts/LintAndFix/LintAndFix.ts'
 import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 
+const getRequestUrl = (input: string | URL | Request): string => {
+  if (typeof input === 'string') {
+    return input
+  }
+  if (input instanceof URL) {
+    return input.href
+  }
+  return input.url
+}
+
+const createLatestVersionsFetch = (eslintVersion = '9.39.2', eslintConfigVersion = '4.3.0'): typeof globalThis.fetch => {
+  return jest.fn(async (url: string | URL | Request) => {
+    const versions: Record<string, string> = {
+      'https://registry.npmjs.org/@lvce-editor/eslint-config/latest': eslintConfigVersion,
+      'https://registry.npmjs.org/eslint/latest': eslintVersion,
+    }
+    const requestUrl = getRequestUrl(url)
+    const version = versions[requestUrl]
+    if (!version) {
+      throw new Error(`Unexpected fetch URL: ${requestUrl}`)
+    }
+    return {
+      json: async () => ({ version }),
+      ok: true,
+    } as Response
+  })
+}
+
 test('installs eslint and runs eslint --fix', async () => {
   const oldPackageJson: any = {
     name: 'test-package',
@@ -250,16 +278,7 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
     },
   })
 
-  // Mock fetch to return latest version as 4.3.0 (same as installed)
-  const mockFetch = jest.fn(async (url: string) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
-      return {
-        json: async () => ({ version: '4.3.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch URL: ${url}`)
-  })
+  const mockFetch = createLatestVersionsFetch()
 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
@@ -278,7 +297,7 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
@@ -317,16 +336,7 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
     },
   })
 
-  // Mock fetch to return latest version as 4.3.0 (same as installed)
-  const mockFetch = jest.fn(async (url: string) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
-      return {
-        json: async () => ({ version: '4.3.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch URL: ${url}`)
-  })
+  const mockFetch = createLatestVersionsFetch()
 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
@@ -345,7 +355,7 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
@@ -403,16 +413,7 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
     },
   })
 
-  // Mock fetch to return latest version as 4.3.0 (same as installed)
-  const mockFetch = jest.fn(async (url: string) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
-      return {
-        json: async () => ({ version: '4.3.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch URL: ${url}`)
-  })
+  const mockFetch = createLatestVersionsFetch()
 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
@@ -431,7 +432,7 @@ test('skips eslint installation when @lvce-editor/eslint-config is already at la
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
@@ -490,16 +491,7 @@ test('runs eslint fix when force option is set even if eslint config is already 
     },
   })
 
-  // Mock fetch to return latest version as 4.3.0 (same as installed)
-  const mockFetch = jest.fn(async (url: string) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
-      return {
-        json: async () => ({ version: '4.3.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch URL: ${url}`)
-  })
+  const mockFetch = createLatestVersionsFetch()
 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
@@ -527,7 +519,7 @@ test('runs eslint fix when force option is set even if eslint config is already 
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: mockFetch,
     force: true,
     fs: mockFs,
     repositoryName: 'repo',
@@ -593,16 +585,7 @@ test('upgrades @lvce-editor/eslint-config to latest version when outdated', asyn
     },
   })
 
-  // Mock fetch to return latest version as 4.3.0 (newer than installed 4.0.0)
-  const mockFetch = jest.fn(async (url: string) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
-      return {
-        json: async () => ({ version: '4.3.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch URL: ${url}`)
-  })
+  const mockFetch = createLatestVersionsFetch()
 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
@@ -639,7 +622,7 @@ test('upgrades @lvce-editor/eslint-config to latest version when outdated', asyn
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
@@ -661,6 +644,54 @@ test('upgrades @lvce-editor/eslint-config to latest version when outdated', asyn
   // Should upgrade @lvce-editor/eslint-config to latest version
   expect(mockExecFn).toHaveBeenCalledWith('npm', ['install', '--save-dev', '@lvce-editor/eslint-config@4.3.0'], expect.objectContaining({ cwd: clonedRepoUri }))
   expect(mockFetch).toHaveBeenCalledWith('https://registry.npmjs.org/@lvce-editor/eslint-config/latest')
+})
+
+test('upgrades eslint when eslint config is already current', async () => {
+  const clonedRepoUri = pathToUri('/test/repo') + '/'
+  const oldPackageJson = {
+    devDependencies: {
+      '@lvce-editor/eslint-config': '^4.3.0',
+      eslint: '^9.38.0',
+    },
+    name: 'test-package',
+  }
+  const fs = createMockFs({
+    files: {
+      [resolveUri('package-lock.json', clonedRepoUri)]: '{}\n',
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify(oldPackageJson, null, 2) + '\n',
+    },
+  })
+  const execFn = jest.fn(async (file: string, args?: readonly string[], _options?: { cwd?: string }) => {
+    if (file === 'npm' && args?.[0] === 'ci') {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'npm' && args?.[0] === 'install') {
+      await fs.writeFile(
+        resolveUri('package.json', clonedRepoUri),
+        JSON.stringify({ ...oldPackageJson, devDependencies: { ...oldPackageJson.devDependencies, eslint: '^9.39.2' } }, null, 2) + '\n',
+      )
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'npx') {
+      return { exitCode: 0, stderr: '', stdout: '' }
+    }
+    if (file === 'git') {
+      return { exitCode: 0, stderr: '', stdout: ' M package.json\n' }
+    }
+    throw new Error(`Unexpected exec call: ${file} ${args?.join(' ')}`)
+  })
+
+  const result = await lintAndFix({
+    clonedRepoUri,
+    exec: createMockExec(execFn),
+    fetch: createLatestVersionsFetch(),
+    fs,
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+
+  expect(execFn).toHaveBeenCalledWith('npm', ['install', '--save-dev', 'eslint@9.39.2'], { cwd: clonedRepoUri })
+  expect(result).toMatchObject({ status: 'success', statusCode: 201 })
 })
 
 test('installs @lvce-editor/eslint-config at latest version when not installed', async () => {
@@ -699,16 +730,7 @@ test('installs @lvce-editor/eslint-config at latest version when not installed',
     },
   })
 
-  // Mock fetch to return latest version as 4.3.0
-  const mockFetch = jest.fn(async (url: string) => {
-    if (url === 'https://registry.npmjs.org/@lvce-editor/eslint-config/latest') {
-      return {
-        json: async () => ({ version: '4.3.0' }),
-        ok: true,
-      } as Response
-    }
-    throw new Error(`Unexpected fetch URL: ${url}`)
-  })
+  const mockFetch = createLatestVersionsFetch()
 
   const mockExecFn = jest.fn<
     (file: string, args?: readonly string[], options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string; exitCode: number }>
@@ -745,7 +767,7 @@ test('installs @lvce-editor/eslint-config at latest version when not installed',
   const result = await lintAndFix({
     clonedRepoUri,
     exec: mockExec,
-    fetch: mockFetch as any,
+    fetch: mockFetch,
     fs: mockFs,
     repositoryName: 'repo',
     repositoryOwner: 'test',
