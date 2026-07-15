@@ -29,6 +29,6 @@ jobs:
       - name: npm ci
         run: npm ci
         if: steps.npm-cache.outputs.cache-hit != 'true'
+      - run: npm run build
       - run: npm test
       - run: npm run lint
-      - run: npm run build
