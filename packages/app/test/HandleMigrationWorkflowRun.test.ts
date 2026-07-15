@@ -13,6 +13,7 @@ beforeEach(() => {
 })
 
 const MIGRATION_WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
+const ORG_ESLINT_UPDATE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-eslint-update-plan.yml'
 const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
 const OLD_ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
 
@@ -234,6 +235,53 @@ test('dispatches org release plan migration when the request workflow completes 
   expect(invokeGithubWorker).not.toHaveBeenCalled()
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] received completed org release plan request workflow webhook for run 123')
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] dispatched org release plan migration workflow')
+})
+
+test('dispatches org eslint update plan migration when its request workflow completes', async () => {
+  const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({ requestId: 'request-eslint-plan' })
+  const downloadMigrationArtifact = jest.fn() as any
+  const invokeGithubWorker = jest.fn() as any
+  const app = {} as any
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      repository: {
+        name: 'helper-bot',
+        owner: { login: 'lvce-editor' },
+      },
+      workflow_run: {
+        conclusion: 'success',
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: ORG_ESLINT_UPDATE_PLAN_REQUEST_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/plan-org-eslint-updates',
+    migrationOptions: {},
+    targetRepository: 'lvce-editor/helper-bot',
+  })
+  expect(downloadMigrationArtifact).not.toHaveBeenCalled()
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
 })
 
 test('ignores unsuccessful org release plan request workflow runs', async () => {
@@ -654,6 +702,81 @@ test('creates tag refs for upgrade entries in a manually dispatched org release 
   expect(infoSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/example: Created tag v1.3.0')
   expect(warnSpy).toHaveBeenCalledWith('[HandleMigrationWorkflowRun] lvce-editor/incomplete: skipping incomplete release plan entry')
   expect(PlannedReleaseBatch.isPlannedReleasePending('lvce-editor/example', 'v1.3.0')).toBe(true)
+})
+
+test('dispatches one eslint dependency migration for each repository in an eslint update plan', async () => {
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      data: {
+        eslintUpdatePlan: {
+          entries: [
+            {
+              repository: 'lvce-editor/outdated',
+              upgrade: true,
+            },
+            {
+              repository: 'lvce-editor/current',
+              upgrade: false,
+            },
+          ],
+          latestVersions: {
+            eslintConfigVersion: '16.4.0',
+            eslintVersion: '10.7.0',
+          },
+        },
+      },
+      migrationId: '/migrations2/plan-org-eslint-updates',
+      requestId: 'eslint-plan-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/helper-bot',
+    },
+  })
+  const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({ requestId: 'eslint-update-1' })
+  const invokeGithubWorker = jest.fn() as any
+  const app = {} as any
+  const context: any = {
+    log: {
+      error: errorSpy,
+      info: infoSpy,
+      warn: warnSpy,
+    },
+    octokit: {},
+    payload: {
+      repository: {
+        name: 'helper-bot',
+        owner: { login: 'lvce-editor' },
+      },
+      workflow_run: {
+        event: 'workflow_dispatch',
+        head_branch: 'main',
+        id: 123,
+        path: MIGRATION_WORKFLOW_PATH,
+      },
+    },
+  }
+
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({
+    app,
+    dispatchMigrationWorkflow,
+    downloadMigrationArtifact,
+    invokeGithubWorker,
+  })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledTimes(1)
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-eslint-dependencies',
+    migrationOptions: {
+      eslintConfigVersion: '16.4.0',
+      eslintVersion: '10.7.0',
+    },
+    targetRepository: 'lvce-editor/outdated',
+  })
+  expect(invokeGithubWorker).not.toHaveBeenCalled()
 })
 
 test('dispatches pending dependency and builtin extension updates after all planned release workflows complete', async () => {

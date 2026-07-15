@@ -1,6 +1,7 @@
 import type * as FsPromises from 'node:fs/promises'
 import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
+import { eslintConfigPackageName, eslintPackageName, isDependencyVersionUpToDate } from '../EslintDependencies/EslintDependencies.ts'
 import { getChangedFiles } from '../GetChangedFiles/GetChangedFiles.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
 import { getLatestNpmVersion } from '../GetLatestNpmVersion/GetLatestNpmVersion.ts'
@@ -8,38 +9,25 @@ import { npmCi } from '../NpmCi/NpmCi.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
-const normalizeVersion = (version: string): string => {
-  // Remove range prefixes like ^, ~, >=, etc.
-  return version.replace(/^[\^~>=<]+/, '')
+interface DependencyState {
+  readonly currentVersion?: string
+  readonly latestVersion: string | null
+  readonly name: string
+  readonly upToDate: boolean
 }
 
-const isVersionUpToDate = (installedVersion: string, latestVersion: string): boolean => {
-  const normalizedInstalled = normalizeVersion(installedVersion)
-  const normalizedLatest = normalizeVersion(latestVersion)
-
-  // Check if normalized versions match exactly
-  // This handles:
-  // - Exact versions: "4.3.0" === "4.3.0" -> true
-  // - Caret ranges where base matches latest: "^4.3.0" (normalized to "4.3.0") === "4.3.0" -> true
-  // - Caret ranges where base doesn't match: "^4.0.0" (normalized to "4.0.0") === "4.3.0" -> false (needs upgrade)
-  return normalizedInstalled === normalizedLatest
-}
-
-const addEslintCore = async (fs: Readonly<typeof FsPromises>, exec: BaseMigrationOptions['exec'], clonedRepoUri: string): Promise<void> => {
-  try {
-    const { exitCode } = await exec('npm', ['install', '--save-dev', 'eslint', '@lvce-editor/eslint-config'], {
-      cwd: clonedRepoUri,
-    })
-    // eslint-disable-next-line no-console
-    console.info(`[lint-and-fix] npm install eslint exited with code ${exitCode}`)
-  } catch (error) {
-    throw new Error(`Failed to add eslint: ${stringifyError(error)}`, { cause: error })
+const installEslintDependencies = async (
+  exec: BaseMigrationOptions['exec'],
+  clonedRepoUri: string,
+  dependencies: readonly DependencyState[],
+): Promise<void> => {
+  const packages = dependencies
+    .filter((dependency) => !dependency.upToDate && (dependency.latestVersion || !dependency.currentVersion))
+    .map((dependency) => `${dependency.name}@${dependency.latestVersion || 'latest'}`)
+  if (packages.length === 0) {
+    return
   }
-}
-
-const upgradeEslintConfig = async (exec: BaseMigrationOptions['exec'], clonedRepoUri: string, latestVersion: string, installEslint: boolean): Promise<void> => {
   try {
-    const packages = installEslint ? ['eslint', `@lvce-editor/eslint-config@${latestVersion}`] : [`@lvce-editor/eslint-config@${latestVersion}`]
     const { exitCode, stderr } = await exec('npm', ['install', '--save-dev', ...packages], {
       cwd: clonedRepoUri,
     })
@@ -49,7 +37,7 @@ const upgradeEslintConfig = async (exec: BaseMigrationOptions['exec'], clonedRep
       throw new Error(`npm install --save-dev ${packages.join(' ')} exited with code ${exitCode}: ${stderr}`)
     }
   } catch (error) {
-    throw new Error(`Failed to upgrade @lvce-editor/eslint-config: ${stringifyError(error)}`, { cause: error })
+    throw new Error(`Failed to upgrade ESLint dependencies: ${stringifyError(error)}`, { cause: error })
   }
 }
 
@@ -101,61 +89,31 @@ const readPackageDependencies = async (
   }
 }
 
-const getLatestEslintConfigState = async (
-  options: Readonly<LintAndFixOptions>,
-  eslintConfigVersion: string | undefined,
-): Promise<{ latestVersion: string | null; upToDate: boolean }> => {
+const getLatestDependencyState = async (options: Readonly<LintAndFixOptions>, name: string, currentVersion: string | undefined): Promise<DependencyState> => {
   try {
     // eslint-disable-next-line no-console
-    console.info('[lint-and-fix]: Checking for latest version of @lvce-editor/eslint-config')
-    const latestVersion = await getLatestNpmVersion('@lvce-editor/eslint-config', options.fetch)
-    const upToDate = eslintConfigVersion ? isVersionUpToDate(eslintConfigVersion, latestVersion) : false
+    console.info(`[lint-and-fix]: Checking for latest version of ${name}`)
+    const latestVersion = await getLatestNpmVersion(name, options.fetch)
+    const upToDate = isDependencyVersionUpToDate(currentVersion, latestVersion)
 
-    if (eslintConfigVersion) {
+    if (currentVersion) {
       // eslint-disable-next-line no-console
-      console.info(
-        `[lint-and-fix]: @lvce-editor/eslint-config version check - installed: ${eslintConfigVersion}, latest: ${latestVersion}, up to date: ${upToDate}`,
-      )
+      console.info(`[lint-and-fix]: ${name} version check - installed: ${currentVersion}, latest: ${latestVersion}, up to date: ${upToDate}`)
     } else {
       // eslint-disable-next-line no-console
-      console.info(`[lint-and-fix]: @lvce-editor/eslint-config is not installed, will install latest version: ${latestVersion}`)
+      console.info(`[lint-and-fix]: ${name} is not installed, will install latest version: ${latestVersion}`)
     }
 
-    return { latestVersion, upToDate }
+    return { ...(currentVersion && { currentVersion }), latestVersion, name, upToDate }
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.info(`[lint-and-fix]: Failed to check latest version of @lvce-editor/eslint-config, continuing with migration: ${stringifyError(error)}`)
+    console.info(`[lint-and-fix]: Failed to check latest version of ${name}, continuing with migration: ${stringifyError(error)}`)
     return {
+      ...(currentVersion && { currentVersion }),
       latestVersion: null,
+      name,
       upToDate: false,
     }
-  }
-}
-
-const ensureLatestEslintDependencies = async (
-  options: Readonly<LintAndFixOptions>,
-  latestEslintConfigVersion: string | null,
-  eslintConfigVersion: string | undefined,
-  eslintConfigUpToDate: boolean,
-  eslintVersion: string | undefined,
-): Promise<void> => {
-  if (latestEslintConfigVersion) {
-    if (eslintConfigVersion && !eslintConfigUpToDate) {
-      // eslint-disable-next-line no-console
-      console.info(`[lint-and-fix]: Upgrading @lvce-editor/eslint-config to latest version: ${latestEslintConfigVersion}`)
-      await upgradeEslintConfig(options.exec, options.clonedRepoUri, latestEslintConfigVersion, !eslintVersion)
-      return
-    }
-    if (!eslintConfigVersion) {
-      // eslint-disable-next-line no-console
-      console.info(`[lint-and-fix]: Installing @lvce-editor/eslint-config at latest version: ${latestEslintConfigVersion}`)
-      await upgradeEslintConfig(options.exec, options.clonedRepoUri, latestEslintConfigVersion, !eslintVersion)
-    }
-    return
-  }
-
-  if (!eslintVersion || !eslintConfigVersion) {
-    await addEslintCore(options.fs, options.exec, options.clonedRepoUri)
   }
 }
 
@@ -176,21 +134,21 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
     const eslintVersion = allDependencies.eslint
     const eslintConfigVersion = allDependencies['@lvce-editor/eslint-config']
 
-    const eslintState = await getLatestEslintConfigState(options, eslintConfigVersion)
-    const latestEslintConfigVersion = eslintState.latestVersion
-    const eslintConfigUpToDate = eslintState.upToDate
+    const eslintDependencies = await Promise.all([
+      getLatestDependencyState(options, eslintPackageName, eslintVersion),
+      getLatestDependencyState(options, eslintConfigPackageName, eslintConfigVersion),
+    ])
+    const eslintDependenciesUpToDate = eslintDependencies.every((dependency) => dependency.upToDate)
 
-    if (eslintConfigUpToDate && !options.force) {
+    if (eslintDependenciesUpToDate && !options.force) {
       // eslint-disable-next-line no-console
-      console.info(`[lint-and-fix]: Already using latest version of @lvce-editor/eslint-config (${eslintConfigVersion}). Skipping migration.`)
+      console.info('[lint-and-fix]: Already using latest versions of eslint and @lvce-editor/eslint-config. Skipping migration.')
       return emptyMigrationResult
     }
 
-    if (eslintConfigUpToDate && options.force) {
+    if (eslintDependenciesUpToDate && options.force) {
       // eslint-disable-next-line no-console
-      console.info(
-        `[lint-and-fix]: Already using latest version of @lvce-editor/eslint-config (${eslintConfigVersion}), but force option is set. Continuing with eslint fix.`,
-      )
+      console.info('[lint-and-fix]: ESLint dependencies are current, but force is set. Continuing with eslint fix.')
     }
 
     // eslint-disable-next-line no-console
@@ -211,7 +169,7 @@ export const lintAndFix = async (options: Readonly<LintAndFixOptions>): Promise<
       }
     }
 
-    await ensureLatestEslintDependencies(options, latestEslintConfigVersion, eslintConfigVersion, eslintConfigUpToDate, eslintVersion)
+    await installEslintDependencies(options.exec, options.clonedRepoUri, eslintDependencies)
 
     // Run ESLint --fix and get changed files
     await runEslintFix(options.fs, options.exec, options.clonedRepoUri)

@@ -26,6 +26,7 @@ import { modernizeStaticBuild } from '../ModernizeStaticBuild/ModernizeStaticBui
 import { modernizeTsconfig } from '../ModernizeTsconfig/ModernizeTsconfig.ts'
 import { modernizeTypescript } from '../ModernizeTypescript/ModernizeTypescript.ts'
 import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
+import { planOrgEslintUpdatesMigration } from '../PlanOrgEslintUpdates/PlanOrgEslintUpdates.ts'
 import { planOrgReleaseTagsMigration } from '../PlanOrgReleaseTags/PlanOrgReleaseTags.ts'
 import { removeGitpod } from '../RemoveGitpod/RemoveGitpod.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
@@ -36,6 +37,7 @@ import { updateAllDependencies } from '../UpdateAllDependencies/UpdateAllDepende
 import { updateBuiltinExtensionsBatch } from '../UpdateBuiltinExtensionsBatch/UpdateBuiltinExtensionsBatch.ts'
 import { updateCiVersions } from '../UpdateCiVersions/UpdateCiVersions.ts'
 import { updateDependencies } from '../UpdateDependencies/UpdateDependencies.ts'
+import { updateEslintDependencies } from '../UpdateEslintDependencies/UpdateEslintDependencies.ts'
 import { updateGithubActions } from '../UpdateGithubActions/UpdateGithubActions.ts'
 import { updateNodeVersion } from '../UpdateNodeVersion/UpdateNodeVersion.ts'
 import { updatePackageLockFile } from '../UpdatePackageLockFile/UpdatePackageLockFile.ts'
@@ -43,7 +45,7 @@ import { updateSpecificDependencies } from '../UpdateSpecificDependencies/Update
 import { updateSpecificDependency } from '../UpdateSpecificDependency/UpdateSpecificDependency.ts'
 import { updateStartupBenchmarkVersions } from '../UpdateStartupBenchmarkVersions/UpdateStartupBenchmarkVersions.ts'
 import { updateWebsiteConfig } from '../UpdateWebsiteConfig/UpdateWebsiteConfig.ts'
-import { wrapCommand, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
+import { wrapCommand, wrapCommandWithoutClone, wrapResponseCommand } from '../WrapCommand/WrapCommand.ts'
 
 export const commandMap = {
   '/hello-world': wrapResponseCommand(handleHelloWorld),
@@ -73,6 +75,7 @@ export const commandMap = {
   '/migrations2/modernize-static-build': wrapCommand(modernizeStaticBuild),
   '/migrations2/modernize-tsconfig': wrapCommand(modernizeTsconfig),
   '/migrations2/modernize-typescript': wrapCommand(modernizeTypescript),
+  '/migrations2/plan-org-eslint-updates': wrapCommandWithoutClone(planOrgEslintUpdatesMigration),
   '/migrations2/plan-org-release-tags': planOrgReleaseTagsMigration,
   '/migrations2/remove-gitpod': wrapCommand(removeGitpod),
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
@@ -83,6 +86,7 @@ export const commandMap = {
   '/migrations2/update-builtin-extensions': wrapCommand(updateBuiltinExtensionsBatch),
   '/migrations2/update-ci-versions': wrapCommand(updateCiVersions),
   '/migrations2/update-dependencies': wrapCommand(updateDependencies),
+  '/migrations2/update-eslint-dependencies': wrapCommand(updateEslintDependencies),
   '/migrations2/update-github-actions': wrapCommand(updateGithubActions),
   '/migrations2/update-node-version': wrapCommand(updateNodeVersion),
   '/migrations2/update-package-lock-file': wrapCommand(updatePackageLockFile),
