@@ -102,6 +102,20 @@ test('calls update-website-config migration when lvce-editor is published', asyn
   })
 })
 
+test('calls update-startup-benchmark-versions migration when lvce-editor is published', async () => {
+  const context = createContext('published', 'lvce-editor')
+  const app = {} as any
+
+  await handleReleaseReleased(context, app)
+
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-startup-benchmark-versions',
+    migrationOptions: {},
+    targetRepository: 'lvce-editor/lvce-startup-benchmark',
+  })
+})
+
 test('does not call update-website-config migration for prereleases', async () => {
   const context = createContext('published', 'lvce-editor', { prerelease: true })
 
