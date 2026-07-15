@@ -138,6 +138,24 @@ const updateWebsiteConfig = async (context: Context<'release'>, app?: Probot) =>
   }
 }
 
+const updateStartupBenchmarkVersions = async (context: Context<'release'>, app?: Probot) => {
+  if (context.payload.repository.name !== 'lvce-editor') {
+    return
+  }
+
+  try {
+    await dispatchMigrationWorkflow({
+      // @ts-ignore
+      app,
+      migrationId: '/migrations2/update-startup-benchmark-versions',
+      migrationOptions: {},
+      targetRepository: 'lvce-editor/lvce-startup-benchmark',
+    })
+  } catch (error) {
+    captureException(error as Error)
+  }
+}
+
 export const shouldHandleRelease = (context: Context<'release'>): boolean => {
   const { action, release } = context.payload
   if (release.draft || release.prerelease) {
@@ -153,7 +171,12 @@ export const handleReleaseReleased = async (context: Context<'release'>, app?: P
   if (!markReleaseHandled(context)) {
     return
   }
-  await Promise.all([updateBuiltinExtensionsForRelease(context), updateRepositoryDependencies(context, app), updateWebsiteConfig(context, app)])
+  await Promise.all([
+    updateBuiltinExtensionsForRelease(context),
+    updateRepositoryDependencies(context, app),
+    updateStartupBenchmarkVersions(context, app),
+    updateWebsiteConfig(context, app),
+  ])
 }
 
 const handleHelloWorld = async (req: any, res: any) => {

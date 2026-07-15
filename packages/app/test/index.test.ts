@@ -148,7 +148,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       content: Buffer.from(JSON.stringify([], null, 2) + '\n').toString('base64'),
     })
     .get('/repos/lvce-editor/helper-bot/installation')
-    .times(3)
+    .times(4)
     .reply(200, {
       id: 44,
     })
@@ -164,7 +164,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       workflowDispatchBodies.push(body)
       return true
     })
-    .times(3)
+    .times(4)
     .reply(204)
 
   await probot?.receive({
@@ -210,6 +210,18 @@ test('calls update-website-config migration when lvce-editor is published', asyn
           requestId: expect.any(String),
           runName: 'migration-on-demand/main-area-worker/update-specific-dependency',
           targetRepository: 'lvce-editor/main-area-worker',
+        },
+        ref: 'main',
+      },
+      {
+        inputs: {
+          baseBranch: 'main',
+          dryRun: 'false',
+          migrationId: '/migrations2/update-startup-benchmark-versions',
+          migrationOptionsJson: '{}',
+          requestId: expect.any(String),
+          runName: 'migration-on-demand/lvce-startup-benchmark/update-startup-benchmark-versions',
+          targetRepository: 'lvce-editor/lvce-startup-benchmark',
         },
         ref: 'main',
       },
