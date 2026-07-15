@@ -13,10 +13,10 @@
     "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
-    "@lvce-editor/rpc": "^6.4.0",
-    "@lvce-editor/rpc-registry": "^9.31.0",
+    "@lvce-editor/rpc": "^6.8.0",
+    "@lvce-editor/rpc-registry": "^9.35.0",
     "@lvce-editor/verror": "^1.7.0",
-    "@sentry/node": "^10.64.0",
+    "@sentry/node": "^10.65.0",
     "execa": "^9.6.1",
     "express": "^5.2.1",
     "extract-zip": "^2.0.1",
