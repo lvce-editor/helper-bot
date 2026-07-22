@@ -18,6 +18,7 @@ jest.unstable_mockModule('../src/getDependenciesConfig.ts', () => ({
     dependencies: [
       { fromRepo: 'lvce-editor', toRepo: 'editor-worker', toFolder: 'packages/server' },
       { fromRepo: 'test-worker', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
+      { fromRepo: 'text-search-view', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
       { fromRepo: 'process-explorer', toRepo: 'lvce-editor', toFolder: 'packages/shared-process' },
       { asName: 'process-explorer-worker', fromRepo: 'process-explorer', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
     ],
@@ -143,6 +144,25 @@ test('dispatches update-specific-dependency migrations for matching release depe
     migrationId: '/migrations2/update-specific-dependency',
     migrationOptions: {
       fromRepo: 'test-worker',
+      tagName: 'v1.0.0',
+      toFolder: 'packages/renderer-worker',
+      toRepo: 'lvce-editor',
+    },
+    targetRepository: 'lvce-editor/lvce-editor',
+  })
+})
+
+test('dispatches text-search-view dependency updates to lvce-editor', async () => {
+  const context = createContext('published', 'text-search-view')
+  const app = {} as any
+
+  await handleReleaseReleased(context, app)
+
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-specific-dependency',
+    migrationOptions: {
+      fromRepo: 'text-search-view',
       tagName: 'v1.0.0',
       toFolder: 'packages/renderer-worker',
       toRepo: 'lvce-editor',
