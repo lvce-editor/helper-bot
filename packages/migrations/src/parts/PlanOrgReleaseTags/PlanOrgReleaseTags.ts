@@ -13,7 +13,7 @@ export interface PlanOrgReleaseTagsOptions {
   readonly owner?: string
 }
 
-export interface ReleasePlanEntry {
+interface ReleasePlanEntry {
   readonly commitCountSinceLatestTag?: number
   readonly defaultBranch?: string
   readonly defaultBranchSha?: string

@@ -7,7 +7,7 @@ import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 const builtinExtensionsPath = 'packages/build/src/parts/DownloadBuiltinExtensions/builtinExtensions.json'
 
-export interface BuiltinExtensionUpdate {
+interface BuiltinExtensionUpdate {
   readonly repositoryName: string
   readonly tagName: string
 }

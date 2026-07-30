@@ -9,22 +9,10 @@ const decodeBase64 = (content: string): string => {
   return textDecoder.decode(bytes)
 }
 
-export interface ChangedFile {
+interface ChangedFile {
   readonly content: string
   readonly path: string
   readonly type?: 'created' | 'updated' | 'deleted'
-}
-
-export interface MigrationResult {
-  readonly branchName?: string
-  readonly changedFiles: ChangedFile[]
-  readonly commitMessage?: string
-  readonly data?: any
-  readonly errorCode?: string
-  readonly errorMessage?: string
-  readonly pullRequestTitle: string
-  readonly status: 'success' | 'error'
-  readonly statusCode: number
 }
 
 export interface ApplyMigrationResultOptions {

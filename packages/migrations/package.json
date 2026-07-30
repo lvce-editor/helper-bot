@@ -36,7 +36,6 @@
   "dependencies": {
     "@lvce-editor/rpc": "^6.14.0",
     "@lvce-editor/verror": "^1.7.0",
-    "@octokit/rest": "^22.0.1",
-    "@sentry/node": "^10.69.0"
+    "@octokit/rest": "^22.0.1"
   }
 }

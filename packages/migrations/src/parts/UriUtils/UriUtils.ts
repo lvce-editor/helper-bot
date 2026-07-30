@@ -32,10 +32,6 @@ export const normalizePath = (path: string): string => {
   return path.replaceAll('\\', '/')
 }
 
-export const isUri = (path: string): boolean => {
-  return path.startsWith('file://') || path.startsWith('test://') || (!path.includes('\\') && path.includes('/'))
-}
-
 const isValidUri = (uri: string): boolean => {
   return uri.startsWith('file://') || uri.startsWith('test://')
 }

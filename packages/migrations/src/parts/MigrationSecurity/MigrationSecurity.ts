@@ -1,11 +1,11 @@
-export const ALLOWED_TARGET_REPOSITORY_OWNER = 'lvce-editor'
+const ALLOWED_TARGET_REPOSITORY_OWNER = 'lvce-editor'
 
 export interface ParsedTargetRepository {
   readonly owner: string
   readonly repo: string
 }
 
-export const parseTargetRepository = (targetRepository: string): ParsedTargetRepository | undefined => {
+const parseTargetRepository = (targetRepository: string): ParsedTargetRepository | undefined => {
   const parts = targetRepository.split('/')
   if (parts.length !== 2) {
     return undefined

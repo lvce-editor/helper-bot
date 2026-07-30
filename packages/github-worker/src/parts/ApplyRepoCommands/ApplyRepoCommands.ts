@@ -4,12 +4,12 @@ import { updateBranchProtectionWithOctokit } from '../UpdateBranchProtection/Upd
 
 const GITHUB_ACTIONS_INTEGRATION_ID = 15_368
 
-export interface ModernizeBranchProtectionCommand {
+interface ModernizeBranchProtectionCommand {
   readonly branch: string
   readonly type: 'modernize-branch-protection'
 }
 
-export interface UpdateBranchProtectionChecksCommand {
+interface UpdateBranchProtectionChecksCommand {
   readonly branch: string
   readonly osVersions: {
     readonly macos?: string

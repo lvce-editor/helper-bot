@@ -4,7 +4,7 @@ import type { ChangedFile, MigrationResult, RepoCommand } from '../Types/Types.t
 import { commandMap } from '../CommandMap/CommandMap.ts'
 import { assertAllowedTargetRepository } from '../MigrationSecurity/MigrationSecurity.ts'
 
-export interface ArtifactManifest {
+interface ArtifactManifest {
   readonly baseBranch?: string
   readonly branchName?: string
   readonly commitMessage?: string

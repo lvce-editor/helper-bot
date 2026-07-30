@@ -13,7 +13,7 @@ const getContent = (absolutePath: string): Promise<string> => {
   return readFile(absolutePath, 'utf8')
 }
 
-export const computeHash = (contents: string | string[]): string => {
+const computeHash = (contents: string | string[]): string => {
   const hash = createHash('sha1')
   if (Array.isArray(contents)) {
     for (const content of contents) {

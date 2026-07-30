@@ -22,7 +22,7 @@ interface Repository {
   readonly name: string
 }
 
-export interface EslintUpdatePlanEntry {
+interface EslintUpdatePlanEntry {
   readonly currentVersions?: EslintDependencyVersions
   readonly nonUpgradeReason?: string
   readonly repository: string
