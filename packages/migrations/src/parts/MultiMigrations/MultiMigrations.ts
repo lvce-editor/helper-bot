@@ -12,14 +12,14 @@ export interface MultiMigrationsUpdateNodeVersionOptions extends BaseMigrationOp
   readonly serverUrl?: string
 }
 
-export interface RepositoryResult {
+interface RepositoryResult {
   readonly error?: string
   readonly message?: string
   readonly repository: string
   readonly success: boolean
 }
 
-export interface MultiMigrationsUpdateNodeVersionData {
+interface MultiMigrationsUpdateNodeVersionData {
   readonly failed: number
   readonly results: readonly RepositoryResult[]
   readonly successful: number

@@ -1,4 +1,4 @@
-export const ALLOWED_TARGET_REPOSITORY_OWNER = 'lvce-editor'
+const ALLOWED_TARGET_REPOSITORY_OWNER = 'lvce-editor'
 
 const baseBranchPattern = /^(?!\/)(?!.*\.\.)(?!.*\/$)[A-Za-z0-9._/-]+$/
 const sensitiveOptionNames = new Set([

@@ -1,7 +1,7 @@
 import type { Octokit } from '@octokit/rest'
 import { Octokit as OctokitConstructor } from '@octokit/rest'
 
-export interface FileToCommit {
+interface FileToCommit {
   readonly content: string
   readonly mode?: '100644'
   readonly path: string

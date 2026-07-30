@@ -1,0 +1,28 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "project": ["*.js", "scripts/**/*.js"]
+    },
+    "packages/app": {
+      "entry": ["src/main.ts", "src/updateDependencies.ts", "test/**/*.test.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
+    "packages/build": {
+      "entry": ["src/build.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/exec-worker": {
+      "entry": ["src/index.ts", "test/**/*.test.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
+    "packages/github-worker": {
+      "entry": ["src/index.ts", "test/**/*.test.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
+    "packages/migrations": {
+      "entry": ["src/index.ts", "src/runMigrationWorkflow.ts", "test/**/*.test.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    }
+  }
+}

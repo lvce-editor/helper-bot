@@ -4,7 +4,11 @@ import { githubWorkerUrl, githubWorkerUrlDev } from './githubWorkerUrl.ts'
 
 const rpcId = 88
 
-export const { invoke, setFactory } = createLazyRpc(rpcId)
+const rpc = createLazyRpc(rpcId)
+
+export const invoke = rpc.invoke
+
+const setFactory = rpc.setFactory
 
 const launchGithubWorker = async () => {
   const workerUrl = process.env.NODE_ENV === 'production' ? githubWorkerUrl : githubWorkerUrlDev

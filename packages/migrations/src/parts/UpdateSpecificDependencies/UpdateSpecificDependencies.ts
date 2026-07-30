@@ -7,7 +7,7 @@ import { normalizePath, resolveUri } from '../UriUtils/UriUtils.ts'
 
 type DependencyKey = 'dependencies' | 'devDependencies' | 'optionalDependencies'
 
-export interface DependencyUpdate {
+interface DependencyUpdate {
   readonly asName?: string
   readonly fromRepo: string
   readonly tagName: string

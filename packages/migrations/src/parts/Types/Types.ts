@@ -20,12 +20,12 @@ export interface ChangedFile {
   readonly type?: 'deleted'
 }
 
-export interface ModernizeBranchProtectionCommand {
+interface ModernizeBranchProtectionCommand {
   readonly branch: string
   readonly type: 'modernize-branch-protection'
 }
 
-export interface UpdateBranchProtectionChecksCommand {
+interface UpdateBranchProtectionChecksCommand {
   readonly branch: string
   readonly osVersions: {
     readonly macos?: string

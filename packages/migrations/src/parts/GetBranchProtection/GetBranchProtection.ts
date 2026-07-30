@@ -11,11 +11,6 @@ export interface GetBranchProtectionOptions extends BaseMigrationOptions {
   readonly OctokitConstructor?: typeof OctokitConstructor
 }
 
-export interface BranchProtectionData {
-  readonly data: any
-  readonly type: 'rulesets' | 'classic' | 'none'
-}
-
 export const getBranchProtection = async (options: GetBranchProtectionOptions): Promise<MigrationResult> => {
   const { branch = 'main', githubToken, OctokitConstructor: OctokitCtor = OctokitConstructor, repositoryName, repositoryOwner } = options
 

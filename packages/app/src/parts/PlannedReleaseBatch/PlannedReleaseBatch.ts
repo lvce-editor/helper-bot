@@ -11,7 +11,7 @@ export interface PendingDependencyUpdate {
   readonly toRepo: string
 }
 
-export interface PendingDependencyUpdateBatch {
+interface PendingDependencyUpdateBatch {
   readonly type: 'dependencies'
   readonly targetRepository: string
   readonly toRepo: string
@@ -23,7 +23,7 @@ export interface PendingBuiltinExtensionUpdate {
   readonly tagName: string
 }
 
-export interface PendingBuiltinExtensionUpdateBatch {
+interface PendingBuiltinExtensionUpdateBatch {
   readonly type: 'builtinExtensions'
   readonly targetRepository: string
   readonly updates: readonly PendingBuiltinExtensionUpdate[]
@@ -107,7 +107,7 @@ export const addPendingBuiltinExtensionUpdate = (update: Readonly<PendingBuiltin
   state.pendingBuiltinExtensionUpdates.push(update)
 }
 
-export const flushPendingUpdateBatches = (): readonly PendingUpdateBatch[] => {
+const flushPendingUpdateBatches = (): readonly PendingUpdateBatch[] => {
   if (!state) {
     return []
   }
