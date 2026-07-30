@@ -8,6 +8,6 @@
   "license": "MIT",
   "description": "",
   "devDependencies": {
-    "execa": "^9.6.1"
+    "execa": "^10.0.0"
   }
 }
