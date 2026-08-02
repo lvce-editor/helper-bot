@@ -36,3 +36,20 @@ test('keeps HOST when already configured', async () => {
     },
   })
 })
+
+test('loads Sentry when a DSN is configured', async () => {
+  const { main } = await import('../src/main.ts')
+  const previousNodeEnv = process.env.NODE_ENV
+  process.env.NODE_ENV = 'production'
+
+  try {
+    await expect(
+      main(undefined, {
+        NODE_ENV: 'production',
+        SENTRY_DSN: 'https://public@example.com/1',
+      }),
+    ).rejects.toThrow('App ID is missing')
+  } finally {
+    process.env.NODE_ENV = previousNodeEnv
+  }
+})
