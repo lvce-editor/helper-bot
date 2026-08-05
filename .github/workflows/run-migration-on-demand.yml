@@ -74,7 +74,7 @@ jobs:
         run: node packages/migrations/dist/runMigrationWorkflow.js
       - name: Upload migration artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: migration-result-${{ inputs.requestId }}
           path: ${{ runner.temp }}/migration-result-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.requestId }}
