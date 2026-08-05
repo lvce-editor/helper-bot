@@ -233,7 +233,7 @@
       "toFolder": "packages/renderer-worker"
     },
     {
-      "fromRepo": "extension-host-worker",
+      "fromRepo": "drag-and-drop-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
     },
