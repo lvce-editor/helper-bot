@@ -23,10 +23,10 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
-    "@lvce-editor/eslint-config": "^18.2.0",
+    "@lvce-editor/eslint-config": "^18.3.0",
     "@lvce-editor/eslint-plugin-tsconfig": "^18.2.0",
     "@types/node": "^26.1.2",
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "jest": "^30.4.2",
     "knip": "^6.31.0",
     "nock": "^14.0.17",
