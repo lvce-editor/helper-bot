@@ -7,7 +7,7 @@ import { pathToUri, resolveUri } from '../src/parts/UriUtils/UriUtils.ts'
 const clonedRepoUri = pathToUri('/test/repo')
 const versionsUri = resolveUri('versions.json', `${clonedRepoUri}/`)
 
-test('updates versions.json with the latest 150 server versions', async () => {
+test('updates versions.json with the latest 250 server versions', async () => {
   const oldContent = '{\n  "versions": ["1.0.0"]\n}\n'
   const newContent = '{\n  "versions": ["1.0.1", "1.0.0"]\n}\n'
   const fs = createMockFs({
@@ -19,7 +19,7 @@ test('updates versions.json with the latest 150 server versions', async () => {
     (file: string, args?: readonly string[], options?: Readonly<{ cwd?: string }>) => Promise<{ exitCode: number; stderr: string; stdout: string }>
   >(async () => {
     await fs.writeFile(versionsUri, newContent)
-    return { exitCode: 0, stderr: '', stdout: 'Updated versions.json with 150 versions' }
+    return { exitCode: 0, stderr: '', stdout: 'Updated versions.json with 250 versions' }
   })
   const exec = createMockExec(execMock)
 
@@ -45,7 +45,7 @@ test('updates versions.json with the latest 150 server versions', async () => {
     status: 'success',
     statusCode: 201,
   })
-  expect(execMock).toHaveBeenCalledWith('npm', ['run', 'update-versions', '--', '--count', '150'], { cwd: clonedRepoUri })
+  expect(execMock).toHaveBeenCalledWith('npm', ['run', 'update-versions', '--', '--count', '250'], { cwd: clonedRepoUri })
 })
 
 test('returns an empty result when versions.json is already current', async () => {

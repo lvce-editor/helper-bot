@@ -5,7 +5,7 @@ import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const EXPECTED_REPOSITORY_NAME = 'lvce-startup-benchmark'
-const VERSION_COUNT = 150
+const VERSION_COUNT = 250
 const VERSIONS_PATH = 'versions.json'
 
 export type UpdateStartupBenchmarkVersionsOptions = BaseMigrationOptions
