@@ -1,11 +1,17 @@
 import { Context } from 'probot'
+import { getReleaseArchiveIntegrity } from './getReleaseArchiveIntegrity.ts'
 
-const getNewValue = (value: readonly any[], repoName: string, version: string) => {
+const getNewValue = (value: readonly any[], repoName: string, version: string, assetName: string, sha256: string) => {
   return value.map((item) => {
     if (item.name === `builtin.${repoName}`) {
+      const itemWithoutAssetName = { ...item }
+      delete itemWithoutAssetName.assetName
+      const defaultAssetName = `${repoName}-v${version}.tar.br`
       return {
-        ...item,
+        ...itemWithoutAssetName,
         version,
+        ...(assetName === defaultAssetName ? {} : { assetName }),
+        sha256,
       }
     }
     return item
@@ -69,7 +75,13 @@ export const updateBuiltinExtensions = async (context: Context<'release'>) => {
   const filesJsonBase64 = filesJson.data.content
   const filesJsonDecoded = Buffer.from(filesJsonBase64, 'base64').toString()
   const filesJsonValue = JSON.parse(filesJsonDecoded)
-  const filesJsonValueNew = getNewValue(filesJsonValue, releasedRepo, version)
+  const builtinExtension = filesJsonValue.find((item: any) => item.name === `builtin.${releasedRepo}`)
+  if (!builtinExtension) {
+    console.log('released repository is not a builtin extension')
+    return
+  }
+  const { assetName, sha256 } = await getReleaseArchiveIntegrity(payload)
+  const filesJsonValueNew = getNewValue(filesJsonValue, releasedRepo, version, assetName, sha256)
   const filesJsonStringNew = JSON.stringify(filesJsonValueNew, null, 2) + '\n'
   if (filesJsonDecoded === filesJsonStringNew) {
     console.log('no update necessary')

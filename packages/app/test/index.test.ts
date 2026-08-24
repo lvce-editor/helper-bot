@@ -58,6 +58,11 @@ test('creates a pull request to update versions when a release is created', asyn
   if (!probot) {
     throw new Error('probot not initialized')
   }
+  const archiveContents = 'test extension archive'
+  const sha256 = '8ecfde64088c84325658324c38915e8e6cf1afffd7d1736f9762641ffd481301'
+  const archiveMock = nock('https://github.com')
+    .get('/lvce-editor/language-basics-css/releases/download/v2.4.0/language-basics-css-v2.4.0.tar.br')
+    .reply(200, archiveContents)
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/git/ref/heads%2Fmain')
     .reply(200, {
@@ -85,11 +90,15 @@ test('creates a pull request to update versions when a release is created', asyn
       ),
     })
     .put('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json', (body) => {
-      expect(body).toEqual({
-        branch: 'update-version/language-basics-css-v2.4.0',
-        content: 'WwogIHsKICAgICJuYW1lIjogImJ1aWx0aW4ubGFuZ3VhZ2UtYmFzaWNzLWNzcyIsCiAgICAidmVyc2lvbiI6ICIyLjQuMCIKICB9Cl0K',
-        message: 'feature: update language-basics-css to version v2.4.0',
-      })
+      expect(body.branch).toBe('update-version/language-basics-css-v2.4.0')
+      expect(JSON.parse(Buffer.from(body.content, 'base64').toString())).toEqual([
+        {
+          name: 'builtin.language-basics-css',
+          version: '2.4.0',
+          sha256,
+        },
+      ])
+      expect(body.message).toBe('feature: update language-basics-css to version v2.4.0')
       return true
     })
     .reply(200)
@@ -124,6 +133,12 @@ test('creates a pull request to update versions when a release is created', asyn
       action: 'released',
       release: {
         tag_name: 'v2.4.0',
+        assets: [
+          {
+            name: 'language-basics-css-v2.4.0.tar.br',
+            browser_download_url: 'https://github.com/lvce-editor/language-basics-css/releases/download/v2.4.0/language-basics-css-v2.4.0.tar.br',
+          },
+        ],
       },
       repository: {
         name: 'language-basics-css',
@@ -135,6 +150,7 @@ test('creates a pull request to update versions when a release is created', asyn
     },
   })
   expect(mock.pendingMocks()).toEqual([])
+  expect(archiveMock.pendingMocks()).toEqual([])
 })
 
 test('calls update-website-config migration when lvce-editor is published', async () => {
@@ -245,6 +261,11 @@ test("doesn't create a pull request when the new file content would be the same"
   if (!probot) {
     throw new Error('probot not initialized')
   }
+  const archiveContents = 'test extension archive'
+  const sha256 = '8ecfde64088c84325658324c38915e8e6cf1afffd7d1736f9762641ffd481301'
+  const archiveMock = nock('https://github.com')
+    .get('/lvce-editor/language-basics-css/releases/download/v2.4.0/language-basics-css-v2.4.0.tar.br')
+    .reply(200, archiveContents)
   const mock = nock('https://api.github.com')
     .get('/repos/lvce-editor/lvce-editor/contents/packages%2Fbuild%2Fsrc%2Fparts%2FDownloadBuiltinExtensions%2FbuiltinExtensions.json')
     .reply(200, {
@@ -254,6 +275,7 @@ test("doesn't create a pull request when the new file content would be the same"
             {
               name: 'builtin.language-basics-css',
               version: '2.4.0',
+              sha256,
             },
           ],
           null,
@@ -269,6 +291,12 @@ test("doesn't create a pull request when the new file content would be the same"
       action: 'released',
       release: {
         tag_name: 'v2.4.0',
+        assets: [
+          {
+            name: 'language-basics-css-v2.4.0.tar.br',
+            browser_download_url: 'https://github.com/lvce-editor/language-basics-css/releases/download/v2.4.0/language-basics-css-v2.4.0.tar.br',
+          },
+        ],
       },
       repository: {
         name: 'language-basics-css',
@@ -280,4 +308,5 @@ test("doesn't create a pull request when the new file content would be the same"
     },
   })
   expect(mock.pendingMocks()).toEqual([])
+  expect(archiveMock.pendingMocks()).toEqual([])
 })
