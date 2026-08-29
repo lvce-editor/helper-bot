@@ -21,6 +21,8 @@ jest.unstable_mockModule('../src/getDependenciesConfig.ts', () => ({
       { fromRepo: 'text-search-view', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
       { fromRepo: 'process-explorer', toRepo: 'lvce-editor', toFolder: 'packages/shared-process' },
       { asName: 'process-explorer-worker', fromRepo: 'process-explorer', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
+      { fromRepo: 'cookie-import-view', toRepo: 'lvce-editor', toFolder: 'packages/shared-process' },
+      { fromRepo: 'cookie-import-view', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
     ],
   }),
 }))
@@ -272,6 +274,36 @@ test('dispatches process-explorer updates for shared-process and renderer-worker
     migrationOptions: {
       asName: 'process-explorer-worker',
       fromRepo: 'process-explorer',
+      tagName: 'v1.0.0',
+      toFolder: 'packages/renderer-worker',
+      toRepo: 'lvce-editor',
+    },
+    targetRepository: 'lvce-editor/lvce-editor',
+  })
+})
+
+test('dispatches cookie-import-view updates for shared-process and renderer-worker packages', async () => {
+  const context = createContext('published', 'cookie-import-view')
+  const app = {} as any
+
+  await handleReleaseReleased(context, app)
+
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-specific-dependency',
+    migrationOptions: {
+      fromRepo: 'cookie-import-view',
+      tagName: 'v1.0.0',
+      toFolder: 'packages/shared-process',
+      toRepo: 'lvce-editor',
+    },
+    targetRepository: 'lvce-editor/lvce-editor',
+  })
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-specific-dependency',
+    migrationOptions: {
+      fromRepo: 'cookie-import-view',
       tagName: 'v1.0.0',
       toFolder: 'packages/renderer-worker',
       toRepo: 'lvce-editor',

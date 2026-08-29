@@ -32,6 +32,16 @@
       "toFolder": "packages/shared-process"
     },
     {
+      "fromRepo": "cookie-import-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/shared-process"
+    },
+    {
+      "fromRepo": "cookie-import-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "process-explorer",
       "toRepo": "lvce-editor",
       "toFolder": "packages/shared-process"
