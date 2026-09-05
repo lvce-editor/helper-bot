@@ -200,6 +200,6 @@ test.each([
     expect(result.changedFiles).toContainEqual({ path: 'package-lock.json', content: '{"lockfileVersion":3}\n' })
   } else {
     expect(result.changedFiles).toEqual([])
-    expect(result.errorMessage).toContain(message)
+    expect(result).toEqual(expect.objectContaining({ errorMessage: expect.stringContaining(message) }))
   }
 })
