@@ -68,6 +68,11 @@
       "toFolder": "packages/renderer-worker"
     },
     {
+      "fromRepo": "simple-browser-view",
+      "toRepo": "lvce-editor",
+      "toFolder": "packages/renderer-worker"
+    },
+    {
       "fromRepo": "component-state-worker",
       "toRepo": "lvce-editor",
       "toFolder": "packages/renderer-worker"
