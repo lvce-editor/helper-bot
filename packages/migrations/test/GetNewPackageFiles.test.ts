@@ -144,25 +144,25 @@ afterEach(() => {
 
 test.each([
   {
+    calls: 3,
     failures: 2,
     message: 'npm error code ETARGET\nnpm error notarget No matching version found for @lvce-editor/extension-detail-view@^7.47.0.',
-    calls: 3,
     status: 'success',
   },
   {
+    calls: 5,
     failures: Infinity,
     message: 'npm error code ETARGET\nnpm error notarget No matching version found for @lvce-editor/extension-detail-view@^7.47.0.',
-    calls: 5,
     status: 'error',
   },
-  { failures: Infinity, message: 'npm error code ERESOLVE', calls: 1, status: 'error' },
+  { calls: 1, failures: Infinity, message: 'npm error code ERESOLVE', status: 'error' },
   {
+    calls: 1,
     failures: Infinity,
     message: 'npm error code ETARGET\nnpm error notarget No matching version found for @lvce-editor/other@^1.0.0.',
-    calls: 1,
     status: 'error',
   },
-])('handles npm failures with $calls attempts and $status: $message', async ({ failures, message, calls, status }) => {
+])('handles npm failures with $calls attempts and $status: $message', async ({ calls, failures, message, status }) => {
   jest.useFakeTimers()
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({
@@ -196,10 +196,6 @@ test.each([
   const result = await pending
   expect(mockExecFn).toHaveBeenCalledTimes(calls)
   expect(result.status).toBe(status)
-  if (status === 'success') {
-    expect(result.changedFiles).toContainEqual({ path: 'package-lock.json', content: '{"lockfileVersion":3}\n' })
-  } else {
-    expect(result.changedFiles).toEqual([])
-    expect(result).toEqual(expect.objectContaining({ errorMessage: expect.stringContaining(message) }))
-  }
+  expect(result.changedFiles).toHaveLength(status === 'success' ? 2 : 0)
+  expect('errorMessage' in result ? result.errorMessage : '').toBe(status === 'error' ? `Failed to update dependencies: ${message}` : '')
 })
