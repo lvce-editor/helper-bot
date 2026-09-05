@@ -7,6 +7,7 @@ test.each([
   'extension-detail-view',
   'extension-search-view',
   'main-area-worker',
+  'simple-browser-view',
   'status-bar-worker',
   'text-search-view',
   'title-bar-worker',
