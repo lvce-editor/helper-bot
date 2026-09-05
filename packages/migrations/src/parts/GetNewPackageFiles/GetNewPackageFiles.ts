@@ -57,9 +57,21 @@ const getNewPackageFilesCore = async (
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
     await fs.writeFile(resolveUri('package.json', tmpFolderUri), oldPackageJsonStringified)
-    await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)], {
-      cwd: tmpFolderUri,
-    })
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)], {
+          cwd: tmpFolderUri,
+        })
+        break
+      } catch (error) {
+        const message = stringifyError(error)
+        // A release webhook can arrive before its npm version is available.
+        if (attempt === 4 || !message.includes('ETARGET') || !message.includes(`No matching version found for ${packageName}@^${newVersion}.`)) {
+          throw error
+        }
+        await new Promise((resolve) => setTimeout(resolve, 30_000))
+      }
+    }
 
     // Read the updated package.json and package-lock.json
     const packageJsonUri = resolveUri('package.json', tmpFolderUri)

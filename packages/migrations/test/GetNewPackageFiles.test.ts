@@ -1,4 +1,4 @@
-import { test, expect, jest } from '@jest/globals'
+import { afterEach, test, expect, jest } from '@jest/globals'
 import { createMockExec } from '../src/parts/CreateMockExec/CreateMockExec.ts'
 import { createMockFs } from '../src/parts/CreateMockFs/CreateMockFs.ts'
 import { getNewPackageFiles } from '../src/parts/GetNewPackageFiles/GetNewPackageFiles.ts'
@@ -136,4 +136,66 @@ test('handles missing package.json', async () => {
     statusCode: 200,
   })
   expect(mockExecFn).not.toHaveBeenCalled()
+})
+
+afterEach(() => {
+  jest.useRealTimers()
+})
+
+test.each([
+  {
+    calls: 3,
+    failures: 2,
+    message: 'npm error code ETARGET\nnpm error notarget No matching version found for @lvce-editor/extension-detail-view@^7.47.0.',
+    status: 'success',
+  },
+  {
+    calls: 5,
+    failures: Infinity,
+    message: 'npm error code ETARGET\nnpm error notarget No matching version found for @lvce-editor/extension-detail-view@^7.47.0.',
+    status: 'error',
+  },
+  { calls: 1, failures: Infinity, message: 'npm error code ERESOLVE', status: 'error' },
+  {
+    calls: 1,
+    failures: Infinity,
+    message: 'npm error code ETARGET\nnpm error notarget No matching version found for @lvce-editor/other@^1.0.0.',
+    status: 'error',
+  },
+])('handles npm failures with $calls attempts and $status: $message', async ({ calls, failures, message, status }) => {
+  jest.useFakeTimers()
+  const clonedRepoUri = pathToUri('/test/repo')
+  const mockFs = createMockFs({
+    files: {
+      [resolveUri('package.json', clonedRepoUri)]: JSON.stringify({ dependencies: { '@lvce-editor/extension-detail-view': '^7.45.0' } }),
+    },
+  })
+  let attempts = 0
+  const mockExecFn = jest.fn(async (_file: string, _args?: readonly string[], options?: { cwd?: string }) => {
+    attempts++
+    if (attempts <= failures) {
+      throw new Error(message)
+    }
+    await mockFs.writeFile(resolveUri('package-lock.json', options!.cwd!), '{"lockfileVersion":3}\n')
+    return { exitCode: 0, stderr: '', stdout: '' }
+  })
+  const pending = getNewPackageFiles({
+    clonedRepoUri,
+    dependencyKey: 'dependencies',
+    dependencyName: 'extension-detail-view',
+    exec: createMockExec(mockExecFn),
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    newVersion: '7.47.0',
+    packageJsonPath: 'package.json',
+    packageLockJsonPath: 'package-lock.json',
+    repositoryName: 'lvce-editor',
+    repositoryOwner: 'lvce-editor',
+  })
+  await jest.runAllTimersAsync()
+  const result = await pending
+  expect(mockExecFn).toHaveBeenCalledTimes(calls)
+  expect(result.status).toBe(status)
+  expect(result.changedFiles).toHaveLength(status === 'success' ? 2 : 0)
+  expect('errorMessage' in result ? result.errorMessage : '').toBe(status === 'error' ? `Failed to update dependencies: ${message}` : '')
 })
