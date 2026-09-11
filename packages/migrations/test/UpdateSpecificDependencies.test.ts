@@ -154,3 +154,35 @@ test('updates multiple package folders', async () => {
   ])
   expect(mockExecFn).toHaveBeenCalledTimes(2)
 })
+
+test('returns the final root workspace lockfile once when updating multiple workspaces', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
+  const folders = ['packages/server', 'packages/other']
+  const mockFs = createMockFs({
+    files: Object.fromEntries(
+      folders.map((folder) => [resolveUri(`${folder}/package.json`, clonedRepoUri), JSON.stringify({ dependencies: { '@lvce-editor/server': '^0.113.19' } })]),
+    ),
+  })
+  let installs = 0
+  const exec = createMockExec(async () => {
+    installs++
+    const packages = Object.fromEntries(folders.map((folder) => [folder, {}]))
+    await mockFs.writeFile(resolveUri('package-lock.json', clonedRepoUri), JSON.stringify({ installs, lockfileVersion: 3, packages }))
+    return { exitCode: 0, stderr: '', stdout: '' }
+  })
+  const result = await updateSpecificDependencies({
+    clonedRepoUri,
+    exec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'source-control-view',
+    repositoryOwner: 'lvce-editor',
+    toRepo: 'source-control-view',
+    updates: folders.map((toFolder) => ({ asName: '@lvce-editor/server', fromRepo: 'lvce-editor', tagName: 'v0.114.6', toFolder })),
+  })
+  expect(result.status).toBe('success')
+  expect(result.changedFiles.map((file) => file.path)).toEqual(['packages/server/package.json', 'package-lock.json', 'packages/other/package.json'])
+  const lockfile = result.changedFiles.find((file) => file.path === 'package-lock.json')
+  expect(JSON.parse(lockfile!.content).installs).toBe(2)
+  expect(result.changedFiles.filter((file) => file.path.endsWith('/package.json')).every((file) => file.content.includes('^0.114.6'))).toBe(true)
+})

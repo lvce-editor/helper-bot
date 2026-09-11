@@ -98,13 +98,29 @@ const groupUpdatesByFolder = (updates: readonly DependencyUpdate[]): Map<string,
   return grouped
 }
 
+const readLockfile = async (options: Readonly<UpdateSpecificDependenciesOptions>, toFolder: string): Promise<ChangedFile> => {
+  const path = normalizePath(`${toFolder}/package-lock.json`)
+  try {
+    return { content: await options.fs.readFile(resolveUri(path, options.clonedRepoUri), 'utf8'), path }
+  } catch (error: any) {
+    if (error?.code !== 'ENOENT') {
+      throw error
+    }
+    const content = await options.fs.readFile(resolveUri('package-lock.json', options.clonedRepoUri), 'utf8')
+    const lockfile = JSON.parse(content)
+    if (!Object.hasOwn(lockfile.packages || {}, toFolder)) {
+      throw error
+    }
+    return { content, path: 'package-lock.json' }
+  }
+}
+
 const updatePackageFolder = async (
   options: Readonly<UpdateSpecificDependenciesOptions>,
   toFolder: string,
   updates: readonly PackageUpdate[],
 ): Promise<readonly ChangedFile[]> => {
   const packageJsonPath = normalizePath(`${toFolder}/package.json`)
-  const packageLockJsonPath = normalizePath(`${toFolder}/package-lock.json`)
   const packageJsonUri = resolveUri(packageJsonPath, options.clonedRepoUri)
   const packageFolderUri = resolveUri(toFolder, options.clonedRepoUri)
   let packageJson: any
@@ -146,10 +162,7 @@ const updatePackageFolder = async (
       content: await options.fs.readFile(packageJsonUri, 'utf8'),
       path: packageJsonPath,
     },
-    {
-      content: await options.fs.readFile(resolveUri(packageLockJsonPath, options.clonedRepoUri), 'utf8'),
-      path: packageLockJsonPath,
-    },
+    await readLockfile(options, toFolder),
   ]
 }
 
@@ -171,7 +184,7 @@ export const updateSpecificDependencies = async (options: Readonly<UpdateSpecifi
 
     return {
       branchName: 'feature/update-dependencies',
-      changedFiles,
+      changedFiles: new Map(changedFiles.map((file) => [file.path, file])).values().toArray(),
       commitMessage: 'feature: update dependencies',
       pullRequestTitle: 'feature: update dependencies',
       status: 'success',
