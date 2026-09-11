@@ -2,6 +2,11 @@
   "releaseExcludedRepos": ["test-worker", "lvce-editor.github.io", "lvce-editor"],
   "dependencies": [
     {
+      "fromRepo": "fuzzy-search",
+      "toRepo": "quick-pick-worker",
+      "toFolder": "packages/quick-pick-worker"
+    },
+    {
       "fromRepo": "test-worker",
       "toRepo": "test-with-playwright",
       "toFolder": "packages/build"
