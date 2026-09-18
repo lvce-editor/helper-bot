@@ -11,7 +11,9 @@
   },
   "jest": {
     "injectGlobals": false,
-    "extensionsToTreatAsEsm": [".ts"],
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
@@ -23,7 +25,9 @@
         }
       ]
     },
-    "testMatch": ["**/test/**"],
+    "testMatch": [
+      "**/test/**"
+    ],
     "silent": true
   },
   "dependencies": {
