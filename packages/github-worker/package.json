@@ -11,9 +11,7 @@
   },
   "jest": {
     "injectGlobals": false,
-    "extensionsToTreatAsEsm": [
-      ".ts"
-    ],
+    "extensionsToTreatAsEsm": [".ts"],
     "moduleNameMapper": {
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
@@ -25,15 +23,13 @@
         }
       ]
     },
-    "testMatch": [
-      "**/test/**"
-    ],
+    "testMatch": ["**/test/**"],
     "silent": true
   },
   "dependencies": {
     "@lvce-editor/rpc": "^6.21.0",
     "@lvce-editor/verror": "^1.7.0",
-    "@octokit/openapi-types": "^29.0.1",
+    "@octokit/openapi-types": "^28.0.0",
     "@octokit/rest": "^22.0.1"
   }
 }
