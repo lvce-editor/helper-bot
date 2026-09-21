@@ -1,5 +1,4 @@
-import type { components } from '@octokit/openapi-types'
-import type { Octokit } from '@octokit/rest'
+import type { Octokit, RestEndpointMethodTypes } from '@octokit/rest'
 import { updateBranchProtectionWithOctokit } from '../UpdateBranchProtection/UpdateBranchProtection.ts'
 
 const GITHUB_ACTIONS_INTEGRATION_ID = 15_368
@@ -45,14 +44,10 @@ interface Ruleset {
   readonly target?: string
 }
 
-interface RulesetData {
-  readonly bypass_actors: components['schemas']['repository-ruleset-bypass-actor'][]
-  readonly conditions: components['schemas']['repository-ruleset-conditions']
-  readonly enforcement: components['schemas']['repository-rule-enforcement']
-  readonly name: string
-  readonly rules: components['schemas']['repository-rule'][]
-  readonly target: 'branch'
-}
+type RulesetData = Pick<
+  RestEndpointMethodTypes['repos']['createRepoRuleset']['parameters'],
+  'bypass_actors' | 'conditions' | 'enforcement' | 'name' | 'rules' | 'target'
+>
 
 const createDefaultBranchRuleset = (branch: string): RulesetData => {
   return {
@@ -104,7 +99,7 @@ const createDefaultBranchRuleset = (branch: string): RulesetData => {
 }
 
 const convertClassicToRuleset = (classicProtection: ClassicBranchProtection, branch: string): RulesetData => {
-  const rules: components['schemas']['repository-rule'][] = []
+  const rules: NonNullable<RulesetData['rules']> = []
 
   if (classicProtection.required_pull_request_reviews) {
     const reviews = classicProtection.required_pull_request_reviews
