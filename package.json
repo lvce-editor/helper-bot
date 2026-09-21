@@ -22,15 +22,15 @@
     "printWidth": 160
   },
   "devDependencies": {
-    "@jest/globals": "^30.5.1",
+    "@jest/globals": "^30.5.2",
     "@lvce-editor/eslint-config": "^18.14.0",
     "@lvce-editor/eslint-plugin-tsconfig": "^18.14.0",
-    "@types/node": "^26.1.2",
-    "eslint": "10.10.0",
-    "jest": "^30.5.1",
-    "knip": "^6.36.0",
+    "@types/node": "^26.6.2",
+    "eslint": "10.11.0",
+    "jest": "^30.5.2",
+    "knip": "^6.37.0",
     "nock": "^14.0.17",
-    "prettier": "^3.9.7",
+    "prettier": "^3.9.8",
     "ts-jest": "^29.4.12",
     "typescript": "^6.0.3"
   }
