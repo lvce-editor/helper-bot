@@ -199,3 +199,66 @@ test.each([
   expect(result.changedFiles).toHaveLength(status === 'success' ? 2 : 0)
   expect('errorMessage' in result ? result.errorMessage : '').toBe(status === 'error' ? `Failed to update dependencies: ${message}` : '')
 })
+
+test.each([true, false])('updates the workspace root lockfile with nested lockfile present: %s', async (nestedLockfile) => {
+  const clonedRepoUri = pathToUri('/test/workspace/')
+  const packageJsonPath = 'modules/renderer/package.json'
+  const originalFiles: Record<string, string> = {
+    'modules/sibling/package.json': '{"name":"sibling"}',
+    'package-lock.json': '{"oldRootLock":true}',
+    'package.json': JSON.stringify({ name: 'root', workspaces: ['modules/*', 'tools/*/packages/*'] }),
+    [packageJsonPath]: JSON.stringify({ dependencies: { '@lvce-editor/shared': '^1.0.0' }, name: 'renderer' }),
+    'tools/nested/packages/other/package-lock.json': '{"otherLock":true}',
+    'tools/nested/packages/other/package.json': '{"name":"other"}',
+  }
+  if (nestedLockfile) {
+    originalFiles['modules/renderer/package-lock.json'] = '{"staleNestedLock":true}'
+  }
+  const mockFs = createMockFs({
+    files: Object.fromEntries(
+      Object.entries({ ...originalFiles, '.git/package.json': '{}', 'node_modules/ignored/package.json': '{}', 'src/index.js': 'ignored' }).map(
+        ([path, content]) => [resolveUri(path, clonedRepoUri), content],
+      ),
+    ),
+  })
+  let temporaryRoot = ''
+  const exec = createMockExec(async (_file, _args, options) => {
+    temporaryRoot = options!.cwd!
+    expect(temporaryRoot.endsWith('/')).toBe(true)
+    for (const [path, content] of Object.entries(originalFiles)) {
+      const copied = await mockFs.readFile(resolveUri(path, temporaryRoot), 'utf8')
+      const expected = path === packageJsonPath ? { dependencies: { '@lvce-editor/shared': '^2.0.0' }, name: 'renderer' } : JSON.parse(content)
+      expect(JSON.parse(copied)).toEqual(expected)
+    }
+    for (const path of ['node_modules/ignored/package.json', '.git/package.json', 'src/index.js']) {
+      await expect(mockFs.readFile(resolveUri(path, temporaryRoot), 'utf8')).rejects.toThrow('ENOENT')
+    }
+    await mockFs.writeFile(resolveUri('package-lock.json', temporaryRoot), '{"updatedRootLock":true}')
+    return { exitCode: 0, stderr: '', stdout: '' }
+  })
+  const result = await getNewPackageFiles({
+    clonedRepoUri,
+    dependencyKey: 'dependencies',
+    dependencyName: 'shared',
+    exec,
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    newVersion: '2.0.0',
+    packageJsonPath,
+    packageLockJsonPath: 'modules/renderer/package-lock.json',
+    repositoryName: 'repo',
+    repositoryOwner: 'test',
+  })
+  expect(result.status).toBe('success')
+  expect(result.changedFiles).toEqual(
+    expect.arrayContaining([
+      { content: '{"updatedRootLock":true}', path: 'package-lock.json' },
+      { content: expect.stringContaining('^2.0.0'), path: packageJsonPath },
+    ]),
+  )
+  expect(result.changedFiles).toHaveLength(2)
+  for (const [path, content] of Object.entries(originalFiles)) {
+    expect(await mockFs.readFile(resolveUri(path, clonedRepoUri), 'utf8')).toBe(content)
+  }
+  await expect(mockFs.readFile(resolveUri('package.json', temporaryRoot), 'utf8')).rejects.toThrow('ENOENT')
+})

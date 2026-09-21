@@ -1,9 +1,9 @@
-import type * as FsPromises from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { BaseMigrationOptions, MigrationResult } from '../Types/Types.ts'
+import type { BaseMigrationOptions, ChangedFile, MigrationResult } from '../Types/Types.ts'
 import { ERROR_CODES } from '../ErrorCodes/ErrorCodes.ts'
 import { emptyMigrationResult, getHttpStatusCode } from '../GetHttpStatusCode/GetHttpStatusCode.ts'
+import { readPackageFiles } from '../ReadPackageFiles/ReadPackageFiles.ts'
 import { stringifyError } from '../StringifyError/StringifyError.ts'
 import { stringifyJson } from '../StringifyJson/StringifyJson.ts'
 import { pathToUri, uriToPath, resolveUri } from '../UriUtils/UriUtils.ts'
@@ -28,23 +28,29 @@ const getSafeFileNamePart = (value: string): string => {
   return value.replaceAll('@', '').replaceAll('/', '-')
 }
 
-const getNewPackageFilesCore = async (
-  fs: Readonly<typeof FsPromises>,
-  exec: BaseMigrationOptions['exec'],
-  oldPackageJson: PackageJsonWithDependencies,
-  dependencyName: Readonly<string>,
-  dependencyKey: DependencyKey,
-  newVersion: Readonly<string>,
-): Promise<{
-  newPackageJsonString: string
-  newPackageLockJsonString: string
-}> => {
+const getWorkspacePackageFiles = async (options: Readonly<GetNewPackageFilesOptions>): Promise<ChangedFile[] | undefined> => {
+  try {
+    const rootPackageJson = JSON.parse(await options.fs.readFile(resolveUri('package.json', options.clonedRepoUri), 'utf8'))
+    if (Array.isArray(rootPackageJson.workspaces) || Array.isArray(rootPackageJson.workspaces?.packages)) {
+      return await readPackageFiles(options.fs, options.clonedRepoUri)
+    }
+    return undefined
+  } catch (error: any) {
+    if (error?.code !== 'ENOENT') {
+      throw error
+    }
+    return undefined
+  }
+}
+
+const getNewPackageFilesCore = async (options: Readonly<GetNewPackageFilesOptions>, oldPackageJson: PackageJsonWithDependencies): Promise<ChangedFile[]> => {
+  const { dependencyKey, dependencyName, exec, fs, newVersion } = options
   const { name } = oldPackageJson
   const safePackageName = name ? getSafeFileNamePart(name) : 'package'
   const safeDependencyName = getSafeFileNamePart(dependencyName)
   const tmpFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${safePackageName}-${safeDependencyName}-${newVersion}-tmp-`))
   const tmpCacheFolder = await fs.mkdtemp(join(tmpdir(), `update-dependencies-${safePackageName}-${safeDependencyName}-${newVersion}-tmp-cache-`))
-  const tmpFolderUri = pathToUri(tmpFolder)
+  const tmpFolderUri = pathToUri(tmpFolder) + '/'
   const tmpCacheFolderUri = pathToUri(tmpCacheFolder)
   const toRemove = [tmpFolderUri, tmpCacheFolderUri]
   try {
@@ -56,7 +62,17 @@ const getNewPackageFilesCore = async (
     dependencies[packageName] = `^${newVersion}`
     const oldPackageJsonStringified = stringifyJson(oldPackageJson)
     await fs.mkdir(tmpFolderUri, { recursive: true })
-    await fs.writeFile(resolveUri('package.json', tmpFolderUri), oldPackageJsonStringified)
+    const workspaceFiles = await getWorkspacePackageFiles(options)
+    const usesWorkspaces = workspaceFiles !== undefined
+    const originalFiles = workspaceFiles || []
+    for (const { content, path } of originalFiles) {
+      const destination = resolveUri(path, tmpFolderUri)
+      await fs.mkdir(resolveUri('.', destination), { recursive: true })
+      await fs.writeFile(destination, content)
+    }
+    const packageJsonPath = options.packageJsonPath.replaceAll('\\', '/')
+    const packageLockJsonPath = options.packageLockJsonPath.replaceAll('\\', '/')
+    await fs.writeFile(resolveUri(usesWorkspaces ? packageJsonPath : 'package.json', tmpFolderUri), oldPackageJsonStringified)
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
         await exec('npm', ['install', '--ignore-scripts', '--prefer-online', '--cache', uriToPath(tmpCacheFolderUri)], {
@@ -73,14 +89,15 @@ const getNewPackageFilesCore = async (
       }
     }
 
-    // Read the updated package.json and package-lock.json
-    const packageJsonUri = resolveUri('package.json', tmpFolderUri)
-    const newPackageJsonString = await fs.readFile(packageJsonUri, 'utf8')
-    const newPackageLockJsonString = await fs.readFile(resolveUri('package-lock.json', tmpFolderUri), 'utf8')
-    return {
-      newPackageJsonString,
-      newPackageLockJsonString,
+    if (usesWorkspaces) {
+      const previous = new Map(originalFiles.map(({ content, path }) => [path, content]))
+      const updatedFiles = await readPackageFiles(fs, tmpFolderUri)
+      return updatedFiles.filter(({ content, path }) => previous.get(path) !== content)
     }
+    return [
+      { content: await fs.readFile(resolveUri('package.json', tmpFolderUri), 'utf8'), path: packageJsonPath },
+      { content: await fs.readFile(resolveUri('package-lock.json', tmpFolderUri), 'utf8'), path: packageLockJsonPath },
+    ]
   } catch (error) {
     throw new Error(`Failed to update dependencies: ${stringifyError(error)}`, { cause: error })
   } finally {
@@ -116,27 +133,14 @@ export const getNewPackageFiles = async (options: Readonly<GetNewPackageFilesOpt
       throw error
     }
 
-    const result = await getNewPackageFilesCore(options.fs, options.exec, oldPackageJson, options.dependencyName, options.dependencyKey, options.newVersion)
+    const changedFiles = await getNewPackageFilesCore(options, oldPackageJson)
 
     const safeDependencyName = getSafeFileNamePart(options.dependencyName)
     const pullRequestTitle = `feature: update ${options.dependencyName} to version ${options.newVersion}`
 
-    // Normalize paths in changedFiles to use forward slashes
-    const normalizedPackageJsonPath = options.packageJsonPath.replaceAll('\\', '/')
-    const normalizedPackageLockJsonPath = options.packageLockJsonPath.replaceAll('\\', '/')
-
     return {
       branchName: `feature/update-${safeDependencyName}-to-${options.newVersion}`,
-      changedFiles: [
-        {
-          content: result.newPackageJsonString,
-          path: normalizedPackageJsonPath,
-        },
-        {
-          content: result.newPackageLockJsonString,
-          path: normalizedPackageLockJsonPath,
-        },
-      ],
+      changedFiles,
       commitMessage: pullRequestTitle,
       pullRequestTitle,
       status: 'success',
