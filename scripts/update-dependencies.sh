@@ -16,7 +16,7 @@ fi
 
 function updateDependencies {
   echo "updating dependencies..."
-  ncu -u -x probot -x @babel/preset-typescript -x typescript
+  ncu -u -x probot -x @babel/preset-typescript -x typescript -x @octokit/openapi-types
 }
 
                                                        updateDependencies &&
