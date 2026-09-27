@@ -24,6 +24,21 @@ jest.unstable_mockModule('../src/getDependenciesConfig.ts', () => ({
       { fromRepo: 'cookie-import-view', toRepo: 'lvce-editor', toFolder: 'packages/shared-process' },
       { fromRepo: 'cookie-import-view', toRepo: 'lvce-editor', toFolder: 'packages/renderer-worker' },
     ],
+    releaseUpdates: [
+      {
+        fromRepo: 'lvce-editor',
+        toRepository: 'lvce-editor.github.io',
+        migrationId: '/migrations2/update-website-config',
+        includeReleaseTag: true,
+        updateType: 'perform-delayed-update',
+      },
+      {
+        fromRepo: 'lvce-editor',
+        toRepository: 'lvce-startup-benchmark',
+        migrationId: '/migrations2/update-startup-benchmark-versions',
+        updateType: 'perform-delayed-update',
+      },
+    ],
   }),
 }))
 
@@ -37,6 +52,7 @@ jest.unstable_mockModule('../src/errorHandling.ts', () => ({
 
 const { handleReleaseReleased, resetHandledReleases, shouldHandleRelease } = await import('../src/index.ts')
 const PlannedReleaseBatch = await import('../src/parts/PlannedReleaseBatch/PlannedReleaseBatch.ts')
+const DelayedReleaseUpdates = await import('../src/parts/DelayedReleaseUpdates/DelayedReleaseUpdates.ts')
 
 beforeEach(() => {
   mockUpdateBuiltinExtensions.mockResolvedValue(undefined)
@@ -49,6 +65,7 @@ beforeEach(() => {
   mockUpdateDependencies.mockClear()
   mockDispatchMigrationWorkflow.mockClear()
   PlannedReleaseBatch.resetPlannedReleaseBatch()
+  DelayedReleaseUpdates.resetDelayedReleaseUpdates()
   resetHandledReleases()
 })
 
@@ -90,13 +107,20 @@ test('should not handle prereleases', () => {
   expect(shouldHandleRelease(context)).toBe(false)
 })
 
-test('calls update-website-config migration when lvce-editor is published', async () => {
+test('queues website and benchmark updates until the delayed dispatch', async () => {
   const context = createContext('published', 'lvce-editor')
-
-  await handleReleaseReleased(context)
-
+  const app = {} as any
+  await handleReleaseReleased(context, app)
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(1)
+  expect(mockDispatchMigrationWorkflow).not.toHaveBeenCalledWith(
+    expect.objectContaining({
+      migrationId: expect.stringContaining('update-website-config'),
+    }),
+  )
+  await DelayedReleaseUpdates.drainDelayedReleaseUpdates()
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(3)
   expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
-    app: undefined,
+    app,
     migrationId: '/migrations2/update-website-config',
     migrationOptions: {
       releasedTag: 'v1.0.0',
@@ -105,12 +129,20 @@ test('calls update-website-config migration when lvce-editor is published', asyn
   })
 })
 
-test('calls update-startup-benchmark-versions migration when lvce-editor is published', async () => {
-  const context = createContext('published', 'lvce-editor')
+test('deduplicates delayed updates and retains the highest release tag', async () => {
   const app = {} as any
-
-  await handleReleaseReleased(context, app)
-
+  await handleReleaseReleased(createContext('published', 'lvce-editor', { tag_name: 'v1.0.0' }), app)
+  await handleReleaseReleased(createContext('published', 'lvce-editor', { tag_name: 'v1.2.0' }), app)
+  await handleReleaseReleased(createContext('published', 'lvce-editor', { tag_name: 'v1.1.0' }), app)
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(3)
+  await DelayedReleaseUpdates.drainDelayedReleaseUpdates()
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(5)
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-website-config',
+    migrationOptions: { releasedTag: 'v1.2.0' },
+    targetRepository: 'lvce-editor/lvce-editor.github.io',
+  })
   expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
     app,
     migrationId: '/migrations2/update-startup-benchmark-versions',

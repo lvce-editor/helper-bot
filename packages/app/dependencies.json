@@ -1,5 +1,20 @@
 {
   "releaseExcludedRepos": ["test-worker", "lvce-editor.github.io", "lvce-editor"],
+  "releaseUpdates": [
+    {
+      "fromRepo": "lvce-editor",
+      "toRepository": "lvce-editor.github.io",
+      "migrationId": "/migrations2/update-website-config",
+      "includeReleaseTag": true,
+      "updateType": "perform-delayed-update"
+    },
+    {
+      "fromRepo": "lvce-editor",
+      "toRepository": "lvce-startup-benchmark",
+      "migrationId": "/migrations2/update-startup-benchmark-versions",
+      "updateType": "perform-delayed-update"
+    }
+  ],
   "dependencies": [
     {
       "fromRepo": "fuzzy-search",

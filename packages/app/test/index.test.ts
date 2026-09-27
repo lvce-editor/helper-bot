@@ -2,6 +2,7 @@ import { beforeEach, expect, test, afterEach, jest } from '@jest/globals'
 import nock from 'nock'
 import { Probot, ProbotOctokit } from 'probot'
 import * as myProbotApp from '../src/index.ts'
+import * as DelayedReleaseUpdates from '../src/parts/DelayedReleaseUpdates/DelayedReleaseUpdates.ts'
 
 let probot: Probot | undefined
 const privateKey = `-----BEGIN RSA PRIVATE KEY-----
@@ -35,6 +36,7 @@ cDIUGO9eluOat3V1vIlRyZ4BJsL/YbrVh8HfZ4+XD5vn37krunyR8HfY0GeWpFTH
 beforeEach(async () => {
   nock.disableNetConnect()
   myProbotApp.resetHandledReleases()
+  DelayedReleaseUpdates.resetDelayedReleaseUpdates()
   probot = new Probot({
     appId: 123,
     privateKey,
@@ -201,6 +203,7 @@ test('calls update-website-config migration when lvce-editor is published', asyn
       },
     },
   })
+  await DelayedReleaseUpdates.drainDelayedReleaseUpdates()
   expect(workflowDispatchBodies).toHaveLength(2)
   expect(workflowDispatchBodies).toEqual(
     expect.arrayContaining([
