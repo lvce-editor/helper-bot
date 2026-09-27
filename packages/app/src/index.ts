@@ -21,9 +21,11 @@ import { createHandleMigrationWorkflowRun } from './parts/HandleMigrationWorkflo
 import * as PlannedReleaseBatch from './parts/PlannedReleaseBatch/PlannedReleaseBatch.ts'
 import express from 'express'
 import { getDependenciesConfig } from './getDependenciesConfig.ts'
+import * as DelayedReleaseUpdates from './parts/DelayedReleaseUpdates/DelayedReleaseUpdates.ts'
 
 const dependenciesConfig = getDependenciesConfig()
 const dependencies = dependenciesConfig.dependencies
+const releaseUpdates = dependenciesConfig.releaseUpdates
 const handledReleases = new Set<string>()
 const handledReleaseTtl = 10 * 60 * 1000
 const handledReleaseTimeouts = new Map<string, NodeJS.Timeout>()
@@ -114,46 +116,37 @@ const updateBuiltinExtensionsForRelease = async (context: Context<'release'>): P
   await updateBuiltinExtensions(context)
 }
 
-const updateWebsiteConfig = async (context: Context<'release'>, app?: Probot) => {
+const dispatchReleaseUpdate = async (context: Context<'release'>, app: Probot | undefined, update: (typeof releaseUpdates)[number]): Promise<void> => {
   const { payload } = context
-  const releasedRepo = payload.repository.name
-
-  // Only trigger update-website-config for lvce-editor releases
-  if (releasedRepo !== 'lvce-editor') {
-    return
-  }
-
   try {
     await dispatchMigrationWorkflow({
       // @ts-ignore
       app,
-      migrationId: '/migrations2/update-website-config',
-      migrationOptions: {
-        releasedTag: payload.release.tag_name,
-      },
-      targetRepository: 'lvce-editor/lvce-editor.github.io',
+      migrationId: update.migrationId,
+      migrationOptions: update.includeReleaseTag ? { releasedTag: payload.release.tag_name } : {},
+      targetRepository: `lvce-editor/${update.toRepository}`,
     })
   } catch (error) {
     captureException(error as Error)
   }
 }
 
-const updateStartupBenchmarkVersions = async (context: Context<'release'>, app?: Probot) => {
-  if (context.payload.repository.name !== 'lvce-editor') {
-    return
-  }
-
-  try {
-    await dispatchMigrationWorkflow({
-      // @ts-ignore
-      app,
-      migrationId: '/migrations2/update-startup-benchmark-versions',
-      migrationOptions: {},
-      targetRepository: 'lvce-editor/lvce-startup-benchmark',
-    })
-  } catch (error) {
-    captureException(error as Error)
-  }
+const updateReleaseTargets = async (context: Context<'release'>, app?: Probot): Promise<void> => {
+  const releasedRepo = context.payload.repository.name
+  const matchingUpdates = releaseUpdates.filter((update) => update.fromRepo === releasedRepo)
+  await Promise.all(
+    matchingUpdates.map(async (update) => {
+      if (update.updateType === 'perform-delayed-update') {
+        DelayedReleaseUpdates.enqueueDelayedReleaseUpdate({
+          key: `lvce-editor/${update.toRepository}:${update.migrationId}`,
+          tagName: context.payload.release.tag_name,
+          dispatch: () => dispatchReleaseUpdate(context, app, update),
+        })
+        return
+      }
+      await dispatchReleaseUpdate(context, app, update)
+    }),
+  )
 }
 
 export const shouldHandleRelease = (context: Context<'release'>): boolean => {
@@ -171,12 +164,7 @@ export const handleReleaseReleased = async (context: Context<'release'>, app?: P
   if (!markReleaseHandled(context)) {
     return
   }
-  await Promise.all([
-    updateBuiltinExtensionsForRelease(context),
-    updateRepositoryDependencies(context, app),
-    updateStartupBenchmarkVersions(context, app),
-    updateWebsiteConfig(context, app),
-  ])
+  await Promise.all([updateBuiltinExtensionsForRelease(context), updateRepositoryDependencies(context, app), updateReleaseTargets(context, app)])
 }
 
 const handleHelloWorld = async (req: any, res: any) => {
