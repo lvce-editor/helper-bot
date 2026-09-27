@@ -134,13 +134,14 @@ test('deduplicates delayed updates and retains the highest release tag', async (
   await handleReleaseReleased(createContext('published', 'lvce-editor', { tag_name: 'v1.0.0' }), app)
   await handleReleaseReleased(createContext('published', 'lvce-editor', { tag_name: 'v1.2.0' }), app)
   await handleReleaseReleased(createContext('published', 'lvce-editor', { tag_name: 'v1.1.0' }), app)
-  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(3)
+  await handleReleaseReleased(createContext('published', 'lvce-editor', { tag_name: 'v1.3.0' }), app)
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(4)
   await DelayedReleaseUpdates.drainDelayedReleaseUpdates()
-  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(5)
+  expect(mockDispatchMigrationWorkflow).toHaveBeenCalledTimes(6)
   expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
     app,
     migrationId: '/migrations2/update-website-config',
-    migrationOptions: { releasedTag: 'v1.2.0' },
+    migrationOptions: { releasedTag: 'v1.3.0' },
     targetRepository: 'lvce-editor/lvce-editor.github.io',
   })
   expect(mockDispatchMigrationWorkflow).toHaveBeenCalledWith({
