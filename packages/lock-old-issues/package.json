@@ -1,0 +1,13 @@
+{
+  "name": "@lvce-editor/lock-old-issues",
+  "version": "0.0.0-dev",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  }
+}

@@ -10,6 +10,7 @@ default_permissions:
   checks: read
   workflows: write
   administration: write
+  issues: write
 
 name: Lvce Editor Helper Bot
 url: https://github.com/lvce-editor/helper-bot

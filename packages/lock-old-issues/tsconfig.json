@@ -1,29 +1,26 @@
 {
   "compilerOptions": {
     "lib": ["esnext"],
+    "allowImportingTsExtensions": true,
     "checkJs": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
     "module": "nodenext",
+    "noImplicitAny": true,
+    "noUncheckedSideEffectImports": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
     "target": "ESNext",
     "types": ["node"],
     "moduleResolution": "nodenext",
-    "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "assumeChangesOnlyAffectDirectDependencies": true,
     "strict": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noUnusedLocals": true,
+    "composite": true,
+    "declaration": true,
     "outDir": "dist",
     "rootDir": "src",
-    "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src"],
-  "references": [
-    {
-      "path": "../lock-old-issues"
-    }
-  ]
+  "include": ["src"]
 }
