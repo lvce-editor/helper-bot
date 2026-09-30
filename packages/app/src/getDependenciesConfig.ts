@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs'
+import { parseIssueLockingConfig, type IssueLockingConfig } from '@lvce-editor/lock-old-issues'
 
 type DependencyConfig = {
   dependencies: readonly any[]
   releaseUpdates: readonly ReleaseUpdateConfig[]
   releaseExcludedRepos: readonly string[]
+  issueLocking: IssueLockingConfig
 }
 
 type ReleaseUpdateConfig = {
@@ -24,5 +26,6 @@ export const getDependenciesConfig = (): DependencyConfig => {
     dependencies: config.dependencies || [],
     releaseUpdates: config.releaseUpdates || [],
     releaseExcludedRepos: config.releaseExcludedRepos || defaultReleaseExcludedRepos,
+    issueLocking: parseIssueLockingConfig(config.issueLocking),
   }
 }

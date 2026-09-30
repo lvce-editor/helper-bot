@@ -22,10 +22,12 @@ import * as PlannedReleaseBatch from './parts/PlannedReleaseBatch/PlannedRelease
 import express from 'express'
 import { getDependenciesConfig } from './getDependenciesConfig.ts'
 import * as DelayedReleaseUpdates from './parts/DelayedReleaseUpdates/DelayedReleaseUpdates.ts'
+import { lockOldConversations, scheduleIssueLocking, type LockingOctokit } from '@lvce-editor/lock-old-issues'
 
 const dependenciesConfig = getDependenciesConfig()
 const dependencies = dependenciesConfig.dependencies
 const releaseUpdates = dependenciesConfig.releaseUpdates
+const issueLocking = dependenciesConfig.issueLocking
 const handledReleases = new Set<string>()
 const handledReleaseTtl = 10 * 60 * 1000
 const handledReleaseTimeouts = new Map<string, NodeJS.Timeout>()
@@ -167,6 +169,38 @@ export const handleReleaseReleased = async (context: Context<'release'>, app?: P
   await Promise.all([updateBuiltinExtensionsForRelease(context), updateRepositoryDependencies(context, app), updateReleaseTargets(context, app)])
 }
 
+const startIssueLocking = (app: Probot): (() => void) =>
+  scheduleIssueLocking({
+    config: issueLocking,
+    run: async () => {
+      let remainingLocks = issueLocking.maxItemsPerRun
+      let wroteInPreviousRepository = false
+      for (const fullName of issueLocking.repositories) {
+        if (remainingLocks <= 0) {
+          break
+        }
+        const [owner, repo] = fullName.split('/')
+        try {
+          const appOctokit = await app.auth()
+          const { data: installation } = await (appOctokit as any).apps.getRepoInstallation({ owner, repo })
+          const octokit = await app.auth(installation.id)
+          if (wroteInPreviousRepository) {
+            await new Promise((resolve) => setTimeout(resolve, issueLocking.writeIntervalMs))
+          }
+          const locked = await lockOldConversations({
+            octokit: octokit as unknown as LockingOctokit,
+            repository: fullName,
+            config: { ...issueLocking, maxItemsPerRun: remainingLocks },
+          })
+          remainingLocks -= locked
+          wroteInPreviousRepository = locked > 0
+        } catch (error) {
+          console.error(`Unable to process configured repository ${fullName}: ${error instanceof Error ? error.message : String(error)}`)
+        }
+      }
+    },
+  })
+
 const handleHelloWorld = async (req: any, res: any) => {
   res.send('Hello World')
 }
@@ -300,5 +334,10 @@ export default (app: Probot, { addHandler }: ApplicationFunctionOptions) => {
   }
   app.on('release', (context) => handleReleaseReleased(context, app))
   app.on('workflow_run.completed', createHandleMigrationWorkflowRun({ app, processInBackground: true }) as any)
+  if (issueLocking?.enabled && issueLocking.repositories.length > 0) {
+    const stopIssueLocking = startIssueLocking(app)
+    process.once('SIGTERM', stopIssueLocking)
+    process.once('SIGINT', stopIssueLocking)
+  }
   console.log('Event handlers registered')
 }

@@ -1,4 +1,17 @@
 {
+  "issueLocking": {
+    "enabled": false,
+    "repositories": [],
+    "olderThanDays": 45,
+    "schedule": {
+      "hour": 7,
+      "minute": 0,
+      "timeZone": "Europe/Berlin"
+    },
+    "maxPagesPerRun": 5,
+    "maxItemsPerRun": 100,
+    "writeIntervalMs": 1000
+  },
   "releaseExcludedRepos": ["test-worker", "lvce-editor.github.io", "lvce-editor"],
   "releaseUpdates": [
     {

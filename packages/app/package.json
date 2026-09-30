@@ -13,6 +13,7 @@
     "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
+    "@lvce-editor/lock-old-issues": "0.0.0-dev",
     "@lvce-editor/rpc": "^6.21.1",
     "@lvce-editor/rpc-registry": "^9.65.4",
     "@lvce-editor/verror": "^1.7.0",
@@ -28,7 +29,8 @@
       ".ts"
     ],
     "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
+      "^(\\.{1,2}/.*)\\.js$": "$1",
+      "^@lvce-editor/lock-old-issues$": "<rootDir>/../lock-old-issues/src/index.ts"
     },
     "transform": {
       "^.+\\.tsx?$": [
