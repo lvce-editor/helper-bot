@@ -6,7 +6,7 @@ import { resolveUri } from '../UriUtils/UriUtils.ts'
 
 const EXPECTED_REPOSITORY_OWNER = 'lvce-editor'
 const EXPECTED_REPOSITORY_NAME = 'lvce-typing-benchmark'
-const TARGET_PACKAGE_NAMES = ['editor-worker', 'static-server'] as const
+const TARGET_PACKAGE_NAMES = ['editor-worker', 'server', 'static-server'] as const
 
 export type PlanTypingBenchmarkUpdateOptions = BaseMigrationOptions
 
