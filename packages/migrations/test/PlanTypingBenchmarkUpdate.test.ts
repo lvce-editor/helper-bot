@@ -30,6 +30,7 @@ test('plans only published LVCE runtime updates that differ from exact pins', as
   })
   const fetch = createLatestVersionsFetch({
     'https://registry.npmjs.org/@lvce-editor/editor-worker/latest': '19.60.3',
+    'https://registry.npmjs.org/@lvce-editor/server/latest': '0.114.3',
     'https://registry.npmjs.org/@lvce-editor/static-server/latest': '0.114.2',
   })
 
@@ -50,11 +51,16 @@ test('plans only published LVCE runtime updates that differ from exact pins', as
           tagName: 'v19.60.3',
           toFolder: '.',
         },
+        {
+          fromRepo: 'server',
+          tagName: 'v0.114.3',
+          toFolder: '.',
+        },
       ],
     },
     status: 'success',
   })
-  expect(fetch).toHaveBeenCalledTimes(2)
+  expect(fetch).toHaveBeenCalledTimes(3)
 })
 
 test('returns no updates when the target repository already has the latest runtime pins', async () => {
@@ -64,6 +70,7 @@ test('returns no updates when the target repository already has the latest runti
       [resolveUri('package.json', clonedRepoUri)]: JSON.stringify({
         dependencies: {
           '@lvce-editor/editor-worker': '19.60.3',
+          '@lvce-editor/server': '0.114.3',
           '@lvce-editor/static-server': '0.114.2',
         },
       }),
@@ -71,6 +78,7 @@ test('returns no updates when the target repository already has the latest runti
   })
   const fetch = createLatestVersionsFetch({
     'https://registry.npmjs.org/@lvce-editor/editor-worker/latest': '19.60.3',
+    'https://registry.npmjs.org/@lvce-editor/server/latest': '0.114.3',
     'https://registry.npmjs.org/@lvce-editor/static-server/latest': '0.114.2',
   })
 
