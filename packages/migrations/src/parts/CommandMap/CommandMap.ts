@@ -28,6 +28,7 @@ import { modernizeTypescript } from '../ModernizeTypescript/ModernizeTypescript.
 import { multiMigrations } from '../MultiMigrations/MultiMigrations.ts'
 import { planOrgEslintUpdatesMigration } from '../PlanOrgEslintUpdates/PlanOrgEslintUpdates.ts'
 import { planOrgReleaseTagsMigration } from '../PlanOrgReleaseTags/PlanOrgReleaseTags.ts'
+import { planTypingBenchmarkUpdate } from '../PlanTypingBenchmarkUpdate/PlanTypingBenchmarkUpdate.ts'
 import { removeGitpod } from '../RemoveGitpod/RemoveGitpod.ts'
 import { removeGitpodSection } from '../RemoveGitpodSection/RemoveGitpodSection.ts'
 import { removeGitpodyml } from '../RemoveGitpodyml/RemoveGitpodyml.ts'
@@ -77,6 +78,7 @@ export const commandMap = {
   '/migrations2/modernize-typescript': wrapCommand(modernizeTypescript),
   '/migrations2/plan-org-eslint-updates': wrapCommandWithoutClone(planOrgEslintUpdatesMigration),
   '/migrations2/plan-org-release-tags': planOrgReleaseTagsMigration,
+  '/migrations2/plan-typing-benchmark-update': wrapCommand(planTypingBenchmarkUpdate),
   '/migrations2/remove-gitpod': wrapCommand(removeGitpod),
   '/migrations2/remove-gitpod-section': wrapCommand(removeGitpodSection),
   '/migrations2/remove-gitpod-yml': wrapCommand(removeGitpodyml),

@@ -89,6 +89,63 @@ test('updates multiple dependencies in one package folder', async () => {
   expect(mockExecFn).toHaveBeenCalledTimes(1)
 })
 
+test('preserves exact dependency pins and skips an already current version', async () => {
+  const clonedRepoUri = pathToUri('/test/repo')
+  const packageJsonUri = resolveUri('package.json', clonedRepoUri)
+  const originalPackageJson =
+    JSON.stringify({
+      dependencies: {
+        '@lvce-editor/editor-worker': '19.60.3',
+      },
+    }) + '\n'
+  const mockFs = createMockFs({ files: { [packageJsonUri]: originalPackageJson } })
+  const execFn = jest.fn(async () => ({ exitCode: 0, stderr: '', stdout: '' }))
+  const currentResult = await updateSpecificDependencies({
+    clonedRepoUri,
+    exactVersions: true,
+    exec: createMockExec(execFn),
+    fetch: globalThis.fetch,
+    fs: mockFs,
+    repositoryName: 'lvce-typing-benchmark',
+    repositoryOwner: 'lvce-editor',
+    toRepo: 'lvce-typing-benchmark',
+    updates: [{ fromRepo: 'editor-worker', tagName: 'v19.60.3', toFolder: '.' }],
+  })
+
+  expect(currentResult).toMatchObject({ changedFiles: [], status: 'success', statusCode: 200 })
+  expect(execFn).not.toHaveBeenCalled()
+  expect(await mockFs.readFile(packageJsonUri, 'utf8')).toBe(originalPackageJson)
+
+  const mockFsWithLockfile = createMockFs({
+    files: {
+      [packageJsonUri]: originalPackageJson.replace('19.60.3', '19.60.2'),
+      [resolveUri('package-lock.json', clonedRepoUri)]: JSON.stringify({ lockfileVersion: 3, packages: {} }),
+    },
+  })
+  const updateExecFn = jest.fn(async () => {
+    await mockFsWithLockfile.writeFile(
+      resolveUri('package-lock.json', clonedRepoUri),
+      JSON.stringify({ lockfileVersion: 3, packages: { 'node_modules/@lvce-editor/editor-worker': { version: '19.60.3' } } }),
+    )
+    return { exitCode: 0, stderr: '', stdout: '' }
+  })
+  const updateResult = await updateSpecificDependencies({
+    clonedRepoUri,
+    exactVersions: true,
+    exec: createMockExec(updateExecFn),
+    fetch: globalThis.fetch,
+    fs: mockFsWithLockfile,
+    repositoryName: 'lvce-typing-benchmark',
+    repositoryOwner: 'lvce-editor',
+    toRepo: 'lvce-typing-benchmark',
+    updates: [{ fromRepo: 'editor-worker', tagName: 'v19.60.3', toFolder: '.' }],
+  })
+
+  expect(updateResult.status).toBe('success')
+  expect(updateResult.status === 'success' && updateResult.changedFiles[0].content).toContain('"@lvce-editor/editor-worker": "19.60.3"')
+  expect(updateExecFn).toHaveBeenCalledTimes(1)
+})
+
 test('updates multiple package folders', async () => {
   const clonedRepoUri = pathToUri('/test/repo')
   const mockFs = createMockFs({

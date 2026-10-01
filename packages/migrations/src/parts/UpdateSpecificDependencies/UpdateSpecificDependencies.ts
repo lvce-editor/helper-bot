@@ -15,6 +15,7 @@ interface DependencyUpdate {
 }
 
 export interface UpdateSpecificDependenciesOptions extends BaseMigrationOptions {
+  readonly exactVersions?: boolean
   readonly toRepo: string
   readonly updates: readonly DependencyUpdate[]
 }
@@ -68,6 +69,9 @@ const validateOptions = (options: Readonly<UpdateSpecificDependenciesOptions>): 
   }
   if (!Array.isArray(options.updates) || options.updates.length === 0) {
     return 'Invalid or missing updates parameter'
+  }
+  if (options.exactVersions !== undefined && typeof options.exactVersions !== 'boolean') {
+    return 'Invalid exactVersions parameter (must be a boolean if provided)'
   }
   if (!options.repositoryOwner || typeof options.repositoryOwner !== 'string' || options.repositoryOwner.trim() === '') {
     return 'Invalid or missing repositoryOwner parameter'
@@ -140,7 +144,7 @@ const updatePackageFolder = async (
     if (!dependencyKey) {
       continue
     }
-    const newDependency = `^${update.newVersion}`
+    const newDependency = `${options.exactVersions ? '' : '^'}${update.newVersion}`
     if (packageJson[dependencyKey][update.dependencyName] === newDependency) {
       continue
     }

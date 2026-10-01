@@ -15,12 +15,15 @@ const WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
 const RELEASE_WORKFLOW_PATH = '.github/workflows/release.yml'
 const ORG_ESLINT_UPDATE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-eslint-update-plan.yml'
 const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
+const TYPING_BENCHMARK_UPDATE_REQUEST_WORKFLOW_PATH = '.github/workflows/request-typing-benchmark-update.yml'
 const ORG_ESLINT_UPDATE_PLAN_MIGRATION_ID = '/migrations2/plan-org-eslint-updates'
 const ORG_RELEASE_PLAN_MIGRATION_ID = '/migrations2/plan-org-release-tags'
+const TYPING_BENCHMARK_UPDATE_MIGRATION_ID = '/migrations2/plan-typing-benchmark-update'
 const UPDATE_ESLINT_DEPENDENCIES_MIGRATION_ID = '/migrations2/update-eslint-dependencies'
 const UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID = '/migrations2/update-specific-dependencies'
 const UPDATE_BUILTIN_EXTENSIONS_MIGRATION_ID = '/migrations2/update-builtin-extensions'
 const ORG_RELEASE_PLAN_TARGET_REPOSITORY = 'lvce-editor/helper-bot'
+const TYPING_BENCHMARK_REPOSITORY = 'lvce-editor/lvce-typing-benchmark'
 const LOG_PREFIX = '[HandleMigrationWorkflowRun]'
 
 export interface CreateHandleMigrationWorkflowRunOptions {
@@ -120,6 +123,17 @@ const isAllowedOrgEslintUpdatePlanRequestWorkflowRun = (
   )
 }
 
+const isAllowedTypingBenchmarkUpdateRequestWorkflowRun = (
+  workflowRun: Readonly<{ conclusion?: string | null; event: string; head_branch?: string; path: string }>,
+): boolean => {
+  return (
+    workflowRun.path === TYPING_BENCHMARK_UPDATE_REQUEST_WORKFLOW_PATH &&
+    workflowRun.head_branch === WORKFLOW_BRANCH &&
+    workflowRun.conclusion === 'success' &&
+    (workflowRun.event === 'schedule' || workflowRun.event === WORKFLOW_EVENT)
+  )
+}
+
 export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleMigrationWorkflowRunOptions>) => {
   const dispatchWorkflow = options.dispatchMigrationWorkflow || dispatchMigrationWorkflow
   const downloadArtifact = options.downloadMigrationArtifact || downloadMigrationArtifact
@@ -153,6 +167,22 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       logger.info(`${LOG_PREFIX} dispatched org eslint update plan migration workflow`)
     } catch (error) {
       logger.error(`${LOG_PREFIX} failed to dispatch org eslint update plan migration workflow`, error)
+      captureException(error as Error)
+    }
+  }
+
+  const requestTypingBenchmarkUpdateMigration = async (logger: Logger): Promise<void> => {
+    try {
+      logger.info(`${LOG_PREFIX} dispatching typing benchmark update migration`)
+      await dispatchWorkflow({
+        app: options.app,
+        migrationId: TYPING_BENCHMARK_UPDATE_MIGRATION_ID,
+        migrationOptions: {},
+        targetRepository: TYPING_BENCHMARK_REPOSITORY,
+      })
+      logger.info(`${LOG_PREFIX} dispatched typing benchmark update migration`)
+    } catch (error) {
+      logger.error(`${LOG_PREFIX} failed to dispatch typing benchmark update migration`, error)
       captureException(error as Error)
     }
   }
@@ -256,6 +286,29 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
         await dispatchPlannedEslintUpdates(logger, eslintUpdatePlan)
         return
       }
+      if (artifact.manifest.migrationId === TYPING_BENCHMARK_UPDATE_MIGRATION_ID) {
+        const updates = artifact.manifest.data?.updates
+        if (!Array.isArray(updates)) {
+          logger.warn(`${LOG_PREFIX} ${migrationLabel}: typing benchmark update plan is missing data.updates`)
+          return
+        }
+        if (updates.length === 0) {
+          logger.info(`${LOG_PREFIX} ${migrationLabel}: typing benchmark dependencies are already up to date`)
+          return
+        }
+        await dispatchWorkflow({
+          app: options.app,
+          migrationId: UPDATE_SPECIFIC_DEPENDENCIES_MIGRATION_ID,
+          migrationOptions: {
+            toRepo: 'lvce-typing-benchmark',
+            updates,
+            exactVersions: true,
+          },
+          targetRepository: TYPING_BENCHMARK_REPOSITORY,
+        })
+        logger.info(`${LOG_PREFIX} dispatched ${updates.length} typing benchmark dependency updates`)
+        return
+      }
       if (artifact.manifest.migrationId === ORG_RELEASE_PLAN_MIGRATION_ID) {
         const releasePlan = artifact.manifest.data?.releasePlan
         if (!releasePlan) {
@@ -350,6 +403,17 @@ export const createHandleMigrationWorkflowRun = (options: Readonly<CreateHandleM
       }
       setImmediate(async () => {
         await requestOrgEslintUpdatePlanMigration(logger)
+      })
+      return
+    }
+    if (isAllowedTypingBenchmarkUpdateRequestWorkflowRun(workflowRun)) {
+      logger.info(`${LOG_PREFIX} received completed typing benchmark update request workflow webhook for run ${workflowRun.id}`)
+      if (!options.processInBackground) {
+        await requestTypingBenchmarkUpdateMigration(logger)
+        return
+      }
+      setImmediate(async () => {
+        await requestTypingBenchmarkUpdateMigration(logger)
       })
       return
     }

@@ -15,6 +15,7 @@ beforeEach(() => {
 const MIGRATION_WORKFLOW_PATH = '.github/workflows/run-migration-on-demand.yml'
 const ORG_ESLINT_UPDATE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-eslint-update-plan.yml'
 const ORG_RELEASE_PLAN_REQUEST_WORKFLOW_PATH = '.github/workflows/request-org-release-plan.yml'
+const TYPING_BENCHMARK_UPDATE_REQUEST_WORKFLOW_PATH = '.github/workflows/request-typing-benchmark-update.yml'
 const OLD_ORG_RELEASE_PLAN_WORKFLOW_PATH = '.github/workflows/nightly-org-release-plan.yml'
 
 afterEach(() => {
@@ -282,6 +283,112 @@ test('dispatches org eslint update plan migration when its request workflow comp
   })
   expect(downloadMigrationArtifact).not.toHaveBeenCalled()
   expect(invokeGithubWorker).not.toHaveBeenCalled()
+})
+
+test.each(['schedule', 'workflow_dispatch'])('dispatches the typing benchmark update migration for a successful %s request', async (event) => {
+  const dispatchMigrationWorkflow = (jest.fn() as any).mockResolvedValue({ requestId: 'request-typing-benchmark' })
+  const app = {} as any
+  const context: any = {
+    log: { error: errorSpy, info: infoSpy, warn: warnSpy },
+    payload: {
+      repository: { name: 'helper-bot', owner: { login: 'lvce-editor' } },
+      workflow_run: {
+        conclusion: 'success',
+        event,
+        head_branch: 'main',
+        id: 123,
+        path: TYPING_BENCHMARK_UPDATE_REQUEST_WORKFLOW_PATH,
+      },
+    },
+  }
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({ app, dispatchMigrationWorkflow })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/plan-typing-benchmark-update',
+    migrationOptions: {},
+    targetRepository: 'lvce-editor/lvce-typing-benchmark',
+  })
+})
+
+test.each([
+  { conclusion: 'failure', event: 'schedule', head_branch: 'main', path: TYPING_BENCHMARK_UPDATE_REQUEST_WORKFLOW_PATH },
+  { conclusion: 'success', event: 'push', head_branch: 'main', path: TYPING_BENCHMARK_UPDATE_REQUEST_WORKFLOW_PATH },
+  { conclusion: 'success', event: 'schedule', head_branch: 'feature/other', path: TYPING_BENCHMARK_UPDATE_REQUEST_WORKFLOW_PATH },
+  { conclusion: 'success', event: 'schedule', head_branch: 'main', path: '.github/workflows/ci.yml' },
+])('ignores an untrusted typing benchmark request run: $event $conclusion $head_branch $path', async (workflowRun) => {
+  const dispatchMigrationWorkflow = jest.fn() as any
+  const context: any = {
+    log: { error: errorSpy, info: infoSpy, warn: warnSpy },
+    payload: {
+      repository: { name: 'helper-bot', owner: { login: 'lvce-editor' } },
+      workflow_run: { ...workflowRun, id: 123 },
+    },
+  }
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({ app: {} as any, dispatchMigrationWorkflow })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).not.toHaveBeenCalled()
+})
+
+test('dispatches exact-pin dependency updates from a typing benchmark plan and leaves current plans alone', async () => {
+  const app = {} as any
+  const context: any = {
+    log: { error: errorSpy, info: infoSpy, warn: warnSpy },
+    payload: {
+      repository: { name: 'helper-bot', owner: { login: 'lvce-editor' } },
+      workflow_run: { event: 'workflow_dispatch', head_branch: 'main', id: 123, path: MIGRATION_WORKFLOW_PATH },
+    },
+  }
+  const dispatchMigrationWorkflow = jest.fn() as any
+  const downloadMigrationArtifact = (jest.fn() as any).mockResolvedValue({
+    changedFiles: [],
+    manifest: {
+      data: { updates: [{ fromRepo: 'editor-worker', tagName: 'v19.60.3', toFolder: '.' }] },
+      migrationId: '/migrations2/plan-typing-benchmark-update',
+      requestId: 'typing-plan-1',
+      status: 'success',
+      targetRepository: 'lvce-editor/lvce-typing-benchmark',
+    },
+  })
+  const { createHandleMigrationWorkflowRun } = await import('../src/parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts')
+  const handleMigrationWorkflowRun = createHandleMigrationWorkflowRun({ app, dispatchMigrationWorkflow, downloadMigrationArtifact })
+
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).toHaveBeenCalledWith({
+    app,
+    migrationId: '/migrations2/update-specific-dependencies',
+    migrationOptions: {
+      toRepo: 'lvce-typing-benchmark',
+      updates: [{ fromRepo: 'editor-worker', tagName: 'v19.60.3', toFolder: '.' }],
+      exactVersions: true,
+    },
+    targetRepository: 'lvce-editor/lvce-typing-benchmark',
+  })
+
+  dispatchMigrationWorkflow.mockClear()
+  downloadMigrationArtifact.mockResolvedValueOnce({
+    changedFiles: [],
+    manifest: {
+      data: { updates: [] },
+      migrationId: '/migrations2/plan-typing-benchmark-update',
+      requestId: 'typing-plan-2',
+      status: 'success',
+      targetRepository: 'lvce-editor/lvce-typing-benchmark',
+    },
+  })
+  await handleMigrationWorkflowRun(context)
+
+  expect(dispatchMigrationWorkflow).not.toHaveBeenCalled()
+  expect(infoSpy).toHaveBeenCalledWith(
+    '[HandleMigrationWorkflowRun] lvce-editor/lvce-typing-benchmark /migrations2/plan-typing-benchmark-update: typing benchmark dependencies are already up to date',
+  )
 })
 
 test('ignores unsuccessful org release plan request workflow runs', async () => {

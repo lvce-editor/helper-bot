@@ -1,0 +1,21 @@
+# eslint-disable github-actions/on
+name: request-typing-benchmark-update
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 1 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: request-typing-benchmark-update
+  cancel-in-progress: false
+
+jobs:
+  request:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - run: echo "Requesting typing benchmark update migration"
