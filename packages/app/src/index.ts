@@ -19,6 +19,7 @@ import { migrations2RoutePatterns, registerMigrations2Endpoints } from './migrat
 import { dispatchMigrationWorkflow } from './parts/DispatchMigrationWorkflow/DispatchMigrationWorkflow.ts'
 import { createHandleMigrationWorkflowRun } from './parts/HandleMigrationWorkflowRun/HandleMigrationWorkflowRun.ts'
 import * as PlannedReleaseBatch from './parts/PlannedReleaseBatch/PlannedReleaseBatch.ts'
+import { createHandleConfigChecksCompleted, createHandleConfigApplicationCompleted } from './parts/RepositoryConfig/HandleRepositoryConfig.ts'
 import express from 'express'
 import { getDependenciesConfig } from './getDependenciesConfig.ts'
 import * as DelayedReleaseUpdates from './parts/DelayedReleaseUpdates/DelayedReleaseUpdates.ts'
@@ -333,6 +334,8 @@ export default (app: Probot, { addHandler }: ApplicationFunctionOptions) => {
     }
   }
   app.on('release', (context) => handleReleaseReleased(context, app))
+  app.on('workflow_run.completed', createHandleConfigChecksCompleted(app) as any)
+  app.on('workflow_run.completed', createHandleConfigApplicationCompleted(app) as any)
   app.on('workflow_run.completed', createHandleMigrationWorkflowRun({ app, processInBackground: true }) as any)
   if (issueLocking?.enabled && issueLocking.repositories.length > 0) {
     const stopIssueLocking = startIssueLocking(app)
