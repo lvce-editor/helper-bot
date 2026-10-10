@@ -7,6 +7,7 @@ COPY packages/build/package.json ./packages/build/
 COPY packages/exec-worker/package.json ./packages/exec-worker/
 COPY packages/github-worker/package.json ./packages/github-worker/
 COPY packages/migrations/package.json ./packages/migrations/
+COPY packages/lock-old-issues/package.json ./packages/lock-old-issues/
 
 RUN npm ci --ignore-scripts
 
@@ -23,11 +24,13 @@ COPY packages/build/package.json ./packages/build/
 COPY packages/exec-worker/package.json ./packages/exec-worker/
 COPY packages/github-worker/package.json ./packages/github-worker/
 COPY packages/migrations/package.json ./packages/migrations/
+COPY packages/lock-old-issues/package.json ./packages/lock-old-issues/
 
 RUN npm ci --omit=dev --ignore-scripts --workspace=@lvce-editor/helper-bot --workspace=@lvce-editor/helper-bot-github-worker
 
 COPY --from=builder /usr/src/app/packages/app/dist ./packages/app/dist
 COPY --from=builder /usr/src/app/packages/github-worker/dist ./packages/github-worker/dist
+COPY --from=builder /usr/src/app/packages/lock-old-issues/dist ./packages/lock-old-issues/dist
 
 ENV NODE_ENV="production"
 CMD ["npm", "start", "--workspace=@lvce-editor/helper-bot"]

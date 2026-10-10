@@ -32,3 +32,41 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run lint
+
+  container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build production image
+        run: docker build --tag helper-bot-production .
+      - name: Verify production app imports
+        run: docker run --rm helper-bot-production node --input-type=module -e "await import('./packages/app/dist/index.js')"
+
+  deploy:
+    needs: [ci, container]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Request deployment of validated main
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import urllib.request
+          from urllib.parse import urlparse
+
+          hook = os.environ.get('DEPLOY_HOOK_URL', '')
+          if urlparse(hook).scheme != 'https':
+              raise SystemExit('A valid HTTPS deployment hook is required')
+          try:
+              with urllib.request.urlopen(urllib.request.Request(hook, data=b'', method='POST'), timeout=60) as response:
+                  if not 200 <= response.status < 300:
+                      raise SystemExit('Deployment hook rejected the request')
+          except Exception:
+              raise SystemExit('Deployment hook request failed; inspect the hosting service')
+          print('Deployment requested. Verify the deployed application before declaring acceptance.')
+          PY
