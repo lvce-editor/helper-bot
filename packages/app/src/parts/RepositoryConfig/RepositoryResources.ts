@@ -164,7 +164,6 @@ export const planResources = async (
   requirePermission(granted, 'administration')
   // Check every required permission before reads or writes, avoiding a predictable partial application.
   if ((desired.labels !== undefined || desired.milestones !== undefined) && granted.pull_requests !== 'write') requirePermission(granted, 'issues')
-  if (desired.environments !== undefined) requirePermission(granted, 'environments')
   if (desired.teams !== undefined) requirePermission(granted, 'members', 'read')
   const writes: (() => Promise<unknown>)[] = []
   if (desired.topics !== undefined) {
