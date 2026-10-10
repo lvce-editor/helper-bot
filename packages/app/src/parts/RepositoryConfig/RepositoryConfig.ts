@@ -1,16 +1,18 @@
-import { parse } from 'yaml'
+import { parse, parseDocument } from 'yaml'
+import { assertOwnership, parseResources, planResources, type ResourceConfig } from './RepositoryResources.ts'
 
-export const CONFIG_PATH = '.github/repository-config.json'
+const CONFIG_PATH = '.github/repository-config.yml'
+const LEGACY_CONFIG_PATH = '.github/repository-config.json'
 export const WORKFLOW_PATH = '.github/workflows/apply-repository-config.yml'
 export const WORKFLOW_PREFIX = 'repository-config/'
 const ACTIONS_APP_ID = 15368
 const LOCK_REF = 'heads/helper-bot-repository-config-lock'
 
-export interface RepositoryConfig {
+export interface RepositoryConfig extends ResourceConfig {
   readonly version: 1
   readonly requiredStatusChecks: readonly string[]
   readonly rulesetId?: number
-  readonly settings?: Readonly<Record<string, boolean>>
+  readonly settings?: Readonly<Record<string, boolean | string>>
 }
 
 export interface ConfigRequest {
@@ -40,12 +42,31 @@ export const parseConfig = (text: string): RepositoryConfig => {
   if (Buffer.byteLength(text) > 65536) {
     throw new Error('Repository config is too large')
   }
-  const config = JSON.parse(text)
+  const document = parseDocument(text, { uniqueKeys: true, schema: 'core' })
+  if (document.errors.length || document.warnings.length) {
+    throw new Error('Invalid or ambiguous repository YAML')
+  }
+  const config = document.toJS({ maxAliasCount: 0 })
   if (
     !config ||
     typeof config !== 'object' ||
     Array.isArray(config) ||
-    Object.keys(config).some((key) => !['version', 'requiredStatusChecks', 'rulesetId', 'settings'].includes(key))
+    Object.keys(config).some(
+      (key) =>
+        ![
+          'version',
+          'requiredStatusChecks',
+          'rulesetId',
+          'settings',
+          'topics',
+          'labels',
+          'milestones',
+          'environments',
+          'collaborators',
+          'teams',
+          'branches',
+        ].includes(key),
+    )
   ) {
     throw new Error('Invalid repository config fields')
   }
@@ -62,18 +83,7 @@ export const parseConfig = (text: string): RepositoryConfig => {
   if (config.rulesetId !== undefined && (!Number.isSafeInteger(config.rulesetId) || config.rulesetId < 1)) {
     throw new Error('Invalid ruleset id')
   }
-  if (
-    config.settings !== undefined &&
-    (!config.settings ||
-      typeof config.settings !== 'object' ||
-      Array.isArray(config.settings) ||
-      Object.entries(config.settings).some(
-        ([key, value]) =>
-          !['allow_squash_merge', 'allow_merge_commit', 'allow_rebase_merge', 'delete_branch_on_merge'].includes(key) || typeof value !== 'boolean',
-      ))
-  ) {
-    throw new Error('Invalid repository settings')
-  }
+  parseResources(config)
   return config
 }
 
@@ -121,13 +131,30 @@ export const getWorkflowChecks = (text: string): readonly string[] => {
   return checks
 }
 
-export const readFile = async (octokit: any, repository: string, ref: string, path: string): Promise<string> => {
+const readFile = async (octokit: any, repository: string, ref: string, path: string): Promise<string> => {
   const [owner, repo] = repository.split('/')
   const { data } = await octokit.rest.repos.getContent({ owner, repo, path, ref })
   if (data.type !== 'file' || data.encoding !== 'base64' || data.size > 65536) {
     throw new Error(`Invalid config data at ${path}`)
   }
   return Buffer.from(data.content, 'base64').toString('utf8')
+}
+
+export const readConfig = async (octokit: any, repository: string, ref: string): Promise<RepositoryConfig> => {
+  let yaml: string | undefined
+  let legacy: string | undefined
+  for (const path of [CONFIG_PATH, LEGACY_CONFIG_PATH]) {
+    try {
+      const text = await readFile(octokit, repository, ref, path)
+      if (path === CONFIG_PATH) yaml = text
+      else legacy = text
+    } catch (error: any) {
+      if (error.status !== 404) throw error
+    }
+  }
+  if (yaml !== undefined && legacy !== undefined) throw new Error('Remove legacy JSON when migrating to YAML')
+  if (yaml === undefined && legacy === undefined) throw Object.assign(new Error('Repository is not configured'), { status: 404 })
+  return parseConfig(yaml ?? legacy!)
 }
 
 const getPullRequest = async (octokit: any, request: Readonly<ConfigRequest>): Promise<any> => {
@@ -159,11 +186,12 @@ export interface ValidatedConfig {
 
 export const validateRequest = async (octokit: any, request: Readonly<ConfigRequest>): Promise<ValidatedConfig> => {
   await getPullRequest(octokit, request)
-  const base = parseConfig(await readFile(octokit, request.repository, request.baseSha, CONFIG_PATH))
-  const desired = parseConfig(await readFile(octokit, request.repository, request.headSha, CONFIG_PATH))
+  const base = await readConfig(octokit, request.repository, request.baseSha)
+  const desired = await readConfig(octokit, request.repository, request.headSha)
   if (base.rulesetId !== desired.rulesetId || !equal(Object.keys(base.settings || {}), Object.keys(desired.settings || {}))) {
     throw new Error('Configuration ownership must be bootstrapped on main; do not change managed fields in a PR')
   }
+  assertOwnership(base, desired)
   const [owner, repo] = request.repository.split('/')
   const workflowChecks = async (ref: string): Promise<Map<string, readonly string[]>> => {
     const { data: files } = await octokit.rest.repos.getContent({ owner, repo, ref, path: '.github/workflows' })
@@ -273,7 +301,7 @@ const assertSnapshot = (live: readonly string[], base: readonly string[], desire
   }
 }
 
-export const applyRequest = async (octokit: any, request: Readonly<ConfigRequest>): Promise<void> => {
+export const applyRequest = async (octokit: any, request: Readonly<ConfigRequest>, permissions: Readonly<Record<string, string>>): Promise<void> => {
   assertRequest(request)
   const [owner, repo] = request.repository.split('/')
   await getPullRequest(octokit, request)
@@ -284,6 +312,7 @@ export const applyRequest = async (octokit: any, request: Readonly<ConfigRequest
     if (!changed) {
       return
     }
+    const resourceWrites = await planResources(octokit, owner, repo, base, desired, permissions)
     let updateChecks: (() => Promise<unknown>) | undefined
     if (desired.rulesetId) {
       const { data: ruleset } = await octokit.request('GET /repos/{owner}/{repo}/rulesets/{ruleset_id}', { owner, repo, ruleset_id: desired.rulesetId })
@@ -338,6 +367,9 @@ export const applyRequest = async (octokit: any, request: Readonly<ConfigRequest
       }
     }
     const { data: repository } = await octokit.rest.repos.get({ owner, repo })
+    for (const key of ['description', 'homepage']) {
+      if (repository[key] === null) repository[key] = ''
+    }
     for (const [key, value] of Object.entries(desired.settings || {})) {
       if (repository[key] !== base.settings?.[key] && repository[key] !== value) {
         throw new Error(`Live repository setting conflicts: ${key}`)
@@ -347,7 +379,18 @@ export const applyRequest = async (octokit: any, request: Readonly<ConfigRequest
     await getPullRequest(octokit, request)
     if (Object.entries(desired.settings || {}).some(([key, value]) => repository[key] !== value)) {
       await octokit.rest.repos.update({ owner, repo, ...desired.settings })
+      const { data: updated } = await octokit.rest.repos.get({ owner, repo })
+      if (
+        Object.entries(desired.settings || {}).some(([key, value]) => (updated[key] ?? (['description', 'homepage'].includes(key) ? '' : undefined)) !== value)
+      ) {
+        throw new Error('Repository settings write was not confirmed')
+      }
     }
+    for (const write of resourceWrites) {
+      await getPullRequest(octokit, request)
+      await write()
+    }
+    await getPullRequest(octokit, request)
     await updateChecks?.()
   } finally {
     await octokit.rest.git.deleteRef({ owner, repo, ref: LOCK_REF })

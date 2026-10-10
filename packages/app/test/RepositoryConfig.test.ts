@@ -35,9 +35,11 @@ const fixture = () => {
     if (path === '.github/workflows') {
       return { data: [{ name: 'pr.yml', path: '.github/workflows/pr.yml' }] }
     }
-    const text = path.endsWith('.json')
-      ? JSON.stringify(ref === headSha ? desired : base)
-      : workflow(ref === headSha ? platforms : platforms.map((os) => os.replace('macos-26', 'macos-15')))
+    if (path.endsWith('.json')) throw Object.assign(new Error('Not found'), { status: 404 })
+    const text =
+      path === '.github/repository-config.yml'
+        ? JSON.stringify(ref === headSha ? desired : base)
+        : workflow(ref === headSha ? platforms : platforms.map((os) => os.replace('macos-26', 'macos-15')))
     return { data: { type: 'file', encoding: 'base64', size: text.length, content: Buffer.from(text).toString('base64') } }
   })
   const listRuns = jest.fn()
@@ -123,7 +125,7 @@ test.each(['pending', 'failed', 'missing', 'skipped', 'stale-base'])('rejects %s
 
 test('updates only required checks and preserves strict protection', async () => {
   const { octokit } = fixture()
-  await applyRequest(octokit, request)
+  await applyRequest(octokit, request, { administration: 'write' })
   expect(octokit.rest.repos.updateStatusCheckProtection).toHaveBeenCalledWith({
     owner: 'lvce-editor',
     repo: 'about-view',
@@ -139,7 +141,7 @@ test('duplicate application makes no administrative writes', async () => {
   octokit.rest.repos.getStatusChecksProtection.mockResolvedValue({
     data: { contexts: desired.requiredStatusChecks, checks: desired.requiredStatusChecks.map((context) => ({ context, app_id: 15368 })), strict: true },
   })
-  await applyRequest(octokit, request)
+  await applyRequest(octokit, request, { administration: 'write' })
   expect(octokit.rest.repos.updateStatusCheckProtection).not.toHaveBeenCalled()
   expect(octokit.rest.repos.update).not.toHaveBeenCalled()
 })
@@ -147,7 +149,7 @@ test('duplicate application makes no administrative writes', async () => {
 test('a conflicting PR cannot overwrite live settings', async () => {
   const { octokit } = fixture()
   octokit.rest.repos.getStatusChecksProtection.mockResolvedValue({ data: { contexts: ['different'], checks: [{ context: 'different', app_id: 15368 }] } })
-  await expect(applyRequest(octokit, request)).rejects.toThrow('conflict')
+  await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('conflict')
   expect(octokit.rest.repos.updateStatusCheckProtection).not.toHaveBeenCalled()
   expect(octokit.rest.git.deleteRef).toHaveBeenCalledTimes(1)
 })
@@ -155,7 +157,7 @@ test('a conflicting PR cannot overwrite live settings', async () => {
 test('a held distributed lock prevents overlapping application and is not deleted', async () => {
   const { octokit } = fixture()
   octokit.rest.git.createRef.mockRejectedValue(new Error('Reference already exists'))
-  await expect(applyRequest(octokit, request)).rejects.toThrow('Reference already exists')
+  await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('Reference already exists')
   expect(octokit.rest.git.deleteRef).not.toHaveBeenCalled()
   expect(octokit.rest.repos.updateStatusCheckProtection).not.toHaveBeenCalled()
 })
@@ -163,7 +165,7 @@ test('a held distributed lock prevents overlapping application and is not delete
 test('write failures are propagated and the lock is released', async () => {
   const { octokit } = fixture()
   octokit.rest.repos.updateStatusCheckProtection.mockRejectedValue(new Error('Permission denied'))
-  await expect(applyRequest(octokit, request)).rejects.toThrow('Permission denied')
+  await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('Permission denied')
   expect(octokit.rest.git.deleteRef).toHaveBeenCalledTimes(1)
 })
 
@@ -173,7 +175,7 @@ test('rejects a branch update immediately before the administrative write', asyn
     .mockResolvedValueOnce({ data: pr })
     .mockResolvedValueOnce({ data: pr })
     .mockResolvedValueOnce({ data: { ...pr, head: { ...pr.head, sha: 'c'.repeat(40) } } })
-  await expect(applyRequest(octokit, request)).rejects.toThrow('stale')
+  await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('stale')
   expect(octokit.rest.repos.updateStatusCheckProtection).not.toHaveBeenCalled()
 })
 
@@ -203,7 +205,7 @@ test('preserves unrelated rules, conditions and bypass actors when updating a re
   const original = getContent.getMockImplementation()!
   getContent.mockImplementation(async (options: any) => {
     const response = await original(options)
-    if (options.path.endsWith('.json')) {
+    if (options.path === '.github/repository-config.yml') {
       const value = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'))
       response.data.content = Buffer.from(JSON.stringify({ ...value, rulesetId: 99 })).toString('base64')
     }
@@ -233,7 +235,7 @@ test('preserves unrelated rules, conditions and bypass actors when updating a re
     ],
   }
   octokit.request = jest.fn<(route: string, options: any) => Promise<any>>().mockResolvedValue({ data: live })
-  await applyRequest(octokit, request)
+  await applyRequest(octokit, request, { administration: 'write' })
   expect(octokit.request).toHaveBeenLastCalledWith(
     'PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}',
     expect.objectContaining({
@@ -260,13 +262,50 @@ test('rejects inherited organization rulesets', async () => {
   const original = getContent.getMockImplementation()!
   getContent.mockImplementation(async (options: any) => {
     const response = await original(options)
-    if (options.path.endsWith('.json')) {
+    if (options.path === '.github/repository-config.yml') {
       const value = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'))
       response.data.content = Buffer.from(JSON.stringify({ ...value, rulesetId: 99 })).toString('base64')
     }
     return response
   })
   octokit.request = jest.fn<() => Promise<any>>().mockResolvedValue({ data: { source_type: 'Organization', source: 'lvce-editor' } })
-  await expect(applyRequest(octokit, request)).rejects.toThrow('repository-owned')
+  await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('repository-owned')
   expect(octokit.request).toHaveBeenCalledTimes(1)
+})
+
+test('applies description and retains omitted repository fields; live metadata conflicts fail before writes', async () => {
+  const { octokit, getContent } = fixture()
+  const original = getContent.getMockImplementation()!
+  getContent.mockImplementation(async (options: any) => {
+    const response = await original(options)
+    if (options.path === '.github/repository-config.yml') {
+      const value = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'))
+      response.data.content = Buffer.from(
+        JSON.stringify({ ...value, settings: { description: options.ref === headSha ? 'Updated about view' : 'About View' } }),
+      ).toString('base64')
+    }
+    return response
+  })
+  octokit.rest.repos.get
+    .mockResolvedValueOnce({ data: { description: 'About View', has_issues: true } })
+    .mockResolvedValue({ data: { description: 'Updated about view', has_issues: true } })
+  await applyRequest(octokit, request, { administration: 'write' })
+  expect(octokit.rest.repos.update).toHaveBeenCalledWith({ owner: 'lvce-editor', repo: 'about-view', description: 'Updated about view' })
+  octokit.rest.repos.update.mockClear()
+  octokit.rest.repos.updateStatusCheckProtection.mockClear()
+  octokit.rest.repos.get.mockResolvedValue({ data: { description: 'Other administrator' } })
+  await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('conflicts')
+  expect(octokit.rest.repos.update).not.toHaveBeenCalled()
+  expect(octokit.rest.repos.updateStatusCheckProtection).not.toHaveBeenCalled()
+})
+
+test('validates a JSON-base to YAML-head migration without expanding managed ownership', async () => {
+  const { octokit, getContent } = fixture()
+  const original = getContent.getMockImplementation()!
+  getContent.mockImplementation(async (options: any) => {
+    if (options.path === '.github/repository-config.yml' && options.ref === baseSha) throw Object.assign(new Error('missing'), { status: 404 })
+    if (options.path === '.github/repository-config.json' && options.ref === baseSha) return original({ ...options, path: '.github/repository-config.yml' })
+    return original(options)
+  })
+  expect(await validateRequest(octokit, request)).toEqual({ base, desired, changed: true })
 })
