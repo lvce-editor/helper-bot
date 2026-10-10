@@ -67,7 +67,11 @@ export const parseResources = (config: any): void => {
     labels: {
       key: 'name',
       valid: (item) =>
-        fields(item, ['name', 'color', 'description']) && string(item.name, 50) && /^[a-fA-F0-9]{6}$/.test(item.color) && string(item.description, 100, true),
+        fields(item, ['name', 'color', 'description']) &&
+        string(item.name, 50) &&
+        typeof item.color === 'string' &&
+        /^[a-fA-F0-9]{6}$/.test(item.color) &&
+        string(item.description, 100, true),
     },
     milestones: {
       key: 'title',
@@ -77,7 +81,10 @@ export const parseResources = (config: any): void => {
         string(item.description, 10000, true) &&
         ['open', 'closed'].includes(item.state) &&
         (item.due_on === null ||
-          (typeof item.due_on === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(item.due_on) && Number.isFinite(Date.parse(item.due_on)))),
+          (typeof item.due_on === 'string' &&
+            /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(item.due_on) &&
+            Number.isFinite(Date.parse(item.due_on)) &&
+            new Date(item.due_on).toISOString().replace('.000Z', 'Z') === item.due_on)),
     },
     collaborators: {
       key: 'username',
@@ -259,14 +266,15 @@ export const planResources = async (
     })
     const before = base[adapter.section] || []
     const identity = (item: any) => item[adapter.key].toLowerCase()
+    const beforeMap = new Map(before.map((item) => [identity(item), item]))
+    const afterMap = new Map(after.map((item) => [identity(item), item]))
     const liveMap = new Map<string, any>()
     for (const item of items) {
       const id = identity(adapter.normalize(item))
+      if (!beforeMap.has(id) && !afterMap.has(id)) continue
       if (liveMap.has(id)) throw new Error(`Ambiguous live ${adapter.section}: ${id}`)
       liveMap.set(id, item)
     }
-    const beforeMap = new Map(before.map((item) => [identity(item), item]))
-    const afterMap = new Map(after.map((item) => [identity(item), item]))
     for (const id of new Set([...beforeMap.keys(), ...afterMap.keys()])) {
       const live = liveMap.get(id)
       const normalizeConfig = (item: any) => (item && adapter.section === 'labels' ? { ...item, color: item.color.toLowerCase() } : item)

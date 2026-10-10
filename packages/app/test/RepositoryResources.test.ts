@@ -2,7 +2,7 @@ import { expect, jest, test } from '@jest/globals'
 import { parseConfig, readConfig } from '../src/parts/RepositoryConfig/RepositoryConfig.ts'
 import { assertOwnership, planResources } from '../src/parts/RepositoryConfig/RepositoryResources.ts'
 
-const permissions = { administration: 'write', issues: 'write', environments: 'write', members: 'read' }
+const permissions = { administration: 'write', issues: 'write', members: 'read' }
 const config = 'version: 1\nrequiredStatusChecks: [pr]\n'
 const label = { name: 'managed', color: 'abcdef', description: 'managed label' }
 const fixture = (initial: any[] = []) => {
@@ -41,6 +41,8 @@ test.each([
   `${config}settings: {default_branch: other}`,
   `${config}settings: {description: true}`,
   `${config}labels: [{name: test, color: abcdef, description: text, oldname: old}]`,
+  `${config}labels: [{name: test, color: 123456, description: text}]`,
+  `${config}milestones: [{title: v1, description: text, state: open, due_on: '2026-02-30T00:00:00Z'}]`,
   `${config}labels: [{name: test, color: abcdef, description: text}, {name: TEST, color: abcdef, description: text}]`,
   `${config}environments: [{name: prod}]`,
   `${config}collaborators: [{username: person, permission: superadmin}]`,
@@ -236,4 +238,16 @@ test('pull_requests write also authorizes labels and milestones without issues w
   )
   expect(writes).toHaveLength(1)
   await writes[0]()
+})
+
+test('unmanaged duplicate milestone titles do not prevent managing a distinct milestone', async () => {
+  const item = { title: 'owned', description: '', state: 'open', due_on: null }
+  const octokit: any = {
+    paginate: jest.fn<() => Promise<any>>().mockResolvedValue([
+      { ...item, number: 1 },
+      { ...item, title: 'other', number: 2 },
+      { ...item, title: 'other', number: 3 },
+    ]),
+  }
+  expect(await planResources(octokit, 'lvce-editor', 'about-view', { milestones: [item] }, { milestones: [item] }, permissions)).toHaveLength(0)
 })
