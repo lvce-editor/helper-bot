@@ -1,0 +1,56 @@
+# eslint-disable github-actions/on
+name: apply-repository-config
+run-name: repository-config/${{ inputs.repository }}/${{ inputs.pullRequest }}/${{ inputs.headSha }}/${{ inputs.baseSha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: Repository in owner/repo form
+        required: true
+        type: string
+      pullRequest:
+        description: Pull request number
+        required: true
+        type: string
+      headSha:
+        description: Exact checked PR revision
+        required: true
+        type: string
+      baseSha:
+        description: Exact main configuration revision
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: repository-config-${{ inputs.repository }}
+  cancel-in-progress: false
+
+jobs:
+  validate-config:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+      - name: Install trusted validation dependencies
+        run: npm ci --ignore-scripts
+      - name: Validate proposed data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REPOSITORY: ${{ inputs.repository }}
+          PULL_REQUEST: ${{ inputs.pullRequest }}
+          HEAD_SHA: ${{ inputs.headSha }}
+          BASE_SHA: ${{ inputs.baseSha }}
+        run: node packages/app/src/parts/RepositoryConfig/validateWorkflow.ts
