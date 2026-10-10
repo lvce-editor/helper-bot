@@ -2,9 +2,8 @@ import type { Context, Probot } from 'probot'
 import {
   applyRequest,
   assertRequest,
-  CONFIG_PATH,
   isTrustedAuthor,
-  readFile,
+  readConfig,
   validateRequest,
   WORKFLOW_PATH,
   WORKFLOW_PREFIX,
@@ -15,7 +14,7 @@ const getOctokit = async (app: Probot, repository: string): Promise<any> => {
   const [owner, repo] = repository.split('/')
   const auth = await app.auth()
   const { data } = await auth.rest.apps.getRepoInstallation({ owner, repo })
-  return app.auth(data.id)
+  return { octokit: await app.auth(data.id), permissions: data.permissions }
 }
 
 export const createHandleConfigChecksCompleted =
@@ -40,7 +39,7 @@ export const createHandleConfigChecksCompleted =
       }
       // Unconfigured repositories are deliberately opt-in. Bootstrap a live snapshot on main first.
       try {
-        await readFile(context.octokit, target, pr.base.sha, CONFIG_PATH)
+        await readConfig(context.octokit, target, pr.base.sha)
       } catch (error: any) {
         if (error.status === 404) {
           continue
@@ -59,7 +58,7 @@ export const createHandleConfigChecksCompleted =
         context.log.warn({ err: error }, 'Repository configuration is not ready to apply')
         continue
       }
-      const octokit = await getOctokit(app, 'lvce-editor/helper-bot')
+      const { octokit } = await getOctokit(app, 'lvce-editor/helper-bot')
       await octokit.rest.actions.createWorkflowDispatch({
         owner: 'lvce-editor',
         repo: 'helper-bot',
@@ -105,14 +104,14 @@ export const createHandleConfigApplicationCompleted =
       throw new Error('Untrusted or stale config application workflow')
     }
     const request = requestFromRunName(run.display_title)
-    const octokit = await getOctokit(app, request.repository)
+    const { octokit, permissions } = await getOctokit(app, request.repository)
     const [owner, repo] = request.repository.split('/')
     // The application result is posted only after privileged writes finish. Workflow success alone is not application success.
     try {
       if (run.conclusion !== 'success') {
         throw new Error(`Config validation workflow failed: ${run.conclusion}`)
       }
-      await applyRequest(octokit, request)
+      await applyRequest(octokit, request, permissions)
       await octokit.rest.issues.createComment({
         owner,
         repo,
