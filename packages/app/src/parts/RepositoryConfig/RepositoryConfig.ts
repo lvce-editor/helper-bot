@@ -1,5 +1,6 @@
 import { parse, parseDocument } from 'yaml'
 import { assertOwnership, parseResources, planResources, type ResourceConfig } from './RepositoryResources.ts'
+import { assertRulesetChecks } from './RepositoryRulesets.ts'
 
 const CONFIG_PATH = '.github/repository-config.yml'
 const LEGACY_CONFIG_PATH = '.github/repository-config.json'
@@ -65,6 +66,8 @@ export const parseConfig = (text: string): RepositoryConfig => {
           'collaborators',
           'teams',
           'branches',
+          'pages',
+          'rulesets',
         ].includes(key),
     )
   ) {
@@ -232,6 +235,7 @@ export const validateRequest = async (octokit: any, request: Readonly<ConfigRequ
   ) {
     throw new Error('Required checks must match the complete workflow matrix and preserve platform coverage')
   }
+  assertRulesetChecks(desired.rulesets || [], expected)
   const runs: any[] = await octokit.paginate(octokit.rest.actions.listWorkflowRunsForRepo, {
     owner,
     repo,
