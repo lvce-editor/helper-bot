@@ -106,6 +106,9 @@ test('preflights all rulesets, rejecting external changes, inherited ownership a
   await expect(legacy.run([ruleset], [ruleset], 9)).rejects.toThrow('overlap')
   const ambiguous = fixture([live, { ...live, id: 10 }])
   await expect(ambiguous.run([ruleset], [ruleset])).rejects.toThrow('Ambiguous')
+  const experimental = fixture([{ ...live, rules: [{ type: 'deletion', parameters: { undocumented_policy: true } }] }])
+  await expect(experimental.run([ruleset], [{ ...ruleset, enforcement: 'disabled' }])).rejects.toThrow('conflicts')
+  expect(experimental.request.mock.calls.every(([route]) => route.startsWith('GET '))).toBe(true)
 })
 
 test('retry reconciles a partial application and an uncertain create response without duplicating rulesets', async () => {
