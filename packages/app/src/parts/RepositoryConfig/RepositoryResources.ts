@@ -1,6 +1,11 @@
 import { assertBranchOwnership, planBranches, validateBranches, type ManagedBranch } from './RepositoryBranchProtection.ts'
+import { planPages, validatePages, type ManagedPages } from './RepositoryPages.ts'
+import { planRulesets, validateRulesets, type ManagedRuleset } from './RepositoryRulesets.ts'
 // Configuration is data: never forward arbitrary keys to privileged GitHub endpoints.
 export interface ResourceConfig {
+  readonly pages?: ManagedPages
+  readonly rulesets?: readonly ManagedRuleset[]
+  readonly rulesetId?: number
   readonly branches?: readonly ManagedBranch[]
   readonly topics?: readonly string[]
   readonly labels?: readonly Record<string, any>[]
@@ -40,6 +45,8 @@ const reject = (valid: boolean, message: string): void => {
 }
 
 export const parseResources = (config: any): void => {
+  if (config.pages !== undefined) validatePages(config.pages)
+  if (config.rulesets !== undefined) validateRulesets(config.rulesets)
   if (config.settings !== undefined) {
     reject(record(config.settings), 'Invalid repository settings')
     for (const [key, value] of Object.entries(config.settings)) {
@@ -133,10 +140,11 @@ export const parseResources = (config: any): void => {
 }
 
 export const assertOwnership = (base: ResourceConfig, desired: ResourceConfig): void => {
-  for (const section of ['topics', 'labels', 'milestones', 'environments', 'collaborators', 'teams', 'branches'] as const) {
+  for (const section of ['topics', 'labels', 'milestones', 'environments', 'collaborators', 'teams', 'branches', 'pages', 'rulesets'] as const) {
     if ((base[section] === undefined) !== (desired[section] === undefined)) throw new Error(`Bootstrap managed ${section} on main first`)
   }
   assertBranchOwnership(base.branches || [], desired.branches || [])
+  if (!same(Object.keys(base.pages || {}), Object.keys(desired.pages || {}))) throw new Error('Bootstrap managed Pages keys on main first')
 }
 
 // Order of mapping keys and set-valued lists is irrelevant to live-state comparisons.
@@ -172,7 +180,10 @@ export const planResources = async (
   // Check every required permission before reads or writes, avoiding a predictable partial application.
   if ((desired.labels !== undefined || desired.milestones !== undefined) && granted.pull_requests !== 'write') requirePermission(granted, 'issues')
   if (desired.teams !== undefined) requirePermission(granted, 'members', 'read')
+  if (desired.pages !== undefined) requirePermission(granted, 'pages')
   const writes: (() => Promise<unknown>)[] = []
+  if (desired.pages !== undefined) writes.push(...(await planPages(octokit, owner, repo, base.pages!, desired.pages)))
+  if (desired.rulesets !== undefined) writes.push(...(await planRulesets(octokit, owner, repo, base.rulesets || [], desired.rulesets, desired.rulesetId)))
   if (desired.topics !== undefined) {
     const { data } = await octokit.rest.repos.getAllTopics({ owner, repo })
     snapshot(data.names, base.topics, desired.topics, 'topics')

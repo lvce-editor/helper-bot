@@ -12,6 +12,7 @@
     "build": "node packages/build/src/build.ts",
     "dev": "npm run dev --workspace=@lvce-editor/helper-bot",
     "format": "prettier --write .",
+    "generate:repository-ruleset-schema": "node scripts/generateRepositoryRulesetSchema.js",
     "lint": "eslint . && prettier --check . && knip --no-config-hints",
     "start": "npm start --workspace=@lvce-editor/helper-bot",
     "test": "npm test --workspaces --if-present"

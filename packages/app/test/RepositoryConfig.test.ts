@@ -309,3 +309,44 @@ test('validates a JSON-base to YAML-head migration without expanding managed own
   })
   expect(await validateRequest(octokit, request)).toEqual({ base, desired, changed: true })
 })
+
+test('new ruleset writes recheck the PR and do not start after a concurrent head change', async () => {
+  const { octokit, getContent, pr } = fixture()
+  const original = getContent.getMockImplementation()!
+  getContent.mockImplementation(async (options: any) => {
+    const response = await original(options)
+    if (options.path === '.github/repository-config.yml') {
+      const value = JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'))
+      response.data.content = Buffer.from(
+        JSON.stringify({
+          ...value,
+          rulesets:
+            options.ref === baseSha
+              ? []
+              : [
+                  {
+                    name: 'Protect tags',
+                    target: 'tag',
+                    enforcement: 'active',
+                    conditions: { ref_name: { include: ['refs/tags/v*'], exclude: [] } },
+                    bypass_actors: [],
+                    rules: [{ type: 'deletion' }],
+                  },
+                ],
+        }),
+      ).toString('base64')
+    }
+    return response
+  })
+  const paginate = octokit.paginate.getMockImplementation()!
+  octokit.paginate.mockImplementation(async (method: any, params: any) => (method === 'GET /repos/{owner}/{repo}/rulesets' ? [] : paginate(method, params)))
+  octokit.request = jest.fn()
+  octokit.rest.pulls.get
+    .mockResolvedValueOnce({ data: pr })
+    .mockResolvedValueOnce({ data: pr })
+    .mockResolvedValueOnce({ data: pr })
+    .mockResolvedValue({ data: { ...pr, head: { ...pr.head, sha: 'c'.repeat(40) } } })
+  await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('stale')
+  expect(octokit.request).not.toHaveBeenCalled()
+  expect(octokit.rest.git.deleteRef).toHaveBeenCalledTimes(1)
+})
