@@ -157,6 +157,20 @@ test.each(['pending', 'failed', 'missing', 'skipped', 'stale-base'])('rejects %s
   await expect(validateRequest(octokit, request)).rejects.toThrow()
 })
 
+test('rejects missing PR workflow association while the PR is open', async () => {
+  const { octokit, runs } = fixture()
+  runs[0].pull_requests = []
+  await expect(validateRequest(octokit, request)).rejects.toThrow('Missing intended PR workflow')
+})
+
+test('accepts exact-head workflow runs whose PR association GitHub clears after merge', async () => {
+  const { octokit, pr, runs } = fixture()
+  pr.state = 'closed'
+  Object.assign(pr, { merged: true, merge_commit_sha: 'c'.repeat(40) })
+  runs[0].pull_requests = []
+  expect(await validateRequest(octokit, request)).toEqual({ base, desired, changed: true })
+})
+
 test('updates only required checks and preserves strict protection', async () => {
   const { octokit } = fixture()
   await applyRequest(octokit, request, { administration: 'write' })
