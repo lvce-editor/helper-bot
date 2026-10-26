@@ -201,7 +201,8 @@ export interface ValidatedConfig {
 }
 
 export const validateRequest = async (octokit: any, request: Readonly<ConfigRequest>): Promise<ValidatedConfig> => {
-  await getPullRequest(octokit, request)
+  const pr = await getPullRequest(octokit, request)
+  const mergedPr = pr.state === 'closed' && pr.merged
   const base = await readConfig(octokit, request.repository, request.baseSha)
   const desired = await readConfig(octokit, request.repository, request.headSha)
   if (base.rulesetId !== desired.rulesetId || !equal(Object.keys(base.settings || {}), Object.keys(desired.settings || {}))) {
@@ -268,10 +269,13 @@ export const validateRequest = async (octokit: any, request: Readonly<ConfigRequ
   }
   for (const [path, checks] of candidateWorkflows) {
     const intended = latest.get(path)
+    const associations = intended?.pull_requests || []
+    const associatedWithRequest = associations.some((runPr: any) => runPr.number === request.pullRequest && runPr.base.sha === request.baseSha)
+    const associationWasClearedAfterMerge = mergedPr && associations.length === 0
     if (
       !intended ||
       intended.head_sha !== request.headSha ||
-      !intended.pull_requests?.some((pr: any) => pr.number === request.pullRequest && pr.base.sha === request.baseSha)
+      (!associatedWithRequest && !associationWasClearedAfterMerge)
     ) {
       throw new Error('Missing intended PR workflow for this revision and base')
     }
