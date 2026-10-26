@@ -49,6 +49,12 @@ const fixture = () => {
       pulls: { get: jest.fn<() => Promise<any>>().mockResolvedValue({ data: pr }) },
       git: {
         getRef: jest.fn<() => Promise<any>>().mockResolvedValue({ data: { object: { sha: baseSha } } }),
+        getCommit: jest.fn<(options: any) => Promise<any>>().mockImplementation(async ({ commit_sha }) => ({
+          data: {
+            tree: { sha: 'head-tree' },
+            parents: [{ sha: baseSha }],
+          },
+        })),
         createRef: jest.fn<() => Promise<any>>().mockResolvedValue({}),
         deleteRef: jest.fn<() => Promise<any>>().mockResolvedValue({}),
       },
@@ -109,6 +115,34 @@ test.each(['author', 'head', 'base', 'fork', 'closed'])('rejects %s before readi
   if (kind === 'base') pr.base.sha = 'c'.repeat(40)
   if (kind === 'fork') pr.head.repo.full_name = 'attacker/about-view'
   if (kind === 'closed') pr.state = 'closed'
+  await expect(validateRequest(octokit, request)).rejects.toThrow('Untrusted, closed or stale')
+  expect(getContent).not.toHaveBeenCalled()
+})
+
+test('accepts a trusted PR merged after its exact configuration tree passed CI', async () => {
+  const { octokit, pr } = fixture()
+  pr.state = 'closed'
+  Object.assign(pr, { merged: true, merge_commit_sha: 'c'.repeat(40) })
+  octokit.rest.git.getCommit.mockImplementation(async ({ commit_sha }: any) => ({
+    data: {
+      tree: { sha: 'same-config-tree' },
+      parents: [{ sha: baseSha }],
+    },
+  }))
+  expect(await validateRequest(octokit, request)).toEqual({ base, desired, changed: true })
+  expect(octokit.rest.git.getCommit).toHaveBeenCalledTimes(2)
+})
+
+test.each([
+  { tree: 'different-tree', parent: baseSha },
+  { tree: 'same-config-tree', parent: 'c'.repeat(40) },
+])('rejects merged PRs whose merge commit does not prove the validated snapshot: %j', async ({ tree, parent }) => {
+  const { octokit, pr, getContent } = fixture()
+  pr.state = 'closed'
+  Object.assign(pr, { merged: true, merge_commit_sha: 'c'.repeat(40) })
+  octokit.rest.git.getCommit.mockImplementation(async ({ commit_sha }: any) => ({
+    data: { tree: { sha: commit_sha === headSha ? 'same-config-tree' : tree }, parents: [{ sha: parent }] },
+  }))
   await expect(validateRequest(octokit, request)).rejects.toThrow('Untrusted, closed or stale')
   expect(getContent).not.toHaveBeenCalled()
 })
