@@ -165,20 +165,33 @@ const getPullRequest = async (octokit: any, request: Readonly<ConfigRequest>): P
   const [owner, repo] = request.repository.split('/')
   const { data: pr } = await octokit.rest.pulls.get({ owner, repo, pull_number: request.pullRequest })
   const { data: main } = await octokit.rest.git.getRef({ owner, repo, ref: 'heads/main' })
-  if (
-    pr.state !== 'open' ||
+  const trustedIdentity =
     pr.draft ||
     !isTrustedAuthor(pr.user) ||
     pr.base.ref !== 'main' ||
     pr.base.repo.full_name !== request.repository ||
     pr.head.repo?.full_name !== request.repository ||
-    pr.head.sha !== request.headSha ||
-    pr.base.sha !== request.baseSha ||
-    main.object.sha !== request.baseSha
-  ) {
+    pr.head.sha !== request.headSha
+  if (trustedIdentity) {
     throw new Error('Untrusted, closed or stale repository config PR')
   }
-  return pr
+  if (pr.state === 'open' && pr.base.sha === request.baseSha && main.object.sha === request.baseSha) {
+    return pr
+  }
+  // The configuration workflow can finish just after an otherwise valid PR is merged.
+  // Accept that race only when GitHub's squash/merge commit contains exactly the
+  // requested tree and is based on the configuration snapshot validated by CI.
+  if (pr.state === 'closed' && pr.merged && pr.base.sha === request.baseSha && pr.merge_commit_sha) {
+    const [mergedCommit, headCommit] = await Promise.all([
+      octokit.rest.git.getCommit({ owner, repo, commit_sha: pr.merge_commit_sha }),
+      octokit.rest.git.getCommit({ owner, repo, commit_sha: request.headSha }),
+    ])
+    const merged = mergedCommit.data
+    if (merged.tree.sha === headCommit.data.tree.sha && merged.parents?.[0]?.sha === request.baseSha) {
+      return pr
+    }
+  }
+  throw new Error('Untrusted, closed or stale repository config PR')
 }
 
 export interface ValidatedConfig {
