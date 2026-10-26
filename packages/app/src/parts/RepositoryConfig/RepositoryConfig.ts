@@ -272,11 +272,7 @@ export const validateRequest = async (octokit: any, request: Readonly<ConfigRequ
     const associations = intended?.pull_requests || []
     const associatedWithRequest = associations.some((runPr: any) => runPr.number === request.pullRequest && runPr.base.sha === request.baseSha)
     const associationWasClearedAfterMerge = mergedPr && associations.length === 0
-    if (
-      !intended ||
-      intended.head_sha !== request.headSha ||
-      (!associatedWithRequest && !associationWasClearedAfterMerge)
-    ) {
+    if (!intended || intended.head_sha !== request.headSha || (!associatedWithRequest && !associationWasClearedAfterMerge)) {
       throw new Error('Missing intended PR workflow for this revision and base')
     }
     // Check final-attempt jobs, rather than trusting caller-provided names or spoofable statuses.
