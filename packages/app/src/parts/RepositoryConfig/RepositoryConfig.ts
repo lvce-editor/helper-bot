@@ -109,7 +109,11 @@ export const getWorkflowChecks = (text: string): readonly string[] => {
   }
   const checks: string[] = []
   for (const [id, job] of Object.entries(workflow.jobs) as [string, any][]) {
-    if (job.if !== undefined || job.uses !== undefined || job.name !== undefined) {
+    if (job.if !== undefined || job.uses !== undefined) {
+      throw new Error('Conditional, reusable or renamed jobs require a trusted policy update')
+    }
+    const macOSNameMapping = job.name === `${id} (\${{ matrix.os == 'macos-15' && 'macos-14' || matrix.os }})`
+    if (job.name !== undefined && (!macOSNameMapping || !job.strategy)) {
       throw new Error('Conditional, reusable or renamed jobs require a trusted policy update')
     }
     if (!job.strategy) {
@@ -126,7 +130,12 @@ export const getWorkflowChecks = (text: string): readonly string[] => {
     ) {
       throw new Error('Unsupported workflow matrix')
     }
-    checks.push(...matrix.os.map((os: string) => `${id} (${os})`))
+    checks.push(
+      ...matrix.os.map((os: string) => {
+        const checkOs = macOSNameMapping && os === 'macos-15' ? 'macos-14' : os
+        return `${id} (${checkOs})`
+      }),
+    )
   }
   if (checks.length < 1 || new Set(checks).size !== checks.length) {
     throw new Error('Invalid workflow jobs')
