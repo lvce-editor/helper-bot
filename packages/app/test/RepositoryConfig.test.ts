@@ -102,6 +102,14 @@ test('requires static complete matrices and rejects conditional jobs', () => {
   expect(() => getWorkflowChecks('on: pull_request\njobs:\n  test:\n    strategy:\n      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}\n')).toThrow()
 })
 
+test('supports the process-explorer macOS check name while preserving every matrix entry', () => {
+  const processExplorerWorkflow = `on: pull_request\njobs:\n  pr:\n    name: pr (\u0024{{ matrix.os == 'macos-15' && 'macos-14' || matrix.os }})\n    strategy:\n      matrix:\n        os: [ubuntu-22.04, macos-15, windows-2022]\n`
+  expect(getWorkflowChecks(processExplorerWorkflow)).toEqual(['pr (ubuntu-22.04)', 'pr (macos-14)', 'pr (windows-2022)'])
+  expect(() => getWorkflowChecks(processExplorerWorkflow.replace('macos-14', 'macos-latest'))).toThrow()
+  expect(() => getWorkflowChecks(processExplorerWorkflow.replace('windows-2022', 'macos-14'))).toThrow()
+  expect(() => getWorkflowChecks(processExplorerWorkflow.replace('    strategy:', '    if: false\n    strategy:'))).toThrow()
+})
+
 test('validates the complete matrix against the exact head and main revision', async () => {
   const { octokit } = fixture()
   expect(await validateRequest(octokit, request)).toEqual({ base, desired, changed: true })
@@ -397,4 +405,44 @@ test('new ruleset writes recheck the PR and do not start after a concurrent head
   await expect(applyRequest(octokit, request, { administration: 'write' })).rejects.toThrow('stale')
   expect(octokit.request).not.toHaveBeenCalled()
   expect(octokit.rest.git.deleteRef).toHaveBeenCalledTimes(1)
+})
+
+test('adopts a complete second PR workflow from a live bootstrap without dropping any jobs', async () => {
+  const { octokit, getContent, runs } = fixture()
+  const original = getContent.getMockImplementation()!
+  const integration = 'on: pull_request\njobs:\n  integration:\n    strategy:\n      matrix:\n        os: [ubuntu-24.04, macos-15, windows-2025]\n'
+  const integrationChecks = getWorkflowChecks(integration)
+  let omitIntegrationCheck = false
+  getContent.mockImplementation(async (options: any) => {
+    if (options.path === '.github/workflows') {
+      return { data: ['pr.yml', 'integration.yml'].map((name) => ({ name, path: `.github/workflows/${name}` })) }
+    }
+    if (options.path === '.github/workflows/integration.yml') {
+      return { data: { type: 'file', encoding: 'base64', size: integration.length, content: Buffer.from(integration).toString('base64') } }
+    }
+    const result = await original(options)
+    if (options.path === '.github/repository-config.yml' && options.ref === headSha) {
+      result.data.content = Buffer.from(
+        JSON.stringify({
+          ...desired,
+          requiredStatusChecks: [...desired.requiredStatusChecks, ...(omitIntegrationCheck ? integrationChecks.slice(1) : integrationChecks)],
+        }),
+      ).toString('base64')
+    }
+    return result
+  })
+  runs.push({ ...runs[0], id: 43, path: '.github/workflows/integration.yml' })
+  const paginate = octokit.paginate.getMockImplementation()!
+  octokit.paginate.mockImplementation(async (method: any, params: any) => {
+    if (method === octokit.rest.actions.listJobsForWorkflowRunAttempt && params.run_id === 43) {
+      return integrationChecks.map((name) => ({ name, status: 'completed', conclusion: 'success' }))
+    }
+    return paginate(method, params)
+  })
+  expect((await validateRequest(octokit, request)).desired.requiredStatusChecks).toHaveLength(desired.requiredStatusChecks.length + integrationChecks.length)
+  omitIntegrationCheck = true
+  await expect(validateRequest(octokit, request)).rejects.toThrow('Required checks must match the complete workflow matrix')
+  omitIntegrationCheck = false
+  runs.pop()
+  await expect(validateRequest(octokit, request)).rejects.toThrow('Missing intended PR workflow')
 })
